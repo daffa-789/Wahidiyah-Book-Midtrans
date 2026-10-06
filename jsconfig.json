@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "checkJs": false,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@features/*": ["./src/features/*"],
+      "@ui/*": ["./src/components/ui/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@data/*": ["./src/data/*"],
+      "@context/*": ["./src/context/*"],
+      "@theme/*": ["./src/theme/*"]
+    }
+  },
+  "include": ["src/**/*", "vite.config.js", "tailwind.config.js", "postcss.config.js"],
+  "exclude": ["node_modules", "dist", "dist-*"]
+}

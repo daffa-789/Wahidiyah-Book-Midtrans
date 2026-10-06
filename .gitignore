@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+server/node_modules/
+.pnp
+.pnp.js
+
+# Production Build
+dist/
+dist-ssr/
+dist-*/
+*.local
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+server/.env
+client_secret_*.json
+
+# Editor & OS files
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.zcode/
+.zcodeignore
+
+# Cadangan otomatis draw.io (.$<nama>.drawio.bkp / .dtmp) — artefak editor, bukan dokumen skripsi
+.$*.bkp
+.$*
+*.dtmp
+*.bak
+*.bak*
+
+# Log memori alat AI lain yang jalan di mesin ini (bukan bagian proyek).
+# KEBIJAKAN BARU (R51): catatan kerja internal TIDAK di-commit.
+# Sebelumnya `.workbuddy-ai/memory/` sengaja ikut karena berguna sebagai jejak
+# kerja per rilis. Ternyata isinya memuat kredensial asli (Google Client Secret,
+# refresh token, kunci Supabase) sehingga tidak layak masuk repo publik.
+# Catatan tetap tersimpan di mesin lokal, hanya tidak dipublikasikan.
+.workbuddy-ai/
+memory-kerja/
+Master_Memory_Workflow.md
+
+# R36 — penyimpanan OTP sementara (pengembangan). Isinya kode + data pendaftaran.
+# Sengaja di AKAR proyek, bukan di dalam `server/`: berkas ini ditulis setiap kali
+# kode OTP diterbitkan, dan `npm run dev` mengawasi folder `server/` dengan
+# `--watch-path` — menaruhnya di sana membuat tiap pendaftaran me-restart server.
+.otp-dev-store.json
+server/.otp-dev-store.json
+
+# Artefak verifikasi & perkakas lokal — bukan bagian proyek
+.playwright-cli/
+screenshots-verifikasi/
+docs/visual-flows/screenshots-verifikasi/
+__pycache__/
+*.pyc

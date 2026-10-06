@@ -1,0 +1,451 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color-scheme: light;
+
+  /* ── R29: nilai dasar palet "Editorial Elegan" ─────────────────────────────
+     Ini adalah nilai FALLBACK. Nilai sebenarnya disuntikkan oleh
+     src/theme/themeInjector.js dari component.json saat aplikasi dimuat.
+     Menaruhnya di sini penting supaya render pertama (sebelum JS jalan) sudah
+     memakai warna yang benar — kalau tidak, akan ada kedipan putih. */
+  --color-brand-primary: #14523A;
+  --color-brand-primary-hover: #0E3D2C;
+  --color-brand-primary-light: #DCEDE4;
+  --color-ui-bg: #FBF8F3;
+  --color-ui-surface: #F7F2E9;
+  --color-ui-card: #FFFDFA;
+  --color-ui-border: #E4D9C6;
+  --color-ui-text-primary: #1D1B17;
+  --color-ui-text-secondary: #5A554E;
+  --color-ui-text-muted: #7C766E;
+
+  --radius-btn: 14px;
+  --radius-card: 18px;
+  --radius-input: 12px;
+  --radius-modal: 22px;
+
+  --sidebar-w-expanded: 248px;
+  --sidebar-w-collapsed: 68px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  /* Latar krem hangat — SENGAJA bukan putih murni. Putih dingin membuat
+     antarmuka terasa seperti dashboard SaaS generik. */
+  background-color: var(--color-ui-bg, #FBF8F3);
+  color: var(--color-ui-text-primary, #1D1B17);
+}
+
+/* Enable text selection, drag, and copy across the entire application */
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+#root {
+  min-height: 100vh;
+  background: var(--color-ui-bg, #FBF8F3);
+}
+
+/* Definisi SATU-SATUNYA warna seleksi teks di aplikasi.
+   Utility selection:* di index.html dulu menindih aturan ini dengan warna yang
+   sama — duplikasinya sudah dibuang dari index.html. */
+::selection {
+  background-color: #F2DFA6;
+  color: #0E3D2C;
+}
+
+/* Custom scrollbar for reader and content */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D2C2A8;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B9A588;
+}
+
+/* Scrollbar tipis untuk sidebar gelap (dipakai DeviceFrame) */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: #2C2925;
+  border-radius: 9999px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #403C37;
+}
+
+/* Arabic typography class */
+.font-arabic {
+  font-family: 'Amiri', serif;
+  line-height: 2.2;
+}
+
+/* Judul bergaya editorial — serif display dengan optical sizing.
+   font-optical-sizing membuat Fraunces memilih kontras goresan yang tepat
+   untuk ukuran teksnya, jadi judul besar tidak terlihat kurus. */
+.font-display {
+  font-family: 'Fraunces', 'Newsreader', Georgia, Cambria, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+/* Smooth transitions */
+.page-transition {
+  animation: fadeIn 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Auth screens: intentionally small, consistent, and independent from the
+   app sidebar so public routes remain pleasant on desktop and mobile.
+   Dihuni @layer components agar kalah prioritas dari utility Tailwind di JSX,
+   dan override <=480px memakai varian `max-xs:` (screen xs didefinisikan di
+   tailwind.config.js) — satu sistem responsif dengan sisa aplikasi, bukan
+   @media mentah lagi. */
+@layer components {
+  .auth-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(20, 82, 58, 0.09), transparent 27rem),
+      radial-gradient(circle at 88% 92%, rgba(184, 134, 11, 0.07), transparent 25rem),
+      #FBF8F3;
+  }
+
+  .auth-card {
+    border: 1px solid rgba(228, 217, 198, 0.9);
+    border-radius: 1.75rem;
+    padding: 1.75rem;
+    background: rgba(251, 248, 243, 0.96);
+    box-shadow: 0 24px 60px rgba(28, 26, 23, 0.10);
+  }
+
+  /* Padanan 1:1 dari blok @media (max-width: 480px) lama — hanya sistemnya yang pindah ke Tailwind. */
+  .auth-shell {
+    @apply max-xs:items-start max-xs:p-4;
+  }
+
+  .auth-card {
+    @apply max-xs:mt-4 max-xs:p-[1.375rem] max-xs:rounded-3xl;
+  }
+}
+
+.auth-label {
+  display: block;
+  color: #5A544C;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.auth-input-wrap {
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+  border: 1px solid #E4D9C6;
+  border-radius: 1rem;
+  background: #FBF8F3;
+  color: #141210;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.auth-input-wrap:focus-within {
+  border-color: #14523A;
+  background: #F7F2E9;
+  box-shadow: 0 0 0 4px rgba(20, 82, 58, 0.11);
+}
+
+.auth-input-wrap input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0.75rem 0.25rem;
+  color: #141210;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.auth-input-wrap input::placeholder {
+  color: #A8A199;
+}
+
+.auth-input-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  margin-left: 0.875rem;
+  color: #7C756C;
+}
+
+.auth-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0.875rem;
+  color: #7C756C;
+  transition: color 160ms ease;
+}
+
+.auth-icon-button:hover {
+  color: #2B2823;
+}
+
+.auth-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  color: #14523A;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: color 160ms ease;
+}
+
+.auth-link:hover {
+  color: #0E3D2C;
+  text-decoration: underline;
+}
+
+.auth-primary-button {
+  display: inline-flex;
+  width: 100%;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #14523A, #0E3D2C);
+  padding: 0.75rem 1rem;
+  color: #FBF8F3;
+  font-size: 0.875rem;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(20, 82, 58, 0.22);
+  transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+
+.auth-primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(20, 82, 58, 0.28);
+}
+
+.auth-primary-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.auth-primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.auth-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  border: 1px solid #fecdd3;
+  border-radius: 0.875rem;
+  background: #fff1f2;
+  padding: 0.75rem;
+  color: #be123c;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  animation: toastEnter 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, .35);
+  border-top-color: #fff;
+  border-radius: 999px;
+  animation: spin 700ms linear infinite;
+}
+
+.reader-empty-state {
+  width: min(100%, 42rem);
+  margin: 8rem auto;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.44);
+}
+
+@keyframes toastEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes androidSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%) scale(0.92);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(6px) scale(1.01);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-android-slide-down {
+  animation: androidSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ==========================================================
+   DYNAMIC DESIGN SYSTEM CLASSES (TERHUBUNG KE component.json)
+   Ubah nilai di component.json maka class di bawah otomatis berubah!
+   ========================================================== */
+
+/* 1. Tombol Dinamis */
+.app-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-brand-primary, #14523A);
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: var(--radius-btn, 14px);
+  height: var(--btn-height-md, 44px);
+  padding-left: var(--btn-px-md, 18px);
+  padding-right: var(--btn-px-md, 18px);
+  font-size: var(--btn-font-md, 13.5px);
+  transition: background-color var(--duration-fast, 140ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    transform var(--duration-fast, 140ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow var(--duration-fast, 140ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  box-shadow: 0 6px 18px -6px rgba(20, 82, 58, 0.45);
+}
+
+.app-btn-primary:hover {
+  background-color: var(--color-brand-primary-hover, #0E3D2C);
+  transform: translateY(-1px);
+}
+
+.app-btn-primary:active {
+  transform: translateY(0);
+}
+
+.app-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-brand-50, #F0F7F3);
+  color: var(--color-brand-800, #0E3D2C);
+  font-weight: 700;
+  border-radius: var(--radius-btn, 14px);
+  height: var(--btn-height-md, 44px);
+  padding-left: var(--btn-px-md, 18px);
+  padding-right: var(--btn-px-md, 18px);
+  font-size: var(--btn-font-md, 13.5px);
+  transition: all 0.2s ease;
+}
+
+.app-btn-secondary:hover {
+  background-color: var(--color-brand-100, #DCEDE4);
+}
+
+/* 2. Kartu Dinamis */
+.app-card {
+  background-color: var(--color-ui-card, #FFFDFA);
+  border-radius: var(--radius-card, 18px);
+  padding: var(--card-padding-md, 20px);
+  border: var(--card-border-width, 1px) solid var(--color-ui-border, #E4D9C6);
+  box-shadow: var(--shadow-sm, 0 2px 8px -2px rgba(28, 26, 23, 0.06), 0 1px 2px rgba(28, 26, 23, 0.04));
+}
+
+/* 3. Input Dinamis */
+.app-input {
+  width: 100%;
+  height: var(--input-height, 48px);
+  border-radius: var(--radius-input, 12px);
+  padding-left: var(--input-px, 16px);
+  padding-right: var(--input-px, 16px);
+  font-size: var(--input-font-size, 14px);
+  border: var(--input-border-width, 1px) solid var(--color-ui-border, #E4D9C6);
+  background-color: var(--color-ui-card, #FFFDFA);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-input:focus {
+  outline: none;
+  border-color: var(--color-brand-primary, #14523A);
+  box-shadow: 0 0 0 3px rgba(20, 82, 58, 0.14);
+}
+
+/* 4. Frame HP Dinamis */
+.app-device-frame {
+  max-width: var(--device-frame-max-width, 430px);
+  border-radius: var(--device-frame-radius, 32px);
+  border: var(--device-frame-border-width, 8px) solid var(--device-frame-border-color, #1D1B17);
+}

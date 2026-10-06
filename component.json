@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Buku Wahidiyah Design Tokens & Component System",
+  "version": "2.0.0",
+  "description": "Token desain Wahidiyah Book — arah 'editorial elegan': zamrud tua + krem hangat + emas. Setiap nilai di sini disuntikkan ke CSS variables oleh src/theme/themeInjector.js dan dipakai Tailwind, sehingga mengubah satu angka di sini langsung mengubah seluruh tampilan aplikasi.",
+  "direction": {
+    "name": "Editorial Elegan",
+    "tone": "Berwibawa, tenang, premium — seperti katalog perpustakaan cetak, bukan dashboard SaaS generik.",
+    "differentiation": "Kombinasi latar krem hangat + tipografi serif display + aksen emas tipis. Kontras dengan mayoritas aplikasi yang memakai putih dingin + sans-serif.",
+    "avoid": [
+      "Putih murni #FFFFFF sebagai latar utama",
+      "Hitam murni #000000 sebagai teks",
+      "Gradien ungu-biru / neon (ciri khas 'AI slop')",
+      "Glassmorphism berlebihan",
+      "Sudut membulat besar + bayangan generik di semua elemen"
+    ]
+  },
+  "colors": {
+    "brand": {
+      "50": "#F0F7F3",
+      "100": "#DCEDE4",
+      "200": "#B9DBC9",
+      "300": "#8CC2A5",
+      "400": "#5AA37E",
+      "500": "#348460",
+      "600": "#216B4C",
+      "700": "#14523A",
+      "800": "#0E3D2C",
+      "900": "#082D20"
+    },
+    "primary": "#14523A",
+    "primaryHover": "#0E3D2C",
+    "primaryLight": "#DCEDE4",
+    "gold": {
+      "50": "#FDF9EC",
+      "100": "#FAF0D3",
+      "200": "#F2DFA6",
+      "300": "#E5C877",
+      "400": "#D4AF4F",
+      "500": "#B8860B",
+      "600": "#96690A",
+      "700": "#735009",
+      "800": "#503807",
+      "900": "#2E2004"
+    },
+    "accent": {
+      "gold": "#B8860B",
+      "goldLight": "#FAF0D3",
+      "blue": "#1E5B8C",
+      "blueLight": "#DCEAF5",
+      "red": "#A62F26",
+      "redLight": "#F7E1DF"
+    },
+    "cream": {
+      "50": "#FBF8F3",
+      "100": "#F7F2E9",
+      "200": "#F0E8DA",
+      "300": "#E4D9C6",
+      "400": "#D2C2A8",
+      "500": "#B9A588"
+    },
+    "ink": {
+      "50": "#F6F5F3",
+      "100": "#E8E5E0",
+      "200": "#CFCAC2",
+      "300": "#A8A199",
+      "400": "#7C756C",
+      "500": "#5A544C",
+      "600": "#3F3B35",
+      "700": "#2B2823",
+      "800": "#1D1B17",
+      "900": "#141210"
+    },
+    "ui": {
+      "background": "#FBF8F3",
+      "surface": "#F7F2E9",
+      "card": "#FFFDFA",
+      "border": "#E4D9C6",
+      "textPrimary": "#1D1B17",
+      "textSecondary": "#5A544C",
+      "textMuted": "#7C756C"
+    },
+    "semantic": {
+      "success": "#216B4C",
+      "successLight": "#DCEDE4",
+      "warning": "#96690A",
+      "warningLight": "#FAF0D3",
+      "danger": "#A62F26",
+      "dangerLight": "#F7E1DF",
+      "info": "#1E5B8C",
+      "infoLight": "#DCEAF5"
+    }
+  },
+  "shapes": {
+    "borderRadius": {
+      "none": "0px",
+      "xs": "4px",
+      "sm": "8px",
+      "md": "10px",
+      "lg": "14px",
+      "xl": "18px",
+      "2xl": "22px",
+      "3xl": "28px",
+      "full": "9999px"
+    },
+    "componentRadius": {
+      "button": "14px",
+      "card": "18px",
+      "modal": "22px",
+      "input": "12px",
+      "badge": "9999px",
+      "deviceFrame": "32px"
+    },
+    "borderWidth": {
+      "hairline": "1px",
+      "emphasis": "1.5px"
+    }
+  },
+  "sizing": {
+    "icon": {
+      "xs": "14px",
+      "sm": "16px",
+      "md": "20px",
+      "lg": "24px",
+      "xl": "28px"
+    },
+    "avatar": {
+      "sm": "32px",
+      "md": "40px",
+      "lg": "56px"
+    },
+    "control": {
+      "heightSm": "34px",
+      "heightMd": "44px",
+      "heightLg": "52px"
+    },
+    "touchTarget": "44px"
+  },
+  "breakpoints": {
+    "xs": "480px"
+  },
+  "elevation": {
+    "none": "none",
+    "xs": "0 1px 2px rgba(28, 26, 23, 0.04)",
+    "sm": "0 2px 8px -2px rgba(28, 26, 23, 0.06), 0 1px 2px rgba(28, 26, 23, 0.04)",
+    "md": "0 8px 24px -6px rgba(28, 26, 23, 0.10), 0 2px 6px -2px rgba(28, 26, 23, 0.05)",
+    "lg": "0 18px 44px -12px rgba(28, 26, 23, 0.16), 0 4px 12px -4px rgba(28, 26, 23, 0.08)",
+    "xl": "0 32px 72px -20px rgba(28, 26, 23, 0.22)"
+  },
+  "motion": {
+    "durationFast": "140ms",
+    "durationBase": "200ms",
+    "durationSlow": "320ms",
+    "easeOut": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "easeInOut": "cubic-bezier(0.65, 0, 0.35, 1)"
+  },
+  "components": {
+    "button": {
+      "heightSm": "34px",
+      "heightMd": "44px",
+      "heightLg": "52px",
+      "paddingXSm": "12px",
+      "paddingXMd": "18px",
+      "paddingXLg": "24px",
+      "fontSizeSm": "12px",
+      "fontSizeMd": "13.5px",
+      "fontSizeLg": "15px",
+      "fontWeight": "700",
+      "radius": "14px"
+    },
+    "card": {
+      "paddingSm": "14px",
+      "paddingMd": "20px",
+      "paddingLg": "28px",
+      "radius": "18px",
+      "borderWidth": "1px",
+      "shadow": "0 2px 8px -2px rgba(28, 26, 23, 0.06), 0 1px 2px rgba(28, 26, 23, 0.04)"
+    },
+    "input": {
+      "height": "48px",
+      "paddingX": "14px",
+      "fontSize": "14px",
+      "radius": "12px",
+      "borderWidth": "1px"
+    },
+    "deviceFrame": {
+      "maxWidth": "430px",
+      "maxHeight": "932px",
+      "radius": "32px",
+      "borderWidth": "8px",
+      "borderColor": "#1D1B17"
+    },
+    "modal": {
+      "radius": "22px",
+      "padding": "24px",
+      "maxWidth": "440px"
+    },
+    "sidebar": {
+      "widthExpanded": "248px",
+      "widthCollapsed": "68px",
+      "background": "#141210",
+      "itemRadius": "10px"
+    }
+  },
+  "typography": {
+    "fontFamilySans": "'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
+    "fontFamilyDisplay": "'Fraunces', 'Newsreader', Georgia, Cambria, serif",
+    "fontFamilyArabic": "'Amiri', serif",
+    "scale": {
+      "displayLg": "1.875rem",
+      "displayMd": "1.75rem",
+      "displaySm": "1.625rem",
+      "display": "clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem)",
+      "h1": "clamp(1.375rem, 1.1rem + 1.1vw, 1.75rem)",
+      "title": "1.375rem",
+      "subtitle": "1.3125rem",
+      "h2": "1.125rem",
+      "h3": "1rem",
+      "lead": "0.9375rem",
+      "body": "0.875rem",
+      "buttonMd": "0.84375rem",
+      "small": "0.75rem",
+      "caption": "0.6875rem",
+      "micro": "0.625rem",
+      "overline": "0.5625rem"
+    },
+    "tracking": {
+      "display": "-0.02em",
+      "tight": "-0.01em",
+      "normal": "0",
+      "wide": "0.08em"
+    }
+  },
+  "layout": {
+    "contentNarrow": "32rem",
+    "contentDefault": "42rem",
+    "contentWide": "56rem",
+    "pagePaddingX": "1rem",
+    "sectionGap": "1.75rem"
+  }
+}

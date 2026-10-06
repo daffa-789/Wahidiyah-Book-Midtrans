@@ -1,0 +1,53 @@
+{
+  "css.lint.unknownAtRules": "ignore",
+  "typescript.tsserver.maxTsServerMemory": 3072,
+  "tailwindCSS.validate": true,
+  "tailwindCSS.lint.cssConflict": "ignore",
+  "tailwindCSS.lint.invalidApply": "ignore",
+  "tailwindCSS.includeLanguages": {
+    "javascript": "javascript",
+    "javascriptreact": "javascriptreact"
+  },
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "ngClass",
+    "class:list"
+  ],
+  "tailwindCSS.classFunctions": [
+    "cn",
+    "clsx",
+    "twMerge"
+  ],
+  "tailwindCSS.experimental.classRegex": [
+    ["(?:layout|typography|surfaces|controls|tone)\\.\\w+\\s*[:=]\\s*['\"`]([^'\"`]*)['\"`]"],
+    ["cn\\(([^)]*)\\)"],
+    ["[\"'`]([^\"'`]*)[\"'`]"]
+  ],
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "off",
+    "strings": "on"
+  },
+  "editor.suggestOnTriggerCharacters": true,
+  "editor.tabCompletion": "on",
+  "editor.wordBasedSuggestions": "matchingDocuments",
+  "editor.parameterHints.enabled": true,
+  "editor.acceptSuggestionOnEnter": "on",
+  "javascript.suggest.autoImports": true,
+  "javascript.suggest.completeFunctionCalls": true,
+  "javascript.suggest.includeAutomaticOptionalChainCompletions": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifierEnding": "minimal",
+  "javascript.preferences.quoteStyle": "single",
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "package.json": "package-lock.json, .nvmrc, jsconfig.json, .prettierrc*",
+    "vite.config.js": "tailwind.config.js, postcss.config.js, component.json",
+    ".env": ".env.*"
+  }
+}
