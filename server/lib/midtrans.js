@@ -55,12 +55,41 @@ const jakartaOrderTime = () => {
 };
 
 
+/**
+ * Midtrans mengembalikan QRIS dalam dua bentuk (hasil probe sandbox 6 Okt 2026):
+ *   1. `qr_string`  — payload EMVCo mentah, pilihan utama karena paling andal:
+ *                     tidak butuh request tambahan dan tidak bergantung pada
+ *                     URL gambar yang bisa berubah/diblokir.
+ *   2. `actions[]`  — URL gambar PNG (generate-qr-code-v2 diutamakan). Dipakai
+ *                     sebagai cadangan bila `qr_string` tidak ada.
+ *
+ * Catatan: Midtrans membungkus payload dalam struktur berbeda antara SDK
+ * (objek langsung) dan REST mentah (kadang `{ data: {...} }`), jadi kita
+ * cek dua tingkat.
+ */
+const unwrapChargePayload = (charge) => {
+  if (!charge || typeof charge !== 'object') return {};
+  if (charge.qr_string || Array.isArray(charge.actions)) return charge;
+  return charge.data && typeof charge.data === 'object' ? charge.data : charge;
+};
+
+
+export const extractQrString = (charge) => {
+  const payload = unwrapChargePayload(charge);
+  const raw = payload.qr_string;
+  return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
+};
+
+
 export const pickQrAction = (actions) => {
   const list = Array.isArray(actions) ? actions : [];
   const preferred = list.find((item) => item?.name === 'generate-qr-code-v2' && item?.url);
   if (preferred) return preferred;
   return list.find((item) => item?.name === 'generate-qr-code' && item?.url) || null;
 };
+
+
+export const extractQrAction = (charge) => pickQrAction(unwrapChargePayload(charge)?.actions);
 
 
 export async function createQrisCharge({

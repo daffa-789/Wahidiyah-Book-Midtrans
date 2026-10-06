@@ -9,7 +9,8 @@ import {
   Clock,
   ShieldCheck
 } from 'lucide-react';
-import { useApp } from '@context/AppContext';
+import { QRCodeSVG } from 'qrcode.react';
+import { useApp, isQrisPaymentMethod } from '@context/AppContext';
 import { useQrisPayment } from './useQrisPayment';
 import { layout, typography, surfaces, controls } from '@lib/styles';
 
@@ -32,8 +33,7 @@ export const PaymentConfirmScreen = () => {
   const [error, setError] = useState('');
   const timerRef = useRef(null);
 
-  const isQrisMethod = selectedPaymentMethod?.id === 'qris' ||
-                       selectedPaymentMethod?.name?.toLowerCase().includes('qris');
+  const isQrisMethod = isQrisPaymentMethod(selectedPaymentMethod);
 
   const handlePaymentSuccess = useCallback(async () => {
     try {
@@ -228,6 +228,15 @@ export const PaymentConfirmScreen = () => {
                     <span>Buat Ulang</span>
                   </button>
                 </div>
+              ) : qrTransaction?.qrString ? (
+                <QRCodeSVG
+                  value={qrTransaction.qrString}
+                  size={224}
+                  level="M"
+                  marginSize={0}
+                  className="w-56 h-56"
+                  title="Kode QRIS pembayaran"
+                />
               ) : qrTransaction?.qrImageUrl ? (
                 <img
                   src={qrTransaction.qrImageUrl}

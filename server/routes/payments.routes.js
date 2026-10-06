@@ -21,10 +21,11 @@ import { MIDTRANS_IS_PRODUCTION, MIDTRANS_PAYMENT_METHOD_LABEL, MIDTRANS_QRIS_EX
 import rateLimit from 'express-rate-limit';
 import {
   createQrisCharge,
+  extractQrAction,
+  extractQrString,
   fetchQrImage,
   getTransactionStatus,
   isMidtransConfigured,
-  pickQrAction,
   verifySignatureKey
 } from '../lib/midtrans.js';
 import { logger } from '../logger.js';
@@ -52,7 +53,7 @@ const qrImageRateLimiter = rateLimit({
 const FAILED_MIDTRANS_STATUSES = new Set(['expire', 'cancel', 'deny']);
 
 
-const TRANSACTION_COLUMNS = 'id, ref_no, user_id, plan_name, amount, admin_fee, total_paid, payment_method, status, verified_at, created_at, midtrans_transaction_id, midtrans_qr_url, expires_at';
+const TRANSACTION_COLUMNS = 'id, ref_no, user_id, plan_name, amount, admin_fee, total_paid, payment_method, status, verified_at, created_at, midtrans_transaction_id, midtrans_qr_url, midtrans_qr_string, expires_at';
 
 
 async function loadOwnTransaction(orderId, user) {
@@ -181,14 +182,16 @@ paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(async 
       .limit(1)
       .maybeSingle();
 
-    if (pendingTx?.midtrans_qr_url) {
+    const reusable = pendingTx && (pendingTx.midtrans_qr_string || pendingTx.midtrans_qr_url);
+    if (reusable) {
       return res.json({
         success: true,
         reused: true,
         orderId: pendingTx.id,
         refNo: pendingTx.ref_no,
-        qrImageUrl: `/api/payments/qris/${pendingTx.id}/qr.png`,
-        qrMidtransUrl: pendingTx.midtrans_qr_url,
+        qrString: pendingTx.midtrans_qr_string || null,
+        qrImageUrl: pendingTx.midtrans_qr_url ? `/api/payments/qris/${pendingTx.id}/qr.png` : null,
+        qrMidtransUrl: pendingTx.midtrans_qr_url || null,
         planName: pendingTx.plan_name,
         amount: pendingTx.amount,
         adminFee: pendingTx.admin_fee,
@@ -242,10 +245,12 @@ paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(async 
       throw chargeError;
     }
 
-    const qrAction = pickQrAction(charge?.actions);
-    if (!qrAction) {
+    const qrString = extractQrString(charge);
+    const qrAction = extractQrAction(charge);
+
+    if (!qrString && !qrAction) {
       await rejectTransaction(pendingRow, 'tanpa QR');
-      logger.error('MIDTRANS', 'Respons charge tidak berisi URL QR', { orderId });
+      logger.error('MIDTRANS', 'Respons charge tidak berisi qr_string maupun URL QR', { orderId });
       return res.status(502).json({
         success: false,
         message: 'Midtrans tidak mengembalikan kode QR. Coba beberapa saat lagi.'
@@ -256,20 +261,28 @@ paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(async 
       .from('transactions')
       .update({
         midtrans_transaction_id: charge?.transaction_id || null,
-        midtrans_qr_url: qrAction.url,
+        midtrans_qr_url: qrAction?.url || null,
+        midtrans_qr_string: qrString || null,
         expires_at: expiredAt
       })
       .eq('id', orderId);
 
-    logger.ok('MIDTRANS', 'Charge QRIS dibuat', { orderId, totalPaid, acquirer: charge?.acquirer });
+    logger.ok('MIDTRANS', 'Charge QRIS dibuat', {
+      orderId,
+      totalPaid,
+      acquirer: charge?.acquirer,
+      sumberQr: qrString ? 'qr_string' : 'image'
+    });
 
     res.status(201).json({
       success: true,
       orderId,
       refNo,
-      qrImageUrl: `/api/payments/qris/${orderId}/qr.png`,
-      
-      ...(MIDTRANS_IS_PRODUCTION ? {} : { qrMidtransUrl: qrAction.url }),
+      // Sumber utama: payload EMVCo → dirender jadi QR di sisi klien (SVG tajam, tanpa latensi).
+      qrString,
+      // Cadangan: endpoint gambar kita sendiri (proxy PNG dari Midtrans).
+      qrImageUrl: qrAction ? `/api/payments/qris/${orderId}/qr.png` : null,
+      ...(MIDTRANS_IS_PRODUCTION ? {} : { qrMidtransUrl: qrAction?.url || null }),
       planName: plan.name,
       amount,
       adminFee,
@@ -359,7 +372,10 @@ paymentsRouter.get('/qris/:orderId/qr.png', qrImageRateLimiter, requireAuth, wra
   }
 
   if (!transaction.midtrans_qr_url) {
-    return res.status(404).json({ success: false, message: 'Kode QR tidak tersedia untuk transaksi ini.' });
+    return res.status(404).json({
+      success: false,
+      message: 'Transaksi ini memakai payload QR (qr_string); tidak ada gambar dari Midtrans.'
+    });
   }
 
   try {

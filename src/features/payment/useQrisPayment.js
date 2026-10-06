@@ -55,8 +55,9 @@ export const useQrisPayment = ({
 
       setQrTransaction({
         orderId: data.orderId,
-        qrImageUrl: data.qrImageUrl,
-        qrMidtransUrl: data.qrMidtransUrl,
+        qrString: data.qrString || null,
+        qrImageUrl: data.qrImageUrl || null,
+        qrMidtransUrl: data.qrMidtransUrl || null,
         totalPaid: data.totalPaid,
         planName: data.planName,
         expiredAt: data.expiredAt

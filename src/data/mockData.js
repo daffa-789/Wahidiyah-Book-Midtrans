@@ -38,7 +38,7 @@ export const PAYMENT_METHODS = [
     options: [
       {
         id: "qris",
-        name: "QRIS (Semua Pembayaran)",
+        name: "QRIS Midtrans",
         icon: "wallet",
         logoUrl: "/payments/qris.svg",
         color: "#EA2127",

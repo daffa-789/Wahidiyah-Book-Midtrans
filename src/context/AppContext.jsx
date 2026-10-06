@@ -42,6 +42,18 @@ import {
 
 const AppContext = createContext(null);
 
+/**
+ * Satu-satunya tempat yang menentukan apakah sebuah metode pembayaran
+ * ditangani oleh Midtrans QRIS. Dipakai oleh completePayment() dan
+ * PaymentConfirmScreen agar keduanya tidak pernah berbeda pendapat.
+ */
+export const isQrisPaymentMethod = (method) => {
+  if (!method) return false;
+  const id = String(method.id || '').toLowerCase();
+  const name = String(method.name || '').toLowerCase();
+  return id.includes('qris') || id === 'midtrans' || name.includes('qris');
+};
+
 export const AppProvider = ({ children, initialScreen }) => {
   const [currentScreen, setCurrentScreen] = useState(() => initialScreen || getScreenFromPath());
   const [currentPath, setCurrentPath] = useState(() => {
@@ -678,24 +690,52 @@ export const AppProvider = ({ children, initialScreen }) => {
     const now = new Date();
     
     
+    
     const expiry = new Date(now);
     expiry.setMonth(expiry.getMonth() + 1);
     const periodStr = `${now.toLocaleDateString('id-ID')} – ${expiry.toLocaleDateString('id-ID')}`;
+    // refNo di sini hanya placeholder untuk tampilan di antara klik dan respons server.
+    // Angka definitif diambil dari payload.transaction.refNo di bawah.
     const refNo = `0000${Math.floor(10000000 + Math.random() * 90000000)}`;
-    const adminFee = 3000;
-    const totalPaid = Number(selectedPlan.price || 0) + adminFee;
 
     const result = {
       refNo,
       dateStr: `${now.toLocaleDateString('id-ID')}, ${now.toLocaleTimeString('id-ID')}`,
       periodStr,
       amount: selectedPlan.price,
-      adminFee,
-      totalPaid,
+      adminFee: null,
+      totalPaid: null,
       methodName: selectedPaymentMethod?.name || 'Bank Transfer',
       planName: selectedPlan.title
     };
     setLastPaymentResult(result);
+
+    // Bila QRIS Midtrans: server sudah membuat transaksi (charge) dan mengaktifkan
+    // langganan lewat webhook / polling status. Jadi JANGAN membuat transaksi kedua —
+    // cukup sinkronkan tampilan dengan status terkini dari server.
+    if (isQrisPaymentMethod(selectedPaymentMethod)) {
+      try {
+        const me = await apiJson('/api/auth/me', { headers: authHeaders(getStoredSession()?.token) });
+        if (me?.user) {
+          patchUser((current) => ({
+            ...normalizeUser({ ...current, ...me.user }),
+            isPro: Boolean(me.user.isPro)
+          }));
+        }
+        const subs = await refreshSubscriptions();
+        const latest = subs[0];
+        setLastPaymentResult((current) => ({
+          ...(current || {}),
+          refNo: latest?.ref || current?.refNo,
+          periodStr: latest?.period || current?.periodStr,
+          amount: latest?.price || current?.amount,
+          planName: latest?.planName || current?.planName
+        }));
+      } catch (error) {
+        console.warn('Gagal menyinkronkan status langganan setelah pembayaran QRIS:', error.message);
+      }
+      return;
+    }
 
     const stored = getStoredSession();
     if (stored?.token) {

@@ -17,10 +17,11 @@ PaymentConfirmScreen
 POST /api/payments/qris/charge        ──► server hitung harga dari SUBSCRIPTION_PLANS
   │                                        server charge ke Midtrans Core API (payment_type: qris)
   ▼                                        simpan transaksi status = pending
-Midtrans balas actions[]                simpan URL gambar QR + waktu kedaluwarsa
+Midtrans balas qr_string + actions[]   simpan payload QR + URL gambar cadangan + waktu kedaluwarsa
   │
   ▼
-<img src="/api/payments/qris/:orderId/qr.png">   ──► server proxy PNG dari Midtrans (Basic Auth)
+<QRCodeSVG value={qrString}>            ──► QR digambar di klien (SVG tajam, tanpa request gambar)
+  │                                        fallback: <img src="/api/payments/qris/:orderId/qr.png">
   │
   │  pengguna memindai QR / membayar lewat simulator sandbox
   ▼
@@ -44,7 +45,7 @@ server mengaktifkan membership Pro (activatePaidMembership) — SEKALI SAJA
 |---|---|---|---|
 | POST | `/api/payments/qris/charge` | JWT | Buat transaksi + charge QRIS |
 | GET | `/api/payments/qris/:orderId/status` | JWT | Cek status ke Midtrans, aktifkan Pro kalau lunas |
-| GET | `/api/payments/qris/:orderId/qr.png` | JWT | Proxy gambar QR (PNG) |
+| GET | `/api/payments/qris/:orderId/qr.png` | JWT | Proxy gambar QR (PNG) — cadangan bila `qrString` tidak ada |
 | POST | `/api/payments/midtrans/notification` | Signature SHA512 | Webhook Midtrans |
 
 Request `charge` hanya perlu `{ planId, phone }`. **Harga tidak pernah dikirim dari client** —
@@ -119,9 +120,20 @@ Kirim dua kali — respons harus tetap sukses dan masa aktif Pro **tidak bertamb
 
 ## 5. Catatan penting
 
-- **QR bukan `qr_string`.** Respon charge QRIS Midtrans hanya berisi `actions[]` berupa URL gambar
-  PNG (`generate-qr-code` tanpa border, `generate-qr-code-v2` dengan border ASPI).
-  Kode memilih `generate-qr-code-v2`, fallback ke `generate-qr-code`.
+- **QRIS punya `qr_string`.**
+  > Koreksi 6 Okt 2026 — hasil probe langsung ke akun sandbox (`Daffa Corp`, merchant `G860512974`)
+  > membuktikan respons charge QRIS **berisi `qr_string`** (payload EMVCo ±244 karakter),
+  > berbeda dari asumsi dokumentasi versi lama. Respons sekaligus berisi:
+  >
+  > - `qr_string` — payload EMVCo mentah (**dipakai sebagai sumber utama**)
+  > - `actions[]` — `generate-qr-code` (tanpa border) & `generate-qr-code-v2` (border ASPI) → **cadangan**
+  > - `transaction_id`, `order_id`, `transaction_status`, `expiry_time`
+  >
+  > Kode kini memilih `qr_string` lebih dulu: QR digambar di klien sebagai SVG (tajam, tanpa
+  > latensi jaringan, tidak bergantung pada URL gambar Midtrans). Bila `qr_string` tidak ada
+  > (mis. suatu saat berubah), kode otomatis jatuh ke `actions[]` → `/qr.png`.
+  > Respons charge juga dinormalkan lewat `unwrapChargePayload` karena Midtrans kadang
+  > membungkus payload dalam `{ data: {...} }` (REST mentah) versus objek langsung (SDK).
 - Masa berlaku QR default **15 menit** — sama dengan hitungan mundur di UI.
 - `orderId` dipakai ganda: sebagai primary key `transactions.id` sekaligus `order_id` Midtrans.
 - **Idempoten:** pembaruan memakai pola
@@ -137,7 +149,8 @@ Kirim dua kali — respons harus tetap sukses dan masa aktif Pro **tidak bertamb
 | Gejala | Kemungkinan |
 |---|---|
 | "Payment gateway Midtrans belum dikonfigurasi" (503) | `MIDTRANS_SERVER_KEY` / `MIDTRANS_CLIENT_KEY` masih kosong di `.env` |
-| "Midtrans tidak mengembalikan kode QR" (502) | Respons charge tidak berisi `actions[]` — cek log server |
+| "Midtrans tidak mengembalikan kode QR" (502) | Respons charge tidak berisi `qr_string` **maupun** `actions[]` — cek log server |
+| QR blank / `qrString` null | Migrasi SQL belum dijalankan sehingga kolom `midtrans_qr_string` tidak ada — jalankan `migration_midtrans_qris.sql` |
 | QR muncul tapi tidak pernah lunas | Pembayaran belum dilakukan di simulator sandbox, atau QR sudah kedaluwarsa |
 | Notifikasi ditolak 401 | `signature_key` salah — pastikan urutan `order_id + status_code + gross_amount + ServerKey` |
 | Notifikasi 400 | Nominal `gross_amount` tidak sama dengan `total_paid` yang tersimpan |
