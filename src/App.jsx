@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { useApp } from '@context/AppContext';
 import { DeviceFrame } from '@ui/DeviceFrame';
 import { InAppReminders } from '@ui/InAppReminders';
+import { PwaInstallBanner } from './components/PwaInstallBanner';
 
 
 import { LoginScreen } from '@features/auth/LoginScreen';
@@ -197,6 +198,7 @@ export function App() {
   return (
     <>
       <RouterBridge />
+      <PwaInstallBanner />
       <Suspense fallback={<ScreenLoading />}>
       <Routes>
         

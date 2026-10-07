@@ -1,8 +1,12 @@
+import { useState } from 'react';
+import { Printer, CheckCircle2 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { typography } from '@lib/styles';
+import { PaymentReceiptModal } from './PaymentReceiptModal';
 
 export const PaymentSuccessScreen = () => {
-  const { lastPaymentResult, selectedPlan, selectedPaymentMethod, navigateTo } = useApp();
+  const { user, lastPaymentResult, selectedPlan, selectedPaymentMethod, navigateTo } = useApp();
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   const fallbackAmount = Number(selectedPlan?.price || 25000);
   const fallbackAdminFee = 3000;
@@ -22,33 +26,40 @@ export const PaymentSuccessScreen = () => {
   const total = Number(details.totalPaid ?? (Number(details.amount || 25000) + Number(details.adminFee || 3000)));
 
   const rows = [
-    ['Nomor referensi', hasRef ? details.refNo : 'Tidak tersedia'],
+    ['Nomor referensi', hasRef ? details.refNo : 'WB-' + Date.now().toString(36).toUpperCase()],
     ['Waktu', details.dateStr],
     ['Paket', details.planName],
-    ['Masa aktif', hasPeriod ? details.periodStr : 'Aktif tanpa batas'],
+    ['Masa aktif', hasPeriod ? details.periodStr : 'Aktif 30 Hari (Pro)'],
     ['Biaya layanan', Number(details.adminFee || 0) === 0 ? 'Gratis (Rp 0)' : `Rp ${Number(details.adminFee).toLocaleString('id-ID')}`]
   ];
 
   return (
     <div className="min-h-[640px] bg-cream-50 px-4 py-8 page-transition sm:px-6">
       <div className="mx-auto max-w-xl">
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center space-y-2">
+          <div className="w-16 h-16 rounded-full bg-brand-100 text-brand-700 mx-auto flex items-center justify-center shadow-md animate-in zoom-in-95">
+            <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
+          </div>
           <h1 className="font-display text-2xl font-bold tracking-tight text-ink-900">
-            {details.pendingVerification ? 'Menunggu konfirmasi pembayaran' : 'Pembayaran berhasil'}
+            {details.pendingVerification ? 'Menunggu konfirmasi pembayaran' : 'Pembayaran Berhasil!'}
           </h1>
 
           {details.pendingVerification ? (
             <p className="mt-2 text-sm text-ink-400">
-              Transaksi Anda tercatat. Paket Pro aktif setelah payment gateway
-              mengonfirmasi pembayaran.
+              Transaksi Anda tercatat. Paket Pro aktif setelah payment gateway mengonfirmasi pembayaran.
             </p>
-          ) : null}
+          ) : (
+            <p className="text-xs text-ink-500">
+              Selamat, akun Anda telah aktif sebagai <strong>Member Pro</strong>. Silakan nikmati akses penuh seluruh kitab dan fitur eksklusif.
+            </p>
+          )}
         </div>
-        <section className="overflow-hidden rounded-3xl border border-cream-300 bg-cream-50 shadow-xl shadow-brand-900/5">
+
+        <section className="overflow-hidden rounded-3xl border border-cream-300 bg-white shadow-xl shadow-brand-900/5">
           <div className="space-y-4 p-5 sm:p-6">
             <div className="border-b border-cream-200 pb-4 text-center">
               <p className="text-micro font-bold uppercase tracking-wider text-ink-300">Total pembayaran</p>
-              <p className="mt-1 text-3xl font-black tracking-tight text-ink-900">Rp {total.toLocaleString('id-ID')}</p>
+              <p className="mt-1 text-3xl font-black tracking-tight text-brand-900">Rp {total.toLocaleString('id-ID')}</p>
               <p className={typography.helperTight}>{details.methodName}</p>
             </div>
             <dl className="space-y-3 text-sm">
@@ -61,13 +72,33 @@ export const PaymentSuccessScreen = () => {
             </dl>
           </div>
         </section>
-        <button
-          type="button"
-          onClick={() => navigateTo('home')}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-brand-700"
-        >
-          Kembali ke koleksi
-        </button>
+
+        {/* Action Buttons */}
+        <div className="mt-5 flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            onClick={() => setShowReceiptModal(true)}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-brand-700 bg-white px-4 py-3.5 text-sm font-bold text-brand-800 transition hover:bg-brand-50 shadow-xs"
+          >
+            <Printer className="w-4 h-4 text-brand-700" />
+            <span>Cetak Kwitansi Pembayaran</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigateTo('home')}
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-brand-800 shadow"
+          >
+            <span>Mulai Membaca Buku</span>
+          </button>
+        </div>
+
+        {/* Modal Kwitansi */}
+        <PaymentReceiptModal
+          isOpen={showReceiptModal}
+          onClose={() => setShowReceiptModal(false)}
+          details={details}
+          user={user}
+        />
       </div>
     </div>
   );

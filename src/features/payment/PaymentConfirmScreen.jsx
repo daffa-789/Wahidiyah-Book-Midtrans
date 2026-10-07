@@ -8,8 +8,10 @@ import {
   AlertCircle,
   Clock,
   PlayCircle,
-  ShieldCheck
+  ShieldCheck,
+  Download
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { useApp, isQrisPaymentMethod } from '@context/AppContext';
 import { useQrisPayment } from './useQrisPayment';
@@ -33,6 +35,62 @@ export const PaymentConfirmScreen = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const timerRef = useRef(null);
+  const qrContainerRef = useRef(null);
+
+  const handleDownloadQr = () => {
+    try {
+      if (!qrContainerRef.current) return;
+      const svg = qrContainerRef.current.querySelector('svg');
+      if (svg) {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const size = 320;
+        canvas.width = size;
+        canvas.height = size + 60;
+        
+        img.onload = () => {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          ctx.fillStyle = '#14523A';
+          ctx.font = 'bold 16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('QRIS — WAHIDIYAH BOOK', canvas.width / 2, 28);
+          
+          ctx.drawImage(img, (canvas.width - 240) / 2, 42, 240, 240);
+          
+          ctx.fillStyle = '#64748B';
+          ctx.font = '11px sans-serif';
+          ctx.fillText('Scan via DANA, BCA, GoPay, OVO, ShopeePay', canvas.width / 2, canvas.height - 12);
+          
+          const pngUrl = canvas.toDataURL('image/png');
+          const downloadLink = document.createElement('a');
+          downloadLink.href = pngUrl;
+          downloadLink.download = `QRIS-Wahidiyah-Book-${selectedPlan?.id || 'pro'}.png`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          toast.success('Gambar QRIS berhasil disimpan ke galeri! Buka DANA/BCA untuk scan.');
+        };
+        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+      } else if (qrTransaction?.qrImageUrl) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = qrTransaction.qrImageUrl;
+        downloadLink.download = 'QRIS-Wahidiyah-Book.png';
+        downloadLink.target = '_blank';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        toast.success('Kode QRIS berhasil diunduh!');
+      }
+    } catch (err) {
+      console.error('Gagal download QR:', err);
+      toast.error('Gagal menyimpan gambar QRIS');
+    }
+  };
 
   const isQrisMethod = isQrisPaymentMethod(selectedPaymentMethod);
 
@@ -193,7 +251,7 @@ export const PaymentConfirmScreen = () => {
               </div>
             )}
 
-            <div className="relative mx-auto w-64 h-64 bg-cream-50 p-4 rounded-3xl border-2 border-dashed border-cream-300 shadow-inner flex flex-col items-center justify-center">
+            <div ref={qrContainerRef} className="relative mx-auto w-64 h-64 bg-cream-50 p-4 rounded-3xl border-2 border-dashed border-cream-300 shadow-inner flex flex-col items-center justify-center">
               {isGeneratingQr ? (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
@@ -251,6 +309,15 @@ export const PaymentConfirmScreen = () => {
 
             {!isQrisPaid && !isExpired && !isGeneratingQr && qrTransaction && (
               <div className="pt-1 space-y-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadQr}
+                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Simpan QRIS ke Galeri (Buka di DANA/BCA)</span>
+                </button>
+
                 <button
                   type="button"
                   data-testid="qris-simulate-paid"
