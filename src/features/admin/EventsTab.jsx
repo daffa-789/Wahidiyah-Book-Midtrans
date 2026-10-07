@@ -28,27 +28,17 @@ import {
 } from '@lib/date';
 import { layout, typography, surfaces, controls } from '@lib/styles';
 
+const CATEGORY_DEFAULT_STYLE = {
+  badge: 'bg-brand-50 text-brand-800 border-brand-200',
+  dot: 'bg-brand-600',
+  border: 'border-brand-200'
+};
+
 const CATEGORY_STYLES = {
-  Mujahadah: {
-    badge: 'bg-brand-50 text-brand-800 border-brand-200',
-    dot: 'bg-brand-600',
-    border: 'border-brand-200'
-  },
-  Pengajian: {
-    badge: 'bg-sky-50 text-sky-800 border-sky-200',
-    dot: 'bg-sky-500',
-    border: 'border-sky-200'
-  },
-  Kubro: {
-    badge: 'bg-purple-50 text-purple-800 border-purple-200',
-    dot: 'bg-purple-500',
-    border: 'border-purple-200'
-  },
-  Peringatan: {
-    badge: 'bg-amber-50 text-amber-800 border-amber-200',
-    dot: 'bg-amber-500',
-    border: 'border-amber-200'
-  }
+  Mujahadah: CATEGORY_DEFAULT_STYLE,
+  Pengajian: CATEGORY_DEFAULT_STYLE,
+  Kubro: CATEGORY_DEFAULT_STYLE,
+  Peringatan: CATEGORY_DEFAULT_STYLE
 };
 
 export const EventsTab = ({
@@ -164,18 +154,18 @@ export const EventsTab = ({
                   <button
                     type="button"
                     onClick={handleExportEvents}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-white px-3.5 py-2 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                     title="Ekspor seluruh daftar agenda ke Excel"
                   >
-                    <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                    <FileSpreadsheet className="h-4 w-4 text-brand-700" />
                     Export Excel
                   </button>
                   <span className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-50 border border-brand-200 px-3.5 py-2 text-xs font-bold text-brand-800">
                     <CalendarCheck className={controls.iconBrand} />
                     {events.length} Agenda Terdaftar
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-2xl bg-gold-50 border border-gold-200 px-3.5 py-2 text-xs font-bold text-gold-800">
-                    <Images className="h-4 w-4 text-gold-600" />
+                  <span className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-50 border border-brand-200 px-3.5 py-2 text-xs font-bold text-brand-800">
+                    <Images className="h-4 w-4 text-brand-700" />
                     {events.filter((evt) => evt.showInCarousel).length} di Carousel
                   </span>
                 </div>
@@ -367,7 +357,7 @@ export const EventsTab = ({
                                   onClick={() => toggleEventCarousel(evt)}
                                   className={`p-2 rounded-xl border transition cursor-pointer ${
                                     evt.showInCarousel
-                                      ? 'border-gold-300 bg-gold-50 text-gold-700'
+                                      ? 'border-brand-300 bg-brand-50 text-brand-700'
                                       : 'border-cream-300 text-ink-400 hover:bg-cream-100'
                                   }`}
                                   title={evt.showInCarousel ? 'Keluarkan dari carousel' : 'Tampilkan di carousel'}
@@ -526,7 +516,7 @@ export const EventsTab = ({
                         />
                       </div>
 
-                      <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-cream-300 bg-white px-3 py-3">
+                      <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-cream-300 bg-cream-50 px-3 py-3">
                         <input
                           type="checkbox"
                           checked={Boolean(eventForm.show_in_carousel)}
@@ -535,7 +525,7 @@ export const EventsTab = ({
                         />
                         <span>
                           <span className="flex items-center gap-1.5 text-xs font-bold text-ink-800">
-                            <Images className="h-3.5 w-3.5 text-gold-600" />
+                            <Images className="h-3.5 w-3.5 text-brand-700" />
                             Tampilkan di Carousel
                           </span>
                           <span className="mt-0.5 block text-caption text-ink-400">

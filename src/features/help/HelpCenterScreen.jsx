@@ -23,16 +23,7 @@ export const HelpCenterScreen = () => {
           </div>
         </div>
 
-        <section className="mt-7">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <h2 className="text-sm font-extrabold text-ink-900">
-              Pertanyaan yang Sering Diajukan
-            </h2>
-            <span className="text-caption font-bold text-ink-300">
-              {FAQ_ITEMS.length} pertanyaan
-            </span>
-          </div>
-
+        <section className="mt-6">
           <div className="space-y-2.5">
             {FAQ_ITEMS.map((item, index) => {
               const isExpanded = expandedId === item.id;
@@ -87,8 +78,6 @@ export const HelpCenterScreen = () => {
         </section>
 
         <section className="mt-8">
-          <h2 className="text-sm font-extrabold text-ink-900 mb-3">Masih butuh bantuan?</h2>
-
           <div className="grid gap-3 sm:grid-cols-2">
 
             <div className="rounded-2xl border border-cream-300 bg-cream-50 p-5 shadow-sm">
@@ -123,9 +112,6 @@ export const HelpCenterScreen = () => {
         </section>
       </div>
 
-      <div className="pt-6 text-center text-caption text-ink-300">
-        Buku Wahidiyah — Pusat Bantuan
-      </div>
     </div>
   );
 };

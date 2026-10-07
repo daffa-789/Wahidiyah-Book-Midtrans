@@ -97,8 +97,8 @@ export const LogsTab = ({ sessionToken }) => {
               onClick={() => setFilterType('user')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                 filterType === 'user'
-                  ? 'bg-sky-600 text-white shadow-xs'
-                  : 'bg-sky-50 text-sky-700 hover:bg-sky-100'
+                  ? 'bg-ink-700 text-white shadow-xs'
+                  : 'bg-cream-100 text-ink-700 hover:bg-cream-200'
               }`}
             >
               Pendaftaran ({logs.filter(l => l.type === 'user').length})
@@ -149,8 +149,8 @@ export const LogsTab = ({ sessionToken }) => {
               <div key={idx} className="flex items-start gap-3.5 px-5 py-3.5 hover:bg-cream-100/70 transition">
                 <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border ${
                   log.type === 'subscription'
-                    ? 'bg-brand-50 text-brand-600 border-brand-200 shadow-xs'
-                    : 'bg-sky-50 text-sky-600 border-sky-200 shadow-xs'
+                    ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-xs'
+                    : 'bg-cream-100 text-ink-700 border-cream-300 shadow-xs'
                 }`}>
                   {log.type === 'subscription' ? <CreditCard className="h-4 w-4" /> : <User className="h-4 w-4" />}
                 </div>
@@ -158,7 +158,7 @@ export const LogsTab = ({ sessionToken }) => {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-bold text-ink-800">{log.action}</p>
                     <span className={`text-micro font-bold px-1.5 py-0.2 rounded ${
-                      log.type === 'subscription' ? 'bg-brand-100 text-brand-800' : 'bg-sky-100 text-sky-800'
+                      log.type === 'subscription' ? 'bg-brand-100 text-brand-800' : 'bg-cream-200 text-ink-700'
                     }`}>
                       {log.type === 'subscription' ? 'Keuangan' : 'Akun'}
                     </span>

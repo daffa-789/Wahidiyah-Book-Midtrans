@@ -6,10 +6,6 @@ export const AboutScreen = () => {
     <div className="min-h-[700px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
       <div className={layout.contentCenter}>
 
-        <div className="mb-6">
-          <h2 className="font-display text-h2 font-bold text-ink-900">Tentang</h2>
-        </div>
-
         <div className="text-center my-4">
           <div className="w-20 h-20 bg-gradient-to-tr from-brand-800 to-brand-900 rounded-3xl mx-auto flex items-center justify-center text-white shadow-lg shadow-brand-700/20 mb-3">
             <BookOpen className="w-10 h-10 stroke-[2]" />
@@ -56,9 +52,6 @@ export const AboutScreen = () => {
         </div>
       </div>
 
-      <div className="pt-6 text-center text-caption text-ink-500">
-        Dikembangkan untuk Skripsi & Publikasi Ilmiah © 2024
-      </div>
     </div>
   );
 };

@@ -209,7 +209,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
       </div>
 
       {carouselReady === false && (
-        <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div role="alert" className="rounded-2xl border border-cream-300 bg-cream-100 px-4 py-3 text-sm text-ink-800">
           Tabel <code className="font-mono">carousel_slides</code> belum ada di basis data. Jalankan
           <code className="font-mono"> supabase_database/full_setup.sql </code>
           di SQL Editor Supabase, lalu muat ulang halaman ini.
@@ -253,13 +253,13 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                     <h3 className="font-bold text-ink-900">{slide.title}</h3>
                     <span className={`rounded-full px-2 py-0.5 text-micro font-bold ${
                       isCurrentlyShowing(slide)
-                        ? 'bg-emerald-50 text-emerald-700'
+                        ? 'bg-brand-50 text-brand-700 border border-brand-200'
                         : 'bg-cream-200 text-ink-500'
                     }`}>
                       {isCurrentlyShowing(slide) ? 'Tayang' : 'Tidak tayang'}
                     </span>
                     {slide.eventId && (
-                      <span className="rounded-full bg-sky-50 px-2 py-0.5 text-micro font-bold text-sky-700">
+                      <span className="rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 text-micro font-bold text-brand-700">
                         Dari agenda
                       </span>
                     )}
@@ -299,8 +299,8 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                     disabled={busyId === slide.id}
                     className={`rounded-xl border px-2.5 py-1.5 text-xs font-bold transition disabled:opacity-50 ${
                       slide.isActive
-                        ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
-                        : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                        ? 'border-cream-300 text-ink-600 hover:bg-cream-100'
+                        : 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100'
                     }`}
                   >
                     {slide.isActive ? 'Nonaktifkan' : 'Aktifkan'}
@@ -334,7 +334,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                       type="file"
                       accept="image/png,image/jpeg,image/webp,image/avif"
                       onChange={(e) => uploadImage(slide.id, e.target.files?.[0])}
-                      className="w-full rounded-xl border border-cream-300 bg-white px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-xs file:font-bold file:text-brand-700"
+                      className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-xs file:font-bold file:text-brand-700"
                     />
                     <p className="mt-1 text-caption text-ink-400">PNG/JPEG/WebP, maksimal 8 MB. Otomatis dikompres ke WebP 1600 px.</p>
                   </div>
@@ -421,7 +421,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                 ref={imageInputRef}
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/avif"
-                className="w-full rounded-xl border border-cream-300 bg-white px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-xs file:font-bold file:text-brand-700"
+                className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-xs file:font-bold file:text-brand-700"
               />
             </div>
           )}

@@ -22,10 +22,10 @@
   --color-ui-text-secondary: #5A554E;
   --color-ui-text-muted: #7C766E;
 
-  --radius-btn: 14px;
-  --radius-card: 18px;
-  --radius-input: 12px;
-  --radius-modal: 22px;
+  --radius-btn: 8px;
+  --radius-card: 10px;
+  --radius-input: 8px;
+  --radius-modal: 12px;
 
   --sidebar-w-expanded: 248px;
   --sidebar-w-collapsed: 68px;
@@ -86,7 +86,7 @@ body,
 
 ::-webkit-scrollbar-thumb {
   background: #D2C2A8;
-  border-radius: 9999px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -104,7 +104,7 @@ body,
 
 .thin-scrollbar::-webkit-scrollbar-thumb {
   background: #2C2925;
-  border-radius: 9999px;
+  border-radius: 2px;
 }
 
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -177,7 +177,7 @@ body,
 
   .auth-card {
     border: 1px solid rgba(228, 217, 198, 0.9);
-    border-radius: 1.75rem;
+    border-radius: 12px;
     padding: 1.75rem;
     background: rgba(251, 248, 243, 0.96);
     box-shadow: 0 24px 60px rgba(28, 26, 23, 0.10);
@@ -189,7 +189,7 @@ body,
   }
 
   .auth-card {
-    @apply max-xs:mt-4 max-xs:p-[1.375rem] max-xs:rounded-3xl;
+    @apply max-xs:mt-4 max-xs:p-[1.375rem] max-xs:rounded-xl;
   }
 }
 
@@ -205,7 +205,7 @@ body,
   align-items: center;
   min-height: 3rem;
   border: 1px solid #E4D9C6;
-  border-radius: 1rem;
+  border-radius: 8px;
   background: #FBF8F3;
   color: #141210;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
@@ -276,7 +276,7 @@ body,
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 1rem;
+  border-radius: 8px;
   background: linear-gradient(135deg, #14523A, #0E3D2C);
   padding: 0.75rem 1rem;
   color: #FBF8F3;
@@ -305,7 +305,7 @@ body,
   align-items: flex-start;
   gap: 0.5rem;
   border: 1px solid #fecdd3;
-  border-radius: 0.875rem;
+  border-radius: 6px;
   background: #fff1f2;
   padding: 0.75rem;
   color: #be123c;
@@ -328,7 +328,7 @@ body,
   width: min(100%, 42rem);
   margin: 8rem auto;
   border: 1px dashed rgba(148, 163, 184, 0.45);
-  border-radius: 1.5rem;
+  border-radius: 10px;
   padding: 2rem;
   text-align: center;
   color: #cbd5e1;

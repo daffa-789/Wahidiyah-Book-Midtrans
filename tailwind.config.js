@@ -14,6 +14,24 @@ const controlHeights = {
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
+    borderRadius: {
+      none: '0px',
+      xs: '3px',
+      sm: '4px',
+      DEFAULT: '6px',
+      md: '6px',
+      lg: '8px',
+      xl: '8px',
+      '2xl': '10px',
+      '3xl': '12px',
+      full: '9999px',
+      btn: tokens.shapes.componentRadius.button,
+      card: tokens.shapes.componentRadius.card,
+      modal: tokens.shapes.componentRadius.modal,
+      input: tokens.shapes.componentRadius.input,
+      badge: tokens.shapes.componentRadius.badge,
+      frame: tokens.shapes.componentRadius.deviceFrame,
+    },
     extend: {
       screens: { ...tokens.breakpoints },
       colors: {
@@ -37,15 +55,6 @@ export default {
       },
       fontSize: { ...tokens.typography.scale },
       letterSpacing: { ...tokens.typography.tracking },
-      borderRadius: {
-        ...tokens.shapes.borderRadius,
-        btn: tokens.shapes.componentRadius.button,
-        card: tokens.shapes.componentRadius.card,
-        modal: tokens.shapes.componentRadius.modal,
-        input: tokens.shapes.componentRadius.input,
-        badge: tokens.shapes.componentRadius.badge,
-        frame: tokens.shapes.componentRadius.deviceFrame,
-      },
       borderWidth: { ...tokens.shapes.borderWidth },
       boxShadow: { ...tokens.elevation },
       transitionTimingFunction: {

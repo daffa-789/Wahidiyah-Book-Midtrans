@@ -27,14 +27,6 @@ export const ProScreen = () => {
     <div className="min-h-[700px] flex flex-col bg-cream-50 page-transition pb-8">
       <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        <div className="max-w-2xl">
-          <h1 className="font-display text-displaySm sm:text-displayLg font-bold leading-tight text-ink-900 tracking-tight">
-            Pro
-          </h1>
-          <p className={typography.helperMuted}>
-            Buka seluruh koleksi kitab eksklusif Wahidiyah.
-          </p>
-        </div>
 
         <div className="flex justify-center max-w-lg mx-auto items-stretch">
 

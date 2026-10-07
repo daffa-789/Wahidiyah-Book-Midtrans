@@ -24,12 +24,9 @@ export const SubscriptionHistoryScreen = () => {
     <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
       <div className={layout.contentCenter}>
 
-        <div className="mb-6">
-          <h1 className={typography.subTitle}>Riwayat Langganan</h1>
-        </div>
 
         {subscriptions.length === 0 ? (
-          <div className="py-12 px-4 text-center bg-cream-100/70 rounded-3xl border border-dashed border-cream-300 space-y-3">
+          <div className="py-12 px-4 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-brand-100 text-brand-700 mx-auto flex items-center justify-center">
               <CreditCard className="w-6 h-6" />
             </div>
@@ -40,7 +37,7 @@ export const SubscriptionHistoryScreen = () => {
             <button
               type="button"
               onClick={() => navigateTo('pro')}
-              className="inline-flex items-center justify-center gap-1.5 min-h-11 px-4 py-2 bg-brand-700 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="inline-flex items-center justify-center gap-1.5 min-h-11 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold rounded-xl shadow-sm transition mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Lihat Paket Pro</span>

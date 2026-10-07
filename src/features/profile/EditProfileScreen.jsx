@@ -113,14 +113,6 @@ export const EditProfileScreen = () => {
   return (
     <div className="min-h-[640px] flex flex-col px-4 sm:px-6 py-8 bg-cream-50 page-transition">
 
-      <div className="w-full max-w-content mx-auto mb-7">
-        <h1 className="font-display text-title font-bold leading-tight text-ink-900">
-          Profil Saya
-        </h1>
-        <p className="mt-0.5 text-xs text-ink-500">
-          Kelola identitas akun Anda
-        </p>
-      </div>
 
       <div className="mx-auto w-full max-w-content-narrow">
 

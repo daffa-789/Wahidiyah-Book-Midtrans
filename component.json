@@ -32,36 +32,21 @@
     "primaryHover": "#0E3D2C",
     "primaryLight": "#DCEDE4",
     "gold": {
-      "50": "#FDF9EC",
-      "100": "#FAF0D3",
-      "200": "#F2DFA6",
       "300": "#E5C877",
       "400": "#D4AF4F",
-      "500": "#B8860B",
-      "600": "#96690A",
-      "700": "#735009",
-      "800": "#503807",
-      "900": "#2E2004"
+      "500": "#B8860B"
     },
     "accent": {
-      "gold": "#B8860B",
-      "goldLight": "#FAF0D3",
-      "blue": "#1E5B8C",
-      "blueLight": "#DCEAF5",
-      "red": "#A62F26",
-      "redLight": "#F7E1DF"
+      "gold": "#B8860B"
     },
     "cream": {
       "50": "#FBF8F3",
       "100": "#F7F2E9",
       "200": "#F0E8DA",
       "300": "#E4D9C6",
-      "400": "#D2C2A8",
-      "500": "#B9A588"
+      "400": "#D2C2A8"
     },
     "ink": {
-      "50": "#F6F5F3",
-      "100": "#E8E5E0",
       "200": "#CFCAC2",
       "300": "#A8A199",
       "400": "#7C756C",
@@ -94,22 +79,22 @@
   "shapes": {
     "borderRadius": {
       "none": "0px",
-      "xs": "4px",
-      "sm": "8px",
-      "md": "10px",
-      "lg": "14px",
-      "xl": "18px",
-      "2xl": "22px",
-      "3xl": "28px",
+      "xs": "3px",
+      "sm": "4px",
+      "md": "6px",
+      "lg": "8px",
+      "xl": "10px",
+      "2xl": "12px",
+      "3xl": "14px",
       "full": "9999px"
     },
     "componentRadius": {
-      "button": "14px",
-      "card": "18px",
-      "modal": "22px",
-      "input": "12px",
-      "badge": "9999px",
-      "deviceFrame": "32px"
+      "button": "8px",
+      "card": "10px",
+      "modal": "12px",
+      "input": "8px",
+      "badge": "6px",
+      "deviceFrame": "16px"
     },
     "borderWidth": {
       "hairline": "1px",
@@ -166,13 +151,13 @@
       "fontSizeMd": "13.5px",
       "fontSizeLg": "15px",
       "fontWeight": "700",
-      "radius": "14px"
+      "radius": "8px"
     },
     "card": {
       "paddingSm": "14px",
       "paddingMd": "20px",
       "paddingLg": "28px",
-      "radius": "18px",
+      "radius": "10px",
       "borderWidth": "1px",
       "shadow": "0 2px 8px -2px rgba(28, 26, 23, 0.06), 0 1px 2px rgba(28, 26, 23, 0.04)"
     },
@@ -180,18 +165,18 @@
       "height": "48px",
       "paddingX": "14px",
       "fontSize": "14px",
-      "radius": "12px",
+      "radius": "8px",
       "borderWidth": "1px"
     },
     "deviceFrame": {
       "maxWidth": "430px",
       "maxHeight": "932px",
-      "radius": "32px",
+      "radius": "16px",
       "borderWidth": "8px",
       "borderColor": "#1D1B17"
     },
     "modal": {
-      "radius": "22px",
+      "radius": "12px",
       "padding": "24px",
       "maxWidth": "440px"
     },
@@ -199,7 +184,7 @@
       "widthExpanded": "248px",
       "widthCollapsed": "68px",
       "background": "#141210",
-      "itemRadius": "10px"
+      "itemRadius": "6px"
     }
   },
   "typography": {

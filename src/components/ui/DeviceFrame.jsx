@@ -28,7 +28,6 @@ import { layout } from '@lib/styles';
 const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
   const Icon = item.icon;
   const isDanger = Boolean(item.danger);
-  const isAdminAccent = item.accent === 'admin';
 
   if (isCollapsed) {
     return (
@@ -40,13 +39,9 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         aria-current={item.isActive ? 'page' : undefined}
         className={`relative h-11 w-11 rounded-xl flex items-center justify-center transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
           ? 'focus-visible:ring-rose-400'
-          : isAdminAccent
-            ? 'focus-visible:ring-gold-500'
-            : 'focus-visible:ring-brand-500'
+          : 'focus-visible:ring-brand-500'
           } ${item.isActive
-            ? isAdminAccent
-              ? 'bg-gold-400/20 text-gold-100'
-              : 'bg-brand-700 text-cream-50'
+            ? 'bg-brand-700 text-cream-50 shadow-sm'
             : 'text-ink-400 hover:text-cream-50 hover:bg-cream-50/5'
           }`}
       >
@@ -62,25 +57,20 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
       aria-current={item.isActive ? 'page' : undefined}
       className={`group relative w-full h-11 flex items-center gap-3 pl-3 pr-3 rounded-xl transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
         ? 'focus-visible:ring-rose-400'
-        : isAdminAccent
-          ? 'focus-visible:ring-gold-500'
-          : 'focus-visible:ring-brand-500'
+        : 'focus-visible:ring-brand-500'
         } ${item.isActive
-          ? isAdminAccent
-            ? 'bg-gold-400/15 text-gold-100'
-            : 'bg-brand-700 text-cream-50'
+          ? 'bg-brand-700 text-cream-50 shadow-sm'
           : 'text-ink-300 hover:text-cream-50 hover:bg-cream-50/5'
         }`}
     >
-
       <span
         aria-hidden="true"
-        className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full transition-all duration-200 ${item.isActive ? 'h-5 bg-gold-400' : 'h-0 bg-transparent'
+        className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full transition-all duration-200 ${item.isActive ? 'h-5 bg-brand-400' : 'h-0 bg-transparent'
           }`}
       />
       <Icon
         className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${item.isActive
-          ? 'text-gold-300'
+          ? 'text-cream-50'
           : isDanger
             ? 'text-rose-300/70 group-hover:text-rose-200'
             : 'text-ink-400 group-hover:text-cream-100'
@@ -216,10 +206,7 @@ const SidebarContent = React.memo(({
             onClick={() => onNavClick(isAdminNav ? 'admin-dashboard' : 'home')}
             title={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
             aria-label={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
-            className={`flex h-10 w-10 items-center justify-center rounded-xl text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isAdminNav
-              ? 'bg-gold-600 hover:bg-gold-500 focus-visible:ring-gold-400'
-              : 'bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500'
-              }`}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500"
           >
             {isAdminNav
               ? <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.9} />
@@ -254,8 +241,7 @@ const SidebarContent = React.memo(({
           className="flex min-h-9 min-w-0 select-none items-center gap-2 text-left transition-colors duration-200 hover:opacity-80 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
         >
           <span
-            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-cream-50 ${isAdminNav ? 'bg-gold-600' : 'bg-brand-700'
-              }`}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-cream-50 bg-brand-700"
           >
             {isAdminNav
               ? <ShieldCheck className="h-[15px] w-[15px]" strokeWidth={2} />
@@ -266,7 +252,7 @@ const SidebarContent = React.memo(({
               <span className="truncate font-display text-body font-bold leading-tight tracking-tight text-cream-50">
                 Wahidiyah Book
               </span>
-              <span className="mt-0.5 self-start rounded border border-gold-400/30 bg-gold-400/10 px-1.5 py-px text-overline font-bold uppercase tracking-[0.14em] text-gold-200">
+              <span className="mt-0.5 self-start rounded border border-brand-400/30 bg-brand-400/15 px-1.5 py-px text-overline font-bold uppercase tracking-[0.14em] text-brand-200">
                 Panel Admin
               </span>
             </span>
@@ -387,7 +373,6 @@ const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, onOpenMen
       {items.map((item) => {
         const Icon = item.icon;
         const isActive = item.isActive;
-        const isAdminAccent = isAdmin;
 
         return (
           <button
@@ -401,15 +386,9 @@ const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, onOpenMen
               }
             }}
             aria-current={isActive ? 'page' : undefined}
-            className={`group relative flex flex-1 flex-col items-center justify-center min-h-[50px] py-1 px-1 rounded-2xl transition-all duration-200 cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 ${
-              isAdminAccent
-                ? 'focus-visible:ring-gold-500'
-                : 'focus-visible:ring-brand-500'
-            } ${
+            className={`group relative flex flex-1 flex-col items-center justify-center min-h-[50px] py-1 px-1 rounded-2xl transition-all duration-200 cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
               isActive
-                ? isAdminAccent
-                  ? 'text-gold-900 bg-gold-400/20 font-bold'
-                  : 'text-brand-900 bg-brand-100/70 font-bold'
+                ? 'text-brand-900 bg-brand-100/70 font-bold'
                 : 'text-ink-400 hover:text-ink-700 font-medium'
             }`}
           >
@@ -418,20 +397,14 @@ const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, onOpenMen
                 className={`h-5 w-5 transition-transform duration-200 ${
                   isActive ? 'scale-110' : 'group-hover:scale-105'
                 } ${
-                  isActive
-                    ? isAdminAccent
-                      ? 'text-gold-700'
-                      : 'text-brand-700'
-                    : 'text-ink-400'
+                  isActive ? 'text-brand-700' : 'text-ink-400'
                 }`}
                 strokeWidth={isActive ? 2.3 : 1.8}
               />
               {isActive && (
                 <span
                   aria-hidden="true"
-                  className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full ${
-                    isAdminAccent ? 'bg-gold-600' : 'bg-brand-700'
-                  }`}
+                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand-700"
                 />
               )}
             </div>
@@ -522,8 +495,7 @@ const DeviceFrameBase = ({ children }) => {
             className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
           >
             <span
-              className={`flex h-8 w-8 items-center justify-center rounded-xl text-cream-50 ${isAdmin ? 'bg-gold-600' : 'bg-brand-700'
-                }`}
+              className="flex h-8 w-8 items-center justify-center rounded-xl text-cream-50 bg-brand-700"
             >
               {isAdmin
                 ? <ShieldCheck className="h-4 w-4" strokeWidth={2} />

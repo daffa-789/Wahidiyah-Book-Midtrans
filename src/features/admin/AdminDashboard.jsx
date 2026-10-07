@@ -18,11 +18,7 @@ import {
   ShieldCheck,
   Trash2,
   UserCog,
-  Users,
-  LayoutDashboard,
-  CalendarDays,
-  Images,
-  Activity
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
@@ -45,15 +41,6 @@ import { BookModal } from './BookModal';
 import { layout, typography, surfaces, controls } from '@lib/styles';
 
 const isValidTabSlug = (slug) => slug === undefined || ADMIN_TAB_SLUGS.has(slug);
-
-const ADMIN_TABS = [
-  { id: 'overview', label: 'Ringkasan', icon: LayoutDashboard },
-  { id: 'books', label: 'Koleksi', icon: BookOpen },
-  { id: 'users', label: 'Pengguna', icon: Users },
-  { id: 'events', label: 'Agenda', icon: CalendarDays },
-  { id: 'carousel', label: 'Carousel', icon: Images },
-  { id: 'logs', label: 'Log', icon: Activity }
-];
 
 const EMPTY_BOOK_FORM = {
   title: '',
@@ -175,7 +162,7 @@ export const AdminDashboard = () => {
     const regular = Math.max(users.length - pro, 0);
     return [
       { name: 'Pro', value: pro, color: '#14523A' },
-      { name: 'Reguler', value: regular, color: '#D4AF4F' }
+      { name: 'Reguler', value: regular, color: '#B9DBC9' }
     ].filter((item) => item.value > 0);
   }, [users]);
 
@@ -366,10 +353,10 @@ export const AdminDashboard = () => {
   };
 
   const kpis = [
-    { label: 'Total pengguna', value: stats?.totalUsers ?? 0, icon: Users, tone: 'text-sky-600 bg-sky-50 border-sky-100' },
-    { label: 'Koleksi aktif', value: stats?.totalBooks ?? books.length, icon: BookOpen, tone: 'text-brand-600 bg-brand-50 border-brand-100' },
-    { label: 'Langganan aktif', value: stats?.activeSubscriptions ?? 0, icon: ShieldCheck, tone: 'text-violet-600 bg-violet-50 border-violet-100' },
-    { label: 'Pendapatan tervalidasi', value: formatCurrency(stats?.totalRevenue), icon: CheckCircle2, tone: 'text-amber-600 bg-amber-50 border-amber-100' }
+    { label: 'Total pengguna', value: stats?.totalUsers ?? 0, icon: Users, tone: 'text-ink-700 bg-cream-100 border-cream-200' },
+    { label: 'Koleksi aktif', value: stats?.totalBooks ?? books.length, icon: BookOpen, tone: 'text-brand-700 bg-brand-50 border-brand-200' },
+    { label: 'Langganan aktif', value: stats?.activeSubscriptions ?? 0, icon: ShieldCheck, tone: 'text-brand-700 bg-brand-50 border-brand-200' },
+    { label: 'Pendapatan tervalidasi', value: formatCurrency(stats?.totalRevenue), icon: CheckCircle2, tone: 'text-brand-800 bg-brand-100/70 border-brand-300' }
   ];
 
   if (!isValidTabSlug(tabParam)) {
@@ -377,48 +364,9 @@ export const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cream-100 text-ink-900">
+    <div className="min-h-screen bg-cream-50 text-ink-900">
 
       <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
-
-        {/* Quick Horizontal Tab Switcher on Mobile & Desktop */}
-        <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            {ADMIN_TABS.map((tab) => {
-              const isActive = activeTab === tab.id;
-              const Icon = tab.icon;
-              let badge = null;
-              if (tab.id === 'books') badge = books.length;
-              if (tab.id === 'users') badge = users.length;
-              if (tab.id === 'events') badge = events.length;
-
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => navigateTo('admin-dashboard', { adminTab: tab.id })}
-                  className={`group flex items-center gap-2 shrink-0 rounded-2xl px-3.5 py-2.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
-                    isActive
-                      ? 'bg-brand-700 text-white shadow-sm shadow-brand-900/20'
-                      : 'bg-white border border-cream-300/80 text-ink-600 hover:bg-cream-100 hover:text-ink-900'
-                  }`}
-                >
-                  <Icon className={`h-4 w-4 transition-colors ${isActive ? 'text-white' : 'text-ink-400 group-hover:text-ink-700'}`} />
-                  <span>{tab.label}</span>
-                  {badge !== null && (
-                    <span
-                      className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-cream-200 text-ink-600'
-                      }`}
-                    >
-                      {badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
           {error && (
             <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
@@ -440,10 +388,10 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleExportTransactions}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-white px-3.5 py-2.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                     title="Ekspor seluruh riwayat transaksi & keuangan ke Excel"
                   >
-                    <FileDown className="h-4 w-4 text-emerald-600" />
+                    <FileDown className="h-4 w-4 text-brand-700" />
                     Export Transaksi ({transactions.length})
                   </button>
                   <button
@@ -452,7 +400,7 @@ export const AdminDashboard = () => {
                     className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-brand-800"
                     title="Ekspor buku kerja lengkap (Semua sheet: KPI, Transaksi, Pengguna, Buku, Agenda)"
                   >
-                    <FileSpreadsheet className="h-4 w-4 text-amber-300" />
+                    <FileSpreadsheet className="h-4 w-4 text-brand-100" />
                     Export Laporan Lengkap (.xlsx)
                   </button>
                 </div>
@@ -494,21 +442,21 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleExportTransactions}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-white px-3 py-1.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-50 px-3 py-1.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                   >
-                    <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-brand-700" />
                     Unduh Excel
                   </button>
                 </div>
                 {/* Mobile Transaction Cards (< sm) */}
                 <div className="space-y-2.5 sm:hidden">
                   {transactions.slice(0, 10).map((tx) => (
-                    <div key={tx.id || tx.refNo} className="rounded-2xl border border-cream-200 bg-white p-3.5 shadow-sm space-y-2">
+                    <div key={tx.id || tx.refNo} className="rounded-2xl border border-cream-200 bg-cream-50 p-3.5 shadow-sm space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-mono text-xs font-bold text-ink-700">{tx.refNo}</span>
                         <span className={`inline-flex rounded-full px-2 py-0.5 text-micro font-bold ${
                           tx.status === 'success'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            ? 'bg-brand-50 text-brand-700 border border-brand-200'
                             : tx.status === 'pending'
                             ? 'bg-amber-50 text-amber-700 border border-amber-200'
                             : 'bg-rose-50 text-rose-700 border border-rose-200'
@@ -564,7 +512,7 @@ export const AdminDashboard = () => {
                           <td className="px-3.5 py-2.5">
                             <span className={`inline-flex rounded-full px-2 py-0.5 text-micro font-bold ${
                               tx.status === 'success'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                ? 'bg-brand-50 text-brand-700 border border-brand-200'
                                 : tx.status === 'pending'
                                 ? 'bg-amber-50 text-amber-700 border border-amber-200'
                                 : 'bg-rose-50 text-rose-700 border border-rose-200'
@@ -600,10 +548,10 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleExportBooks}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-white px-3.5 py-3 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-3 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                     title="Ekspor daftar koleksi buku ke Excel"
                   >
-                    <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                    <FileSpreadsheet className="h-4 w-4 text-brand-700" />
                     Export Excel
                   </button>
                   <button type="button" onClick={() => setIsBookModalOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-brand-800">
@@ -623,10 +571,10 @@ export const AdminDashboard = () => {
                 <button
                   type="button"
                   onClick={handleExportUsers}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-white px-3.5 py-2.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                   title="Ekspor seluruh pengguna ke Excel"
                 >
-                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                  <FileSpreadsheet className="h-4 w-4 text-brand-700" />
                   Export Excel ({users.length})
                 </button>
               </div>
@@ -645,7 +593,7 @@ export const AdminDashboard = () => {
                         </div>
                       </div>
                       <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-                        item.role === 'admin' ? 'bg-violet-50 text-violet-700 border border-violet-200' : 'bg-cream-200 text-ink-600'
+                        item.role === 'admin' ? 'bg-brand-50 text-brand-800 border border-brand-200' : 'bg-cream-200 text-ink-600'
                       }`}>
                         {item.role}
                       </span>
@@ -661,14 +609,14 @@ export const AdminDashboard = () => {
                             <span className="h-1.5 w-1.5 rounded-full bg-ink-400" /> Email
                           </span>
                         )}
-                        <span className={`text-xs font-bold ${item.isPro ? 'text-brand-700' : 'text-ink-400'}`}>
+                        <span className={`text-xs font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-400'}`}>
                           {item.isPro ? '⭐ Pro aktif' : 'Reguler'}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => updateUser(item.id, { role: item.role === 'admin' ? 'user' : 'admin' }, 'Role pengguna diperbarui.')}
-                        className="inline-flex items-center gap-1 rounded-xl border border-cream-300 bg-white px-2.5 py-1.5 text-xs font-bold text-ink-700 hover:bg-cream-100 active:scale-95 transition"
+                        className="inline-flex items-center gap-1 rounded-xl border border-cream-300 bg-cream-50 px-2.5 py-1.5 text-xs font-bold text-ink-700 hover:bg-cream-100 active:scale-95 transition"
                       >
                         <UserCog className="h-3.5 w-3.5 text-brand-700" />
                         {item.role === 'admin' ? 'Jadikan user' : 'Jadikan admin'}
@@ -717,12 +665,12 @@ export const AdminDashboard = () => {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.role === 'admin' ? 'bg-violet-50 text-violet-700' : 'bg-cream-200 text-ink-500'}`}>
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.role === 'admin' ? 'bg-brand-50 text-brand-800 border border-brand-200' : 'bg-cream-200 text-ink-500'}`}>
                             {item.role}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`text-xs font-bold ${item.isPro ? 'text-brand-700' : 'text-ink-400'}`}>
+                          <span className={`text-xs font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-400'}`}>
                             {item.isPro ? 'Pro aktif' : 'Reguler'}
                           </span>
                         </td>

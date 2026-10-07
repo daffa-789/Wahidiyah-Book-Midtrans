@@ -1,10 +1,10 @@
 
 
 const EVENT_BADGE_COLORS = {
-  Mujahadah: 'bg-brand-50 text-brand-700 border-brand-200',
-  Pengajian: 'bg-blue-50 text-blue-700 border-blue-200',
-  Kubro: 'bg-amber-50 text-amber-700 border-amber-200',
-  Peringatan: 'bg-violet-50 text-violet-700 border-violet-200'
+  Mujahadah: 'bg-brand-50 text-brand-800 border-brand-200',
+  Pengajian: 'bg-brand-50 text-brand-800 border-brand-200',
+  Kubro: 'bg-brand-50 text-brand-800 border-brand-200',
+  Peringatan: 'bg-brand-50 text-brand-800 border-brand-200'
 };
 
 export const EMPTY_USER = {
@@ -98,7 +98,7 @@ export const normalizeEvent = (event = {}) => {
     organizer: event.organizer || '',
 
     showInCarousel: Boolean(event.show_in_carousel ?? event.showInCarousel),
-    badgeColor: event.badgeColor || EVENT_BADGE_COLORS[category] || 'bg-cream-100 text-ink-700 border-cream-300',
+    badgeColor: event.badgeColor || EVENT_BADGE_COLORS[category] || 'bg-brand-50 text-brand-800 border-brand-200',
     createdAt: event.created_at ?? event.createdAt ?? null
   };
 };

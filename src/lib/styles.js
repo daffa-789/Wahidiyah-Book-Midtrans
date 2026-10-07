@@ -59,7 +59,7 @@ export const controls = {
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400',
   inputWrap: 'auth-input-wrap mt-1.5',
   select:
-    'w-full rounded-input border border-cream-300 bg-white px-3 py-2.5 text-body transition ' +
+    'w-full rounded-input border border-cream-300 bg-cream-50 px-3 py-2.5 text-body transition ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400',
   iconSm: 'w-3.5 h-3.5 text-brand-800',
   iconMd: 'w-4 h-4 text-brand-800',
@@ -68,7 +68,7 @@ export const controls = {
   spinner: 'h-4 w-4 animate-spin',
   emptyIcon: 'mx-auto h-9 w-9 text-cream-300',
   chip:
-    'inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-white ' +
+    'inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 ' +
     'px-3.5 py-2.5 text-caption font-bold text-ink-700 shadow-sm',
 };
 
