@@ -1,20 +1,8 @@
-import React, { useState, useCallback, useRef, useMemo } from 'react';
-import { BookOpen, Lock, Sparkles, Search, X } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { BookOpen, Lock, Sparkles } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 import HeroCarousel from './HeroCarousel';
-
-const CATEGORIES = [
-  'Semua',
-  'Tasawuf',
-  'Bimbingan',
-  'Kitab Kuning',
-  'Ajaran',
-  'Tauhid',
-  'Doa & Zikir',
-  'Sejarah',
-  'Amalan'
-];
 
 const CATEGORY_STYLES = {
   'Tasawuf': {
@@ -180,8 +168,6 @@ export const HomeScreen = () => {
 
   const [imgErrors, setImgErrors] = useState({});
   const [paywallBook, setPaywallBook] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Semua');
 
   const paywallPanelRef = useRef(null);
 
@@ -199,21 +185,6 @@ export const HomeScreen = () => {
   }, [user.isPro, openReader]);
 
   useDialogFocusTrap(paywallPanelRef, { isOpen: Boolean(paywallBook), onClose: () => setPaywallBook(null) });
-
-  const filteredBooks = useMemo(() => {
-    return books.filter((book) => {
-      const matchCategory = selectedCategory === 'Semua' || book.category === selectedCategory;
-      if (!matchCategory) return false;
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase().trim();
-      return (
-        (book.title || '').toLowerCase().includes(q) ||
-        (book.author || '').toLowerCase().includes(q) ||
-        (book.description || '').toLowerCase().includes(q) ||
-        (book.category || '').toLowerCase().includes(q)
-      );
-    });
-  }, [books, selectedCategory, searchQuery]);
 
   return (
     <div className="flex-1 flex flex-col justify-between bg-cream-50 page-transition min-h-[calc(100vh-2rem)]">
@@ -238,101 +209,19 @@ export const HomeScreen = () => {
                 <HeroCarousel slides={carouselSlides} />
               </div>
             )}
-
-            {/* Pencarian Cepat & Filter Kategori */}
-            <div className="w-full space-y-3 mb-5 sm:mb-6">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari judul kitab, penulis, atau topik..."
-                    className="w-full pl-10 pr-9 py-2.5 bg-cream-100/90 border border-cream-300 rounded-2xl text-xs sm:text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-700 p-0.5 rounded-full hover:bg-cream-200"
-                      aria-label="Hapus pencarian"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-2 text-xs text-ink-500 font-semibold px-0.5">
-                  <span>{filteredBooks.length} Kitab {selectedCategory !== 'Semua' ? `• ${selectedCategory}` : ''}</span>
-                  {(searchQuery || selectedCategory !== 'Semua') && (
-                    <button
-                      type="button"
-                      onClick={() => { setSearchQuery(''); setSelectedCategory('Semua'); }}
-                      className="text-brand-700 hover:underline font-bold text-xs"
-                    >
-                      Reset
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Horizontal Scrollable Category Chips */}
-              <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-                  {CATEGORIES.map((cat) => {
-                    const isSelected = selectedCategory === cat;
-                    return (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setSelectedCategory(cat)}
-                        className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
-                          isSelected
-                            ? 'bg-brand-700 text-white shadow-sm shadow-brand-900/15'
-                            : 'bg-cream-100/90 border border-cream-300/70 text-ink-600 hover:bg-cream-200/70 hover:text-ink-900'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            <div className="w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5 lg:gap-6 justify-center items-stretch">
+              {books.map((book) => (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  isLocked={Boolean(book.isLocked && !user.isPro)}
+                  onBookClick={handleBookClick}
+                  onPaywallClick={setPaywallBook}
+                  hasError={Boolean(imgErrors[book.id])}
+                  onError={handleImgError}
+                />
+              ))}
             </div>
-
-            {filteredBooks.length === 0 ? (
-              <section className="my-8 w-full max-w-md rounded-3xl border border-dashed border-cream-300 bg-cream-100/60 p-8 text-center mx-auto">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-cream-200 text-ink-500">
-                  <Search className="h-6 w-6" />
-                </div>
-                <h3 className="mt-4 font-bold text-ink-900">Tidak ada kitab yang cocok</h3>
-                <p className="mt-1 text-xs text-ink-400">
-                  Coba kata kunci lain atau pilih kategori kitab yang berbeda.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => { setSearchQuery(''); setSelectedCategory('Semua'); }}
-                  className="mt-4 rounded-xl bg-brand-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-brand-800"
-                >
-                  Tampilkan Semua Kitab
-                </button>
-              </section>
-            ) : (
-              <div className="w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5 lg:gap-6 justify-center items-stretch">
-                {filteredBooks.map((book) => (
-                  <BookCard
-                    key={book.id}
-                    book={book}
-                    isLocked={Boolean(book.isLocked && !user.isPro)}
-                    onBookClick={handleBookClick}
-                    onPaywallClick={setPaywallBook}
-                    hasError={Boolean(imgErrors[book.id])}
-                    onError={handleImgError}
-                  />
-                ))}
-              </div>
-            )}
           </>
         )}
       </div>
