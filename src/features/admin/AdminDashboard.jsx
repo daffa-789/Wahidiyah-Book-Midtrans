@@ -58,8 +58,8 @@ const ADMIN_TABS = [
 const EMPTY_BOOK_FORM = {
   title: '',
   subtitle: '',
-  author: '',
-  category: '',
+  author: 'Penyusun Wahidiyah',
+  category: 'Kitab',
   pages: '',
   description: '',
   is_locked: false,
@@ -214,6 +214,10 @@ export const AdminDashboard = () => {
 
   const submitBook = async (event) => {
     event.preventDefault();
+    if (!bookForm.thumbnail) {
+      toast.error('Pilih berkas thumbnail terlebih dahulu.');
+      return;
+    }
     if (!bookForm.content) {
       toast.error('Pilih lampiran konten buku terlebih dahulu.');
       return;
@@ -615,11 +619,7 @@ export const AdminDashboard = () => {
 
           {activeTab === 'users' && (
             <section className="space-y-5">
-              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-                <div>
-                  <h2 className={typography.sectionTitlePlain}>Pengguna</h2>
-                  <p className={typography.helper}>Role, metode masuk, dan status Pro tersimpan langsung di Supabase Cloud.</p>
-                </div>
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={handleExportUsers}

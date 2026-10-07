@@ -70,8 +70,8 @@ booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wr
   const content = req.files?.content?.[0];
   const contentExtension = content ? path.extname(content.originalname).toLowerCase() : '';
 
-  if (!title || !author || !category || !content) {
-    return res.status(400).json({ success: false, message: 'Judul, penulis, kategori, dan file konten wajib diisi' });
+  if (!title || !content || !thumbnail) {
+    return res.status(400).json({ success: false, message: 'Judul, thumbnail, dan file konten wajib diisi' });
   }
   if (thumbnail && !thumbnail.mimetype.startsWith('image/')) {
     return res.status(415).json({ success: false, message: 'Thumbnail harus berupa file gambar' });
@@ -108,13 +108,16 @@ booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wr
   
   const coverUrl = toDataUrl(thumbnailBuffer, thumbnailMime);
   const extension = contentExtension.replace(/^\./, '');
+  const safeAuthor = (author && String(author).trim()) || 'Penyusun Wahidiyah';
+  const safeCategory = (category && String(category).trim()) || 'Kitab';
+  const safeDescription = (description && String(description).trim()) || '';
 
   const { error } = await supabaseServer.from('books').insert({
     id,
     title: title.trim(),
     subtitle: subtitle || '',
-    author: author.trim(),
-    category: String(category).trim(),
+    author: safeAuthor,
+    category: safeCategory,
     pages: Number(pages) || 1,
     total_pages: Number(pages) || 1,
     is_locked: is_locked === 'true' || is_locked === true || is_locked === 1,
@@ -126,7 +129,7 @@ booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wr
     content_mime: content.mimetype,
     content_size: content.size,
     content_type: extension,
-    description: description || ''
+    description: safeDescription
   });
   if (error) throw error;
 

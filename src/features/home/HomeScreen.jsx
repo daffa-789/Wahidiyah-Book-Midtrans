@@ -117,10 +117,14 @@ const BookCard = React.memo(({ book, isLocked, onBookClick, onPaywallClick, hasE
           <h3 className="font-bold text-sm sm:text-lead text-ink-900 line-clamp-1 leading-snug group-hover:text-brand-700 transition-colors duration-200">
             {book.title}
           </h3>
-          <p className="text-caption font-medium text-ink-400 line-clamp-1 mt-0.5">{book.author}</p>
-          <p className="text-caption text-ink-500 line-clamp-2 mt-1.5 leading-relaxed">
-            {book.description}
-          </p>
+          {book.author ? (
+            <p className="text-caption font-medium text-ink-400 line-clamp-1 mt-0.5">{book.author}</p>
+          ) : null}
+          {book.description ? (
+            <p className="text-caption text-ink-500 line-clamp-2 mt-1.5 leading-relaxed">
+              {book.description}
+            </p>
+          ) : null}
         </div>
 
         {isLocked ? (

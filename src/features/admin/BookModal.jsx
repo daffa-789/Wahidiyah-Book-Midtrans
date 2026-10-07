@@ -5,9 +5,6 @@ import { FileUp, Loader2, X, CheckCircle2, FileText } from 'lucide-react';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 import { layout, typography, surfaces, controls } from '@lib/styles';
 
-const fileLabel = (file) =>
-  file ? `${file.name} • ${(file.size / 1024 / 1024).toFixed(1)} MB` : 'Belum dipilih';
-
 export const BookModal = ({
   isOpen = true,
   onClose,
@@ -41,9 +38,6 @@ export const BookModal = ({
             <h2 id="book-modal-title" className="text-lg font-black text-ink-900">
               Tambah buku
             </h2>
-            <p className={typography.helperTight}>
-              Lampiran disimpan sebagai konten baca dan tidak diberi tombol unduh.
-            </p>
           </div>
           <button
             type="button"
@@ -68,42 +62,10 @@ export const BookModal = ({
             />
           </label>
 
-          <label className="block">
-            <span className={typography.fieldLabelSoft}>Penulis</span>
-            <input
-              required
-              value={bookForm.author}
-              onChange={(e) => setBookForm((form) => ({ ...form, author: e.target.value }))}
-              placeholder="Penulis"
-              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600 transition"
-            />
-          </label>
-
-          <label className="block">
-            <span className={typography.fieldLabelSoft}>Kategori</span>
-            <input
-              required
-              value={bookForm.category}
-              onChange={(e) => setBookForm((form) => ({ ...form, category: e.target.value }))}
-              placeholder="Contoh: Sholawat, Fiqih, Tauhid"
-              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600 transition"
-            />
-          </label>
-
-          <label className="block">
-            <span className={typography.fieldLabelSoft}>Deskripsi</span>
-            <textarea
-              value={bookForm.description}
-              onChange={(e) => setBookForm((form) => ({ ...form, description: e.target.value }))}
-              rows="3"
-              placeholder="Deskripsi singkat (opsional)"
-              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600 transition"
-            />
-          </label>
-
           <label className="block rounded-2xl border border-dashed border-cream-300 p-3 text-xs text-ink-500">
-            <span className="font-bold text-ink-800">Thumbnail (opsional)</span>
+            <span className="font-bold text-ink-800">Thumbnail</span>
             <input
+              required
               type="file"
               accept="image/*"
               className="mt-2 block w-full text-xs text-ink-400 file:mr-3 file:rounded-xl file:border-0 file:bg-cream-200 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700 hover:file:bg-cream-300 cursor-pointer"
@@ -111,7 +73,7 @@ export const BookModal = ({
                 setBookForm((form) => ({ ...form, thumbnail: e.target.files?.[0] || null }))
               }
             />
-            {bookForm.thumbnail ? (
+            {bookForm.thumbnail && (
               <div className="mt-2.5 flex items-center gap-3 p-2 bg-cream-100 rounded-xl border border-cream-300">
                 <div className="h-16 w-12 rounded-lg overflow-hidden bg-cream-300 shrink-0 border border-cream-300">
                   <img
@@ -128,15 +90,11 @@ export const BookModal = ({
                   </span>
                 </div>
               </div>
-            ) : (
-              <span className="mt-1 block text-caption text-ink-300">
-                {fileLabel(bookForm.thumbnail)}
-              </span>
             )}
           </label>
 
           <label className="block rounded-2xl border border-dashed border-brand-300 bg-brand-50/40 p-3 text-xs text-ink-500">
-            <span className="font-bold text-ink-800">Konten buku *</span>
+            <span className="font-bold text-ink-800">Konten buku</span>
             <input
               required
               type="file"
@@ -146,7 +104,7 @@ export const BookModal = ({
                 setBookForm((form) => ({ ...form, content: e.target.files?.[0] || null }))
               }
             />
-            {bookForm.content ? (
+            {bookForm.content && (
               <div className="mt-2.5 flex items-center gap-3 p-2.5 bg-cream-50 rounded-xl border border-brand-200 shadow-sm">
                 <div className="h-10 w-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center shrink-0">
                   <FileText className="w-5 h-5" />
@@ -161,10 +119,6 @@ export const BookModal = ({
                   </span>
                 </div>
               </div>
-            ) : (
-              <span className="mt-1 block text-caption text-ink-300">
-                {fileLabel(bookForm.content)}
-              </span>
             )}
           </label>
 
