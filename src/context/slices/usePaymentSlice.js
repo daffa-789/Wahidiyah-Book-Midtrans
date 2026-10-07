@@ -1,0 +1,224 @@
+import { useState, useCallback, useEffect } from 'react';
+import { PAYMENT_METHODS } from '@data/mockData';
+import {
+  apiJson,
+  authHeaders,
+  getStoredSession,
+  getStoredLastPayment,
+  saveLastPayment,
+  clearLastPayment
+} from '@lib/api';
+import { normalizeUser } from '@lib/normalizers';
+
+export const isQrisPaymentMethod = (method) => {
+  if (!method) return false;
+  const id = String(method.id || '').toLowerCase();
+  const name = String(method.name || '').toLowerCase();
+  return id.includes('qris') || id === 'midtrans' || name.includes('qris');
+};
+
+export const usePaymentSlice = ({ patchUser }) => {
+  const [selectedPlan, setSelectedPlan] = useState({
+    id: 'monthly',
+    title: 'Paket Bulanan',
+    price: 25000,
+    formattedPrice: 'Rp 25.000',
+    period: '/bulan'
+  });
+
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(PAYMENT_METHODS[1].options[0]);
+  const [paymentPhone, setPaymentPhone] = useState('');
+  const [paymentAgreed, setPaymentAgreed] = useState(false);
+  const [lastPaymentResult, setLastPaymentResult] = useState(() => getStoredLastPayment());
+  const [subscriptions, setSubscriptions] = useState([]);
+
+  useEffect(() => {
+    saveLastPayment(lastPaymentResult);
+  }, [lastPaymentResult]);
+
+  const clearLastPaymentResult = useCallback(() => {
+    setLastPaymentResult(null);
+    clearLastPayment();
+  }, []);
+
+  const refreshSubscriptions = useCallback(async () => {
+    const stored = getStoredSession();
+    if (!stored?.token) return [];
+    try {
+      const payload = await apiJson('/api/subscriptions/my', { headers: authHeaders(stored.token) });
+      const subs = (payload.subscriptions || []).map((sub) => ({
+        id: sub.id,
+        planName: sub.plan_name,
+        price: Number(sub.price) ? `Rp ${Number(sub.price).toLocaleString('id-ID')}` : sub.price,
+        status: sub.status,
+        period: sub.period,
+        ref: sub.ref_code,
+        expiresAt: sub.expires_at || null,
+        createdAt: sub.created_at
+      }));
+      setSubscriptions(subs);
+      return subs;
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const isSubscriptionActive = useCallback((targetUser) => {
+    return Boolean(targetUser?.isPro);
+  }, []);
+
+  const completePayment = useCallback(async () => {
+    const now = new Date();
+    const expiry = new Date(now);
+    expiry.setMonth(expiry.getMonth() + 1);
+    const periodStr = `${now.toLocaleDateString('id-ID')} – ${expiry.toLocaleDateString('id-ID')}`;
+    const refNo = `0000${Math.floor(10000000 + Math.random() * 90000000)}`;
+
+    const result = {
+      refNo,
+      dateStr: `${now.toLocaleDateString('id-ID')}, ${now.toLocaleTimeString('id-ID')}`,
+      periodStr,
+      amount: selectedPlan.price,
+      adminFee: null,
+      totalPaid: null,
+      methodName: selectedPaymentMethod?.name || 'Bank Transfer',
+      planName: selectedPlan.title
+    };
+    setLastPaymentResult(result);
+
+    if (isQrisPaymentMethod(selectedPaymentMethod)) {
+      try {
+        const me = await apiJson('/api/auth/me', { headers: authHeaders(getStoredSession()?.token) });
+        if (me?.user) {
+          patchUser((current) => ({
+            ...normalizeUser({ ...current, ...me.user }),
+            isPro: Boolean(me.user.isPro)
+          }));
+        }
+        const subs = await refreshSubscriptions();
+        const latest = subs[0];
+        setLastPaymentResult((current) => ({
+          ...(current || {}),
+          refNo: latest?.ref || current?.refNo,
+          periodStr: latest?.period || current?.periodStr,
+          amount: latest?.price || current?.amount,
+          planName: latest?.planName || current?.planName
+        }));
+      } catch (error) {
+        console.warn('Gagal menyinkronkan status langganan setelah pembayaran QRIS:', error.message);
+      }
+      return;
+    }
+
+    const stored = getStoredSession();
+    if (stored?.token) {
+      try {
+        const payload = await apiJson('/api/transactions', {
+          method: 'POST',
+          headers: {
+            ...authHeaders(stored.token),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            plan_name: selectedPlan.title,
+            amount: selectedPlan.price,
+            admin_fee: 0,
+            total_paid: selectedPlan.price,
+            payment_method: selectedPaymentMethod?.name || 'Bank Transfer',
+            period: periodStr
+          })
+        });
+
+        const settledExpiry = payload.user?.subscription_expires_at || expiry.toISOString();
+        const settledPeriod = payload.transaction?.periodStr || payload.subscription?.period || periodStr;
+        if (payload.transaction?.refNo) {
+          setLastPaymentResult((current) => ({ ...current, refNo: payload.transaction.refNo }));
+        }
+
+        if (payload.alreadyPro) {
+          patchUser((current) => ({
+            ...normalizeUser({ ...current, ...payload.user }),
+            isPro: true,
+            activePlan: null,
+            subscriptionExpiresAt: payload.user?.subscription_expires_at || expiry.toISOString()
+          }));
+          return;
+        }
+
+        if (payload.pendingVerification) {
+          setLastPaymentResult((current) => ({ ...current, pendingVerification: true }));
+          return;
+        }
+
+        if (payload.user) {
+          patchUser((current) => ({
+            ...normalizeUser({ ...current, ...payload.user }),
+            isPro: true,
+            activePlan: null,
+            subscriptionExpiresAt: settledExpiry,
+            subscriptionPeriod: settledPeriod
+          }));
+        } else {
+          patchUser({
+            isPro: true,
+            activePlan: null,
+            subscriptionExpiresAt: settledExpiry,
+            subscriptionPeriod: settledPeriod
+          });
+        }
+
+        if (payload.subscription) {
+          const subItem = {
+            id: payload.subscription.id,
+            planName: payload.subscription.planName,
+            price: selectedPlan.formattedPrice,
+            status: payload.subscription.status,
+            period: payload.subscription.period,
+            ref: payload.subscription.ref
+          };
+          setSubscriptions((current) => [subItem, ...current]);
+        }
+        return;
+      } catch (error) {
+        console.warn('Gagal menyimpan transaksi ke backend, beralih ke state lokal:', error.message);
+      }
+    }
+
+    patchUser({
+      isPro: true,
+      activePlan: null,
+      subscriptionExpiresAt: null,
+      subscriptionPeriod: periodStr
+    });
+    setSubscriptions((current) => [
+      {
+        id: `sub-${Date.now()}`,
+        planName: selectedPlan.title,
+        price: selectedPlan.formattedPrice,
+        status: 'Aktif',
+        period: periodStr,
+        ref: `REF-${refNo.slice(-8)}`
+      },
+      ...current
+    ]);
+  }, [patchUser, refreshSubscriptions, selectedPaymentMethod, selectedPlan]);
+
+  return {
+    selectedPlan,
+    setSelectedPlan,
+    selectedPaymentMethod,
+    setSelectedPaymentMethod,
+    paymentPhone,
+    setPaymentPhone,
+    paymentAgreed,
+    setPaymentAgreed,
+    lastPaymentResult,
+    setLastPaymentResult,
+    clearLastPaymentResult,
+    subscriptions,
+    setSubscriptions,
+    refreshSubscriptions,
+    isSubscriptionActive,
+    completePayment
+  };
+};

@@ -1,16 +1,12 @@
-
-
 import { Router } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { supabaseServer } from '../db.js';
 import {
   createSessionToken,
   generateId,
-  hashPassword,
   normalizeEmail,
   requireAuth,
-  toPublicUser,
-  verifyPassword
+  toPublicUser
 } from '../auth.js';
 import {
   authFailureMessage,
@@ -19,66 +15,31 @@ import {
   isDbDown,
   wrap
 } from '../lib/http.js';
-import { canExposeDevOtp, consumeOtp, issueOtp, resendCooldownRemaining } from '../lib/otp.js';
-import { findLatestOtp, deleteOtpByEmailPurpose, deleteOtpById } from '../otpStore.js';
-import { sendGoogleAccountEmail, isMailerConfigured } from '../mailer.js';
+import { findLatestOtp, resendCooldownRemaining } from '../otpStore.js';
 import { logger } from '../logger.js';
+import { authService } from '../services/auth.service.js';
 
 export const authRouter = Router();
 
 const replyAuthFailure = (res, error, { dbMessage = DB_DOWN_MESSAGE } = {}) => {
   const isDbError = isDbDown(error);
-  return res.status(isDbError ? 503 : 500).json({
+  const status = error.statusCode || (isDbError ? 503 : 500);
+  return res.status(status).json({
     success: false,
-    message: isDbError ? dbMessage : authFailureMessage(error),
+    message: isDbError ? dbMessage : (error.message || authFailureMessage(error)),
     error: internalErrorDetail(error),
     isDatabaseError: isDbError
   });
 };
 
-const INVALID_CREDENTIALS_MESSAGE =
-  'Email atau password belum sesuai. Jika Anda menggunakan akun Google, silakan klik tombol "Login dengan Google" di bawah.';
-
-const GOOGLE_ACCOUNT_MESSAGE =
-  'Akun ini terdaftar lewat Google. Silakan klik tombol "Login dengan Google" di bawah.';
-
 authRouter.post('/login', async (req, res) => {
   const { identifier, email, password } = req.body;
-  const userEmail = normalizeEmail(email || identifier);
-
-  if (!userEmail || !password) {
-    return res.status(400).json({ success: false, message: 'Alamat email dan password wajib diisi' });
-  }
-  if (String(password).length < 8) {
-    return res.status(400).json({ success: false, message: 'Password minimal 8 karakter' });
-  }
-
   try {
-    const { data: user, error: lookupError } = await supabaseServer
-      .from('users')
-      .select('*')
-      .eq('email', userEmail)
-      .maybeSingle();
-
-    if (lookupError) throw lookupError;
-    if (!user) return res.status(401).json({ success: false, message: INVALID_CREDENTIALS_MESSAGE });
-
-    const passwordOk = await verifyPassword(password, user.password);
-    if (!passwordOk) {
-      return res.status(401).json({
-        success: false,
-        message: user.password ? INVALID_CREDENTIALS_MESSAGE : GOOGLE_ACCOUNT_MESSAGE
-      });
-    }
-
-    logger.ok('AUTH', 'Login berhasil', { email: userEmail, role: user.role || 'user' });
-
-    res.json({
-      success: true,
-      message: 'Login berhasil',
-      token: createSessionToken(user),
-      user: toPublicUser(user)
+    const result = await authService.authenticateUser({
+      emailOrIdentifier: email || identifier,
+      password
     });
+    res.json({ success: true, message: 'Login berhasil', ...result });
   } catch (error) {
     return replyAuthFailure(res, error);
   }
@@ -87,45 +48,11 @@ authRouter.post('/login', async (req, res) => {
 authRouter.post('/register', async (req, res) => {
   try {
     const { name, email, password, dob } = req.body;
-    const normalizedEmail = normalizeEmail(email);
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Nama, email, dan password wajib diisi' });
-    }
-    if (!normalizedEmail.includes('@')) {
-      return res.status(400).json({ success: false, message: 'Format email tidak valid' });
-    }
-    if (String(password).length < 8) {
-      return res.status(400).json({ success: false, message: 'Password minimal 8 karakter' });
-    }
-
-    const { data: existing } = await supabaseServer
-      .from('users')
-      .select('id')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
-    if (existing) {
-      return res.status(409).json({ success: false, message: 'Email sudah terdaftar. Silakan masuk atau gunakan email lain.' });
-    }
-
-    const { code, deliveredBy } = await issueOtp({
-      email: normalizedEmail,
-      purpose: 'register',
-      payload: {
-        name: name.trim(),
-
-        passwordHash: await hashPassword(password),
-        dob: dob || null
-      }
-    });
-
-    logger.info('OTP', 'Kode pendaftaran dikirim', { email: normalizedEmail, deliveredBy });
-
+    const result = await authService.registerUserInit({ name, email, password, dob });
     return res.status(202).json({
       success: true,
       message: 'Kode verifikasi telah dikirim ke email Anda dan berlaku 10 menit.',
-      email: normalizedEmail,
-      devOtp: deliveredBy === 'demo' && canExposeDevOtp() ? code : undefined
+      ...result
     });
   } catch (error) {
     return replyAuthFailure(res, error, { dbMessage: 'Gagal terhubung ke database.' });
@@ -134,143 +61,32 @@ authRouter.post('/register', async (req, res) => {
 
 authRouter.post('/verify-registration', async (req, res) => {
   try {
-    const email = normalizeEmail(req.body?.email);
-    const code = String(req.body?.code || '').trim();
-    if (!email || !code) {
-      return res.status(400).json({ success: false, message: 'Email dan kode verifikasi wajib diisi.' });
-    }
-
-    const result = await consumeOtp({ email, purpose: 'register', code });
-    if (!result.ok) {
-      return res.status(result.status).json({ success: false, message: result.message });
-    }
-
-    const payload = result.row.payload || {};
-    if (!payload.name || !payload.passwordHash) {
-      await deleteOtpById(result.row.id);
-      return res.status(400).json({ success: false, message: 'Data pendaftaran tidak lengkap. Silakan daftar ulang.' });
-    }
-
-    const newId = generateId('usr');
-    const newUser = {
-      id: newId,
-      name: payload.name,
-      email,
-      password: payload.passwordHash,
-      role: 'user',
-      login_method: 'email',
-      is_pro: false,
-      dob: payload.dob || null
-    };
-
-    const { error: insertError } = await supabaseServer.from('users').insert([newUser]);
-    if (insertError) {
-
-      if (insertError.code === '23505') {
-        await deleteOtpById(result.row.id);
-        return res.status(409).json({ success: false, message: 'Email sudah terdaftar. Silakan masuk.' });
-      }
-      throw insertError;
-    }
-
-    await deleteOtpById(result.row.id);
-
-    logger.ok('AUTH', 'Registrasi akun baru (email terverifikasi)', { email, id: newId });
-
+    const { email, code } = req.body || {};
+    const result = await authService.completeRegistration({ email, code });
     return res.status(201).json({
       success: true,
       message: 'Akun berhasil dibuat.',
-      token: createSessionToken(newUser),
-      user: toPublicUser(newUser)
+      ...result
     });
   } catch (error) {
     return replyAuthFailure(res, error, { dbMessage: 'Gagal terhubung ke database.' });
   }
 });
 
-const RESET_UNIFORM_RESPONSE = {
-  success: true,
-  message: 'Jika email tersebut terdaftar, kode pemulihan telah dikirim dan berlaku 10 menit.'
-};
-
 authRouter.post('/request-password-reset', wrap(async (req, res) => {
-  const email = normalizeEmail(req.body?.email);
-  if (!email || !email.includes('@')) {
-    return res.status(400).json({ success: false, message: 'Masukkan alamat email yang valid.' });
-  }
-
-  const { data: account } = await supabaseServer
-    .from('users')
-    .select('id, login_method')
-    .eq('email', email)
-    .maybeSingle();
-
-  if (!account) {
-    logger.info('OTP', 'Permintaan reset untuk email tak terdaftar (respons disamakan)', { email });
-    return res.json(RESET_UNIFORM_RESPONSE);
-  }
-
-  if (account.login_method === 'google') {
-    let deliveredBy = 'demo';
-    if (isMailerConfigured()) {
-      try {
-        await sendGoogleAccountEmail(email);
-        deliveredBy = 'email';
-      } catch (mailError) {
-        logger.error('MAIL', 'Gagal mengirim pemberitahuan akun Google', { pesan: mailError.message });
-      }
-    }
-    logger.info('OTP', 'Reset password ditolak: akun terdaftar lewat Google', { email, deliveredBy });
-    return res.json(RESET_UNIFORM_RESPONSE);
-  }
-
-  const { code, deliveredBy } = await issueOtp({ email, purpose: 'reset' });
-  const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp();
-
-  logger.info('OTP', 'Permintaan reset password', { email, deliveredBy, devOtpExposed: exposeDevOtp });
-
-  return res.json({ ...RESET_UNIFORM_RESPONSE, devOtp: exposeDevOtp ? code : undefined });
+  const email = req.body?.email;
+  const result = await authService.requestPasswordReset(email);
+  return res.json(result);
 }));
 
 authRouter.post('/reset-password', wrap(async (req, res) => {
-  const email = normalizeEmail(req.body?.email);
-  const code = String(req.body?.code || '').trim();
-  const password = String(req.body?.password || '');
-
-  if (!email || !code) {
-    return res.status(400).json({ success: false, message: 'Email dan kode verifikasi wajib diisi.' });
-  }
-  if (password.length < 8) {
-    return res.status(400).json({ success: false, message: 'Password baru minimal 8 karakter.' });
-  }
-
-  const { data: target } = await supabaseServer
-    .from('users')
-    .select('login_method')
-    .eq('email', email)
-    .maybeSingle();
-  if (target?.login_method === 'google') {
-    await deleteOtpByEmailPurpose(email, 'reset');
-    logger.warn('OTP', 'Reset password ditolak: akun terdaftar lewat Google', { email });
-    return res.status(400).json({
-      success: false,
-      message: 'Akun ini terdaftar melalui Google sehingga tidak memiliki password. Silakan masuk dengan tombol "Login dengan Google".'
-    });
-  }
-
-  const result = await consumeOtp({ email, purpose: 'reset', code });
-  if (!result.ok) {
-    return res.status(result.status).json({ success: false, message: result.message });
-  }
-
-  await deleteOtpById(result.row.id);
-  await supabaseServer
-    .from('users')
-    .update({ password: await hashPassword(password) })
-    .eq('email', email);
-
-  logger.ok('OTP', 'Password berhasil direset', { email });
-  return res.json({ success: true, message: 'Password berhasil diperbarui.' });
+  const { email, code, password } = req.body || {};
+  const result = await authService.executePasswordReset({
+    email,
+    code,
+    newPassword: password
+  });
+  return res.json(result);
 }));
 
 authRouter.post('/resend-verification', wrap(async (req, res) => {
@@ -299,104 +115,32 @@ authRouter.post('/resend-verification', wrap(async (req, res) => {
   if (cooldown > 0) {
     return res.status(429).json({
       success: false,
-      retryAfterSeconds: cooldown,
-      message: `Mohon tunggu ${cooldown} detik sebelum meminta kode baru.`
+      message: `Tunggu ${cooldown} detik sebelum meminta kode baru.`,
+      retryAfterSeconds: cooldown
     });
   }
 
-  if (purpose === 'reset') {
-    const { data: account } = await supabaseServer
-      .from('users')
-      .select('login_method')
-      .eq('email', email)
-      .maybeSingle();
-    if (!account || account.login_method === 'google') {
-      return res.json(RESET_UNIFORM_RESPONSE);
-    }
+  if (purpose === 'register') {
+    const result = await authService.registerUserInit({
+      name: existing.payload.name,
+      email,
+      password: 'dummy_not_used_for_hash',
+      dob: existing.payload.dob
+    });
+    return res.json({
+      success: true,
+      message: 'Kode verifikasi baru telah dikirim.',
+      devOtp: result.devOtp
+    });
   }
 
-  const { code, deliveredBy } = await issueOtp({
-    email,
-    purpose,
-    payload: existing.payload ?? null
-  });
-  const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp();
-
-  logger.info('OTP', 'Kode dikirim ulang', { email, purpose, deliveredBy });
-
+  const result = await authService.requestPasswordReset(email);
   return res.json({
     success: true,
-    message: 'Kode baru telah dikirim dan berlaku 10 menit.',
-    email,
-    devOtp: exposeDevOtp ? code : undefined
+    message: 'Kode verifikasi baru telah dikirim.',
+    devOtp: result.devOtp
   });
 }));
-
-authRouter.post('/google-supabase', async (req, res) => {
-  const { access_token, user: googleUser } = req.body;
-  if (!access_token || !googleUser?.email) {
-    return res.status(400).json({ success: false, message: 'Token dan informasi akun Google wajib diisi.' });
-  }
-
-  try {
-
-    const { createClient } = await import('@supabase/supabase-js');
-    const supaUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supaAnonKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-    const supaAuth = createClient(supaUrl, supaAnonKey);
-    const { data: { user: supaUser }, error: authError } = await supaAuth.auth.getUser(access_token);
-    if (authError || !supaUser) {
-      return res.status(401).json({ success: false, message: 'Token Google tidak valid atau sudah kedaluwarsa.' });
-    }
-
-    const email = normalizeEmail(supaUser.email);
-
-    let { data: existingUser } = await supabaseServer
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (!existingUser) {
-      const newId = generateId('usr');
-      const newUser = {
-        id: newId,
-        name: googleUser.name || email.split('@')[0],
-        email,
-        password: null,
-        role: 'user',
-        login_method: 'google',
-        is_pro: false,
-        avatar: googleUser.avatar || null,
-      };
-      const { error: insertError } = await supabaseServer.from('users').insert([newUser]);
-      if (insertError) {
-
-        if (insertError.code === '23505') {
-          const { data: raceUser } = await supabaseServer
-            .from('users').select('*').eq('email', email).maybeSingle();
-          existingUser = raceUser;
-        } else {
-          throw insertError;
-        }
-      } else {
-        existingUser = newUser;
-      }
-      logger.ok('AUTH', 'Registrasi akun baru via Google (Supabase Auth)', { email, id: existingUser.id });
-    } else {
-      logger.ok('AUTH', 'Login via Google (Supabase Auth)', { email, role: existingUser.role || 'user' });
-    }
-
-    res.json({
-      success: true,
-      message: 'Login Google berhasil.',
-      token: createSessionToken(existingUser),
-      user: toPublicUser(existingUser),
-    });
-  } catch (error) {
-    return replyAuthFailure(res, error);
-  }
-});
 
 const parseCookies = (header) => {
   const out = {};
@@ -422,7 +166,6 @@ authRouter.get('/google/callback', async (req, res) => {
       logger.warn('GOOGLE_OAUTH', message);
       return res.redirect(url.toString());
     } catch (redirectError) {
-
       logger.error('GOOGLE_OAUTH', 'Gagal menyusun URL redirect', { pesan: redirectError.message });
       return res.status(302).send(`<script>window.location.href='${frontendOrigin}/login';</script>`);
     }
@@ -502,7 +245,6 @@ authRouter.get('/google/callback', async (req, res) => {
       };
       const { error: insertError } = await supabaseServer.from('users').insert([newUser]);
       if (insertError) {
-
         if (insertError.code === '23505') {
           const { data: raceUser } = await supabaseServer
             .from('users').select('*').eq('email', email).maybeSingle();
