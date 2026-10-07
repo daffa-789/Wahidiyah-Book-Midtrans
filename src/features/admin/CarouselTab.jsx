@@ -17,17 +17,14 @@ import { layout, typography, surfaces, controls } from '@lib/styles';
 const EMPTY_SLIDE_FORM = {
   title: '',
   description: '',
-  event_date: '',
   sort_order: 0,
-  is_active: true,
-  starts_at: '',
-  ends_at: ''
+  is_active: true
 };
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const periodLabel = (slide) => {
-  if (!slide.startsAt && !slide.endsAt) return 'Tanpa batas waktu';
+  if (!slide.startsAt && !slide.endsAt) return '';
   if (slide.startsAt && slide.endsAt) return `${dateLabel(slide.startsAt)} – ${dateLabel(slide.endsAt)}`;
   if (slide.startsAt) return `Mulai ${dateLabel(slide.startsAt)}`;
   return `Sampai ${dateLabel(slide.endsAt)}`;
@@ -60,12 +57,9 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
     setEditingId(slide.id);
     setForm({
       title: slide.title,
-      description: slide.description,
-      event_date: slide.eventDate || '',
+      description: slide.description || '',
       sort_order: slide.sortOrder,
-      is_active: slide.isActive,
-      starts_at: slide.startsAt || '',
-      ends_at: slide.endsAt || ''
+      is_active: slide.isActive
     });
   };
 
@@ -97,21 +91,14 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
       toast.error('Judul banner wajib diisi.');
       return;
     }
-    if (form.starts_at && form.ends_at && form.ends_at < form.starts_at) {
-      toast.error('Tanggal selesai tidak boleh sebelum tanggal mulai.');
-      return;
-    }
 
     setIsSaving(true);
     try {
       const payload = {
         title: form.title.trim(),
-        description: form.description.trim(),
-        event_date: form.event_date || null,
+        description: (form.description || '').trim(),
         sort_order: Number(form.sort_order) || 0,
-        is_active: form.is_active,
-        starts_at: form.starts_at || null,
-        ends_at: form.ends_at || null
+        is_active: form.is_active
       };
 
       if (editingId) {
@@ -280,9 +267,11 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                   {slide.description && (
                     <p className="mt-1 line-clamp-2 text-xs text-ink-500">{slide.description}</p>
                   )}
-                  <p className="mt-1 text-caption text-ink-400">
-                    {slide.eventDate ? `${dateLabel(slide.eventDate)} · ` : ''}{periodLabel(slide)}
-                  </p>
+                  {(slide.eventDate || periodLabel(slide)) && (
+                    <p className="mt-1 text-caption text-ink-400">
+                      {slide.eventDate ? `${dateLabel(slide.eventDate)} ` : ''}{periodLabel(slide)}
+                    </p>
+                  )}
                 </div>
 
                 <div className={layout.rowShrink}>
@@ -373,7 +362,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
           </div>
 
           <div>
-            <label htmlFor="slide-title" className={typography.fieldLabel}>Judul banner *</label>
+            <label htmlFor="slide-title" className={typography.fieldLabel}>Judul banner</label>
             <input
               id="slide-title"
               required
@@ -386,7 +375,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
           </div>
 
           <div>
-            <label htmlFor="slide-description" className={typography.fieldLabel}>Deskripsi singkat</label>
+            <label htmlFor="slide-description" className={typography.fieldLabel}>Deskripsi</label>
             <textarea
               id="slide-description"
               rows="3"
@@ -397,41 +386,6 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
               className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
             />
           </div>
-
-          <div>
-            <label htmlFor="slide-event-date" className={typography.fieldLabel}>Tanggal kegiatan</label>
-            <input
-              id="slide-event-date"
-              type="date"
-              value={form.event_date}
-              onChange={(e) => setForm((prev) => ({ ...prev, event_date: e.target.value }))}
-              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label htmlFor="slide-starts" className={typography.fieldLabel}>Mulai tayang</label>
-              <input
-                id="slide-starts"
-                type="date"
-                value={form.starts_at}
-                onChange={(e) => setForm((prev) => ({ ...prev, starts_at: e.target.value }))}
-                className="w-full rounded-xl border border-cream-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
-              />
-            </div>
-            <div>
-              <label htmlFor="slide-ends" className={typography.fieldLabel}>Selesai tayang</label>
-              <input
-                id="slide-ends"
-                type="date"
-                value={form.ends_at}
-                onChange={(e) => setForm((prev) => ({ ...prev, ends_at: e.target.value }))}
-                className="w-full rounded-xl border border-cream-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
-              />
-            </div>
-          </div>
-          <p className="-mt-2 text-caption text-ink-400">Kosongkan keduanya untuk banner tanpa batas waktu.</p>
 
           <div className="grid grid-cols-2 items-end gap-2">
             <div>
