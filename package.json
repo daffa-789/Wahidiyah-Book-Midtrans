@@ -8,17 +8,17 @@
     "node": ">=22"
   },
   "scripts": {
-    "start": "node scripts/start.js",
     "dev": "node scripts/dev.js",
-    "dev:frontend": "vite",
-    "dev:server": "node --watch server/server.js",
+    "start": "node scripts/start.js",
     "build": "vite build",
     "preview": "vite preview",
+    "health": "node scripts/health-check.js",
+    "check": "node --check server/server.js && vite build",
+    "clean:ports": "node scripts/clean-ports.js",
+    "dev:frontend": "vite",
+    "dev:server": "node --watch server/server.js",
     "server": "node server/server.js",
     "server:dev": "node --watch server/server.js",
-    "check": "node --check server/server.js && vite build",
-    "health": "node scripts/health-check.js",
-    "clean:ports": "node scripts/clean-ports.js",
     "gmail:token": "node scripts/get-gmail-token.js",
     "audit:security": "npm audit --audit-level=high"
   },
