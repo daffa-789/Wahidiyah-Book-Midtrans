@@ -18,7 +18,11 @@ import {
   ShieldCheck,
   Trash2,
   UserCog,
-  Users
+  Users,
+  LayoutDashboard,
+  CalendarDays,
+  Images,
+  Activity
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
@@ -41,6 +45,15 @@ import { BookModal } from './BookModal';
 import { layout, typography, surfaces, controls } from '@lib/styles';
 
 const isValidTabSlug = (slug) => slug === undefined || ADMIN_TAB_SLUGS.has(slug);
+
+const ADMIN_TABS = [
+  { id: 'overview', label: 'Ringkasan', icon: LayoutDashboard },
+  { id: 'books', label: 'Koleksi', icon: BookOpen },
+  { id: 'users', label: 'Pengguna', icon: Users },
+  { id: 'events', label: 'Agenda', icon: CalendarDays },
+  { id: 'carousel', label: 'Carousel', icon: Images },
+  { id: 'logs', label: 'Log', icon: Activity }
+];
 
 const EMPTY_BOOK_FORM = {
   title: '',
@@ -364,6 +377,45 @@ export const AdminDashboard = () => {
 
       <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
 
+        {/* Quick Horizontal Tab Switcher on Mobile & Desktop */}
+        <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {ADMIN_TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const Icon = tab.icon;
+              let badge = null;
+              if (tab.id === 'books') badge = books.length;
+              if (tab.id === 'users') badge = users.length;
+              if (tab.id === 'events') badge = events.length;
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => navigateTo('admin-dashboard', { adminTab: tab.id })}
+                  className={`group flex items-center gap-2 shrink-0 rounded-2xl px-3.5 py-2.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
+                    isActive
+                      ? 'bg-brand-700 text-white shadow-sm shadow-brand-900/20'
+                      : 'bg-white border border-cream-300/80 text-ink-600 hover:bg-cream-100 hover:text-ink-900'
+                  }`}
+                >
+                  <Icon className={`h-4 w-4 transition-colors ${isActive ? 'text-white' : 'text-ink-400 group-hover:text-ink-700'}`} />
+                  <span>{tab.label}</span>
+                  {badge !== null && (
+                    <span
+                      className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                        isActive ? 'bg-white/20 text-white' : 'bg-cream-200 text-ink-600'
+                      }`}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
           {error && (
             <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
               <span>{error}</span>
@@ -444,7 +496,46 @@ export const AdminDashboard = () => {
                     Unduh Excel
                   </button>
                 </div>
-                <div className="overflow-x-auto rounded-2xl border border-cream-200">
+                {/* Mobile Transaction Cards (< sm) */}
+                <div className="space-y-2.5 sm:hidden">
+                  {transactions.slice(0, 10).map((tx) => (
+                    <div key={tx.id || tx.refNo} className="rounded-2xl border border-cream-200 bg-white p-3.5 shadow-sm space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs font-bold text-ink-700">{tx.refNo}</span>
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-micro font-bold ${
+                          tx.status === 'success'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : tx.status === 'pending'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        }`}>
+                          {tx.status === 'success' ? 'Sukses' : tx.status === 'pending' ? 'Pending' : 'Gagal'}
+                        </span>
+                      </div>
+                      <div className="flex items-start justify-between text-xs">
+                        <div>
+                          <p className="font-bold text-ink-900">{tx.userName || '-'}</p>
+                          <p className={typography.helperInline}>{tx.userEmail || ''}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-ink-900">{formatCurrency(tx.totalPaid)}</p>
+                          <p className="text-caption text-ink-500">{tx.planName || 'Paket Bulanan'}</p>
+                        </div>
+                      </div>
+                      <p className="text-micro text-ink-400 pt-1.5 border-t border-cream-100">
+                        {formatWIB(tx.createdAt, { withSeconds: false })}
+                      </p>
+                    </div>
+                  ))}
+                  {transactions.length === 0 && (
+                    <div className="p-6 text-center text-xs text-ink-400">
+                      Belum ada riwayat transaksi pembayaran.
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop Table (sm and up) */}
+                <div className="hidden sm:block overflow-x-auto rounded-2xl border border-cream-200">
                   <table className="min-w-full text-left text-xs">
                     <thead className="bg-cream-100 uppercase tracking-wider text-ink-400">
                       <tr>
@@ -539,14 +630,125 @@ export const AdminDashboard = () => {
                   Export Excel ({users.length})
                 </button>
               </div>
-              <div className="overflow-x-auto rounded-3xl border border-cream-300 bg-cream-50 shadow-sm"><table className="min-w-full text-left text-sm"><thead className="bg-cream-100 text-xs uppercase tracking-wider text-ink-400"><tr><th className="px-4 py-3">Pengguna</th><th className="px-4 py-3">Metode</th><th className="px-4 py-3">Role</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Aksi</th></tr></thead><tbody className={layout.divider}>{users.map((item) => <tr key={item.id}><td className="px-4 py-3"><p className="font-bold">{item.name}</p><p className="text-xs text-ink-400">{item.email}</p></td><td className="px-4 py-3">{item.loginMethod === 'google' ? <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-100"><span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>Google</span> : <span className="inline-flex items-center gap-1.5 rounded-full bg-cream-200 px-2.5 py-1 text-xs font-bold text-ink-500 border border-cream-300/60"><span className="h-1.5 w-1.5 rounded-full bg-ink-300"></span>Email</span>}</td><td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.role === 'admin' ? 'bg-violet-50 text-violet-700' : 'bg-cream-200 text-ink-500'}`}>{item.role}</span></td><td className="px-4 py-3"><span className={`text-xs font-bold ${item.isPro ? 'text-brand-700' : 'text-ink-400'}`}>{item.isPro ? 'Pro aktif' : 'Reguler'}</span></td><td className="px-4 py-3"><button type="button" onClick={() => updateUser(item.id, { role: item.role === 'admin' ? 'user' : 'admin' }, 'Role pengguna diperbarui.')} className="rounded-xl border border-cream-300 px-2.5 py-1.5 text-xs font-bold text-ink-500 hover:bg-cream-100"><UserCog className="mr-1 inline h-3.5 w-3.5" />{item.role === 'admin' ? 'Jadikan user' : 'Jadikan admin'}</button></td></tr>)}{users.length === 0 && (
+              {/* Mobile User Cards (< sm) */}
+              <div className="space-y-3 sm:hidden">
+                {users.map((item) => (
+                  <div key={item.id} className="rounded-2xl border border-cream-300 bg-cream-50 p-4 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-10 w-10 rounded-full bg-brand-100 border border-brand-200 text-brand-800 flex items-center justify-center font-bold text-sm shrink-0">
+                          {(item.name || 'U').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-ink-900 truncate text-sm">{item.name}</p>
+                          <p className="text-xs text-ink-400 truncate">{item.email}</p>
+                        </div>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+                        item.role === 'admin' ? 'bg-violet-50 text-violet-700 border border-violet-200' : 'bg-cream-200 text-ink-600'
+                      }`}>
+                        {item.role}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs pt-2.5 border-t border-cream-200/80">
+                      <div className="flex items-center gap-2">
+                        {item.loginMethod === 'google' ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-micro font-bold text-blue-700 border border-blue-100">
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> Google
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-cream-200 px-2 py-0.5 text-micro font-bold text-ink-600 border border-cream-300/60">
+                            <span className="h-1.5 w-1.5 rounded-full bg-ink-400" /> Email
+                          </span>
+                        )}
+                        <span className={`text-xs font-bold ${item.isPro ? 'text-brand-700' : 'text-ink-400'}`}>
+                          {item.isPro ? '⭐ Pro aktif' : 'Reguler'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => updateUser(item.id, { role: item.role === 'admin' ? 'user' : 'admin' }, 'Role pengguna diperbarui.')}
+                        className="inline-flex items-center gap-1 rounded-xl border border-cream-300 bg-white px-2.5 py-1.5 text-xs font-bold text-ink-700 hover:bg-cream-100 active:scale-95 transition"
+                      >
+                        <UserCog className="h-3.5 w-3.5 text-brand-700" />
+                        {item.role === 'admin' ? 'Jadikan user' : 'Jadikan admin'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {users.length === 0 && (
+                  <div className="p-8 text-center text-ink-400 rounded-2xl bg-cream-50 border border-cream-300">
+                    <p className="font-bold text-ink-700">Belum ada pengguna</p>
+                    <p className={typography.helper}>Akun yang mendaftar atau masuk lewat Google akan muncul di daftar ini.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Table (sm and up) */}
+              <div className="hidden sm:block overflow-x-auto rounded-3xl border border-cream-300 bg-cream-50 shadow-sm">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-cream-100 text-xs uppercase tracking-wider text-ink-400">
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center">
-                        <p className="font-bold text-ink-700">Belum ada pengguna</p>
-                        <p className={typography.helper}>Akun yang mendaftar atau masuk lewat Google akan muncul di daftar ini.</p>
-                      </td>
+                      <th className="px-4 py-3">Pengguna</th>
+                      <th className="px-4 py-3">Metode</th>
+                      <th className="px-4 py-3">Role</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Aksi</th>
                     </tr>
-                  )}</tbody></table></div>
+                  </thead>
+                  <tbody className={layout.divider}>
+                    {users.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-4 py-3">
+                          <p className="font-bold">{item.name}</p>
+                          <p className="text-xs text-ink-400">{item.email}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          {item.loginMethod === 'google' ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-100">
+                              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                              Google
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-cream-200 px-2.5 py-1 text-xs font-bold text-ink-500 border border-cream-300/60">
+                              <span className="h-1.5 w-1.5 rounded-full bg-ink-300" />
+                              Email
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.role === 'admin' ? 'bg-violet-50 text-violet-700' : 'bg-cream-200 text-ink-500'}`}>
+                            {item.role}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs font-bold ${item.isPro ? 'text-brand-700' : 'text-ink-400'}`}>
+                            {item.isPro ? 'Pro aktif' : 'Reguler'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() => updateUser(item.id, { role: item.role === 'admin' ? 'user' : 'admin' }, 'Role pengguna diperbarui.')}
+                            className="rounded-xl border border-cream-300 px-2.5 py-1.5 text-xs font-bold text-ink-500 hover:bg-cream-100"
+                          >
+                            <UserCog className="mr-1 inline h-3.5 w-3.5" />
+                            {item.role === 'admin' ? 'Jadikan user' : 'Jadikan admin'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-10 text-center">
+                          <p className="font-bold text-ink-700">Belum ada pengguna</p>
+                          <p className={typography.helper}>Akun yang mendaftar atau masuk lewat Google akan muncul di daftar ini.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </section>
           )}
 

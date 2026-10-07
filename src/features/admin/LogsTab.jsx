@@ -69,7 +69,7 @@ export const LogsTab = ({ sessionToken }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-cream-50 rounded-2xl border border-cream-300 shadow-xs">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-ink-300 ml-1" />
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             <button
               type="button"
               onClick={() => setFilterType('all')}

@@ -143,6 +143,19 @@ body,
   }
 }
 
+/* ── Mobile utilities: scrollbar-less horizontal lists & safe-area padding ── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0.75rem);
+}
+
 /* Auth screens: intentionally small, consistent, and independent from the
    app sidebar so public routes remain pleasant on desktop and mobile.
    Dihuni @layer components agar kalah prioritas dari utility Tailwind di JSX,

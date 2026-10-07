@@ -361,6 +361,90 @@ const LogoutConfirmDialog = ({ isOpen, userName, onCancel, onConfirm }) => (
   </Transition>
 );
 
+const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, onOpenMenu }) => {
+  const userItems = [
+    { id: 'home', label: 'Beranda', icon: Home, target: 'home', isActive: activeKeys.includes('home') },
+    { id: 'calendar', label: 'Kalender', icon: Calendar, target: 'calendar', isActive: activeKeys.includes('calendar') },
+    { id: 'pro', label: 'Pro', icon: Sparkles, target: 'pro', isActive: activeKeys.includes('pro') },
+    { id: 'profile', label: 'Profil', icon: UserRound, target: 'profile-edit', isActive: activeKeys.includes('profile') },
+  ];
+
+  const adminItems = [
+    { id: 'admin-overview', label: 'Ringkasan', icon: LayoutDashboard, target: 'admin:overview', isActive: activeKeys.includes('admin-overview') },
+    { id: 'admin-books', label: 'Koleksi', icon: BookOpen, target: 'admin:books', isActive: activeKeys.includes('admin-books') },
+    { id: 'admin-users', label: 'Pengguna', icon: Users, target: 'admin:users', isActive: activeKeys.includes('admin-users') },
+    { id: 'admin-events', label: 'Agenda', icon: CalendarDays, target: 'admin:events', isActive: activeKeys.includes('admin-events') },
+    { id: 'admin-menu', label: 'Menu', icon: Menu, isMenu: true, isActive: false },
+  ];
+
+  const items = isAdmin ? adminItems : userItems;
+
+  return (
+    <nav
+      aria-label="Navigasi bawah mobile"
+      className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-around border-t border-cream-300/80 bg-cream-50/95 px-2 py-1 shadow-[0_-4px_24px_rgba(20,82,58,0.06)] backdrop-blur-md md:hidden pb-safe"
+    >
+      {items.map((item) => {
+        const Icon = item.icon;
+        const isActive = item.isActive;
+        const isAdminAccent = isAdmin;
+
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => {
+              if (item.isMenu) {
+                onOpenMenu();
+              } else {
+                onNavClick(item.target);
+              }
+            }}
+            aria-current={isActive ? 'page' : undefined}
+            className={`group relative flex flex-1 flex-col items-center justify-center min-h-[50px] py-1 px-1 rounded-2xl transition-all duration-200 cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 ${
+              isAdminAccent
+                ? 'focus-visible:ring-gold-500'
+                : 'focus-visible:ring-brand-500'
+            } ${
+              isActive
+                ? isAdminAccent
+                  ? 'text-gold-900 bg-gold-400/20 font-bold'
+                  : 'text-brand-900 bg-brand-100/70 font-bold'
+                : 'text-ink-400 hover:text-ink-700 font-medium'
+            }`}
+          >
+            <div className="relative">
+              <Icon
+                className={`h-5 w-5 transition-transform duration-200 ${
+                  isActive ? 'scale-110' : 'group-hover:scale-105'
+                } ${
+                  isActive
+                    ? isAdminAccent
+                      ? 'text-gold-700'
+                      : 'text-brand-700'
+                    : 'text-ink-400'
+                }`}
+                strokeWidth={isActive ? 2.3 : 1.8}
+              />
+              {isActive && (
+                <span
+                  aria-hidden="true"
+                  className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full ${
+                    isAdminAccent ? 'bg-gold-600' : 'bg-brand-700'
+                  }`}
+                />
+              )}
+            </div>
+            <span className="mt-0.5 text-[11px] leading-tight tracking-tight truncate max-w-full">
+              {item.label}
+            </span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+});
+
 const DeviceFrameBase = ({ children }) => {
   const { currentScreen, currentPath, navigateTo, user, logout } = useApp();
 
@@ -523,9 +607,16 @@ const DeviceFrameBase = ({ children }) => {
           }`}
       >
         <main className="flex w-full flex-1 flex-col">
-          <div className="relative flex w-full flex-1 flex-col bg-cream-50">{children}</div>
+          <div className="relative flex w-full flex-1 flex-col bg-cream-50 pb-20 md:pb-0">{children}</div>
         </main>
       </div>
+
+      <MobileBottomNav
+        isAdmin={isAdmin}
+        activeKeys={activeKeys}
+        onNavClick={handleNavClick}
+        onOpenMenu={() => setMobileMenuOpen(true)}
+      />
     </div>
   );
 };
