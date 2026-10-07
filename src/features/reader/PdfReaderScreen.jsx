@@ -214,7 +214,10 @@ export const PdfReaderScreen = () => {
         );
       }
       return (
-        <div className="mx-auto h-[calc(100vh-7.5rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-ink-500 bg-cream-50 shadow-2xl">
+        <div 
+          className="mx-auto h-[calc(100vh-7.5rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-ink-500 bg-cream-50 shadow-2xl select-none"
+          onContextMenu={(e) => e.preventDefault()}
+        >
           <iframe
             key={`${pdfUrl}-${currentPage}`}
             title={`Konten ${activeBook.title}`}
@@ -223,6 +226,7 @@ export const PdfReaderScreen = () => {
           />
         </div>
       );
+
     }
 
     if (TEXT_TYPES.has(extension) && activeBook.contentUrl) {
