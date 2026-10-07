@@ -1,15 +1,15 @@
 # Arsitektur Sistem — Aplikasi Buku Wahidiyah
 
-Dokumen ini menjelaskan arsitektur perangkat lunak, pola desain (*design patterns*), struktur folder, aliran data, dan standar keamanan yang diterapkan pada aplikasi **Wahidiyah Book**.
+Dokumen ini menjelaskan arsitektur perangkat lunak, struktur folder, aliran data, dan standar keamanan yang diterapkan pada aplikasi **Wahidiyah Book**.
 
 ---
 
 ## 1. Ringkasan Eksekutif & Tech Stack
 
-Aplikasi ini dibangun menggunakan arsitektur **Client-Server Terpisah (Decoupled Single Page Application)** yang dapat dijalankan dalam mode mandiri (*monolithic runtime*) maupun terpisah:
+Aplikasi ini dibangun menggunakan arsitektur **Client-Server Mandiri (Murni React JSX + Node.js Express)**:
 
-* **Frontend:** React 18, Vite, React Router v7, Tailwind CSS, Headless UI, Lucide Icons, Sonner.
-* **Backend:** Node.js (v20+ / v22+), Express.js 4.
+* **Frontend:** React 18 (`.jsx` dan `.js`), Vite, React Router, Tailwind CSS, Lucide Icons, Sonner.
+* **Backend:** Node.js (v20+ / v22+), Express.js 4 (`.js` murni).
 * **Database & BaaS:** Supabase Cloud (PostgreSQL 15 dengan *Row Level Security*).
 * **Payment Gateway:** Midtrans Core API (QRIS Sandbox/Production).
 * **Image Processing:** Sharp (kompresi & sanitasi gambar WebP).
@@ -21,13 +21,12 @@ Aplikasi ini dibangun menggunakan arsitektur **Client-Server Terpisah (Decoupled
 
 ```mermaid
 graph TD
-    Client["Browser / Mobile Client (React 18 SPA)"]
+    Client["Browser / Mobile Client (React 18 JSX SPA)"]
     
-    subgraph Backend ["Node.js Express Server"]
+    subgraph Backend ["Node.js Express Server (.js)"]
         Router["HTTP Routes (/api/*)"]
         Middleware["Security & Auth Middleware (Helmet, RateLimit, JWT)"]
-        Services["Service Layer (AuthService, PaymentsService, BooksService)"]
-        Libs["Helpers & Utilities (Sharp, PostgREST, Mailer)"]
+        Libs["Helpers & Database Connectors (Sharp, Supabase Server SDK, Mailer)"]
     end
     
     subgraph External ["External Services"]
@@ -39,33 +38,31 @@ graph TD
 
     Client -->|HTTPS / JSON| Router
     Router --> Middleware
-    Middleware --> Services
-    Services --> Libs
+    Router --> Libs
     Libs --> Supabase
-    Services --> Midtrans
-    Services --> GoogleAuth
-    Services --> Gmail
+    Router --> Midtrans
+    Router --> GoogleAuth
+    Router --> Gmail
 ```
 
 ---
 
 ## 3. Struktur Folder Modular
 
-Codebase mengikuti arsitektur modular berbasis fitur (*feature-based*) di frontend dan arsitektur berlapis (*layered service-oriented architecture*) di backend:
+Codebase mengikuti arsitektur modular berbasis fitur di frontend dan rute Express standar di backend:
 
 ```text
 ├── docs/                   # Dokumentasi teknis & spesifikasi API
 ├── public/                 # Aset statis publik (logo, favicon, PWA manifest)
-├── server/                 # Backend Node.js Express
-│   ├── lib/                # Helper murni (constants, crypto, http, images, validate)
-│   ├── middleware/         # Express middleware (security, errors, requestLog, uploads)
-│   ├── routes/             # HTTP Route definitions (controller endpoints)
-│   ├── services/           # Logika bisnis & integrasi eksternal (Service Layer)
+├── server/                 # Backend Node.js Express (.js)
 │   ├── auth.js             # Sesi JWT, hashing password, otorisasi role
 │   ├── config.js           # Konfigurasi terpusat & env mapping
 │   ├── db.js               # Inisialisasi koneksi Supabase Server SDK
+│   ├── lib/                # Helper murni (constants, crypto, http, images, validate)
+│   ├── middleware/         # Express middleware (security, errors, requestLog, uploads)
+│   ├── routes/             # Rute HTTP Express standar (auth, books, payments, stats)
 │   └── server.js           # Entrypoint Express server
-├── src/                    # Frontend React 18 SPA
+├── src/                    # Frontend React 18 SPA (.jsx dan .js)
 │   ├── components/         # Komponen umum & UI reusable (DeviceFrame, Modal, dll)
 │   ├── context/            # Global State (AppProvider & Slices)
 │   │   └── slices/         # Modular hooks: useCatalogSlice, usePaymentSlice, useNavigationSlice
@@ -78,7 +75,7 @@ Codebase mengikuti arsitektur modular berbasis fitur (*feature-based*) di fronte
 │   │   ├── profile/        # Profil pengguna, ganti password, riwayat langganan
 │   │   └── reader/         # Pembaca buku PDF digital
 │   ├── lib/                # Klien HTTP (apiJson), normalizer, utility tanggal/angka
-│   ├── App.jsx             # Router aplikasi & perlindungan rute (Guards)
+│   ├── App.jsx             # Router aplikasi & perlindungan rute
 │   └── main.jsx            # Entrypoint React DOM
 └── supabase_database/      # Skema database & DDL PostgreSQL (full_setup.sql)
 ```
@@ -90,8 +87,8 @@ Codebase mengikuti arsitektur modular berbasis fitur (*feature-based*) di fronte
 ### A. Alur Otentikasi Pengguna (Email/Password & OTP)
 1. Pengguna mengisi form pendaftaran di `RegisterScreen`.
 2. Frontend mengirim `POST /api/auth/register`.
-3. `auth.service.js` memvalidasi input, membuat hash password sementara via `bcrypt`, dan menerbitkan OTP 6-digit.
-4. Kode OTP dikirim ke email via Gmail API (atau ditampilkan di layar pengujian jika mode demo).
+3. Handler di `auth.routes.js` memvalidasi input, membuat hash password via `bcrypt`, dan menerbitkan OTP 6-digit.
+4. Kode OTP dikirim ke email via Gmail API (atau mode dev jika lokal).
 5. Pengguna memasukkan OTP di `VerifyEmailScreen` (`POST /api/auth/verify-registration`).
 6. Server memverifikasi OTP, membuat baris pengguna baru di tabel `users`, dan menerbitkan JWT token.
 7. Token disimpan di `localStorage` klien untuk header otentikasi `Authorization: Bearer <token>`.

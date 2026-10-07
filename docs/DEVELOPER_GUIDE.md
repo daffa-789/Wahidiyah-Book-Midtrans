@@ -4,12 +4,12 @@ Selamat datang di panduan pengembang **Wahidiyah Book**. Dokumen ini dirancang a
 
 ---
 
-## 💡 Filosofi & Teknologi (Tanpa Framework Rumit)
+## 💡 Filosofi & Teknologi (Murni JS & React JSX — Tanpa Angular)
 
 Proyek ini sengaja dibangun menggunakan fondasi web modern yang ringan, stabil, dan mudah dipahami:
-- **Frontend**: **React 18** murni + **Vite** (Single Page Application / SPA) + **Tailwind CSS**.
-  > *Catatan: Tidak menggunakan Angular, Next.js, atau meta-framework berat lainnya. Semua alur state dan render menggunakan standar React Hooks.*
-- **Backend**: **Node.js** + **Express.js** murni dengan arsitektur *Service Layer Pattern*.
+- **Frontend**: **React 18** murni (`.jsx` dan `.js`) + **Vite** (Single Page Application / SPA) + **Tailwind CSS**.
+  > *Catatan: Tidak menggunakan Angular, Next.js, TypeScript, atau meta-framework berat lainnya. Semua alur state dan render menggunakan standar React Hooks dan komponen JSX.*
+- **Backend**: **Node.js** + **Express.js** murni (`.js`) dengan struktur rute standar (`server/routes/`).
 - **Database**: **Supabase Cloud** (PostgreSQL) melalui client `@supabase/supabase-js`.
 - **Payment Gateway**: **Midtrans Core API** (Mode Sandbox QRIS Real-time).
 
@@ -26,28 +26,25 @@ Proyek ini sengaja dibangun menggunakan fondasi web modern yang ringan, stabil, 
 │   ├── dev.js                  # Menjalankan frontend + backend di mode pengembangan
 │   ├── start.js                # Menjalankan server tunggal di mode produksi (port 5000)
 │   └── get-gmail-token.js      # Generator refresh token OAuth2 Gmail
-├── server/                     # Backend API (Node.js Express)
+├── server/                     # Backend API (Murni Node.js Express .js)
+│   ├── auth.js                 # Helper otentikasi, JWT, OTP, dan hashing password
 │   ├── config.js               # Validasi & pemuatan variabel lingkungan (.env)
+│   ├── db.js                   # Client Supabase PostgreSQL Server
 │   ├── middleware/             # Middleware otentikasi JWT, role check, upload Multer
-│   │   ├── auth.middleware.js
-│   │   └── upload.middleware.js
-│   ├── services/               # [Service Layer] Logika bisnis & manipulasi database
-│   │   ├── auth.service.js     # Login, OTP email, registrasi, Google OAuth
-│   │   ├── books.service.js    # Katalog buku, upload PDF/EPUB, konversi Sharp WebP
-│   │   └── payments.service.js # Integrasi Midtrans QRIS, polling, status webhook
-│   ├── routes/                 # [Transport Layer] Definisi rute Express yang ramping
-│   │   ├── auth.routes.js
-│   │   └── payments.routes.js
+│   ├── lib/                    # Helper formatting, image processing (Sharp), konstanta
+│   ├── routes/                 # Rute Express standar yang menangani endpoint & database
+│   │   ├── auth.routes.js      # Endpoint login, registrasi, OTP, dan Google OAuth
+│   │   ├── books.routes.js     # Endpoint katalog buku, upload PDF, dan thumbnail
+│   │   ├── payments.routes.js  # Endpoint transaksi Midtrans QRIS & status
+│   │   ├── stats.routes.js     # Endpoint statistik & analitik admin
+│   │   └── ...
 │   └── server.js               # Entry point Express, registrasi rute & penyajian file statis
-├── src/                        # Frontend UI (Pure React 18)
+├── src/                        # Frontend UI (Murni React 18 .jsx dan .js)
 │   ├── assets/                 # Ikon, logo, dan gambar statis
-│   ├── context/                # Pengelola State Global
-│   │   ├── slices/             # Modular Slice Hooks
-│   │   │   ├── useCatalogSlice.js    # State buku, acara kalender, banner carousel
-│   │   │   ├── usePaymentSlice.js    # State checkout, transaksi QRIS, status langganan
-│   │   │   └── useNavigationSlice.js # State tab aktif & navigasi layar
+│   ├── context/                # Pengelola State Global React
+│   │   ├── slices/             # Modular Slice Hooks (useCatalogSlice, usePaymentSlice, dll)
 │   │   └── AppContext.jsx      # Orkestrator utama, menyediakan hook useApp()
-│   ├── features/               # Halaman & Modul Fitur
+│   ├── features/               # Halaman & Komponen Fitur JSX
 │   │   ├── admin/              # Panel Manajemen Admin
 │   │   ├── auth/               # Layar Login, Registrasi & Verifikasi OTP
 │   │   ├── books/              # Komponen Detail Buku & Reader PDF/EPUB
@@ -87,54 +84,41 @@ Perintah ini akan secara otomatis memastikan frontend sudah di-build ke folder `
 
 ---
 
-## 🛠️ Panduan Menambah Fitur Baru
+## 🛠️ Panduan Menambah Fitur Baru (Simpel & Cepat)
 
-Untuk menjaga kode tetap bersih (*Clean Code*) dan mudah dirawat, selalu ikuti 4 langkah ini saat menambahkan fitur baru:
+Untuk menambah fitur baru secara rapi dan standar Express + React:
 
-### Langkah 1: Buat Logika Bisnis di Backend Service (`server/services/`)
-Jangan menaruh query database atau logika kalkulasi rumit di dalam file route. Buat fungsi di service:
+### Langkah 1: Daftarkan Rute di Express (`server/routes/`)
+Buat file rute baru di `server/routes/` atau tambahkan endpoint ke file rute yang sudah ada:
 ```javascript
-// Contoh: server/services/bookmark.service.js
-import { supabase } from '../lib/supabaseClient.js';
+// Contoh: server/routes/bookmarks.routes.js
+import { Router } from 'express';
+import { supabaseServer } from '../db.js';
+import { requireAuth } from '../auth.js';
 
-export const bookmarkService = {
-  async getUserBookmarks(userId) {
-    const { data, error } = await supabase
+export const bookmarksRouter = Router();
+
+bookmarksRouter.get('/bookmarks', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabaseServer
       .from('user_bookmarks')
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', req.user.id);
+
     if (error) throw error;
-    return data;
-  }
-};
-```
-
-### Langkah 2: Daftarkan Rute di Express (`server/routes/`)
-File route bertugas menerima HTTP request, memvalidasi input sederhana, memanggil service, dan mengembalikan JSON:
-```javascript
-// Contoh: server/routes/bookmark.routes.js
-import { Router } from 'express';
-import { bookmarkService } from '../services/bookmark.service.js';
-import { requireAuth } from '../middleware/auth.middleware.js';
-
-export const bookmarkRouter = Router();
-
-bookmarkRouter.get('/', requireAuth, async (req, res) => {
-  try {
-    const data = await bookmarkService.getUserBookmarks(req.user.id);
-    res.json({ success: true, data });
+    res.json({ success: true, bookmarks: data });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 ```
-Daftarkan `bookmarkRouter` di `server/server.js`:
+Daftarkan `bookmarksRouter` di `server/server.js`:
 ```javascript
-app.use('/api/bookmarks', bookmarkRouter);
+app.use('/api', bookmarksRouter);
 ```
 
-### Langkah 3: Tambahkan State di Frontend Slice (`src/context/slices/`)
-Buat custom hook untuk mengelola state fitur tersebut:
+### Langkah 2: Tambahkan State di Frontend Slice (`src/context/slices/`)
+Buat custom hook untuk mengelola data fitur tersebut:
 ```javascript
 // Contoh: src/context/slices/useBookmarkSlice.js
 import { useState, useCallback } from 'react';
@@ -146,18 +130,18 @@ export function useBookmarkSlice(token) {
   const fetchBookmarks = useCallback(async () => {
     if (!token) return;
     const res = await api.get('/api/bookmarks', token);
-    if (res.success) setBookmarks(res.data);
+    if (res.success) setBookmarks(res.bookmarks);
   }, [token]);
 
   return { bookmarks, fetchBookmarks };
 }
 ```
-Lalu panggil slice ini di `src/context/AppContext.jsx` dan gabungkan ke nilai `value` yang di-export `useApp()`.
+Lalu sambungkan slice ini di `src/context/AppContext.jsx` ke dalam objek `value` yang dikembalikan oleh `useApp()`.
 
-### Langkah 4: Tampilkan di Komponen UI (`src/features/`)
+### Langkah 3: Tampilkan di Komponen JSX (`src/features/`)
 Gunakan hook `useApp()` di komponen React:
 ```jsx
-// Contoh komponen React
+// Contoh komponen React JSX
 import React, { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 
@@ -185,21 +169,20 @@ export function BookmarkList() {
 ## 🛡️ Konvensi Kode & Standar Keamanan
 
 1. **Gunakan Async/Await dengan Try-Catch Bersih**:
-   Setiap fungsi async di backend dan frontend wajib menangani potensi error dengan pesan yang manusiawi.
+   Setiap fungsi async di backend dan frontend wajib menangani potensi error dengan respons JSON yang jelas.
 2. **Keamanan Kunci Rahasia**:
-   - Jangan pernah menyematkan `SUPABASE_SERVICE_ROLE_KEY` atau `MIDTRANS_SERVER_KEY` di kode frontend (`src/`).
+   - Kunci sensitif seperti `SUPABASE_SERVICE_ROLE_KEY` dan `MIDTRANS_SERVER_KEY` hanya boleh diakses di backend (`server/`).
    - Variabel yang aman dibaca frontend hanya yang berawalan `VITE_` (misalnya `VITE_SUPABASE_ANON_KEY`).
 3. **Penyimpanan Password**:
    - Password pengguna wajib di-hash menggunakan `bcryptjs` dengan *salt rounds* 10 sebelum disimpan ke database.
 4. **Sanitasi File Upload**:
-   - Gambar sampul buku selalu dikonversi dan dikompresi ke format **WebP** via library `sharp` sebelum disimpan ke bucket storage.
-   - File dokumen buku (PDF/EPUB) diverifikasi MIME type-nya (`application/pdf`, dll) di layer Multer.
+   - Gambar sampul buku dikonversi dan dikompresi ke format **WebP** via library `sharp` sebelum disimpan.
+   - File dokumen buku (PDF/EPUB) diverifikasi tipe kontennya di middleware Multer.
 
 ---
 
 ## 🔍 Checklist Verifikasi Sebelum Commit
 
-Sebelum melakukan commit atau rilis ke Git:
+Sebelum melakukan commit atau push:
 - [ ] Jalankan `node --check server/server.js` (Memastikan tidak ada galat sintaks di backend).
-- [ ] Jalankan `npm run build` (Memastikan bundling Vite berhasil 100% tanpa error).
-- [ ] Pastikan tidak ada berkas `.env` atau kredensial rahasia yang ter-track di Git.
+- [ ] Jalankan `npm run build` (Memastikan bundling Vite React berhasil 100% tanpa error).
