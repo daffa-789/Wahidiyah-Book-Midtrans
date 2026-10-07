@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import net from 'net';
 import dotenv from 'dotenv';
+import pc from 'picocolors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,7 +55,7 @@ async function freePorts(ports = [3000, 5000]) {
   for (const port of ports) {
     const isBusy = await probePort(port);
     if (!isBusy) continue;
-    console.log(`\x1b[33m[DEV] Port ${port} terikat proses lain. Memeriksa pemilik port...\x1b[0m`);
+    console.log(pc.yellow(`[DEV] Port ${port} terikat proses lain. Memeriksa pemilik port...`));
     try {
 
       const ps = spawn('powershell', [
@@ -71,9 +72,9 @@ async function freePorts(ports = [3000, 5000]) {
       await new Promise((resolve) => ps.on('close', resolve));
       for (const line of out.split('\n').map(s => s.trim()).filter(Boolean)) {
         if (line.startsWith('KILL')) {
-          console.log(`\x1b[33m[DEV]   → proses node dihentikan: PID ${line.slice(5)}\x1b[0m`);
+          console.log(pc.yellow(`[DEV]   → proses node dihentikan: PID ${line.slice(5)}`));
         } else if (line.startsWith('SKIP')) {
-          console.log(`\x1b[33m[DEV]   → dilewati, bukan proses node: PID ${line.slice(5)}\x1b[0m`);
+          console.log(pc.yellow(`[DEV]   → dilewati, bukan proses node: PID ${line.slice(5)}`));
         }
       }
       await new Promise(r => setTimeout(r, 800));
@@ -85,8 +86,8 @@ const nodeExec = process.execPath;
 const serverScript = path.resolve(rootDir, 'server', 'server.js');
 
 async function startDev() {
-  console.log('\x1b[32m⚡ [DATABASE] Menggunakan Database Cloud Supabase (Skripsi_Project)\x1b[0m');
-  console.log('\x1b[36m   Mode satu port: Express menyalakan server, Vite dipasang di dalamnya.\x1b[0m');
+  console.log(pc.green('⚡ [DATABASE] Menggunakan Database Cloud Supabase (Skripsi_Project)'));
+  console.log(pc.cyan('   Mode satu port: Express menyalakan server, Vite dipasang di dalamnya.'));
 
   await freePorts([3000, 5000]);
 
@@ -114,7 +115,7 @@ async function startDev() {
   const cleanup = () => {
     if (isCleaningUp) return;
     isCleaningUp = true;
-    console.log('\n\x1b[33m[DEV] Menghentikan layanan...\x1b[0m');
+    console.log(pc.yellow('\n[DEV] Menghentikan layanan...'));
     killTree(serverProc);
     setTimeout(() => process.exit(0), 300);
   };
@@ -125,7 +126,7 @@ async function startDev() {
 
   serverProc.on('close', (code) => {
     if (!isCleaningUp && code !== 0 && code !== 3221225786 && code !== null) {
-      console.error('\x1b[31m[DEV] Server berhenti.\x1b[0m');
+      console.error(pc.red('[DEV] Server berhenti.'));
     }
   });
 }

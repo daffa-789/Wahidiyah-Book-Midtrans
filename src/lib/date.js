@@ -1,99 +1,60 @@
+import dayjs from 'dayjs';
+import 'dayjs/locale/id';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.locale('id');
+
 const WIB_TIME_ZONE = 'Asia/Jakarta';
 
-const YMD_FORMATTER = new Intl.DateTimeFormat('en-CA', {
-  timeZone: WIB_TIME_ZONE,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
 export const MONTH_NAMES = [
-  'Januari',
-  'Februari',
-  'Maret',
-  'April',
-  'Mei',
-  'Juni',
-  'Juli',
-  'Agustus',
-  'September',
-  'Oktober',
-  'November',
-  'Desember',
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
 export const DAY_NAMES = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Ahd'];
 
 export const formatYMD = (year, monthIndex, day) => {
-  const mm = String(monthIndex + 1).padStart(2, '0');
-  const dd = String(day).padStart(2, '0');
-  return `${year}-${mm}-${dd}`;
+  return dayjs(new Date(year, monthIndex, day)).format('YYYY-MM-DD');
 };
 
-export const todayWib = () => YMD_FORMATTER.format(new Date());
-
+export const todayWib = () => dayjs().tz(WIB_TIME_ZONE).format('YYYY-MM-DD');
 export const getTodayStr = todayWib;
 
 export const formatWIB = (dateInput, { withTime = true, withSeconds = false } = {}) => {
   if (!dateInput) return '-';
-  try {
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    if (Number.isNaN(date.getTime())) return '-';
-
-    const options = {
-      timeZone: WIB_TIME_ZONE,
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    };
-    if (withTime) {
-      options.hour = '2-digit';
-      options.minute = '2-digit';
-      if (withSeconds) options.second = '2-digit';
-    }
-    return date.toLocaleString('id-ID', options);
-  } catch {
-    return String(dateInput);
-  }
+  const d = dayjs(dateInput).tz(WIB_TIME_ZONE);
+  if (!d.isValid()) return '-';
+  if (!withTime) return d.format('DD MMM YYYY');
+  return d.format(withSeconds ? 'DD MMM YYYY, HH.mm.ss' : 'DD MMM YYYY, HH.mm');
 };
 
 export const parseYMD = (value) => {
   if (!value) return null;
-  if (value instanceof Date) return value;
-  const str = String(value).slice(0, 10);
-  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (match) {
-    const [, y, m, d] = match.map(Number);
-    return new Date(y, m - 1, d, 12, 0, 0);
-  }
-  const fallback = new Date(value);
-  return Number.isNaN(fallback.getTime()) ? null : fallback;
+  const d = dayjs(value);
+  return d.isValid() ? d.toDate() : null;
 };
 
 export const dateLabel = (value) => {
   if (!value) return '—';
-  const date = parseYMD(value);
-  if (!date || Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  const d = dayjs(value).tz(WIB_TIME_ZONE);
+  return d.isValid() ? d.format('DD MMM YYYY') : '—';
 };
 
 export const fullDateLabel = (value) => {
   if (!value) return '—';
-  const date = parseYMD(value);
-  if (!date || Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  const d = dayjs(value).tz(WIB_TIME_ZONE);
+  return d.isValid() ? d.format('dddd, D MMMM YYYY') : '—';
 };
 
 export const getCalendarMonthGrid = (year, monthIndex) => {
   const todayStr = todayWib();
-  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-  const firstDayIndex = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
-  const prevMonthDaysCount = new Date(year, monthIndex, 0).getDate();
+  const base = dayjs(new Date(year, monthIndex, 1));
+  const daysInMonth = base.daysInMonth();
+  const firstDayIndex = (base.day() + 6) % 7;
+  const prevMonthDaysCount = dayjs(new Date(year, monthIndex, 0)).date();
 
   const leadingBlanks = [];
   for (let i = firstDayIndex - 1; i >= 0; i -= 1) {
@@ -108,3 +69,4 @@ export const getCalendarMonthGrid = (year, monthIndex) => {
 
   return { daysInMonth, firstDayIndex, leadingBlanks, days };
 };
+

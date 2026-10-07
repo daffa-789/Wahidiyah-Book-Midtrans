@@ -1,13 +1,46 @@
 
 
-export function parseBooleanFlag(value) {
-  if (typeof value === 'boolean') return value;
-  if (typeof value === 'number') return value === 1;
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
+import { z } from 'zod';
+
+export const booleanFlagSchema = z.preprocess((val) => {
+  if (typeof val === 'boolean') return val;
+  if (typeof val === 'number') return val === 1;
+  if (typeof val === 'string') {
+    const normalized = val.trim().toLowerCase();
     return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on';
   }
   return false;
+}, z.boolean());
+
+export const loginSchema = z.object({
+  email: z.string({ required_error: 'Alamat email wajib diisi' })
+    .trim()
+    .email('Format email tidak valid'),
+  password: z.string({ required_error: 'Password wajib diisi' })
+    .min(8, 'Password minimal 8 karakter')
+});
+
+export const registerSchema = z.object({
+  name: z.string().trim().min(1, 'Nama wajib diisi'),
+  email: z.string().trim().email('Format email tidak valid'),
+  password: z.string().min(8, 'Password minimal 8 karakter'),
+  dob: z.string().optional().nullable()
+});
+
+export const bookInputSchema = z.object({
+  title: z.string().trim().min(1, 'Judul buku wajib diisi'),
+  subtitle: z.string().optional().default(''),
+  author: z.string().trim().min(1, 'Penulis wajib diisi'),
+  category: z.string().trim().min(1, 'Kategori wajib diisi'),
+  pages: z.coerce.number().int().positive().default(100),
+  is_locked: booleanFlagSchema.default(false),
+  cover_url: z.string().optional().default(''),
+  description: z.string().optional().default('')
+});
+
+export function parseBooleanFlag(value) {
+  const result = booleanFlagSchema.safeParse(value);
+  return result.success ? result.data : false;
 }
 
 export function toPositiveNumber(value) {
@@ -51,3 +84,4 @@ export function toRangedInt(value, { min, max, fallback }) {
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(Math.max(parsed, min), max);
 }
+

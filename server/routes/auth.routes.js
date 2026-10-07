@@ -23,6 +23,7 @@ import { canExposeDevOtp, consumeOtp, issueOtp, resendCooldownRemaining } from '
 import { findLatestOtp, deleteOtpByEmailPurpose, deleteOtpById } from '../otpStore.js';
 import { sendGoogleAccountEmail, isMailerConfigured } from '../mailer.js';
 import { logger } from '../logger.js';
+import { loginSchema, registerSchema } from '../lib/validate.js';
 
 export const authRouter = Router();
 
@@ -46,11 +47,9 @@ authRouter.post('/login', async (req, res) => {
   const { identifier, email, password } = req.body;
   const userEmail = normalizeEmail(email || identifier);
 
-  if (!userEmail || !password) {
-    return res.status(400).json({ success: false, message: 'Alamat email dan password wajib diisi' });
-  }
-  if (String(password).length < 8) {
-    return res.status(400).json({ success: false, message: 'Password minimal 8 karakter' });
+  const parsed = loginSchema.safeParse({ email: userEmail, password });
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Input tidak valid' });
   }
 
   try {
@@ -89,14 +88,9 @@ authRouter.post('/register', async (req, res) => {
     const { name, email, password, dob } = req.body;
     const normalizedEmail = normalizeEmail(email);
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Nama, email, dan password wajib diisi' });
-    }
-    if (!normalizedEmail.includes('@')) {
-      return res.status(400).json({ success: false, message: 'Format email tidak valid' });
-    }
-    if (String(password).length < 8) {
-      return res.status(400).json({ success: false, message: 'Password minimal 8 karakter' });
+    const parsed = registerSchema.safeParse({ name, email: normalizedEmail, password, dob });
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Input tidak valid' });
     }
 
     const { data: existing } = await supabaseServer

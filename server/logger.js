@@ -1,26 +1,9 @@
 
 
-const supportsColor = (() => {
-  if (process.env.NO_COLOR) return false;
-  if (process.env.FORCE_COLOR) return true;
-  return Boolean(process.stdout && process.stdout.isTTY);
-})();
+import pc from 'picocolors';
 
-const wrap = (code) => (text) => (supportsColor ? `\x1b[${code}m${text}\x1b[0m` : String(text));
+export const color = pc;
 
-const color = {
-  reset: wrap(0),
-  bold: wrap(1),
-  dim: wrap(2),
-  gray: wrap(90),
-  red: wrap(31),
-  green: wrap(32),
-  yellow: wrap(33),
-  blue: wrap(34),
-  magenta: wrap(35),
-  cyan: wrap(36),
-  white: wrap(37)
-};
 
 const timeWIB = () =>
   new Date().toLocaleTimeString('id-ID', {

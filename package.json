@@ -17,6 +17,8 @@
     "server": "node server/server.js",
     "server:dev": "node --watch server/server.js",
     "check": "node --check server/server.js && vite build",
+    "health": "node scripts/health-check.js",
+    "clean:ports": "node scripts/clean-ports.js",
     "gmail:token": "node scripts/get-gmail-token.js",
     "audit:security": "npm audit --audit-level=high"
   },
@@ -30,6 +32,7 @@
     "clsx": "^2.1.1",
     "compression": "^1.8.2",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.23",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^8.7.0",
@@ -39,6 +42,7 @@
     "lucide-react": "^0.475.0",
     "midtrans-client": "^1.4.3",
     "multer": "^2.4.0",
+    "picocolors": "^1.1.1",
     "postcss": "^8.5.2",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
@@ -47,8 +51,10 @@
     "recharts": "^3.10.1",
     "sharp": "^0.35.5",
     "sonner": "^2.0.8",
+    "tailwind-merge": "^3.7.0",
     "tailwindcss": "^3.4.17",
     "vite": "^6.1.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.6.5"
   }
 }

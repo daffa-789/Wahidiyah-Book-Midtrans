@@ -6,6 +6,7 @@ import fs from 'fs';
 import net from 'net';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import pc from 'picocolors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,11 +18,8 @@ const forceRebuild = args.includes('--rebuild');
 const skipBuild = args.includes('--no-build');
 
 const PORT = Number(process.env.PORT) || 5000;
-const C = {
-  reset: '\x1b[0m', dim: '\x1b[2m', bold: '\x1b[1m',
-  green: '\x1b[32m', cyan: '\x1b[36m', yellow: '\x1b[33m', red: '\x1b[31m'
-};
-const log = (color, msg) => console.log(`${color}${msg}${C.reset}`);
+const C = pc;
+const log = (colorFn, msg) => console.log(typeof colorFn === 'function' ? colorFn(msg) : msg);
 
 const env = { ...process.env };
 if (process.platform === 'win32') {

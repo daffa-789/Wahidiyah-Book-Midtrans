@@ -1,12 +1,10 @@
 import clsx from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 /**
- * Helper universal untuk menggabungkan class Tailwind secara kondisional.
- * Menghilangkan kebutuhan string template literal ternary yang panjang.
- * 
- * Contoh:
- * cn('btn', isActive && 'btn-active', isError && 'border-red-500')
+ * Helper universal standar (shadcn/tailwind) untuk menggabungkan class Tailwind secara kondisional
+ * dan otomatis menghapus konflik class (misal: 'px-2' dan 'px-4' -> 'px-4').
  */
 export function cn(...inputs) {
-  return clsx(inputs);
+  return twMerge(clsx(inputs));
 }

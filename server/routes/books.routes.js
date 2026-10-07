@@ -13,7 +13,7 @@ import {
 } from '../lib/http.js';
 import { toDataUrl, toWebp } from '../lib/images.js';
 import { BOOK_FIELDS, CONTENT_EXTENSIONS } from '../lib/constants.js';
-import { parseBooleanFlag } from '../lib/validate.js';
+import { bookInputSchema, parseBooleanFlag } from '../lib/validate.js';
 import { uploadBookFiles } from '../middleware/uploads.js';
 
 export const booksRouter = Router();
@@ -46,28 +46,22 @@ booksRouter.get('/books', async (req, res) => {
 
 
 booksRouter.post('/books', requireAuth, requireAdmin, wrap(async (req, res) => {
-  const { title, subtitle, author, category, pages, is_locked, cover_url, description } = req.body;
-  if (!title || !author || !category) {
-    return res.status(400).json({ success: false, message: 'Judul, Penulis, dan Kategori wajib diisi' });
+  const parsed = bookInputSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Input buku tidak valid' });
   }
 
   const id = generateId('buku');
   const { error } = await supabaseServer.from('books').insert({
     id,
-    title: title.trim(),
-    subtitle: subtitle || '',
-    author: author.trim(),
-    category: String(category).trim(),
-    pages: Number(pages) || 100,
-    total_pages: Number(pages) || 100,
-    is_locked: parseBooleanFlag(is_locked),
-    cover_url: cover_url || '',
-    description: description || ''
+    ...parsed.data,
+    total_pages: parsed.data.pages
   });
   if (error) throw error;
 
   res.status(201).json({ success: true, message: 'Buku berhasil ditambahkan', bookId: id });
 }));
+
 
 
 booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wrap(async (req, res) => {
