@@ -38,7 +38,6 @@ CREATE TABLE public.users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) DEFAULT NULL,
-    phone VARCHAR(30) DEFAULT '',
     role public.user_role DEFAULT 'user',
     login_method public.login_method_type DEFAULT 'email',
     is_pro BOOLEAN DEFAULT FALSE,

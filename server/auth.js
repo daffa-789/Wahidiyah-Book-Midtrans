@@ -53,7 +53,6 @@ export const toPublicUser = (user) => {
     id: user.id,
     name: user.name,
     email: user.email,
-    phone: user.phone || '',
     role: user.role || 'user',
     login_method: user.login_method || 'email',
     is_pro: isPro,
