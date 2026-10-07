@@ -60,10 +60,8 @@ Kunci sandbox diambil di **https://dashboard.sandbox.midtrans.com → Settings �
 
 > `.env` sudah masuk `.gitignore` — **jangan pernah** di-commit.
 
-### 4. Jalankan migrasi database
-Buka Supabase → **SQL Editor** → jalankan `supabase_database/migration_midtrans_qris.sql`.
-
-> ⚠️ Jangan pakai `full_setup.sql` untuk migrasi — file itu berisi `DROP TABLE ... CASCADE`.
+### 4. Setup database
+Buka Supabase → **SQL Editor** → jalankan `supabase_database/full_setup.sql` (sudah mencakup tabel utama dan skema Midtrans Core API QRIS).
 
 ### 5. Nyalakan aplikasi
 ```bash

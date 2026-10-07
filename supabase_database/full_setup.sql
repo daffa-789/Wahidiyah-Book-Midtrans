@@ -124,6 +124,11 @@ CREATE TABLE public.transactions (
     payment_method VARCHAR(100) NOT NULL,
     status public.transaction_status DEFAULT 'pending',
     verified_at TIMESTAMPTZ DEFAULT NULL,
+    -- Kolom integrasi Midtrans Core API QRIS
+    midtrans_transaction_id VARCHAR(100),
+    midtrans_qr_url TEXT,
+    midtrans_qr_string TEXT,
+    expires_at TIMESTAMPTZ DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -163,6 +168,7 @@ CREATE INDEX idx_subs_user ON public.subscriptions(user_id);
 CREATE INDEX idx_subs_status ON public.subscriptions(status);
 CREATE INDEX idx_tx_user ON public.transactions(user_id);
 CREATE INDEX idx_tx_status ON public.transactions(status);
+CREATE INDEX idx_transactions_midtrans_transaction_id ON public.transactions(midtrans_transaction_id);
 
 CREATE INDEX idx_email_verifications_lookup
     ON public.email_verifications (email, purpose, id DESC);
@@ -517,3 +523,26 @@ BEGIN
         EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC, anon, authenticated', fn);
     END LOOP;
 END $$;
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- PATCH Midtrans — idempoten, aman untuk basis data yang sudah berisi data.
+-- Menambahkan 4 kolom integrasi Midtrans Core API QRIS ke tabel transactions.
+-- ════════════════════════════════════════════════════════════════════════════
+
+ALTER TABLE public.transactions
+  ADD COLUMN IF NOT EXISTS midtrans_transaction_id VARCHAR(100);
+
+ALTER TABLE public.transactions
+  ADD COLUMN IF NOT EXISTS midtrans_qr_url TEXT;
+
+ALTER TABLE public.transactions
+  ADD COLUMN IF NOT EXISTS midtrans_qr_string TEXT;
+
+ALTER TABLE public.transactions
+  ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_transactions_midtrans_transaction_id
+  ON public.transactions (midtrans_transaction_id);
+
+-- Paksa PostgREST memuat ulang skema cache.
+NOTIFY pgrst, 'reload schema';

@@ -5,7 +5,7 @@ import { AlertCircle, Eye, EyeOff, Info, Lock, LogIn, Mail } from 'lucide-react'
 import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
 import { ServerStatusBanner } from '@ui/ServerStatusBanner';
-import { layout } from '@lib/styles';
+import { layout, controls } from '@lib/styles';
 
 const generateState = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {

@@ -361,6 +361,47 @@ paymentsRouter.get('/qris/:orderId/status', requireAuth, wrap(async (req, res) =
 }));
 
 
+paymentsRouter.post('/qris/:orderId/simulate-paid', paymentRateLimiter, requireAuth, wrap(async (req, res) => {
+  // ── HANYA UNTUK SANDBOX ──────────────────────────────────────────────
+  // Mengaktifkan langganan seolah-olah Midtrans sudah mengirim notifikasi
+  // settlement. Dipakai untuk demo/tes dari HP tanpa membuka simulator
+  // Midtrans. Di PRODUCTION rute ini mati total (404) — tidak mungkin
+  // diaktifkan lewat konfigurasi.
+  if (MIDTRANS_IS_PRODUCTION) {
+    return res.status(404).json({ success: false, message: 'Rute tidak tersedia.' });
+  }
+
+  const { transaction, forbidden } = await loadOwnTransaction(req.params.orderId, req.user);
+
+  if (!transaction) {
+    return res.status(forbidden ? 403 : 404).json({
+      success: false,
+      message: forbidden ? 'Transaksi ini bukan milik Anda.' : 'Transaksi tidak ditemukan.'
+    });
+  }
+
+  if (transaction.status === 'success') {
+    return res.json({ success: true, alreadyProcessed: true, status: 'settlement', isPaid: true });
+  }
+
+  if (transaction.expires_at && new Date(transaction.expires_at).getTime() < Date.now()) {
+    await rejectTransaction(transaction, 'kedaluwarsa');
+    return res.status(410).json({ success: false, message: 'Kode QR sudah kedaluwarsa. Buat ulang dulu.' });
+  }
+
+  // Sengaja memakai settleTransaction() yang sama dengan jalur webhook asli,
+  // supaya perilaku (termasuk idempotensi & rollback) persis identik.
+  const { alreadyProcessed } = await settleTransaction(transaction);
+
+  logger.warn('MIDTRANS', 'Settlement DISIMULASIKAN dari UI (mode sandbox)', {
+    orderId: transaction.id,
+    userId: transaction.user_id
+  });
+
+  return res.json({ success: true, alreadyProcessed, status: 'settlement', isPaid: true });
+}));
+
+
 paymentsRouter.get('/qris/:orderId/qr.png', qrImageRateLimiter, requireAuth, wrap(async (req, res) => {
   const { transaction, forbidden } = await loadOwnTransaction(req.params.orderId, req.user);
 

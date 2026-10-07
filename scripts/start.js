@@ -43,7 +43,7 @@ function probePort(port, host = '127.0.0.1', timeout = 1000) {
     socket.setTimeout(timeout);
     socket.once('connect', () => { done = true; socket.destroy(); resolve(true); });
     socket.once('timeout', () => { if (!done) { done = true; socket.destroy(); resolve(false); } });
-    socket.once('error',   () => { if (!done) { done = true; socket.destroy(); resolve(false); } });
+    socket.once('error', () => { if (!done) { done = true; socket.destroy(); resolve(false); } });
     socket.connect(port, host);
   });
 }
@@ -70,7 +70,7 @@ async function freePort(port) {
       }
     }
     await new Promise((r) => setTimeout(r, 800));
-  } catch {}
+  } catch { }
 }
 
 function runBuild() {
@@ -83,10 +83,6 @@ function runBuild() {
 }
 
 async function main() {
-  console.log();
-  log(C.bold, '  Wahidiyah Book — Mode Produksi');
-  log(C.dim, '  ──────────────────────────────────────────────');
-
   const hasBuild = fs.existsSync(distIndex);
   if (skipBuild && !hasBuild) {
     log(C.red, '[START] --no-build diminta tapi folder dist/ belum ada. Jalankan tanpa flag itu.');
@@ -100,14 +96,12 @@ async function main() {
       log(C.red, `[START] ${e.message}`);
       process.exit(1);
     }
-  } else if (hasBuild) {
-    log(C.dim, '[START] Folder dist/ sudah ada — lewati build (pakai --rebuild untuk membangun ulang).');
   }
 
   await freePort(PORT);
 
   log(C.cyan, `[START] Menjalankan server di http://localhost:${PORT} ...`);
-  log(C.dim,   '        Tekan CTRL+C untuk mematikan.');
+  log(C.dim, '        Tekan CTRL+C untuk mematikan.');
   console.log();
 
   const proc = spawn(nodeExec, [serverScript], {
@@ -126,9 +120,8 @@ async function main() {
   process.on('SIGINT', cleanup);
   process.on('SIGTERM', cleanup);
 
-  proc.on('close', (code) => {
-    log(C.yellow, `[START] Server berhenti${code ? ` (kode ${code})` : ''}.`);
-    process.exit(code ?? 0);
+  proc.on('close', () => {
+    process.exit(0);
   });
 }
 

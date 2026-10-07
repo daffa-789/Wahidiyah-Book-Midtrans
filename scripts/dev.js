@@ -124,8 +124,8 @@ async function startDev() {
   process.on('exit', cleanup);
 
   serverProc.on('close', (code) => {
-    if (!isCleaningUp && code !== 0 && code !== null) {
-      console.error(`\x1b[31m[DEV] Server berhenti (kode: ${code})\x1b[0m`);
+    if (!isCleaningUp && code !== 0 && code !== 3221225786 && code !== null) {
+      console.error('\x1b[31m[DEV] Server berhenti.\x1b[0m');
     }
   });
 }

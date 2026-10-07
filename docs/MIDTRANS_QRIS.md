@@ -73,12 +73,10 @@ MIDTRANS_QRIS_EXPIRY_MINUTES=15
 ```
 `.env` sudah masuk `.gitignore`, jadi aman. Server key **tidak pernah** dikirim ke browser.
 
-### 3.3 Jalankan migrasi database
-Buka Supabase → **SQL Editor** → jalankan isi `supabase_database/migration_midtrans_qris.sql`.
-Migrasi ini **additif** (menambah kolom `midtrans_transaction_id`, `midtrans_qr_url`, `expires_at`)
-dan aman dijalankan berulang.
+### 3.3 Setup database
+Buka Supabase → **SQL Editor** → jalankan isi `supabase_database/full_setup.sql`.
+Semua tabel utama dan patch kolom Midtrans (`midtrans_transaction_id`, `midtrans_qr_url`, `midtrans_qr_string`, `expires_at`) sudah tergabung menjadi satu.
 
-> Jangan jalankan `full_setup.sql` untuk ini — file itu berisi `DROP TABLE ... CASCADE`.
 
 ### 3.4 Jalankan aplikasi
 ```bash
