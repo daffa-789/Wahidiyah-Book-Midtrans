@@ -406,7 +406,10 @@ const parseCookies = (header) => {
 };
 
 authRouter.get('/google/callback', async (req, res) => {
-  const frontendOrigin = process.env.FRONTEND_ORIGIN || `http://localhost:${process.env.VITE_PORT || 3000}`;
+  const host = req.get('host') || `localhost:${process.env.PORT || 5000}`;
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const currentOrigin = `${protocol}://${host}`;
+  const frontendOrigin = process.env.FRONTEND_ORIGIN || currentOrigin;
 
   const failRedirect = (message, code = 'google_oauth') => {
     try {
@@ -416,7 +419,6 @@ authRouter.get('/google/callback', async (req, res) => {
       logger.warn('GOOGLE_OAUTH', message);
       return res.redirect(url.toString());
     } catch (redirectError) {
-
       logger.error('GOOGLE_OAUTH', 'Gagal menyusun URL redirect', { pesan: redirectError.message });
       return res.status(302).send(`<script>window.location.href='${frontendOrigin}/login';</script>`);
     }
@@ -443,7 +445,7 @@ authRouter.get('/google/callback', async (req, res) => {
       return failRedirect('Konfigurasi Google OAuth di server belum lengkap.');
     }
     const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI
-      || `${frontendOrigin}/api/auth/google/callback`;
+      || `${currentOrigin}/api/auth/google/callback`;
 
     const oauthClient = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
     let tokens;
