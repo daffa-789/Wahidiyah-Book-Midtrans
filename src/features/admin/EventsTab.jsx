@@ -427,16 +427,6 @@ export const EventsTab = ({
                           </button>
                         )}
                       </div>
-                      <p className={typography.metaTight}>
-                        Jadwal otomatis tampil di kalender spiritual jemaah.
-                      </p>
-                    </div>
-
-                    <div className="p-3 rounded-2xl bg-brand-50 border border-brand-200 text-xs text-brand-800 flex items-center justify-between">
-                      <span className="font-semibold">
-                        🗓️ Tanggal: {dateLabel(eventForm.event_date || selectedCalDate)}
-                      </span>
-                      <span className="text-micro text-brand-700 font-bold">Sinkron Kalender</span>
                     </div>
 
                     <div className="space-y-3">
