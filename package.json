@@ -16,6 +16,7 @@
     "preview": "vite preview",
     "server": "node server/server.js",
     "server:dev": "node --watch server/server.js",
+    "check": "node --check server/server.js && vite build",
     "gmail:token": "node scripts/get-gmail-token.js",
     "audit:security": "npm audit --audit-level=high"
   },
@@ -25,6 +26,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.6.1",
     "bcryptjs": "^3.0.3",
+    "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
     "compression": "^1.8.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

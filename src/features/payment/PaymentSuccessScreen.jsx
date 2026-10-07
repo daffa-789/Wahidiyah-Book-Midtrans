@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Printer, CheckCircle2 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useApp } from '@context/AppContext';
 import { typography } from '@lib/styles';
 import { PaymentReceiptModal } from './PaymentReceiptModal';
@@ -7,6 +8,20 @@ import { PaymentReceiptModal } from './PaymentReceiptModal';
 export const PaymentSuccessScreen = () => {
   const { user, lastPaymentResult, selectedPlan, selectedPaymentMethod, navigateTo } = useApp();
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+
+  useEffect(() => {
+    // Tembakkan animasi confetti selebrasi saat halaman pembayaran sukses dimuat
+    try {
+      confetti({
+        particleCount: 90,
+        spread: 70,
+        origin: { y: 0.55 },
+        colors: ['#14523A', '#B8860B', '#22C55E', '#F59E0B', '#3B82F6']
+      });
+    } catch {
+      // Abaikan jika lingkungan tidak mendukung canvas
+    }
+  }, []);
 
   const fallbackAmount = Number(selectedPlan?.price || 25000);
   const fallbackAdminFee = 3000;
