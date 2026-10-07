@@ -12,7 +12,7 @@ import {
 import { toast } from 'sonner';
 import { apiJson, authHeaders } from '@lib/api';
 import { dateLabel, getTodayStr } from '@lib/date';
-import { typography } from '@lib/styles';
+import { layout, typography, surfaces, controls } from '@lib/styles';
 
 const EMPTY_SLIDE_FORM = {
   title: '',

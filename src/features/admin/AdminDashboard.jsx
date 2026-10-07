@@ -38,7 +38,7 @@ import { EventsTab } from './EventsTab';
 import { CarouselTab } from './CarouselTab';
 import { LogsTab } from './LogsTab';
 import { BookModal } from './BookModal';
-import { typography } from '@lib/styles';
+import { layout, typography, surfaces, controls } from '@lib/styles';
 
 const isValidTabSlug = (slug) => slug === undefined || ADMIN_TAB_SLUGS.has(slug);
 

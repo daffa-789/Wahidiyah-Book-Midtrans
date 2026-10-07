@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { FileUp, Loader2, X, CheckCircle2, FileText } from 'lucide-react';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
-import { typography } from '@lib/styles';
+import { layout, typography, surfaces, controls } from '@lib/styles';
 
 const fileLabel = (file) =>
   file ? `${file.name} • ${(file.size / 1024 / 1024).toFixed(1)} MB` : 'Belum dipilih';
