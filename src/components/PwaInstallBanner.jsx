@@ -7,8 +7,14 @@ export const PwaInstallBanner = () => {
   const [isIos, setIsIos] = useState(false);
 
   useEffect(() => {
-    // Cek apakah user sudah menutup banner sesi ini
-    if (sessionStorage.getItem('wb_pwa_dismissed') === 'true') {
+    // Jangan tampilkan di Desktop (hanya untuk perangkat mobile / tablet)
+    const isMobileOrTablet = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    if (!isMobileOrTablet) {
+      return;
+    }
+
+    // Cek apakah user sudah menutup banner
+    if (localStorage.getItem('wb_pwa_dismissed') === 'true' || sessionStorage.getItem('wb_pwa_dismissed') === 'true') {
       return;
     }
 
@@ -18,7 +24,7 @@ export const PwaInstallBanner = () => {
       return;
     }
 
-    // Tangkap event instalasi browser Android / Chromium / Desktop
+    // Tangkap event instalasi browser Android / Mobile Chromium
     const handleBeforeInstall = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -58,6 +64,7 @@ export const PwaInstallBanner = () => {
   const handleDismiss = () => {
     setIsVisible(false);
     sessionStorage.setItem('wb_pwa_dismissed', 'true');
+    localStorage.setItem('wb_pwa_dismissed', 'true');
   };
 
   if (!isVisible) return null;
