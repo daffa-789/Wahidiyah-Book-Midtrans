@@ -19,7 +19,10 @@ import {
   X
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { exportEventsToExcel } from '@lib/excelExport';
+// R56 — `exportEventsToExcel` TIDAK lagi di-import statis di sini. Import statis
+// di berkas ini membuat Rollup mengangkat seluruh chunk `excel` (283 KB) ke
+// dalam bundle AdminDashboard, sehingga setiap admin yang membuka dashboard
+// ikut mengunduhnya. Sekarang di-`await import()` di dalam handler ekspor.
 import { apiJson, authHeaders, getStoredSession } from '@lib/api';
 import {
   MONTH_NAMES,
@@ -159,8 +162,9 @@ export const EventsTab = ({
     }
   };
 
-  const handleExportEvents = () => {
+  const handleExportEvents = async () => {
     try {
+      const { exportEventsToExcel } = await import('@lib/excelExport');
       const res = exportEventsToExcel(events);
       toast.success(`${res.count} data agenda berhasil diekspor (${res.fileName})`);
     } catch (err) {

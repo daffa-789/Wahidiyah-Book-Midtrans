@@ -22,6 +22,7 @@ import {
 import { Transition } from '@headlessui/react';
 import { useApp } from '@context/AppContext';
 import { ThemeToggle } from '@ui/ThemeToggle';
+import { BrandMark } from '@ui/BrandMark';
 
 import { tabIdFromPath } from '@lib/navigation';
 import { layout } from '@lib/styles';
@@ -211,7 +212,7 @@ const SidebarContent = React.memo(({
           >
             {isAdminNav
               ? <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.9} />
-              : <BookOpen className="h-[18px] w-[18px]" strokeWidth={1.9} />}
+              : <BrandMark className="h-10 w-10 rounded-xl" />}
           </button>
           {collapseToggle}
           <ThemeToggle variant="onDark" />
@@ -247,7 +248,7 @@ const SidebarContent = React.memo(({
           >
             {isAdminNav
               ? <ShieldCheck className="h-[15px] w-[15px]" strokeWidth={2} />
-              : <BookOpen className="h-[15px] w-[15px]" strokeWidth={2} />}
+              : <BrandMark className="h-7 w-7 rounded-lg" />}
           </span>
           {isAdminNav ? (
             <span className="flex min-w-0 flex-col">
@@ -504,7 +505,7 @@ const DeviceFrameBase = ({ children }) => {
             >
               {isAdmin
                 ? <ShieldCheck className="h-4 w-4" strokeWidth={2} />
-                : <BookOpen className="h-4 w-4" strokeWidth={2} />}
+                : <BrandMark className="h-8 w-8 rounded-xl" />}
             </span>
             <span className="font-display text-lead font-bold tracking-tight text-ink-900">
               {isAdmin ? 'Panel Admin' : 'Wahidiyah Book'}

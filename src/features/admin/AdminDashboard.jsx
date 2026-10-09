@@ -28,12 +28,6 @@ import { ADMIN_DEFAULT_TAB, ADMIN_TAB_SLUGS, tabIdFromPath } from '@lib/navigati
 import { normalizeEvent, normalizeTransaction, normalizeUser } from '@lib/normalizers';
 import { formatWIB, getTodayStr } from '@lib/date';
 import { formatRupiah } from '@lib/formatUtils';
-import {
-  exportBooksToExcel,
-  exportFullReportToExcel,
-  exportTransactionsToExcel,
-  exportUsersToExcel
-} from '@lib/excelExport';
 import { EventsTab } from './EventsTab';
 import { CarouselTab } from './CarouselTab';
 import { LogsTab } from './LogsTab';
@@ -316,8 +310,19 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleExportFull = () => {
+  // R56 — Ekspor Excel jadi *dinamis*.
+  //
+  // Sebelumnya `@lib/excelExport` di-import statis, sehingga Rollup menganggap
+  // chunk `excel` (283 KB, hampir seluruhnya `xlsx`) sebagai dependensi
+  // AdminDashboard — dan AdminDashboard sendiri masuk SEBELUM gzip dipakai.
+  // Akibatnya setiap admin yang membuka dashboard ikut mengunduh 283 KB walau
+  // tidak pernah menekan tombol ekspor.
+  //
+  // Dengan `await import()` di dalam handler, chunk `excel` baru diambil saat
+  // tombol benar-benar diklik. Perilaku tombol tidak berubah, hanya waktunya.
+  const handleExportFull = async () => {
     try {
+      const { exportFullReportToExcel } = await import('@lib/excelExport');
       const res = exportFullReportToExcel({ users, transactions, books, events, stats });
       toast.success(`Laporan lengkap berhasil diunduh (${res.fileName})`);
     } catch (err) {
@@ -325,8 +330,9 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleExportTransactions = () => {
+  const handleExportTransactions = async () => {
     try {
+      const { exportTransactionsToExcel } = await import('@lib/excelExport');
       const res = exportTransactionsToExcel(transactions);
       toast.success(`${res.count} data transaksi berhasil diekspor (${res.fileName})`);
     } catch (err) {
@@ -334,8 +340,9 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleExportUsers = () => {
+  const handleExportUsers = async () => {
     try {
+      const { exportUsersToExcel } = await import('@lib/excelExport');
       const res = exportUsersToExcel(users);
       toast.success(`${res.count} data pengguna berhasil diekspor (${res.fileName})`);
     } catch (err) {
@@ -343,8 +350,9 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleExportBooks = () => {
+  const handleExportBooks = async () => {
     try {
+      const { exportBooksToExcel } = await import('@lib/excelExport');
       const res = exportBooksToExcel(books);
       toast.success(`${res.count} data buku berhasil diekspor (${res.fileName})`);
     } catch (err) {
