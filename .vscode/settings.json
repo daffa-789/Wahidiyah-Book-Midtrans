@@ -14,14 +14,9 @@
     "ngClass",
     "class:list"
   ],
-  "tailwindCSS.classFunctions": [
-    "cn",
-    "clsx",
-    "twMerge"
-  ],
+  "tailwindCSS.classFunctions": [],
   "tailwindCSS.experimental.classRegex": [
     ["(?:layout|typography|surfaces|controls|tone)\\.\\w+\\s*[:=]\\s*['\"`]([^'\"`]*)['\"`]"],
-    ["cn\\(([^)]*)\\)"],
     ["[\"'`]([^\"'`]*)[\"'`]"]
   ],
   "editor.quickSuggestions": {

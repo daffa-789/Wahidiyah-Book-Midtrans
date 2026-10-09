@@ -1,5 +1,29 @@
 
 
+/**
+ * Ambil nilai dari objek dengan mencoba beberapa nama kunci berurutan.
+ *
+ * Supabase (PostgREST) mengembalikan `snake_case`, sementara seluruh kode
+ * klien memakai `camelCase`. Setiap normalizer karena itu sebelumnya menulis
+ * `data.subscription_period ?? data.subscriptionPeriod ?? null` — pola yang
+ * berulang 27 kali di berkas ini.
+ *
+ * Dengan helper ini menjadi `pick(data, 'subscription_period', 'subscriptionPeriod')`.
+ *
+ * Aturan penting yang dipertahankan persis: `undefined` dan `null` SAMA-SAMA
+ * dilewati (memakai `??`), tetapi `false`, `0`, dan `''` dianggap nilai sah
+ * sehingga tidak tertimpa oleh fallback. Ini yang membuat `is_pro: false`
+ * tidak keliru jatuh ke default.
+ */
+const pick = (source, ...keys) => {
+  if (!source) return undefined;
+  for (const key of keys) {
+    const value = source[key];
+    if (value !== undefined && value !== null) return value;
+  }
+  return undefined;
+};
+
 const EVENT_BADGE_COLORS = {
   Mujahadah: 'bg-brand-50 text-brand-800 border-brand-200',
   Pengajian: 'bg-brand-50 text-brand-800 border-brand-200',
@@ -23,20 +47,20 @@ export const EMPTY_USER = {
 };
 
 export const normalizeUser = (data = {}) => {
-  const isPro = Boolean(data.is_pro ?? data.isPro);
+  const isPro = Boolean(pick(data, 'is_pro', 'isPro'));
   return {
     id: data.id ?? null,
     name: data.name ?? '',
     email: data.email ?? '',
     role: data.role === 'admin' ? 'admin' : 'user',
-    loginMethod: data.login_method ?? data.loginMethod ?? 'email',
+    loginMethod: pick(data, 'login_method', 'loginMethod') ?? 'email',
     isPro,
     activePlan: null,
     avatar: data.avatar || null,
     dob: data.dob || null,
-    subscriptionPeriod: isPro ? (data.subscription_period ?? data.subscriptionPeriod ?? null) : null,
-    subscriptionExpiresAt: isPro ? (data.subscription_expires_at ?? data.subscriptionExpiresAt ?? null) : null,
-    createdAt: data.created_at ?? data.createdAt ?? null
+    subscriptionPeriod: isPro ? (pick(data, 'subscription_period', 'subscriptionPeriod') ?? null) : null,
+    subscriptionExpiresAt: isPro ? (pick(data, 'subscription_expires_at', 'subscriptionExpiresAt') ?? null) : null,
+    createdAt: pick(data, 'created_at', 'createdAt') ?? null
   };
 };
 
@@ -63,26 +87,26 @@ export const normalizeBook = (book = {}) => ({
   category: book.category || 'Umum',
   pages: Number(book.total_pages || book.pages || 0),
   totalPages: Number(book.total_pages || 0),
-  isLocked: Boolean(book.is_locked ?? book.isLocked),
+  isLocked: Boolean(pick(book, 'is_locked', 'isLocked')),
   coverUrl: book.has_thumbnail
     ? `/api/books/${encodeURIComponent(book.id)}/thumbnail`
     : (book.cover_url || book.coverUrl || null),
   contentUrl: book.has_content
     ? `/api/books/${encodeURIComponent(book.id)}/content`
     : (book.contentUrl || null),
-  contentName: book.content_name || book.contentName || null,
-  contentType: book.content_type || book.contentType || (book.content_extension || '').replace('.', ''),
+  contentName: pick(book, 'content_name', 'contentName') || null,
+  contentType: pick(book, 'content_type', 'contentType') || (book.content_extension || '').replace('.', ''),
   contentExtension: book.content_extension || '',
-  hasContent: Boolean(book.has_content ?? book.hasContent),
+  hasContent: Boolean(pick(book, 'has_content', 'hasContent')),
   description: book.description || '',
   samplePages: Array.isArray(book.samplePages) ? book.samplePages : [],
-  createdAt: book.created_at || book.createdAt || null
+  createdAt: pick(book, 'created_at', 'createdAt') || null
 });
 
 export const normalizeEvent = (event = {}) => {
-  const dateStr = String(event.event_date ?? event.date ?? '').slice(0, 10);
-  const timeStart = event.time_start ?? event.timeStart ?? '';
-  const timeEnd = event.time_end ?? event.timeEnd ?? '';
+  const dateStr = String(pick(event, 'event_date', 'date') ?? '').slice(0, 10);
+  const timeStart = pick(event, 'time_start', 'timeStart') || '';
+  const timeEnd = pick(event, 'time_end', 'timeEnd') || '';
   const category = event.category || '';
   return {
     id: event.id,
@@ -97,40 +121,40 @@ export const normalizeEvent = (event = {}) => {
     description: event.description || '',
     organizer: event.organizer || '',
 
-    showInCarousel: Boolean(event.show_in_carousel ?? event.showInCarousel),
+    showInCarousel: Boolean(pick(event, 'show_in_carousel', 'showInCarousel')),
     badgeColor: event.badgeColor || EVENT_BADGE_COLORS[category] || 'bg-brand-50 text-brand-800 border-brand-200',
-    createdAt: event.created_at ?? event.createdAt ?? null
+    createdAt: pick(event, 'created_at', 'createdAt') ?? null
   };
 };
 
 export const normalizeCarouselSlide = (slide = {}) => {
-  const rawImage = String(slide.image_url ?? slide.imageUrl ?? '');
+  const rawImage = String(pick(slide, 'image_url', 'imageUrl') ?? '');
   return {
     id: slide.id,
     title: slide.title || 'Tanpa judul',
     description: slide.description || '',
     imageUrl: /^(data:image\/|https?:\/\/)/i.test(rawImage) ? rawImage : null,
-    eventId: slide.event_id ?? slide.eventId ?? null,
-    eventDate: String(slide.event_date ?? slide.eventDate ?? '').slice(0, 10) || null,
-    sortOrder: Number(slide.sort_order ?? slide.sortOrder ?? 0) || 0,
-    isActive: Boolean(slide.is_active ?? slide.isActive ?? true),
-    startsAt: String(slide.starts_at ?? slide.startsAt ?? '').slice(0, 10) || null,
-    endsAt: String(slide.ends_at ?? slide.endsAt ?? '').slice(0, 10) || null,
-    createdAt: slide.created_at ?? slide.createdAt ?? null
+    eventId: pick(slide, 'event_id', 'eventId') ?? null,
+    eventDate: String(pick(slide, 'event_date', 'eventDate') ?? '').slice(0, 10) || null,
+    sortOrder: Number(pick(slide, 'sort_order', 'sortOrder') ?? 0) || 0,
+    isActive: Boolean(pick(slide, 'is_active', 'isActive') ?? true),
+    startsAt: String(pick(slide, 'starts_at', 'startsAt') ?? '').slice(0, 10) || null,
+    endsAt: String(pick(slide, 'ends_at', 'endsAt') ?? '').slice(0, 10) || null,
+    createdAt: pick(slide, 'created_at', 'createdAt') ?? null
   };
 };
 
 export const normalizeTransaction = (tx = {}) => ({
   id: tx.id,
-  refNo: tx.ref_no ?? tx.refNo ?? '',
-  planName: tx.plan_name ?? tx.planName ?? '',
+  refNo: pick(tx, 'ref_no', 'refNo') ?? '',
+  planName: pick(tx, 'plan_name', 'planName') ?? '',
   amount: Number(tx.amount ?? 0),
-  adminFee: Number(tx.admin_fee ?? tx.adminFee ?? 0),
-  totalPaid: Number(tx.total_paid ?? tx.totalPaid ?? 0),
-  paymentMethod: tx.payment_method ?? tx.paymentMethod ?? '',
+  adminFee: Number(pick(tx, 'admin_fee', 'adminFee') ?? 0),
+  totalPaid: Number(pick(tx, 'total_paid', 'totalPaid') ?? 0),
+  paymentMethod: pick(tx, 'payment_method', 'paymentMethod') ?? '',
   status: tx.status ?? '',
-  verifiedAt: tx.verified_at ?? tx.verifiedAt ?? null,
-  createdAt: tx.created_at ?? tx.createdAt ?? null,
+  verifiedAt: pick(tx, 'verified_at', 'verifiedAt') ?? null,
+  createdAt: pick(tx, 'created_at', 'createdAt') ?? null,
   userName: tx.userName ?? '',
   userEmail: tx.userEmail ?? ''
 });

@@ -13,10 +13,13 @@ import {
   verifyPassword
 } from '../auth.js';
 import {
-  authFailureMessage,
   DB_DOWN_MESSAGE,
+  authFailureMessage,
+  badRequest,
+  conflict,
   internalErrorDetail,
   isDbDown,
+  unauthorized,
   wrap
 } from '../lib/http.js';
 import { canExposeDevOtp, consumeOtp, issueOtp, resendCooldownRemaining } from '../lib/otp.js';
@@ -49,7 +52,7 @@ authRouter.post('/login', async (req, res) => {
 
   const parsed = loginSchema.safeParse({ email: userEmail, password });
   if (!parsed.success) {
-    return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Input tidak valid' });
+    return badRequest(res, parsed.error.issues[0]?.message || 'Input tidak valid');
   }
 
   try {
@@ -60,14 +63,11 @@ authRouter.post('/login', async (req, res) => {
       .maybeSingle();
 
     if (lookupError) throw lookupError;
-    if (!user) return res.status(401).json({ success: false, message: INVALID_CREDENTIALS_MESSAGE });
+    if (!user) return unauthorized(res, INVALID_CREDENTIALS_MESSAGE);
 
     const passwordOk = await verifyPassword(password, user.password);
     if (!passwordOk) {
-      return res.status(401).json({
-        success: false,
-        message: user.password ? INVALID_CREDENTIALS_MESSAGE : GOOGLE_ACCOUNT_MESSAGE
-      });
+      return unauthorized(res, user.password ? INVALID_CREDENTIALS_MESSAGE : GOOGLE_ACCOUNT_MESSAGE);
     }
 
     logger.ok('AUTH', 'Login berhasil', { email: userEmail, role: user.role || 'user' });
@@ -90,7 +90,7 @@ authRouter.post('/register', async (req, res) => {
 
     const parsed = registerSchema.safeParse({ name, email: normalizedEmail, password, dob });
     if (!parsed.success) {
-      return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Input tidak valid' });
+      return badRequest(res, parsed.error.issues[0]?.message || 'Input tidak valid');
     }
 
     const { data: existing } = await supabaseServer
@@ -99,7 +99,7 @@ authRouter.post('/register', async (req, res) => {
       .eq('email', normalizedEmail)
       .maybeSingle();
     if (existing) {
-      return res.status(409).json({ success: false, message: 'Email sudah terdaftar. Silakan masuk atau gunakan email lain.' });
+      return conflict(res, 'Email sudah terdaftar. Silakan masuk atau gunakan email lain.');
     }
 
     const { code, deliveredBy } = await issueOtp({
@@ -131,7 +131,7 @@ authRouter.post('/verify-registration', async (req, res) => {
     const email = normalizeEmail(req.body?.email);
     const code = String(req.body?.code || '').trim();
     if (!email || !code) {
-      return res.status(400).json({ success: false, message: 'Email dan kode verifikasi wajib diisi.' });
+      return badRequest(res, 'Email dan kode verifikasi wajib diisi.');
     }
 
     const result = await consumeOtp({ email, purpose: 'register', code });
@@ -142,7 +142,7 @@ authRouter.post('/verify-registration', async (req, res) => {
     const payload = result.row.payload || {};
     if (!payload.name || !payload.passwordHash) {
       await deleteOtpById(result.row.id);
-      return res.status(400).json({ success: false, message: 'Data pendaftaran tidak lengkap. Silakan daftar ulang.' });
+      return badRequest(res, 'Data pendaftaran tidak lengkap. Silakan daftar ulang.');
     }
 
     const newId = generateId('usr');
@@ -162,7 +162,7 @@ authRouter.post('/verify-registration', async (req, res) => {
 
       if (insertError.code === '23505') {
         await deleteOtpById(result.row.id);
-        return res.status(409).json({ success: false, message: 'Email sudah terdaftar. Silakan masuk.' });
+        return conflict(res, 'Email sudah terdaftar. Silakan masuk.');
       }
       throw insertError;
     }
@@ -190,7 +190,7 @@ const RESET_UNIFORM_RESPONSE = {
 authRouter.post('/request-password-reset', wrap(async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   if (!email || !email.includes('@')) {
-    return res.status(400).json({ success: false, message: 'Masukkan alamat email yang valid.' });
+    return badRequest(res, 'Masukkan alamat email yang valid.');
   }
 
   const { data: account } = await supabaseServer
@@ -232,10 +232,10 @@ authRouter.post('/reset-password', wrap(async (req, res) => {
   const password = String(req.body?.password || '');
 
   if (!email || !code) {
-    return res.status(400).json({ success: false, message: 'Email dan kode verifikasi wajib diisi.' });
+    return badRequest(res, 'Email dan kode verifikasi wajib diisi.');
   }
   if (password.length < 8) {
-    return res.status(400).json({ success: false, message: 'Password baru minimal 8 karakter.' });
+    return badRequest(res, 'Password baru minimal 8 karakter.');
   }
 
   const { data: target } = await supabaseServer
@@ -246,10 +246,7 @@ authRouter.post('/reset-password', wrap(async (req, res) => {
   if (target?.login_method === 'google') {
     await deleteOtpByEmailPurpose(email, 'reset');
     logger.warn('OTP', 'Reset password ditolak: akun terdaftar lewat Google', { email });
-    return res.status(400).json({
-      success: false,
-      message: 'Akun ini terdaftar melalui Google sehingga tidak memiliki password. Silakan masuk dengan tombol "Login dengan Google".'
-    });
+    return badRequest(res, 'Akun ini terdaftar melalui Google sehingga tidak memiliki password. Silakan masuk dengan tombol "Login dengan Google".');
   }
 
   const result = await consumeOtp({ email, purpose: 'reset', code });
@@ -272,21 +269,15 @@ authRouter.post('/resend-verification', wrap(async (req, res) => {
   const purpose = req.body?.purpose === 'reset' ? 'reset' : 'register';
 
   if (!email || !email.includes('@')) {
-    return res.status(400).json({ success: false, message: 'Email tidak valid.' });
+    return badRequest(res, 'Email tidak valid.');
   }
 
   const existing = await findLatestOtp(email, purpose);
   if (!existing) {
-    return res.status(400).json({
-      success: false,
-      message: 'Tidak ada permintaan verifikasi yang aktif. Silakan ulangi dari awal.'
-    });
+    return badRequest(res, 'Tidak ada permintaan verifikasi yang aktif. Silakan ulangi dari awal.');
   }
   if (purpose === 'register' && !existing.payload) {
-    return res.status(400).json({
-      success: false,
-      message: 'Data pendaftaran tidak ditemukan. Silakan daftar ulang dari awal.'
-    });
+    return badRequest(res, 'Data pendaftaran tidak ditemukan. Silakan daftar ulang dari awal.');
   }
 
   const cooldown = resendCooldownRemaining(existing);
@@ -329,7 +320,7 @@ authRouter.post('/resend-verification', wrap(async (req, res) => {
 authRouter.post('/google-supabase', async (req, res) => {
   const { access_token, user: googleUser } = req.body;
   if (!access_token || !googleUser?.email) {
-    return res.status(400).json({ success: false, message: 'Token dan informasi akun Google wajib diisi.' });
+    return badRequest(res, 'Token dan informasi akun Google wajib diisi.');
   }
 
   try {
@@ -340,7 +331,7 @@ authRouter.post('/google-supabase', async (req, res) => {
     const supaAuth = createClient(supaUrl, supaAnonKey);
     const { data: { user: supaUser }, error: authError } = await supaAuth.auth.getUser(access_token);
     if (authError || !supaUser) {
-      return res.status(401).json({ success: false, message: 'Token Google tidak valid atau sudah kedaluwarsa.' });
+      return unauthorized(res, 'Token Google tidak valid atau sudah kedaluwarsa.');
     }
 
     const email = normalizeEmail(supaUser.email);

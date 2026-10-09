@@ -28,6 +28,7 @@ import { ADMIN_DEFAULT_TAB, ADMIN_TAB_SLUGS, tabIdFromPath } from '@lib/navigati
 import { normalizeEvent, normalizeTransaction, normalizeUser } from '@lib/normalizers';
 import { formatWIB, getTodayStr } from '@lib/date';
 import { formatRupiah } from '@lib/formatUtils';
+import { withToast, withToastSync } from '@lib/withToast';
 import { EventsTab } from './EventsTab';
 import { CarouselTab } from './CarouselTab';
 import { LogsTab } from './LogsTab';
@@ -160,14 +161,13 @@ export const AdminDashboard = () => {
     ].filter((item) => item.value > 0);
   }, [users]);
 
-  const updateUser = async (id, body, successMessage) => {
-    try {
+  const updateUser = (id, body, successMessage) => withToast(
+    async () => {
       await apiJson(`/api/users/${encodeURIComponent(id)}${body.role ? '/role' : '/pro'}`, {
         method: 'PUT',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      toast.success(successMessage);
 
       if (body.role) {
         const isSelfRoleChange = user?.id === id;
@@ -177,20 +177,21 @@ export const AdminDashboard = () => {
       }
 
       await loadDashboard();
-    } catch (updateError) {
-      toast.error(updateError.message || 'Data pengguna belum dapat diperbarui.');
-    }
-  };
+    },
+    'Data pengguna belum dapat diperbarui.',
+    successMessage
+  );
 
-  const deleteBook = async (book) => {
-    if (!window.confirm(`Hapus buku “${book.title}”? Lampiran dan halaman terkait juga akan dihapus.`)) return;
-    try {
-      await apiJson(`/api/books/${encodeURIComponent(book.id)}`, { method: 'DELETE', headers });
-      toast.success('Buku berhasil dihapus.');
-      await loadDashboard();
-    } catch (deleteError) {
-      toast.error(deleteError.message || 'Buku belum dapat dihapus.');
-    }
+  const deleteBook = (book) => {
+    if (!window.confirm(`Hapus buku “${book.title}”? Lampiran dan halaman terkait juga akan dihapus.`)) return undefined;
+    return withToast(
+      async () => {
+        await apiJson(`/api/books/${encodeURIComponent(book.id)}`, { method: 'DELETE', headers });
+        await loadDashboard();
+      },
+      'Buku belum dapat dihapus.',
+      'Buku berhasil dihapus.'
+    );
   };
 
   const submitBook = async (event) => {
@@ -204,66 +205,69 @@ export const AdminDashboard = () => {
       return;
     }
     setIsSavingBook(true);
-    try {
-      const data = new FormData();
-      Object.entries(bookForm).forEach(([key, value]) => {
-        if (key !== 'thumbnail' && key !== 'content' && value !== '' && value !== null) {
-          data.append(key, String(value));
+    // `withToast` mengembalikan promise, jadi pembersihan tetap bisa dipasang
+    // lewat `.finally()` seperti blok try/finally sebelumnya.
+    return withToast(
+      async () => {
+        const data = new FormData();
+        Object.entries(bookForm).forEach(([key, value]) => {
+          if (key !== 'thumbnail' && key !== 'content' && value !== '' && value !== null) {
+            data.append(key, String(value));
+          }
+        });
+        data.set('is_locked', bookForm.is_locked ? 'true' : 'false');
+        if (bookForm.thumbnail instanceof File) {
+          data.set('thumbnail', bookForm.thumbnail);
         }
-      });
-      data.set('is_locked', bookForm.is_locked ? 'true' : 'false');
-      if (bookForm.thumbnail instanceof File) {
-        data.set('thumbnail', bookForm.thumbnail);
-      }
-      if (bookForm.content instanceof File) {
-        data.set('content', bookForm.content);
-      }
+        if (bookForm.content instanceof File) {
+          data.set('content', bookForm.content);
+        }
 
-      await apiJson('/api/books/upload', { method: 'POST', headers, body: data, timeoutMs: 120000 });
-      toast.success('Buku dan lampirannya berhasil ditambahkan.');
-      setBookForm(EMPTY_BOOK_FORM);
-      setIsBookModalOpen(false);
-      await loadDashboard();
-    } catch (submitError) {
-      toast.error(submitError.message || 'Buku belum dapat disimpan.');
-    } finally {
-      setIsSavingBook(false);
-    }
+        await apiJson('/api/books/upload', { method: 'POST', headers, body: data, timeoutMs: 120000 });
+        setBookForm(EMPTY_BOOK_FORM);
+        setIsBookModalOpen(false);
+        await loadDashboard();
+      },
+      'Buku belum dapat disimpan.',
+      'Buku dan lampirannya berhasil ditambahkan.'
+    ).finally(() => setIsSavingBook(false));
   };
 
   const submitEvent = async (event) => {
     event.preventDefault();
     setIsSavingEvent(true);
-    try {
-      if (editingEventId) {
-        await apiJson(`/api/events/${encodeURIComponent(editingEventId)}`, {
-          method: 'PUT',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventForm)
-        });
-        toast.success('Agenda berhasil diperbarui.');
-      } else {
-        await apiJson('/api/events', {
-          method: 'POST',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventForm)
-        });
-        toast.success('Agenda berhasil ditambahkan.');
-      }
-      const savedDate = eventForm.event_date || selectedCalDate;
-      setSelectedCalDate(savedDate);
-      if (savedDate && !Number.isNaN(new Date(savedDate).getTime())) {
-        const d = new Date(savedDate);
-        setCurrentCalDate(new Date(d.getFullYear(), d.getMonth(), 1));
-      }
-      setEditingEventId(null);
-      setEventForm({ ...EMPTY_EVENT_FORM, event_date: savedDate });
-      await loadDashboard();
-    } catch (submitError) {
-      toast.error(submitError.message || 'Agenda belum dapat disimpan.');
-    } finally {
-      setIsSavingEvent(false);
-    }
+    // Pesan sukses berbeda untuk tambah vs perbarui, jadi `withToast` dipanggil
+    // tanpa pesan sukses dan toast-nya dipasang di dalam aksi — pola galatnya
+    // tetap terpusat di helper.
+    return withToast(
+      async () => {
+        if (editingEventId) {
+          await apiJson(`/api/events/${encodeURIComponent(editingEventId)}`, {
+            method: 'PUT',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventForm)
+          });
+          toast.success('Agenda berhasil diperbarui.');
+        } else {
+          await apiJson('/api/events', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventForm)
+          });
+          toast.success('Agenda berhasil ditambahkan.');
+        }
+        const savedDate = eventForm.event_date || selectedCalDate;
+        setSelectedCalDate(savedDate);
+        if (savedDate && !Number.isNaN(new Date(savedDate).getTime())) {
+          const d = new Date(savedDate);
+          setCurrentCalDate(new Date(d.getFullYear(), d.getMonth(), 1));
+        }
+        setEditingEventId(null);
+        setEventForm({ ...EMPTY_EVENT_FORM, event_date: savedDate });
+        await loadDashboard();
+      },
+      'Agenda belum dapat disimpan.'
+    ).finally(() => setIsSavingEvent(false));
   };
 
   const editEvent = (event) => {
@@ -282,8 +286,8 @@ export const AdminDashboard = () => {
     setEventForm({ ...EMPTY_EVENT_FORM, event_date: selectedCalDate });
   };
 
-  const toggleEventCarousel = async (event) => {
-    try {
+  const toggleEventCarousel = (event) => withToast(
+    async () => {
       await apiJson(`/api/events/${encodeURIComponent(event.id)}`, {
         method: 'PUT',
         headers: { ...headers, 'Content-Type': 'application/json' },
@@ -292,73 +296,51 @@ export const AdminDashboard = () => {
           show_in_carousel: !event.showInCarousel
         })
       });
-      toast.success(event.showInCarousel ? 'Agenda dikeluarkan dari carousel.' : 'Agenda masuk ke carousel.');
       await loadDashboard();
-    } catch (toggleError) {
-      toast.error(toggleError.message || 'Status carousel agenda gagal diubah.');
-    }
+    },
+    'Status carousel agenda gagal diubah.',
+    event.showInCarousel ? 'Agenda dikeluarkan dari carousel.' : 'Agenda masuk ke carousel.'
+  );
+
+  const deleteEvent = (event) => {
+    if (!window.confirm(`Hapus agenda “${event.title}”?`)) return undefined;
+    return withToast(
+      async () => {
+        await apiJson(`/api/events/${encodeURIComponent(event.id)}`, { method: 'DELETE', headers });
+        await loadDashboard();
+      },
+      'Agenda belum dapat dihapus.',
+      'Agenda berhasil dihapus.'
+    );
   };
 
-  const deleteEvent = async (event) => {
-    if (!window.confirm(`Hapus agenda “${event.title}”?`)) return;
-    try {
-      await apiJson(`/api/events/${encodeURIComponent(event.id)}`, { method: 'DELETE', headers });
-      toast.success('Agenda berhasil dihapus.');
-      await loadDashboard();
-    } catch (deleteError) {
-      toast.error(deleteError.message || 'Agenda belum dapat dihapus.');
-    }
-  };
+  // R57 — pola try/catch/toast.error dirampingkan lewat `withToast`, tetapi
+  // pesan SUKSES di sini menyertakan jumlah baris & nama berkas, jadi tetap
+  // ditulis eksplisit lewat `onSuccess`. `withToastSync` dipakai karena
+  // pembuatan berkas Excel berjalan sinkron (unduhan memicu di memori).
+  const handleExportFull = () => withToastSync(
+    () => import('@lib/excelExport').then((m) => m.exportFullReportToExcel({ users, transactions, books, events, stats })),
+    'Gagal mengekspor laporan.',
+    (res) => `Laporan lengkap berhasil diunduh (${res.fileName})`
+  );
 
-  // R56 — Ekspor Excel jadi *dinamis*.
-  //
-  // Sebelumnya `@lib/excelExport` di-import statis, sehingga Rollup menganggap
-  // chunk `excel` (283 KB, hampir seluruhnya `xlsx`) sebagai dependensi
-  // AdminDashboard — dan AdminDashboard sendiri masuk SEBELUM gzip dipakai.
-  // Akibatnya setiap admin yang membuka dashboard ikut mengunduh 283 KB walau
-  // tidak pernah menekan tombol ekspor.
-  //
-  // Dengan `await import()` di dalam handler, chunk `excel` baru diambil saat
-  // tombol benar-benar diklik. Perilaku tombol tidak berubah, hanya waktunya.
-  const handleExportFull = async () => {
-    try {
-      const { exportFullReportToExcel } = await import('@lib/excelExport');
-      const res = exportFullReportToExcel({ users, transactions, books, events, stats });
-      toast.success(`Laporan lengkap berhasil diunduh (${res.fileName})`);
-    } catch (err) {
-      toast.error(err.message || 'Gagal mengekspor laporan.');
-    }
-  };
+  const handleExportTransactions = () => withToastSync(
+    () => import('@lib/excelExport').then((m) => m.exportTransactionsToExcel(transactions)),
+    'Gagal mengekspor data transaksi.',
+    (res) => `${res.count} data transaksi berhasil diekspor (${res.fileName})`
+  );
 
-  const handleExportTransactions = async () => {
-    try {
-      const { exportTransactionsToExcel } = await import('@lib/excelExport');
-      const res = exportTransactionsToExcel(transactions);
-      toast.success(`${res.count} data transaksi berhasil diekspor (${res.fileName})`);
-    } catch (err) {
-      toast.error(err.message || 'Gagal mengekspor data transaksi.');
-    }
-  };
+  const handleExportUsers = () => withToastSync(
+    () => import('@lib/excelExport').then((m) => m.exportUsersToExcel(users)),
+    'Gagal mengekspor data pengguna.',
+    (res) => `${res.count} data pengguna berhasil diekspor (${res.fileName})`
+  );
 
-  const handleExportUsers = async () => {
-    try {
-      const { exportUsersToExcel } = await import('@lib/excelExport');
-      const res = exportUsersToExcel(users);
-      toast.success(`${res.count} data pengguna berhasil diekspor (${res.fileName})`);
-    } catch (err) {
-      toast.error(err.message || 'Gagal mengekspor data pengguna.');
-    }
-  };
-
-  const handleExportBooks = async () => {
-    try {
-      const { exportBooksToExcel } = await import('@lib/excelExport');
-      const res = exportBooksToExcel(books);
-      toast.success(`${res.count} data buku berhasil diekspor (${res.fileName})`);
-    } catch (err) {
-      toast.error(err.message || 'Gagal mengekspor katalog buku.');
-    }
-  };
+  const handleExportBooks = () => withToastSync(
+    () => import('@lib/excelExport').then((m) => m.exportBooksToExcel(books)),
+    'Gagal mengekspor katalog buku.',
+    (res) => `${res.count} data buku berhasil diekspor (${res.fileName})`
+  );
 
   const kpis = [
     { label: 'Total pengguna', value: stats?.totalUsers ?? 0, icon: Users, tone: 'text-ink-700 bg-cream-100 border-cream-200' },

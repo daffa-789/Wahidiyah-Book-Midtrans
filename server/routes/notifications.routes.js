@@ -6,7 +6,10 @@
  */
 
 import { Router } from 'express';
-import { wrap } from '../lib/http.js';
+import {
+  badRequest,
+  wrap
+} from '../lib/http.js';
 import {
   isPushConfigured,
   saveSubscription,
@@ -61,17 +64,11 @@ notificationsRouter.post('/notifications/subscribe', wrap(async (req, res) => {
   const keys = req.body?.keys || {};
 
   if (!isAllowedEndpoint(endpoint)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Endpoint langganan tidak valid — harus berupa URL https.'
-    });
+    return badRequest(res, 'Endpoint langganan tidak valid — harus berupa URL https.');
   }
 
   if (!isValidKey(keys.p256dh) || !isValidKey(keys.auth)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Kunci langganan perangkat tidak lengkap.'
-    });
+    return badRequest(res, 'Kunci langganan perangkat tidak lengkap.');
   }
 
   const result = await saveSubscription({
@@ -109,7 +106,7 @@ notificationsRouter.post('/notifications/unsubscribe', wrap(async (req, res) => 
   const endpoint = req.body?.endpoint;
 
   if (!isAllowedEndpoint(endpoint)) {
-    return res.status(400).json({ success: false, message: 'Endpoint langganan tidak valid.' });
+    return badRequest(res, 'Endpoint langganan tidak valid.');
   }
 
   await removeSubscription(endpoint);

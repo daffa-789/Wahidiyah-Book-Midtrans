@@ -3,7 +3,12 @@
 import { Router } from 'express';
 import { supabaseServer } from '../db.js';
 import { generateId, requireAdmin, requireAuth } from '../auth.js';
-import { fail, wrap } from '../lib/http.js';
+import {
+  badRequest,
+  fail,
+  notFound,
+  wrap
+} from '../lib/http.js';
 import { clippedText, parseBooleanFlag, toDateYmd } from '../lib/validate.js';
 import { logger } from '../logger.js';
 import { sendEventReminderNow } from '../lib/eventReminder.js';
@@ -121,7 +126,7 @@ eventsRouter.get('/events', async (req, res) => {
 eventsRouter.post('/events', requireAuth, requireAdmin, wrap(async (req, res) => {
   const row = toEventRow(req.body);
   if (!row.title || !row.event_date || !row.location) {
-    return res.status(400).json({ success: false, message: 'Judul, tanggal, dan lokasi wajib diisi' });
+    return badRequest(res, 'Judul, tanggal, dan lokasi wajib diisi');
   }
 
   const showInCarousel = parseBooleanFlag(req.body.show_in_carousel);
@@ -171,7 +176,7 @@ eventsRouter.post('/events', requireAuth, requireAdmin, wrap(async (req, res) =>
 eventsRouter.put('/events/:id', requireAuth, requireAdmin, wrap(async (req, res) => {
   const row = toEventRow(req.body);
   if (!row.title || !row.event_date || !row.location) {
-    return res.status(400).json({ success: false, message: 'Judul, tanggal, dan lokasi wajib diisi' });
+    return badRequest(res, 'Judul, tanggal, dan lokasi wajib diisi');
   }
 
   const showInCarousel = parseBooleanFlag(req.body.show_in_carousel);
@@ -187,7 +192,7 @@ eventsRouter.put('/events/:id', requireAuth, requireAdmin, wrap(async (req, res)
       : result));
 
   if (error) throw error;
-  if (!data?.length) return res.status(404).json({ success: false, message: 'Agenda tidak ditemukan' });
+  if (!data?.length) return notFound(res, 'Agenda tidak ditemukan');
 
   try {
     await syncEventSlide(req.params.id, {
@@ -220,7 +225,7 @@ eventsRouter.delete('/events/:id', requireAuth, requireAdmin, wrap(async (req, r
     .eq('id', req.params.id)
     .select('id');
   if (error) throw error;
-  if (!data?.length) return res.status(404).json({ success: false, message: 'Agenda tidak ditemukan' });
+  if (!data?.length) return notFound(res, 'Agenda tidak ditemukan');
 
   res.json({ success: true, message: 'Jadwal kegiatan berhasil dihapus' });
 }));
@@ -236,7 +241,7 @@ eventsRouter.post('/events/:id/send-reminder', requireAuth, requireAdmin, wrap(a
     .eq('id', req.params.id)
     .maybeSingle();
   if (error) throw error;
-  if (!event) return res.status(404).json({ success: false, message: 'Agenda tidak ditemukan' });
+  if (!event) return notFound(res, 'Agenda tidak ditemukan');
 
   const result = await sendEventReminderNow(req.params.id, { force: true });
 

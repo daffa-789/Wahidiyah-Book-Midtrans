@@ -11,7 +11,14 @@ import {
   requireAuth,
   toPublicUser
 } from '../auth.js';
-import { fail, internalErrorDetail, wrap } from '../lib/http.js';
+import {
+  badRequest,
+  conflict,
+  fail,
+  internalErrorDetail,
+  notFound,
+  wrap
+} from '../lib/http.js';
 import { compressAvatarDataUrl } from '../lib/images.js';
 import { ENDED_SUBSCRIPTION_STATUS } from '../lib/membership.js';
 import { parseBooleanFlag, toPastDateYmd } from '../lib/validate.js';
@@ -23,7 +30,7 @@ export const usersRouter = Router();
 usersRouter.put('/users/profile', requireAuth, async (req, res) => {
   const { name, dob, avatar } = req.body;
   if (!name || !name.trim()) {
-    return res.status(400).json({ success: false, message: 'Nama lengkap wajib diisi.' });
+    return badRequest(res, 'Nama lengkap wajib diisi.');
   }
 
   try {
@@ -34,7 +41,7 @@ usersRouter.put('/users/profile', requireAuth, async (req, res) => {
     if (dob !== undefined) {
       const validDob = toPastDateYmd(dob);
       if (dob && !validDob) {
-        return res.status(400).json({ success: false, message: 'Format tanggal lahir tidak valid (YYYY-MM-DD).' });
+        return badRequest(res, 'Format tanggal lahir tidak valid (YYYY-MM-DD).');
       }
       updates.dob = validDob;
     }
@@ -102,7 +109,7 @@ usersRouter.put('/users/:id/role', requireAuth, requireAdmin, wrap(async (req, r
   const { role } = req.body;
 
   if (!['user', 'admin'].includes(role)) {
-    return res.status(400).json({ success: false, message: 'Role harus user atau admin' });
+    return badRequest(res, 'Role harus user atau admin');
   }
 
   const { error } = await supabaseServer.from('users').update({ role }).eq('id', id);
@@ -143,7 +150,7 @@ usersRouter.put('/users/:id/pro', requireAuth, requireAdmin, wrap(async (req, re
 usersRouter.post('/users', requireAuth, requireAdmin, wrap(async (req, res) => {
   const { name, email, role, is_pro, password, dob } = req.body;
   if (!name || !email) {
-    return res.status(400).json({ success: false, message: 'Nama dan email wajib diisi' });
+    return badRequest(res, 'Nama dan email wajib diisi');
   }
 
   const normalizedEmail = normalizeEmail(email);
@@ -153,7 +160,7 @@ usersRouter.post('/users', requireAuth, requireAdmin, wrap(async (req, res) => {
     .eq('email', normalizedEmail)
     .limit(1);
   if (existing && existing.length > 0) {
-    return res.status(409).json({ success: false, message: 'Email sudah terdaftar' });
+    return conflict(res, 'Email sudah terdaftar');
   }
 
   const temporaryPassword = password || crypto.randomBytes(6).toString('hex');
@@ -185,7 +192,7 @@ usersRouter.delete('/users/:id', requireAuth, requireAdmin, wrap(async (req, res
   
   
   if (id === req.user.id) {
-    return res.status(400).json({ success: false, message: 'Anda tidak dapat menghapus akun sendiri.' });
+    return badRequest(res, 'Anda tidak dapat menghapus akun sendiri.');
   }
 
   const { data: existing } = await supabaseServer
@@ -194,7 +201,7 @@ usersRouter.delete('/users/:id', requireAuth, requireAdmin, wrap(async (req, res
     .eq('id', id)
     .maybeSingle();
   if (!existing) {
-    return res.status(404).json({ success: false, message: 'Pengguna tidak ditemukan' });
+    return notFound(res, 'Pengguna tidak ditemukan');
   }
 
   const { error } = await supabaseServer.from('users').delete().eq('id', id);

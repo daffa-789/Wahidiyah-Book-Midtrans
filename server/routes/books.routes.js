@@ -5,8 +5,11 @@ import { Router } from 'express';
 import { supabaseServer } from '../db.js';
 import { effectiveIsPro, generateId, requireAdmin, requireAuth } from '../auth.js';
 import {
+  badRequest,
   fail,
+  forbidden,
   isSafeRawImageFallback,
+  notFound,
   safeContentMime,
   sendDataUrl,
   wrap
@@ -48,7 +51,7 @@ booksRouter.get('/books', async (req, res) => {
 booksRouter.post('/books', requireAuth, requireAdmin, wrap(async (req, res) => {
   const parsed = bookInputSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Input buku tidak valid' });
+    return badRequest(res, parsed.error.issues[0]?.message || 'Input buku tidak valid');
   }
 
   const id = generateId('buku');
@@ -71,7 +74,7 @@ booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wr
   const contentExtension = content ? path.extname(content.originalname).toLowerCase() : '';
 
   if (!title || !content || !thumbnail) {
-    return res.status(400).json({ success: false, message: 'Judul, thumbnail, dan file konten wajib diisi' });
+    return badRequest(res, 'Judul, thumbnail, dan file konten wajib diisi');
   }
   if (thumbnail && !thumbnail.mimetype.startsWith('image/')) {
     return res.status(415).json({ success: false, message: 'Thumbnail harus berupa file gambar' });
@@ -145,7 +148,7 @@ booksRouter.get('/books/:id/thumbnail', wrap(async (req, res) => {
     .maybeSingle();
 
   const url = book?.thumbnail_url || book?.cover_url;
-  if (!url) return res.status(404).json({ success: false, message: 'Thumbnail tidak ditemukan' });
+  if (!url) return notFound(res, 'Thumbnail tidak ditemukan');
 
   if (sendDataUrl(res, url, { cacheControl: 'public, max-age=86400' })) return;
   return res.redirect(url);
@@ -159,10 +162,10 @@ booksRouter.get('/books/:id/content', requireAuth, wrap(async (req, res) => {
     .eq('id', req.params.id)
     .maybeSingle();
 
-  if (!book?.content_url) return res.status(404).json({ success: false, message: 'Konten buku tidak ditemukan' });
+  if (!book?.content_url) return notFound(res, 'Konten buku tidak ditemukan');
 
   if (book.is_locked && !effectiveIsPro(req.user) && req.user.role !== 'admin') {
-    return res.status(403).json({ success: false, message: 'Buku ini khusus pembaca Pro. Aktifkan paket Pro untuk membukanya.' });
+    return forbidden(res, 'Buku ini khusus pembaca Pro. Aktifkan paket Pro untuk membukanya.');
   }
 
   res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(book.content_name || 'book.pdf')}`);
@@ -178,7 +181,7 @@ booksRouter.put('/books/:id', requireAuth, requireAdmin, wrap(async (req, res) =
   const { title, subtitle, author, category, pages, is_locked, cover_url, description } = req.body;
 
   if (!title || !author || !category) {
-    return res.status(400).json({ success: false, message: 'Judul, Penulis, dan Kategori wajib diisi' });
+    return badRequest(res, 'Judul, Penulis, dan Kategori wajib diisi');
   }
 
   const { error } = await supabaseServer.from('books').update({
@@ -209,7 +212,7 @@ booksRouter.delete('/books/:id', requireAuth, requireAdmin, wrap(async (req, res
     .eq('id', id)
     .maybeSingle();
   if (!existing) {
-    return res.status(404).json({ success: false, message: 'Buku tidak ditemukan' });
+    return notFound(res, 'Buku tidak ditemukan');
   }
 
   const { error } = await supabaseServer.from('books').delete().eq('id', id);

@@ -18,12 +18,14 @@ import {
   Trash2,
   X
 } from 'lucide-react';
-import { toast } from 'sonner';
 // R56 — `exportEventsToExcel` TIDAK lagi di-import statis di sini. Import statis
 // di berkas ini membuat Rollup mengangkat seluruh chunk `excel` (283 KB) ke
 // dalam bundle AdminDashboard, sehingga setiap admin yang membuka dashboard
 // ikut mengunduhnya. Sekarang di-`await import()` di dalam handler ekspor.
+// R57 — `toast` dari sonner juga sudah tidak dipakai di sini; pelaporan
+// galat kini terpusat lewat `withToast`/`withToastSync`.
 import { apiJson, authHeaders, getStoredSession } from '@lib/api';
+import { withToast, withToastSync } from '@lib/withToast';
 import {
   MONTH_NAMES,
   DAY_NAMES,
@@ -76,19 +78,16 @@ export const EventsTab = ({
     return () => { cancelled = true; };
   }, []);
 
-  const sendReminder = async (eventId) => {
+  const sendReminder = (eventId) => {
     setSendingId(eventId);
-    try {
-      const result = await apiJson(`/api/events/${eventId}/send-reminder`, {
+    return withToast(
+      () => apiJson(`/api/events/${eventId}/send-reminder`, {
         method: 'POST',
         headers: authHeaders(getStoredSession()?.token)
-      });
-      toast.success(result.message || `Pengingat terkirim ke ${result.sent} perangkat.`);
-    } catch (error) {
-      toast.error(error?.message || 'Pengingat gagal dikirim.');
-    } finally {
-      setSendingId(null);
-    }
+      }),
+      'Pengingat gagal dikirim.',
+      (result) => result.message || `Pengingat terkirim ke ${result.sent} perangkat.`
+    ).finally(() => setSendingId(null));
   };
   const calYear = currentCalDate.getFullYear();
   const calMonth = currentCalDate.getMonth();
@@ -162,15 +161,11 @@ export const EventsTab = ({
     }
   };
 
-  const handleExportEvents = async () => {
-    try {
-      const { exportEventsToExcel } = await import('@lib/excelExport');
-      const res = exportEventsToExcel(events);
-      toast.success(`${res.count} data agenda berhasil diekspor (${res.fileName})`);
-    } catch (err) {
-      toast.error(err.message || 'Gagal mengekspor data agenda.');
-    }
-  };
+  const handleExportEvents = () => withToastSync(
+    () => import('@lib/excelExport').then((m) => m.exportEventsToExcel(events)),
+    'Gagal mengekspor data agenda.',
+    (res) => `${res.count} data agenda berhasil diekspor (${res.fileName})`
+  );
 
   return (
     <section className="space-y-6">
