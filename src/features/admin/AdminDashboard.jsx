@@ -33,6 +33,7 @@ import { EventsTab } from './EventsTab';
 import { CarouselTab } from './CarouselTab';
 import { LogsTab } from './LogsTab';
 import { BookModal } from './BookModal';
+import { TxStatusBadge } from './TxStatusBadge';
 import { layout, typography, surfaces, controls } from '@lib/styles';
 
 const isValidTabSlug = (slug) => slug === undefined || ADMIN_TAB_SLUGS.has(slug);
@@ -444,15 +445,7 @@ export const AdminDashboard = () => {
                     <div key={tx.id || tx.refNo} className="rounded-2xl border border-cream-200 bg-cream-50 p-3.5 shadow-sm space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-mono text-xs font-bold text-ink-700">{tx.refNo}</span>
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-micro font-bold ${
-                          tx.status === 'success'
-                            ? 'bg-brand-50 text-brand-700 border border-brand-200'
-                            : tx.status === 'pending'
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}>
-                          {tx.status === 'success' ? 'Sukses' : tx.status === 'pending' ? 'Pending' : 'Gagal'}
-                        </span>
+                        <TxStatusBadge status={tx.status} />
                       </div>
                       <div className="flex items-start justify-between text-xs">
                         <div>
@@ -500,15 +493,7 @@ export const AdminDashboard = () => {
                           <td className="px-3.5 py-2.5">{tx.planName || 'Paket Bulanan'}</td>
                           <td className="px-3.5 py-2.5 font-bold text-ink-900">{formatCurrency(tx.totalPaid)}</td>
                           <td className="px-3.5 py-2.5">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-micro font-bold ${
-                              tx.status === 'success'
-                                ? 'bg-brand-50 text-brand-700 border border-brand-200'
-                                : tx.status === 'pending'
-                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                : 'bg-rose-50 text-rose-700 border border-rose-200'
-                            }`}>
-                              {tx.status === 'success' ? 'Sukses' : tx.status === 'pending' ? 'Pending' : 'Gagal'}
-                            </span>
+                            <TxStatusBadge status={tx.status} />
                           </td>
                           <td className="px-3.5 py-2.5 text-ink-400">{formatWIB(tx.createdAt, { withSeconds: false })}</td>
                         </tr>

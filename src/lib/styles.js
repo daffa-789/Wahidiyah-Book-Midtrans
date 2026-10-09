@@ -71,11 +71,3 @@ export const controls = {
     'inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 ' +
     'px-3.5 py-2.5 text-caption font-bold text-ink-700 shadow-sm',
 };
-
-export const tone = {
-  success: 'border-semantic-successLight bg-semantic-successLight text-semantic-success',
-  warning: 'border-semantic-warningLight bg-semantic-warningLight text-semantic-warning',
-  danger: 'border-semantic-dangerLight bg-semantic-dangerLight text-semantic-danger',
-  info: 'border-semantic-infoLight bg-semantic-infoLight text-semantic-info',
-  neutral: 'border-cream-300 bg-cream-100 text-ink-600',
-};

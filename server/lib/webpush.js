@@ -35,19 +35,6 @@ const b64urlDecode = (value) =>
  * Kunci publik dikirim ke peramban lewat GET /api/notifications/public-key;
  * kunci privat tidak pernah meninggalkan server.
  */
-const rawPublicKeyToJwk = (publicKey) => {
-  // Kunci publik P-256 mentah = 65 byte: 0x04 || X(32) || Y(32).
-  const bytes = Buffer.isBuffer(publicKey) ? publicKey : b64urlDecode(publicKey);
-  if (bytes.length !== 65 || bytes[0] !== 0x04) {
-    throw new Error('VAPID public key tidak valid — harus 65 byte dengan awalan 0x04.');
-  }
-  return {
-    kty: 'EC',
-    crv: 'P-256',
-    x: b64url(bytes.subarray(1, 33)),
-    y: b64url(bytes.subarray(33, 65))
-  };
-};
 
 /* JWT ES256.
  *
@@ -255,7 +242,3 @@ export const isValidVapidPrivateKey = (value) => {
     return false;
   }
 };
-
-export const toPublicJwk = rawPublicKeyToJwk;
-
-export const __test__ = { b64url, b64urlDecode, hkdf, buildVapidJwt };

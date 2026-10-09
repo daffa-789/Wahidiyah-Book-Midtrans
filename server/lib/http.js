@@ -57,7 +57,6 @@ export const unauthorized = reject(401);
 export const forbidden = reject(403);
 export const notFound = reject(404);
 export const conflict = reject(409);
-export const serviceUnavailable = reject(503);
 
 
 export const authFailureMessage = (error, exposeDetail = includeErrorDetail) =>

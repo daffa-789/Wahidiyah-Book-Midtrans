@@ -36,17 +36,14 @@ import {
 } from '@lib/date';
 import { layout, typography, surfaces, controls } from '@lib/styles';
 
-const CATEGORY_DEFAULT_STYLE = {
+// Keempat kategori sengaja memakai gaya yang sama; disimpan sebagai satu konstanta
+// agar tidak ada objek duplikat yang bisa berbeda diam-diam.
+export const EVENT_CATEGORIES = ['Mujahadah', 'Pengajian', 'Kubro', 'Peringatan'];
+
+const CATEGORY_STYLE = {
   badge: 'bg-brand-50 text-brand-800 border-brand-200',
   dot: 'bg-brand-600',
   border: 'border-brand-200'
-};
-
-const CATEGORY_STYLES = {
-  Mujahadah: CATEGORY_DEFAULT_STYLE,
-  Pengajian: CATEGORY_DEFAULT_STYLE,
-  Kubro: CATEGORY_DEFAULT_STYLE,
-  Peringatan: CATEGORY_DEFAULT_STYLE
 };
 
 export const EventsTab = ({
@@ -326,7 +323,7 @@ export const EventsTab = ({
                               {hasEvents && (
                                 <div className="flex items-center gap-0.5">
                                   {dayEvents.slice(0, 3).map((evt, eIdx) => {
-                                    const dotColor = CATEGORY_STYLES[evt.category]?.dot || 'bg-brand-600';
+                                    const dotColor = CATEGORY_STYLE.dot;
                                     return (
                                       <span
                                         key={eIdx}
@@ -350,9 +347,9 @@ export const EventsTab = ({
                     <div className="mt-4 pt-3 border-t border-cream-200 flex flex-wrap items-center justify-between text-caption text-ink-400 gap-2">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="font-semibold text-ink-500">Kategori:</span>
-                        {Object.entries(CATEGORY_STYLES).map(([cat, style]) => (
+                        {EVENT_CATEGORIES.map((cat) => (
                           <span key={cat} className="flex items-center gap-1">
-                            <span className={`h-2 w-2 rounded-full ${style.dot}`} />
+                            <span className={`h-2 w-2 rounded-full ${CATEGORY_STYLE.dot}`} />
                             {cat}
                           </span>
                         ))}
@@ -385,7 +382,7 @@ export const EventsTab = ({
                     <div className="mt-4 space-y-3">
                       {selectedDateEvents.length > 0 ? (
                         selectedDateEvents.map((evt) => {
-                          const catStyle = CATEGORY_STYLES[evt.category] || CATEGORY_STYLES.Mujahadah;
+                          const catStyle = CATEGORY_STYLE;
                           return (
                             <div
                               key={evt.id}
@@ -563,7 +560,7 @@ export const EventsTab = ({
                           onChange={(e) => setEventForm((form) => ({ ...form, category: e.target.value }))}
                           className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
                         >
-                          {['Mujahadah', 'Pengajian', 'Kubro', 'Peringatan'].map((option) => (
+                          {EVENT_CATEGORIES.map((option) => (
                             <option key={option} value={option}>{option}</option>
                           ))}
                         </select>
@@ -632,10 +629,9 @@ export const EventsTab = ({
                         className="text-xs rounded-xl border border-cream-300 px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 text-ink-500 font-semibold cursor-pointer"
                       >
                         <option value="Semua">Semua Kategori</option>
-                        <option value="Mujahadah">Mujahadah</option>
-                        <option value="Pengajian">Pengajian</option>
-                        <option value="Kubro">Kubro</option>
-                        <option value="Peringatan">Peringatan</option>
+                        {EVENT_CATEGORIES.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
                       </select>
                     </div>
 
