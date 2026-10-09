@@ -1,7 +1,8 @@
 
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  BellRing,
   Calendar,
   CalendarCheck,
   ChevronLeft,
@@ -13,11 +14,13 @@ import {
   MapPin,
   Pencil,
   Plus,
+  Send,
   Trash2,
   X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { exportEventsToExcel } from '@lib/excelExport';
+import { apiJson, authHeaders, getStoredSession } from '@lib/api';
 import {
   MONTH_NAMES,
   DAY_NAMES,
@@ -59,6 +62,31 @@ export const EventsTab = ({
   cancelEditEvent,
   toggleEventCarousel
 }) => {
+  const [pushStatus, setPushStatus] = useState({ enabled: false, subscribers: 0 });
+  const [sendingId, setSendingId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiJson('/api/notifications/status')
+      .then((data) => { if (!cancelled) setPushStatus(data); })
+      .catch(() => { /* status opsional — jangan ganggu tampilan agenda */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const sendReminder = async (eventId) => {
+    setSendingId(eventId);
+    try {
+      const result = await apiJson(`/api/events/${eventId}/send-reminder`, {
+        method: 'POST',
+        headers: authHeaders(getStoredSession()?.token)
+      });
+      toast.success(result.message || `Pengingat terkirim ke ${result.sent} perangkat.`);
+    } catch (error) {
+      toast.error(error?.message || 'Pengingat gagal dikirim.');
+    } finally {
+      setSendingId(null);
+    }
+  };
   const calYear = currentCalDate.getFullYear();
   const calMonth = currentCalDate.getMonth();
 
@@ -176,6 +204,40 @@ export const EventsTab = ({
                 <div className="space-y-5">
 
                   <div className={surfaces.panel}>
+
+                    <div
+                      className={`mb-4 flex items-start gap-2.5 rounded-2xl border px-3.5 py-3 ${
+                        pushStatus.enabled
+                          ? 'border-brand-200 bg-brand-50'
+                          : 'border-amber-200 bg-amber-50'
+                      }`}
+                    >
+                      <BellRing
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${pushStatus.enabled ? 'text-brand-700' : 'text-amber-700'}`}
+                      />
+                      <div className="min-w-0 text-xs leading-relaxed">
+                        {pushStatus.enabled ? (
+                          <>
+                            <p className="font-bold text-brand-900">
+                              Notifikasi pengingat aktif
+                            </p>
+                            <p className="text-brand-800">
+                              {pushStatus.subscribers > 0
+                                ? `${pushStatus.subscribers} perangkat akan menerima pengingat sehari sebelum agenda. Tombol kirim tersedia di tiap agenda.`
+                                : 'Belum ada perangkat yang mengaktifkan. Ajak pengunjung menekan tombol "Ingatkan saya" di halaman utama.'}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-bold text-amber-900">Notifikasi pengingat belum aktif</p>
+                            <p className="text-amber-800">
+                              Jalankan <code className="font-mono">node scripts/generate-vapid-keys.js</code>,
+                              tempel hasilnya ke <code className="font-mono">.env</code>, lalu restart server.
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-cream-200">
                       <div>
@@ -364,6 +426,21 @@ export const EventsTab = ({
                                   aria-pressed={evt.showInCarousel}
                                 >
                                   <Images className="h-4 w-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => sendReminder(evt.id)}
+                                  disabled={sendingId === evt.id || !pushStatus.enabled}
+                                  className="p-2 rounded-xl border border-cream-300 text-ink-600 hover:bg-cream-100 transition shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                  title={
+                                    pushStatus.enabled
+                                      ? `Kirim pengingat notifikasi ke ${pushStatus.subscribers} perangkat`
+                                      : 'Notifikasi belum aktif — isi kunci VAPID di .env'
+                                  }
+                                >
+                                  {sendingId === evt.id
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : <Send className="h-4 w-4" />}
                                 </button>
                                 <button
                                   type="button"

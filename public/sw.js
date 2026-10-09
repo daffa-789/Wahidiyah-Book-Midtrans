@@ -4,7 +4,8 @@
 // CACHE_NAME wajib di-bump setiap deploy (aturan proyek §R5.6) agar cache app shell
 // versi lama dibuang saat activate — kali ini karena server ikut melayani dist/.
 // v8 (R20): referensi `/api/categories` yang sudah mati dibuang dari rute cache.
-const CACHE_NAME = 'wahidiyah-app-shell-v8';
+// v9 (R55): handler Web Push (pengingat agenda H-1) + aksi notificationclick.
+const CACHE_NAME = 'wahidiyah-app-shell-v9';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -115,5 +116,58 @@ self.addEventListener('fetch', (event) => {
   // D. Default -> Fetch normal dengan fallback cache
   event.respondWith(
     caches.match(request).then((cached) => cached || fetch(request))
+  );
+});
+
+// 4. Web Push — Pengingat Agenda
+//
+// Payload dikirim server dalam bentuk terenkripsi aes128gcm; peramban sudah
+// mendekripsinya sebelum sampai ke sini, jadi `event.data` sudah JSON biasa.
+self.addEventListener('push', (event) => {
+  let payload = {};
+
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    // Kiriman tanpa payload (mis. push "keepalive") — tetap tampilkan sesuatu
+    // daripada dibuang diam-diam, supaya peramban tidak mencabut izin.
+    payload = { title: 'Buku Wahidiyah', body: 'Ada pembaruan agenda majelis.' };
+  }
+
+  const title = payload.title || 'Buku Wahidiyah';
+  const options = {
+    body: payload.body || '',
+    icon: payload.icon || '/icon-192.png',
+    badge: payload.badge || '/icon-192.png',
+    // `tag` membuat notifikasi dengan agenda yang sama saling menggantikan,
+    // bukan menumpuk di baki notifikasi.
+    tag: payload.tag || 'wahidiyah-notification',
+    renotify: Boolean(payload.tag),
+    data: { url: payload.url || '/calendar', kind: payload.kind || 'general' },
+    vibrate: [80, 40, 80]
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// 5. Klik notifikasi -> fokuskan tab yang sudah terbuka, atau buka tab baru.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetPath = event.notification.data?.url || '/calendar';
+  const targetUrl = new URL(targetPath, self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        // Fokuskan tab aplikasi yang sudah terbuka, lalu arahkan ke agenda.
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          if ('navigate' in client) client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+      return undefined;
+    })
   );
 });

@@ -40,7 +40,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 );
 
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta.env.PROD) {
+/* Service worker didaftarkan juga di mode pengembangan: Web Push butuh
+   service worker aktif untuk bisa berlangganan, dan tanpa ini tombol
+   "Aktifkan notifikasi" tidak akan pernah bisa diuji di localhost.
+   Cache app-shell tetap hanya bermanfaat di produksi (aset ber-hash). */
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((err) => {
       console.warn('PWA ServiceWorker registration failed:', err);

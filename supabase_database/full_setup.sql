@@ -543,5 +543,45 @@ ALTER TABLE public.transactions
 CREATE INDEX IF NOT EXISTS idx_transactions_midtrans_transaction_id
   ON public.transactions (midtrans_transaction_id);
 
+-- ════════════════════════════════════════════════════════════════════════════
+-- PATCH Web Push — idempoten, aman untuk basis data yang sudah berisi data.
+--
+-- Web Push Notification untuk pengingat agenda H-1. Notifikasi ditujukan
+-- kepada SEMUA pengunjung (tidak wajib punya akun), jadi tabel langganan
+-- sengaja TIDAK memiliki foreign key ke users.
+--
+-- KEAMANAN: tabel ini menyimpan `endpoint` + kunci enkripsi perangkat.
+-- Siapa pun yang memegang pasangan kunci itu bisa mengirim notifikasi ke
+-- perangkat tersebut. Karena itu RLS diaktifkan TANPA policy apa pun —
+-- hanya service-role key (dipakai server Express) yang bisa membaca/menulis.
+-- Anon key tidak bisa menyentuh tabel ini sama sekali.
+-- ════════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS public.push_subscriptions (
+    id VARCHAR(50) PRIMARY KEY,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    user_agent VARCHAR(255) DEFAULT '',
+    is_active BOOLEAN DEFAULT TRUE,
+    failure_count INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_active
+  ON public.push_subscriptions (is_active);
+
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Tidak ada policy SELECT/INSERT/UPDATE/DELETE: akses hanya lewat service role.
+
+-- Penanda "pengingat H-1 sudah dikirim" agar agenda yang diedit tidak
+-- mengirim notifikasi berulang ke perangkat yang sama.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ DEFAULT NULL;
+
+-- Pengaturan jam pengiriman pengingat (WIB). Default 08:00 pagi.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS reminder_hour VARCHAR(5) DEFAULT '08:00';
+
 -- Paksa PostgREST memuat ulang skema cache.
 NOTIFY pgrst, 'reload schema';

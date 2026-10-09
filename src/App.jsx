@@ -4,6 +4,7 @@ import { useApp } from '@context/AppContext';
 import { DeviceFrame } from '@ui/DeviceFrame';
 import { InAppReminders } from '@ui/InAppReminders';
 import { ThemeToggle } from '@ui/ThemeToggle';
+import { NotificationToggle } from '@ui/NotificationToggle';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 
 
@@ -93,10 +94,15 @@ const Framed = ({ children }) => (
 );
 
 /* Layar publik (login/daftar/lupa sandi) tidak memakai shell sidebar, jadi
-   tombol tema ditaruh melayang di sudut kanan atas. */
+   tombol tema ditaruh melayang di sudut kanan atas. Tombol notifikasi ikut
+   di sini agar PENGUNJUNG TANPA AKUN tetap bisa mengaktifkan pengingat
+   agenda — notifikasi memang menyasar semua orang, bukan hanya anggota. */
 const authPage = (node) => (
   <div className={layout.screen}>
-    <ThemeToggle className="fixed right-4 top-4 z-50 border border-cream-300 bg-cream-50/90 backdrop-blur" />
+    <div className="fixed right-4 top-4 z-50 flex items-center gap-2">
+      <NotificationToggle variant="compact" className="border-cream-300 bg-cream-50/90 backdrop-blur" />
+      <ThemeToggle className="border border-cream-300 bg-cream-50/90 backdrop-blur" />
+    </div>
     {node}
   </div>
 );

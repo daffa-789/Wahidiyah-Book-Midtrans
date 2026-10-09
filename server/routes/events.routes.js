@@ -5,6 +5,8 @@ import { supabaseServer } from '../db.js';
 import { generateId, requireAdmin, requireAuth } from '../auth.js';
 import { fail, wrap } from '../lib/http.js';
 import { clippedText, parseBooleanFlag, toDateYmd } from '../lib/validate.js';
+import { logger } from '../logger.js';
+import { sendEventReminderNow } from '../lib/eventReminder.js';
 
 export const eventsRouter = Router();
 
@@ -38,6 +40,30 @@ const isMissingColumn = (error, column) =>
 
 const isMissingCarouselTable = (error) =>
   error?.code === '42P01' || String(error?.message || '').includes('carousel_slides');
+
+
+/* Pengingat H-1 dikirim segera setelah agenda disimpan, tetapi TIDAK boleh
+   menggagalkan permintaan admin bila push service sedang bermasalah.
+   Kalau jarak H-1 belum tiba (agenda masih jauh), fungsi ini tidak
+   mengirim apa pun — penyapu berkala di server.js yang menyusul nanti. */
+const trySendReminder = async (eventId) => {
+  try {
+    const result = await sendEventReminderNow(eventId);
+    if (result.sent > 0) {
+      logger.ok('PUSH', 'Pengingat H-1 langsung terkirim saat agenda disimpan', {
+        agenda: eventId,
+        perangkat: result.sent
+      });
+    }
+    return result;
+  } catch (error) {
+    logger.warn('PUSH', 'Pengingat H-1 gagal dikirim (agenda tetap tersimpan)', {
+      agenda: eventId,
+      pesan: error.message
+    });
+    return null;
+  }
+};
 
 
 const syncEventSlide = async (eventId, { title, eventDate, location, description, showInCarousel }) => {
@@ -130,11 +156,14 @@ eventsRouter.post('/events', requireAuth, requireAdmin, wrap(async (req, res) =>
     }
   }
 
+  const reminder = await trySendReminder(id);
+
   res.status(201).json({
     success: true,
     message: carouselAdded ? 'Jadwal berhasil ditambahkan dan masuk ke carousel.' : 'Jadwal berhasil ditambahkan',
     eventId: id,
-    carouselAdded
+    carouselAdded,
+    reminderSent: reminder?.sent || 0
   });
 }));
 
@@ -172,7 +201,15 @@ eventsRouter.put('/events/:id', requireAuth, requireAdmin, wrap(async (req, res)
     if (!isMissingCarouselTable(slideError)) throw slideError;
   }
 
-  res.json({ success: true, message: 'Agenda berhasil diperbarui' });
+  /* Tanggal bisa berubah menjadi "besok", jadi pengingat dicek ulang.
+     `sendEventReminderNow` menolak mengirim dua kali lewat `reminder_sent_at`. */
+  const reminder = await trySendReminder(req.params.id);
+
+  res.json({
+    success: true,
+    message: 'Agenda berhasil diperbarui',
+    reminderSent: reminder?.sent || 0
+  });
 }));
 
 
@@ -186,4 +223,44 @@ eventsRouter.delete('/events/:id', requireAuth, requireAdmin, wrap(async (req, r
   if (!data?.length) return res.status(404).json({ success: false, message: 'Agenda tidak ditemukan' });
 
   res.json({ success: true, message: 'Jadwal kegiatan berhasil dihapus' });
+}));
+
+
+/* Pemicu manual untuk admin: kirim ulang pengingat agenda tertentu tanpa
+   menunggu jam pengingat — berguna saat pengujian atau bila ada perangkat
+   yang baru mengaktifkan notifikasi setelah pengingat otomatis berjalan. */
+eventsRouter.post('/events/:id/send-reminder', requireAuth, requireAdmin, wrap(async (req, res) => {
+  const { data: event, error } = await supabaseServer
+    .from('events')
+    .select('id, title, event_date')
+    .eq('id', req.params.id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!event) return res.status(404).json({ success: false, message: 'Agenda tidak ditemukan' });
+
+  const result = await sendEventReminderNow(req.params.id, { force: true });
+
+  if (result.skipped && result.reason === 'vapid-not-configured') {
+    return res.status(503).json({
+      success: false,
+      message: 'Notifikasi belum diaktifkan — kunci VAPID belum diisi di .env.'
+    });
+  }
+
+  if (result.sent === 0) {
+    return res.json({
+      success: true,
+      sent: 0,
+      message: result.pruned
+        ? 'Tidak ada perangkat aktif — langganan lama dibersihkan.'
+        : 'Belum ada perangkat yang mengaktifkan notifikasi.'
+    });
+  }
+
+  res.json({
+    success: true,
+    sent: result.sent,
+    failed: result.failed || 0,
+    message: `Pengingat terkirim ke ${result.sent} perangkat.`
+  });
 }));
