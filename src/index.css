@@ -6,11 +6,87 @@
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   color-scheme: light;
 
-  /* ── R29: nilai dasar palet "Editorial Elegan" ─────────────────────────────
-     Ini adalah nilai FALLBACK. Nilai sebenarnya disuntikkan oleh
-     src/theme/themeInjector.js dari component.json saat aplikasi dimuat.
-     Menaruhnya di sini penting supaya render pertama (sebelum JS jalan) sudah
-     memakai warna yang benar — kalau tidak, akan ada kedipan putih. */
+  /* Token struktural (tidak berubah antar tema). Nilainya disuntikkan ulang
+     oleh src/theme/themeInjector.js dari component.json. */
+  --radius-btn: 8px;
+  --radius-card: 10px;
+  --radius-input: 8px;
+  --radius-modal: 12px;
+
+  --sidebar-w-expanded: 248px;
+  --sidebar-w-collapsed: 68px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PALET WARNA — "Editorial Elegan" (Terang & Malam)
+   ══════════════════════════════════════════════════════════════════════════
+   Tiap warna punya DUA bentuk:
+     --cream-50        → tripel RGB ("251 248 243") dipakai Tailwind
+     --color-cream-50  → hex ("#FBF8F3") dipakai kelas kustom di berkas ini
+
+   Blok ini adalah FALLBACK statis agar render pertama tidak berkedip sebelum
+   themeInjector.js berjalan. Nilai runtime tetap bersumber dari component.json.
+
+   `.theme-light-scope` memaksa subtree tertentu (mis. pembaca PDF yang punya
+   sistem tema sendiri) agar selalu memakai palet terang. */
+:root,
+.theme-light-scope {
+  color-scheme: light;
+
+  --brand-50: 240 247 243;
+  --brand-100: 220 237 228;
+  --brand-200: 185 219 201;
+  --brand-300: 140 194 165;
+  --brand-400: 90 163 126;
+  --brand-500: 52 132 96;
+  --brand-600: 33 107 76;
+  --brand-700: 20 82 58;
+  --brand-800: 14 61 44;
+  --brand-900: 8 45 32;
+
+  --gold-300: 229 200 119;
+  --gold-400: 212 175 79;
+  --gold-500: 184 134 11;
+  --accent-gold: 184 134 11;
+
+  --cream-50: 251 248 243;
+  --cream-100: 247 242 233;
+  --cream-200: 240 232 218;
+  --cream-300: 228 217 198;
+  --cream-400: 210 194 168;
+
+  --ink-200: 207 202 194;
+  --ink-300: 168 161 153;
+  --ink-400: 124 117 108;
+  --ink-500: 90 84 76;
+  --ink-600: 63 59 53;
+  --ink-700: 43 40 35;
+  --ink-800: 29 27 23;
+  --ink-900: 20 18 16;
+
+  --ui-bg: 251 248 243;
+  --ui-surface: 247 242 233;
+  --ui-card: 255 253 250;
+  --ui-border: 228 217 198;
+  --ui-text: 29 27 23;
+  --ui-text-secondary: 90 84 76;
+  --ui-text-muted: 124 117 108;
+
+  --semantic-success: 33 107 76;
+  --semantic-success-light: 220 237 228;
+  --semantic-warning: 150 105 10;
+  --semantic-warning-light: 250 240 211;
+  --semantic-danger: 166 47 38;
+  --semantic-danger-light: 247 225 223;
+  --semantic-info: 30 91 140;
+  --semantic-info-light: 220 234 245;
+
+  --primary: 20 82 58;
+  --primary-hover: 14 61 44;
+  --primary-light: 220 237 228;
+
   --color-brand-primary: #14523A;
   --color-brand-primary-hover: #0E3D2C;
   --color-brand-primary-light: #DCEDE4;
@@ -21,16 +97,90 @@
   --color-ui-text-primary: #1D1B17;
   --color-ui-text-secondary: #5A554E;
   --color-ui-text-muted: #7C766E;
+}
 
-  --radius-btn: 8px;
-  --radius-card: 10px;
-  --radius-input: 8px;
-  --radius-modal: 12px;
+/* ── Mode Malam ────────────────────────────────────────────────────────────
+   Bukan inversi putih/hitam. Latar krem hangat → charcoal hangat (tetap
+   "berwarna", bukan hitam pekat) dan teks → off-white hangat, supaya kontras
+   lembut dan mata tidak cepat lelah. Hijau zamrud digeser lebih terang agar
+   tetap terbaca sebagai TEKS di latar gelap. */
+.dark {
+  color-scheme: dark;
 
-  --sidebar-w-expanded: 248px;
-  --sidebar-w-collapsed: 68px;
+  --brand-50: 15 35 27;
+  --brand-100: 20 48 36;
+  --brand-200: 27 66 48;
+  --brand-300: 36 86 62;
+  --brand-400: 46 110 80;
+  --brand-500: 59 138 102;
+  --brand-600: 79 163 124;
+  --brand-700: 111 196 155;
+  --brand-800: 147 216 182;
+  --brand-900: 183 231 206;
 
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --gold-300: 233 208 138;
+  --gold-400: 217 180 74;
+  --gold-500: 201 154 46;
+  --accent-gold: 217 180 74;
+
+  --cream-50: 20 19 15;
+  --cream-100: 27 26 20;
+  --cream-200: 46 42 33;
+  --cream-300: 68 62 51;
+  --cream-400: 79 72 56;
+
+  --ink-200: 90 83 70;
+  --ink-300: 110 103 89;
+  --ink-400: 148 139 121;
+  --ink-500: 169 159 141;
+  --ink-600: 192 183 164;
+  --ink-700: 213 204 185;
+  --ink-800: 231 224 208;
+  --ink-900: 244 239 227;
+
+  --ui-bg: 20 19 15;
+  --ui-surface: 27 26 20;
+  --ui-card: 32 30 23;
+  --ui-border: 68 62 51;
+  --ui-text: 244 239 227;
+  --ui-text-secondary: 192 183 164;
+  --ui-text-muted: 148 139 121;
+
+  --semantic-success: 111 196 155;
+  --semantic-success-light: 20 48 36;
+  --semantic-warning: 232 199 122;
+  --semantic-warning-light: 44 36 19;
+  --semantic-danger: 240 169 162;
+  --semantic-danger-light: 46 26 25;
+  --semantic-info: 156 199 236;
+  --semantic-info-light: 21 36 52;
+
+  --primary: 30 122 87;
+  --primary-hover: 38 144 106;
+  --primary-light: 20 48 36;
+
+  --color-brand-primary: #1E7A57;
+  --color-brand-primary-hover: #26906A;
+  --color-brand-primary-light: #143024;
+  --color-ui-bg: #14130F;
+  --color-ui-surface: #1B1A14;
+  --color-ui-card: #201E17;
+  --color-ui-border: #443E33;
+  --color-ui-text-primary: #F4EFE3;
+  --color-ui-text-secondary: #C0B7A4;
+  --color-ui-text-muted: #948B79;
+
+  /* Nilai solid khusus mode malam (dipakai blok override di bawah) */
+  --night-panel: #0E0D0A;
+  --night-solid-500: #248A60;
+  --night-solid-600: #22855C;
+  --night-solid-700: #1E7A57;
+  --night-solid-800: #17694A;
+  --night-solid-900: #12583E;
+  --night-on-dark: #F4EFE3;
+  --night-on-dark-soft: #E7E0D0;
+  --night-on-dark-muted: #B7AE9A;
+  --night-card: #201E17;
 }
 
 html {
@@ -74,6 +224,11 @@ body,
   color: #0E3D2C;
 }
 
+.dark ::selection {
+  background-color: #3F6B55;
+  color: #F4EFE3;
+}
+
 /* Custom scrollbar for reader and content */
 ::-webkit-scrollbar {
   width: 8px;
@@ -91,6 +246,14 @@ body,
 
 ::-webkit-scrollbar-thumb:hover {
   background: #B9A588;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3A352B;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4A4437;
 }
 
 /* Scrollbar tipis untuk sidebar gelap (dipakai DeviceFrame) */
@@ -461,4 +624,375 @@ body,
   max-width: var(--device-frame-max-width, 430px);
   border-radius: var(--device-frame-radius, 32px);
   border: var(--device-frame-border-width, 8px) solid var(--device-frame-border-color, #1D1B17);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODE MALAM — OVERRIDE UTILITAS
+   ══════════════════════════════════════════════════════════════════════════
+   Sebagian besar warna sudah berganti otomatis lewat variable di atas. Blok
+   ini hanya menangani kasus "makna ganda": satu token yang dipakai untuk dua
+   peran berbeda, sehingga tidak bisa dibalik begitu saja tanpa merusak salah
+   satunya. Contoh:
+     · `bg-ink-900`  = panel sidebar yang MEMANG gelap  vs  `text-ink-900` = teks
+     · `text-cream-50` = teks di atas permukaan gelap      vs  `bg-cream-50` = latar
+     · `bg-brand-700` = isian tombol (butuh pekat)          vs  `text-brand-700` = teks
+   Override hanya berlaku di dalam `.app-surface` (shell aplikasi), sehingga
+   pembaca PDF yang punya sistem tema sendiri tidak terpengaruh. */
+
+/* 1. Permukaan yang sengaja tetap gelap di kedua tema */
+.dark .app-surface .bg-ink-900,
+.dark .app-surface .bg-ink-800 {
+  background-color: var(--night-panel);
+}
+
+.dark .app-surface .bg-ink-700 {
+  background-color: #2A261E;
+}
+
+.dark .app-surface .bg-ink-900\/95 {
+  background-color: rgb(14 13 10 / 0.95);
+}
+
+.dark .app-surface .bg-ink-900\/60 {
+  background-color: rgb(10 9 7 / 0.68);
+}
+
+.dark .app-surface .bg-ink-900\/50 {
+  background-color: rgb(10 9 7 / 0.58);
+}
+
+/* 2. Teks yang harus tetap terang (duduk di atas permukaan gelap) */
+.dark .app-surface .text-cream-50,
+.dark .app-surface .hover\:text-cream-50:hover {
+  color: var(--night-on-dark);
+}
+
+.dark .app-surface .text-cream-100,
+.dark .app-surface .text-cream-100\/70,
+.dark .app-surface .text-cream-100\/80 {
+  color: var(--night-on-dark-soft);
+}
+
+.dark .app-surface .group:hover .group-hover\:text-cream-100 {
+  color: var(--night-on-dark-soft);
+}
+
+.dark .app-surface .text-cream-300,
+.dark .app-surface .text-cream-300\/60,
+.dark .app-surface .text-cream-300\/70,
+.dark .app-surface .text-cream-300\/80 {
+  color: var(--night-on-dark-muted);
+}
+
+.dark .app-surface .text-brand-100 {
+  color: #B7E7CE;
+}
+
+.dark .app-surface .text-brand-200,
+.dark .app-surface .text-brand-300 {
+  color: #93D8B6;
+}
+
+.dark .app-surface .text-brand-400 {
+  color: #6FC49B;
+}
+
+/* 3. Lapisan tipis terang di atas permukaan gelap (sidebar hover, banner) */
+.dark .app-surface .bg-cream-50\/5,
+.dark .app-surface .hover\:bg-cream-50\/5:hover {
+  background-color: rgb(244 239 227 / 0.07);
+}
+
+.dark .app-surface .bg-cream-50\/10 {
+  background-color: rgb(244 239 227 / 0.08);
+}
+
+.dark .app-surface .bg-cream-50\/15 {
+  background-color: rgb(244 239 227 / 0.10);
+}
+
+.dark .app-surface .bg-cream-50\/20 {
+  background-color: rgb(244 239 227 / 0.12);
+}
+
+/* 4. Kartu putih → permukaan gelap */
+.dark .app-surface .bg-white {
+  background-color: var(--night-card);
+}
+
+/* 5. Isian hijau pekat (tombol/aksi) tetap pekat agar teks putih terbaca */
+.dark .app-surface .bg-brand-500 {
+  background-color: var(--night-solid-500);
+}
+
+.dark .app-surface .bg-brand-600 {
+  background-color: var(--night-solid-600);
+}
+
+.dark .app-surface .bg-brand-700 {
+  background-color: var(--night-solid-700);
+}
+
+.dark .app-surface .bg-brand-800 {
+  background-color: var(--night-solid-800);
+}
+
+.dark .app-surface .bg-brand-900 {
+  background-color: var(--night-solid-900);
+}
+
+.dark .app-surface .hover\:bg-brand-500:hover {
+  background-color: #258C61;
+}
+
+.dark .app-surface .hover\:bg-brand-600:hover {
+  background-color: var(--night-solid-500);
+}
+
+.dark .app-surface .hover\:bg-brand-700:hover {
+  background-color: var(--night-solid-600);
+}
+
+.dark .app-surface .hover\:bg-brand-800:hover {
+  background-color: var(--night-solid-700);
+}
+
+.dark .app-surface .active\:bg-brand-800:active {
+  background-color: var(--night-solid-800);
+}
+
+.dark .app-surface .active\:bg-brand-900:active {
+  background-color: var(--night-solid-900);
+}
+
+/* 6. Gradien hijau pekat → tetap pekat */
+.dark .app-surface .from-brand-700 {
+  --tw-gradient-from: var(--night-solid-700) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(30 122 87 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark .app-surface .from-brand-800 {
+  --tw-gradient-from: var(--night-solid-800) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(23 105 74 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark .app-surface .from-brand-900 {
+  --tw-gradient-from: var(--night-solid-900) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(18 88 62 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark .app-surface .hover\:from-brand-900:hover,
+.dark .app-surface .active\:from-brand-900:active {
+  --tw-gradient-from: var(--night-solid-900) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(18 88 62 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.dark .app-surface .to-brand-800 {
+  --tw-gradient-to: var(--night-solid-800) var(--tw-gradient-to-position);
+}
+
+.dark .app-surface .to-brand-900 {
+  --tw-gradient-to: var(--night-solid-900) var(--tw-gradient-to-position);
+}
+
+.dark .app-surface .via-brand-700 {
+  --tw-gradient-to: rgb(30 122 87 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--night-solid-700) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+
+.dark .app-surface .via-brand-800 {
+  --tw-gradient-to: rgb(23 105 74 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--night-solid-800) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+
+.dark .app-surface .via-brand-900\/45 {
+  --tw-gradient-to: rgb(18 88 62 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(18 88 62 / 0.45) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+
+/* 7. Titik/penanda hijau tipis agar tetap terlihat di latar gelap */
+.dark .app-surface .bg-brand-200 {
+  background-color: #2A5B45;
+}
+
+.dark .app-surface .hover\:bg-brand-300:hover {
+  background-color: #357154;
+}
+
+/* 8. Lencana status (warna bawaan Tailwind) → versi malam yang lembut */
+.dark .app-surface .bg-rose-50,
+.dark .app-surface .bg-rose-50\/90,
+.dark .app-surface .hover\:bg-rose-50:hover {
+  background-color: rgb(240 169 162 / 0.12);
+}
+
+.dark .app-surface .bg-rose-100,
+.dark .app-surface .hover\:bg-rose-100:hover {
+  background-color: rgb(240 169 162 / 0.18);
+}
+
+.dark .app-surface .text-rose-500,
+.dark .app-surface .text-rose-600,
+.dark .app-surface .text-rose-700,
+.dark .app-surface .text-rose-800,
+.dark .app-surface .text-rose-900 {
+  color: #F0A9A2;
+}
+
+.dark .app-surface .border-rose-200,
+.dark .app-surface .border-rose-200\/70,
+.dark .app-surface .border-rose-300 {
+  border-color: rgb(240 169 162 / 0.35);
+}
+
+.dark .app-surface .bg-amber-50,
+.dark .app-surface .bg-amber-50\/90 {
+  background-color: rgb(232 199 122 / 0.12);
+}
+
+.dark .app-surface .bg-amber-100 {
+  background-color: rgb(232 199 122 / 0.18);
+}
+
+.dark .app-surface .text-amber-600,
+.dark .app-surface .text-amber-700,
+.dark .app-surface .text-amber-800,
+.dark .app-surface .text-amber-900 {
+  color: #E8C77A;
+}
+
+.dark .app-surface .border-amber-200,
+.dark .app-surface .border-amber-200\/70,
+.dark .app-surface .border-amber-300 {
+  border-color: rgb(232 199 122 / 0.32);
+}
+
+.dark .app-surface .bg-blue-50,
+.dark .app-surface .bg-blue-50\/90 {
+  background-color: rgb(156 199 236 / 0.12);
+}
+
+.dark .app-surface .text-blue-600,
+.dark .app-surface .text-blue-700,
+.dark .app-surface .text-blue-800 {
+  color: #9CC7EC;
+}
+
+.dark .app-surface .border-blue-100,
+.dark .app-surface .border-blue-200,
+.dark .app-surface .border-blue-200\/70 {
+  border-color: rgb(156 199 236 / 0.30);
+}
+
+.dark .app-surface .bg-red-50 {
+  background-color: rgb(240 169 162 / 0.12);
+}
+
+.dark .app-surface .bg-red-100 {
+  background-color: rgb(240 169 162 / 0.18);
+}
+
+.dark .app-surface .text-red-500,
+.dark .app-surface .text-red-600 {
+  color: #F0A9A2;
+}
+
+.dark .app-surface .border-red-100 {
+  border-color: rgb(240 169 162 / 0.30);
+}
+
+.dark .app-surface .bg-emerald-100 {
+  background-color: rgb(111 196 155 / 0.18);
+}
+
+.dark .app-surface .text-emerald-700,
+.dark .app-surface .text-emerald-800 {
+  color: #6FC49B;
+}
+
+.dark .app-surface .border-emerald-300 {
+  border-color: rgb(111 196 155 / 0.32);
+}
+
+.dark .app-surface .bg-indigo-50\/90 {
+  background-color: rgb(165 180 252 / 0.12);
+}
+
+.dark .app-surface .text-indigo-700 {
+  color: #B4C0F5;
+}
+
+.dark .app-surface .border-indigo-200\/70 {
+  border-color: rgb(165 180 252 / 0.30);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODE MALAM — KELAS KUSTOM (index.css)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.dark .app-surface .auth-shell {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(111, 196, 155, 0.10), transparent 27rem),
+    radial-gradient(circle at 88% 92%, rgba(217, 180, 74, 0.07), transparent 25rem),
+    var(--color-ui-bg);
+}
+
+.dark .app-surface .auth-card {
+  border-color: rgba(68, 62, 51, 0.95);
+  background: rgba(32, 30, 23, 0.96);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.dark .app-surface .auth-label {
+  color: #C0B7A4;
+}
+
+.dark .app-surface .auth-input-wrap {
+  border-color: #443E33;
+  background: #1B1A14;
+  color: #F4EFE3;
+}
+
+.dark .app-surface .auth-input-wrap:focus-within {
+  border-color: #4FA37C;
+  background: #201E17;
+  box-shadow: 0 0 0 4px rgba(79, 163, 124, 0.16);
+}
+
+.dark .app-surface .auth-input-wrap input {
+  color: #F4EFE3;
+}
+
+.dark .app-surface .auth-input-wrap input::placeholder {
+  color: #7A7364;
+}
+
+.dark .app-surface .auth-input-icon {
+  color: #948B79;
+}
+
+.dark .app-surface .auth-icon-button {
+  color: #948B79;
+}
+
+.dark .app-surface .auth-icon-button:hover {
+  color: #E7E0D0;
+}
+
+.dark .app-surface .auth-link {
+  color: #7FD3AC;
+}
+
+.dark .app-surface .auth-link:hover {
+  color: #9FE0C3;
+}
+
+.dark .app-surface .auth-alert {
+  border-color: rgba(240, 169, 162, 0.35);
+  background: rgba(240, 169, 162, 0.12);
+  color: #F0A9A2;
 }

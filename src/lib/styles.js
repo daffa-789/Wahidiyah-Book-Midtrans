@@ -2,7 +2,7 @@ export const layout = {
   authShell: 'auth-shell page-transition',
   authCard: 'auth-card w-full max-w-md',
   pageShell: 'flex min-h-full w-full flex-col gap-section-gap px-page-x py-section-gap',
-  screen: 'min-h-screen bg-cream-50',
+  screen: 'min-h-screen bg-cream-50 app-surface',
   contentCenter: 'mx-auto w-full max-w-2xl',
   rowBetween: 'flex items-center justify-between',
   rowCenter: 'flex items-center justify-center',
