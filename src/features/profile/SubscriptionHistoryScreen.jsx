@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Clock, Sparkles, CreditCard } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { formatWIB } from '@lib/date';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout, controls } from '@lib/styles';
 
 export const SubscriptionHistoryScreen = () => {
   const { subscriptions, refreshSubscriptions, navigateTo } = useApp();

@@ -1,15 +1,20 @@
 
 
-export const PRO_REMINDER_THRESHOLD_DAYS = [7, 3, 1, 0];
+/* Helper di bawah ini bersifat internal modul — hanya dipakai oleh
+   `buildReminders` dan fungsi lihat/simpan di berkas ini. Tidak di-export agar
+   permukaan API modul tetap sempit dan jelas mana yang stabil untuk dipakai
+   dari luar. */
 
-export const todayYmd = (now = new Date()) => {
+const PRO_REMINDER_THRESHOLD_DAYS = [7, 3, 1, 0];
+
+const todayYmd = (now = new Date()) => {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const d = String(now.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 };
 
-export const daysBetweenYmd = (fromYmd, toYmd) => {
+const daysBetweenYmd = (fromYmd, toYmd) => {
   const parse = (value) => {
     if (!value) return null;
     const match = String(value).slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -23,7 +28,7 @@ export const daysBetweenYmd = (fromYmd, toYmd) => {
   return Math.round((b.getTime() - a.getTime()) / 86400000);
 };
 
-export const daysUntilExpiry = (expiresAt, now = new Date()) => {
+const daysUntilExpiry = (expiresAt, now = new Date()) => {
   if (!expiresAt) return null;
   const target = new Date(expiresAt);
   if (Number.isNaN(target.getTime())) return null;
@@ -35,12 +40,12 @@ export const daysUntilExpiry = (expiresAt, now = new Date()) => {
   return daysBetweenYmd(todayYmd(now), targetYmd);
 };
 
-export const eventsToday = (events = [], now = new Date()) => {
+const eventsToday = (events = [], now = new Date()) => {
   const today = todayYmd(now);
   return (events || []).filter((event) => String(event?.date || '').slice(0, 10) === today);
 };
 
-export const proReminder = (user, now = new Date()) => {
+const proReminder = (user, now = new Date()) => {
   if (!user?.isPro) return null;
   const daysLeft = daysUntilExpiry(user.subscriptionExpiresAt, now);
   if (daysLeft === null) return null;
@@ -88,19 +93,14 @@ export const buildReminders = ({ events = [], user = null, now = new Date() } = 
   return reminders;
 };
 
-export const REMINDER_SEEN_KEY = 'wahidiyah:reminders-seen';
+const REMINDER_SEEN_KEY = 'wahidiyah:reminders-seen';
 
 export const markRemindersSeen = (ids = [], now = new Date(), storage = globalThis.localStorage) => {
   if (!storage) return;
   try {
-    const today = todayYmd(now);
-    const raw = storage.getItem(REMINDER_SEEN_KEY);
-    const map = raw ? JSON.parse(raw) : {};
-
-    storage.setItem(REMINDER_SEEN_KEY, JSON.stringify({ [today]: ids }));
-    void map;
+    storage.setItem(REMINDER_SEEN_KEY, JSON.stringify({ [todayYmd(now)]: ids }));
   } catch {
-
+    /* localStorage bisa diblokir (mode privat / kuota penuh) — abaikan diam-diam. */
   }
 };
 

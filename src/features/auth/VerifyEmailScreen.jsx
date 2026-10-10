@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
-import { layout } from '@lib/styles';
+import { layout, typography, controls } from '@lib/styles';
 
 export const VerifyEmailScreen = () => {
   const { verification, clearVerification, login, navigateTo } = useApp();

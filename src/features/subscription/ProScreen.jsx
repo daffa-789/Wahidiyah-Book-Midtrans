@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Check, ArrowRight } from 'lucide-react';
 import { useApp } from '@context/AppContext';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout, typography, surfaces } from '@lib/styles';
 
 export const ProScreen = () => {
   const { user, setSelectedPlan, navigateTo, isSubscriptionActive, clearLastPaymentResult } = useApp();

@@ -15,13 +15,13 @@ const postJson = (path, body) => apiJson(path, {
   body: JSON.stringify(body)
 });
 
-export const isPushSupported = () =>
+const isPushSupported = () =>
   typeof window !== 'undefined' &&
   'serviceWorker' in navigator &&
   'PushManager' in window &&
   'Notification' in window;
 
-export const getPermission = () =>
+const getPermission = () =>
   (typeof window !== 'undefined' && 'Notification' in window
     ? Notification.permission
     : 'unsupported');
@@ -38,7 +38,7 @@ const urlBase64ToUint8Array = (base64String) => {
 };
 
 /** Daftarkan service worker bila belum ada. Aman dipanggil berulang kali. */
-export const ensureServiceWorker = async () => {
+const ensureServiceWorker = async () => {
   const registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL);
   // `ready` menunggu sampai SW benar-benar aktif — tanpa ini, `subscribe`
   // bisa gagal pada kunjungan pertama.
@@ -46,13 +46,13 @@ export const ensureServiceWorker = async () => {
   return registration;
 };
 
-export const fetchVapidPublicKey = async () => {
+const fetchVapidPublicKey = async () => {
   const data = await apiJson('/api/notifications/public-key');
   return data?.enabled ? data.publicKey : null;
 };
 
 /** Baca langganan yang sudah ada tanpa meminta izin baru. */
-export const getExistingSubscription = async () => {
+const getExistingSubscription = async () => {
   if (!isPushSupported()) return null;
   const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_URL);
   if (!registration) return null;

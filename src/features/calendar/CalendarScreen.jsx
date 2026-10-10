@@ -13,7 +13,7 @@ import {
   formatYMD,
   getTodayStr
 } from '@lib/date';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout, controls } from '@lib/styles';
 
 export const CalendarScreen = () => {
   const { events, agendaError, refreshEvents } = useApp();

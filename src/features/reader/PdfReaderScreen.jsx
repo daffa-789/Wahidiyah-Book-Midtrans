@@ -9,8 +9,7 @@ import {
   BookOpen,
   Bookmark,
   ChevronLeft,
-  ChevronRight,
-  Check
+  ChevronRight
 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiRequest, authHeaders } from '@lib/api';

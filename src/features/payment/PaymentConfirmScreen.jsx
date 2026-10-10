@@ -16,7 +16,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useApp, isQrisPaymentMethod } from '@context/AppContext';
 import { useQrisPayment } from './useQrisPayment';
 import { AlreadySubscribedNotice } from './AlreadySubscribedNotice';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout, typography } from '@lib/styles';
 
 export const PaymentConfirmScreen = () => {
   const {

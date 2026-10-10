@@ -5,7 +5,8 @@ import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 import { apiJson } from '@lib/api';
 import { ServerStatusBanner } from '@ui/ServerStatusBanner';
 import { AuthBrandHeader } from './AuthBrandHeader';
-import { layout } from '@lib/styles';
+import { layout, controls } from '@lib/styles';
+import { useSubmit } from '@lib/useSubmit';
 
 const POLICY_COPY = {
   terms: {
@@ -59,11 +60,10 @@ export const RegisterScreen = () => {
   const [agreed, setAgreed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { error, setError, isSubmitting, runSubmit } = useSubmit('Pendaftaran belum dapat diproses.');
   const [policy, setPolicy] = useState(null);
 
-  const submit = async (event) => {
+  const submit = (event) => {
     event.preventDefault();
     if (!name.trim()) return setError('Nama lengkap wajib diisi.');
     if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Masukkan alamat email yang valid.');
@@ -71,9 +71,7 @@ export const RegisterScreen = () => {
     if (password !== confirmation) return setError('Konfirmasi password belum sesuai.');
     if (!agreed) return setError('Setujui ketentuan layanan dan kebijakan privasi terlebih dahulu.');
 
-    setIsSubmitting(true);
-    setError('');
-    try {
+    return runSubmit(async () => {
       const target = email.trim().toLowerCase();
       const result = await apiJson('/api/auth/register', {
         method: 'POST',
@@ -83,11 +81,7 @@ export const RegisterScreen = () => {
 
       setVerification({ email: target, purpose: 'register', devOtp: result.devOtp });
       navigateTo('verify-email');
-    } catch (requestError) {
-      setError(requestError.message || 'Pendaftaran belum dapat diproses.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   return (

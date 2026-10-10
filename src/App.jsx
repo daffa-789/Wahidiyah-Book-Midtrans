@@ -14,7 +14,7 @@ import { HomeScreen } from '@features/home/HomeScreen';
 import { CalendarScreen } from '@features/calendar/CalendarScreen';
 import { ProScreen } from '@features/subscription/ProScreen';
 import { PaymentMethodScreen } from '@features/payment/PaymentMethodScreen';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout } from '@lib/styles';
 
 
 

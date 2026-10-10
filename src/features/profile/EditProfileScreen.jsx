@@ -5,7 +5,7 @@ import { useApp } from '@context/AppContext';
 import { apiJson, authHeaders } from '@lib/api';
 import { ThemeModeSelector } from '@ui/ThemeToggle';
 import { NotificationToggle } from '@ui/NotificationToggle';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout, typography, controls } from '@lib/styles';
 
 const toIsoDate = (value) => {
   if (!value) return '';

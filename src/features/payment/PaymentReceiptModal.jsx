@@ -1,5 +1,4 @@
-import React from 'react';
-import { X, Printer, ShieldCheck, CheckCircle2, Download } from 'lucide-react';
+import { X, Printer, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { formatRupiah } from '@lib/formatUtils';
 
 export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {

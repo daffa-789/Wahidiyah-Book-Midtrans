@@ -54,9 +54,6 @@ export const controls = {
     'w-full rounded-input border border-cream-300 px-3 py-2.5 text-body transition ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ' +
     'focus-visible:ring-offset-1 focus-visible:ring-offset-cream-50 disabled:opacity-60',
-  inputCompact:
-    'w-full rounded-input border border-cream-300 px-3 py-2 text-body transition ' +
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400',
   inputWrap: 'auth-input-wrap mt-1.5',
   select:
     'w-full rounded-input border border-cream-300 bg-cream-50 px-3 py-2.5 text-body transition ' +

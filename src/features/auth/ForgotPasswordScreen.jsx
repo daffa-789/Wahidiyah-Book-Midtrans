@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { AlertCircle, ArrowLeft, KeyRound, Mail } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
-import { layout } from '@lib/styles';
+import { layout, typography, controls } from '@lib/styles';
+import { useSubmit } from '@lib/useSubmit';
 
 export const ForgotPasswordScreen = () => {
   const { navigateTo, setVerification } = useApp();
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { error, setError, isSubmitting, runSubmit } = useSubmit('Permintaan belum dapat diproses.');
 
-  const submit = async (event) => {
+  const submit = (event) => {
     event.preventDefault();
     const target = email.trim().toLowerCase();
     if (!/^\S+@\S+\.\S+$/.test(target)) {
@@ -18,9 +18,7 @@ export const ForgotPasswordScreen = () => {
       return;
     }
 
-    setIsSubmitting(true);
-    setError('');
-    try {
+    return runSubmit(async () => {
       const result = await apiJson('/api/auth/request-password-reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -28,11 +26,7 @@ export const ForgotPasswordScreen = () => {
       });
       setVerification({ email: target, purpose: 'reset', devOtp: result.devOtp });
       navigateTo('verify-email');
-    } catch (requestError) {
-      setError(requestError.message || 'Permintaan belum dapat diproses.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   return (

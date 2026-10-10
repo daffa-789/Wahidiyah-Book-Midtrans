@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { BellRing, BellOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-  isPushSupported,
   getPushStatus,
   enablePushNotifications,
   disablePushNotifications

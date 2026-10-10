@@ -2,7 +2,7 @@ import { CheckCircle2, Circle, Building2, Wallet } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { PAYMENT_METHODS } from '@data/mockData';
 import { AlreadySubscribedNotice } from './AlreadySubscribedNotice';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { typography, controls } from '@lib/styles';
 
 export const PaymentMethodScreen = () => {
   const {
