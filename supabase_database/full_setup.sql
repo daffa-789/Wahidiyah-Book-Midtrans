@@ -49,6 +49,7 @@ CREATE TABLE public.users (
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_phone ON public.users(phone);
+COMMENT ON COLUMN public.users.phone IS 'Nomor telepon/WhatsApp pengguna dalam format internasional 628xxx';
 
 CREATE TABLE public.books (
     id VARCHAR(50) PRIMARY KEY,
