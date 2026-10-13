@@ -11,11 +11,12 @@ const FONNTE_TOKEN = process.env.FONNTE_TOKEN || '';
 const FONNTE_API_URL = 'https://api.fonnte.com/send';
 
 /**
- * Normalisasi nomor HP Indonesia ke format standar internasional (628xxx).
+ * Normalisasi nomor HP (Indonesia maupun internasional) ke format standar angka (E.164 tanpa +).
  * Contoh:
- *  - '08123456789'  -> '628123456789'
- *  - '+62812345678' -> '62812345678'
- *  - '8123456789'   -> '628123456789'
+ *  - '08123456789'   -> '628123456789'
+ *  - '+62812345678'  -> '62812345678'
+ *  - '+60123456789'  -> '60123456789'
+ *  - '8123456789'    -> '628123456789'
  */
 export const normalizePhone = (raw) => {
   if (!raw) return '';
@@ -25,19 +26,19 @@ export const normalizePhone = (raw) => {
   }
   if (cleaned.startsWith('08')) {
     cleaned = '62' + cleaned.slice(1);
-  } else if (cleaned.startsWith('8')) {
+  } else if (cleaned.startsWith('8') && cleaned.length >= 9 && cleaned.length <= 13) {
     cleaned = '62' + cleaned;
   }
   return cleaned;
 };
 
 /**
- * Validasi nomor HP Indonesia.
- * Wajib diawali 628 dan panjang antara 10 sampai 15 digit.
+ * Validasi nomor HP (mendukung Indonesia 628xxx maupun format internasional 8-15 digit).
  */
 export const isValidPhone = (raw) => {
   const normalized = normalizePhone(raw);
-  return /^628[1-9][0-9]{7,12}$/.test(normalized);
+  // Standar E.164 tanpa tanda plus: 8 sampai 15 digit angka, tidak diawali 0
+  return /^[1-9][0-9]{7,14}$/.test(normalized);
 };
 
 export const isWhatsAppConfigured = () => Boolean(FONNTE_TOKEN);

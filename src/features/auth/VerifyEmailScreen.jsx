@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, ArrowLeft, CheckCircle2, MessageSquare, Phone } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
 import { layout, typography, controls } from '@lib/styles';
+import { parsePhoneNumber } from '@lib/countryCodes';
 
 export const VerifyEmailScreen = () => {
   const { verification, clearVerification, login, navigateTo } = useApp();
@@ -30,6 +31,13 @@ export const VerifyEmailScreen = () => {
   const phone = verification?.phone || '';
   const purpose = verification?.purpose === 'reset' ? 'reset' : 'register';
   const isReset = purpose === 'reset';
+
+  const displayTarget = useMemo(() => {
+    if (!target) return '';
+    if (!isWhatsApp) return target;
+    const p = parsePhoneNumber(target);
+    return `${p.country.flag} ${p.country.dial} ${p.nationalNumber}`;
+  }, [isWhatsApp, target]);
 
   const startedRef = useRef(false);
   useEffect(() => {
@@ -164,7 +172,7 @@ export const VerifyEmailScreen = () => {
           {isReset
             ? 'Kami mengirim kode pemulihan ke '
             : 'Kami mengirim kode verifikasi ke '}
-          <strong className="text-ink-700">{target}</strong> via {isWhatsApp ? 'WhatsApp' : 'email'}.{' '}
+          <strong className="text-ink-700">{displayTarget || target}</strong> via {isWhatsApp ? 'WhatsApp' : 'email'}.{' '}
           {isWhatsApp
             ? 'Buka aplikasi WhatsApp Anda, lalu masukkan kodenya di bawah. '
             : 'Buka kotak masuk (dan folder spam), lalu masukkan kodenya di bawah. '}

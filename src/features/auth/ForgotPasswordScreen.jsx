@@ -4,6 +4,7 @@ import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
 import { layout, typography, controls } from '@lib/styles';
 import { useSubmit } from '@lib/useSubmit';
+import { PhoneInput } from '@ui/PhoneInput';
 
 export const ForgotPasswordScreen = () => {
   const { navigateTo, setVerification } = useApp();
@@ -12,21 +13,13 @@ export const ForgotPasswordScreen = () => {
   const [phone, setPhone] = useState('');
   const { error, setError, isSubmitting, runSubmit } = useSubmit('Permintaan belum dapat diproses.');
 
-  const cleanPhone = (val) => {
-    let cleaned = String(val || '').trim().replace(/[^0-9+]/g, '');
-    if (cleaned.startsWith('+')) cleaned = cleaned.slice(1);
-    if (cleaned.startsWith('08')) cleaned = '62' + cleaned.slice(1);
-    else if (cleaned.startsWith('8')) cleaned = '62' + cleaned;
-    return cleaned;
-  };
-
   const submit = (event) => {
     event.preventDefault();
 
     if (method === 'whatsapp') {
-      const standardPhone = cleanPhone(phone);
-      if (!standardPhone || !/^628[1-9][0-9]{7,12}$/.test(standardPhone)) {
-        setError('Masukkan nomor WhatsApp yang valid (contoh: 081234567890).');
+      const standardPhone = String(phone || '').trim().replace(/[^0-9]/g, '');
+      if (!standardPhone || standardPhone.length < 8 || standardPhone.length > 15) {
+        setError('Masukkan nomor WhatsApp yang valid.');
         return;
       }
 
@@ -113,19 +106,15 @@ export const ForgotPasswordScreen = () => {
 
         <form onSubmit={submit} className="mt-5 space-y-4" noValidate>
           {method === 'whatsapp' ? (
-            <label className="block">
-              <span className="auth-label">Nomor WhatsApp</span>
-              <span className={controls.inputWrap}>
-                <Phone className="auth-input-icon text-emerald-600" />
-                <input
-                  type="tel"
-                  autoComplete="tel"
-                  value={phone}
-                  onChange={(event) => { setPhone(event.target.value); setError(''); }}
-                  placeholder="081234567890"
-                />
-              </span>
-            </label>
+            <div className="block">
+              <label htmlFor="forgot-phone" className="auth-label">Nomor WhatsApp</label>
+              <PhoneInput
+                id="forgot-phone"
+                value={phone}
+                onChange={(val) => { setPhone(val); setError(''); }}
+                className="mt-1.5"
+              />
+            </div>
           ) : (
             <label className="block">
               <span className="auth-label">Alamat email</span>

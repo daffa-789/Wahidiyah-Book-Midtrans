@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Camera, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
@@ -6,6 +6,7 @@ import { apiJson, authHeaders } from '@lib/api';
 import { ThemeModeSelector } from '@ui/ThemeToggle';
 import { NotificationToggle } from '@ui/NotificationToggle';
 import { layout, typography, controls } from '@lib/styles';
+import { parsePhoneNumber } from '@lib/countryCodes';
 
 const toIsoDate = (value) => {
   if (!value) return '';
@@ -197,11 +198,18 @@ export const EditProfileScreen = () => {
             </label>
             <input
               id="edit-phone-input"
-              type="tel"
+              type="text"
               data-testid="edit-phone"
-              value={user.phone || '-'}
+              value={
+                user.phone
+                  ? (() => {
+                      const p = parsePhoneNumber(user.phone);
+                      return `${p.country.flag} ${p.country.dial} ${p.nationalNumber}`;
+                    })()
+                  : '-'
+              }
               readOnly
-              className="h-12 w-full cursor-not-allowed rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-sm font-medium text-ink-500 focus-visible:outline-none"
+              className="h-12 w-full cursor-not-allowed rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-sm font-medium text-ink-600 focus-visible:outline-none"
             />
             <p className="mt-1.5 text-caption text-ink-400">
               Nomor WhatsApp terdaftar untuk autentikasi dan pemulihan akun.

@@ -4,6 +4,7 @@ import { useApp } from '@context/AppContext';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 import { apiJson } from '@lib/api';
 import { ServerStatusBanner } from '@ui/ServerStatusBanner';
+import { PhoneInput } from '@ui/PhoneInput';
 import { AuthBrandHeader } from './AuthBrandHeader';
 import { layout, controls } from '@lib/styles';
 import { useSubmit } from '@lib/useSubmit';
@@ -65,22 +66,14 @@ export const RegisterScreen = () => {
   const { error, setError, isSubmitting, runSubmit } = useSubmit('Pendaftaran belum dapat diproses.');
   const [policy, setPolicy] = useState(null);
 
-  const cleanPhone = (val) => {
-    let cleaned = String(val || '').trim().replace(/[^0-9+]/g, '');
-    if (cleaned.startsWith('+')) cleaned = cleaned.slice(1);
-    if (cleaned.startsWith('08')) cleaned = '62' + cleaned.slice(1);
-    else if (cleaned.startsWith('8')) cleaned = '62' + cleaned;
-    return cleaned;
-  };
-
   const submit = (event) => {
     event.preventDefault();
     if (!name.trim()) return setError('Nama lengkap wajib diisi.');
     if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Masukkan alamat email yang valid.');
     
-    const standardPhone = cleanPhone(phone);
-    if (!standardPhone || !/^628[1-9][0-9]{7,12}$/.test(standardPhone)) {
-      return setError('Masukkan nomor WhatsApp yang valid (contoh: 081234567890).');
+    const standardPhone = String(phone || '').trim().replace(/[^0-9]/g, '');
+    if (!standardPhone || standardPhone.length < 8 || standardPhone.length > 15) {
+      return setError('Masukkan nomor WhatsApp yang valid.');
     }
 
     if (password.length < 8) return setError('Password minimal 8 karakter.');
@@ -125,19 +118,15 @@ export const RegisterScreen = () => {
           <label className="block"><span className="auth-label">Nama lengkap</span><span className={controls.inputWrap}><UserRound className="auth-input-icon" /><input value={name} onChange={(event) => { setName(event.target.value); setError(''); }} autoComplete="name" placeholder="Nama Anda" /></span></label>
           <label className="block"><span className="auth-label">Alamat email</span><span className={controls.inputWrap}><Mail className="auth-input-icon" /><input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} autoComplete="email" placeholder="nama@email.com" /></span></label>
           
-          <label className="block">
-            <span className="auth-label">Nomor WhatsApp</span>
-            <span className={controls.inputWrap}>
-              <Phone className="auth-input-icon text-emerald-600" />
-              <input
-                type="tel"
-                value={phone}
-                onChange={(event) => { setPhone(event.target.value); setError(''); }}
-                autoComplete="tel"
-                placeholder="081234567890"
-              />
-            </span>
-          </label>
+          <div className="block">
+            <label htmlFor="reg-phone" className="auth-label">Nomor WhatsApp</label>
+            <PhoneInput
+              id="reg-phone"
+              value={phone}
+              onChange={(val) => { setPhone(val); setError(''); }}
+              className="mt-1.5"
+            />
+          </div>
 
           <div className="pt-0.5">
             <span className="auth-label block mb-1.5">Kirim kode verifikasi ke</span>

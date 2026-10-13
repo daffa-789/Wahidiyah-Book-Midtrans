@@ -27,7 +27,7 @@ export const registerSchema = z.object({
   email: z.string().trim().email('Format email tidak valid'),
   phone: z.string({ required_error: 'Nomor WhatsApp wajib diisi' })
     .trim()
-    .refine(isValidPhone, 'Nomor WhatsApp tidak valid (contoh: 081234567890)'),
+    .refine(isValidPhone, 'Nomor WhatsApp tidak valid (contoh: 081234567890 atau format internasional)'),
   password: z.string().min(8, 'Password minimal 8 karakter'),
   dob: z.string().optional().nullable(),
   deliveryMethod: z.enum(['whatsapp', 'email']).optional().default('whatsapp')
