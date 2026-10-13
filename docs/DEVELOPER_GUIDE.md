@@ -166,15 +166,80 @@ export function BookmarkList() {
 
 ---
 
+## 📱 Panduan Multi-Provider WhatsApp Gateway (`server/providers/`)
+
+Wahidiyah Book menggunakan arsitektur **Strategy / Provider Pattern** untuk pengiriman kode OTP WhatsApp. Ini memudahkan penggantian provider atau migrasi ke penyedia lain tanpa mengubah logika bisnis controller.
+
+### 1. Memilih Provider Aktif di `.env`
+Cukup ubah variabel `WHATSAPP_PROVIDER` di file `.env`:
+```ini
+# Pilihan: fonnte | wablas | whacenter | twilio | webhook | demo
+WHATSAPP_PROVIDER=fonnte
+FONNTE_TOKEN=your_fonnte_token_here
+```
+
+### 2. Mode Testing Lokal (`demo`)
+Jika belum memiliki kuota API atau ingin menguji pendaftaran tanpa mengirim pesan ke nomor asli:
+```ini
+WHATSAPP_PROVIDER=demo
+```
+Server akan mencetak kode OTP dengan bingkai rapi langsung di terminal/konsol pengembang.
+
+### 3. Menambahkan Provider Baru
+1. Buat berkas baru di `server/providers/[nama_provider].js`.
+2. Warisi kelas `BaseWhatsAppProvider`:
+   ```javascript
+   import { BaseWhatsAppProvider } from './base.js';
+
+   export class CustomProvider extends BaseWhatsAppProvider {
+     constructor() {
+       super('custom', 'Custom Gateway');
+     }
+     async sendOtp(phone, otpCode, extra = {}) {
+       const message = this.formatOtpMessage(otpCode, extra);
+       // Panggil fetch() ke endpoint provider Anda
+       return { success: true, messageId: '...' };
+     }
+   }
+   ```
+3. Daftarkan kelas provider baru tersebut di `server/providers/index.js`.
+
+---
+
+## 🎨 Utilitas Frontend: `cn()` & `libphonenumber-js`
+
+### 1. `cn(...inputs)` (`src/lib/utils.js`)
+Menggabungkan `clsx` dan `tailwind-merge` untuk menangani conditional class dan resolusi konflik kelas Tailwind:
+```javascript
+import { cn } from '@lib/utils';
+
+<button className={cn('px-4 py-2 bg-cream-100', isActive && 'bg-brand-600 text-white', className)}>
+  Kirim
+</button>
+```
+
+### 2. Normalisasi & Validasi Nomor Telepon (`@lib/countryCodes`)
+Menggunakan `libphonenumber-js` untuk mendeteksi kode negara, format E.164, dan status validitas:
+```javascript
+import { parsePhoneNumber, formatToWhatsAppE164 } from '@lib/countryCodes';
+
+const { country, nationalNumber, isValid } = parsePhoneNumber('081234567890');
+// country: { code: 'ID', dial: '+62', ... }
+// nationalNumber: '81234567890'
+// isValid: true
+```
+
+---
+
 ## 🛡️ Konvensi Kode & Standar Keamanan
 
 1. **Gunakan Async/Await dengan Try-Catch Bersih**:
    Setiap fungsi async di backend dan frontend wajib menangani potensi error dengan respons JSON yang jelas.
 2. **Keamanan Kunci Rahasia**:
-   - Kunci sensitif seperti `SUPABASE_SERVICE_ROLE_KEY` dan `MIDTRANS_SERVER_KEY` hanya boleh diakses di backend (`server/`).
+   - Kunci sensitif seperti `SUPABASE_SERVICE_ROLE_KEY`, `MIDTRANS_SERVER_KEY`, dan token WhatsApp hanya boleh diakses di backend (`server/`).
    - Variabel yang aman dibaca frontend hanya yang berawalan `VITE_` (misalnya `VITE_SUPABASE_ANON_KEY`).
 3. **Penyimpanan Password**:
-   - Password pengguna wajib di-hash menggunakan `bcryptjs` dengan *salt rounds* 10 sebelum disimpan ke database.
+   - Password pengguna wajib di-hash menggunakan `bcryptjs` dengan *salt rounds* 12 sebelum disimpan ke database.
 4. **Sanitasi File Upload**:
    - Gambar sampul buku dikonversi dan dikompresi ke format **WebP** via library `sharp` sebelum disimpan.
    - File dokumen buku (PDF/EPUB) diverifikasi tipe kontennya di middleware Multer.
@@ -184,5 +249,6 @@ export function BookmarkList() {
 ## 🔍 Checklist Verifikasi Sebelum Commit
 
 Sebelum melakukan commit atau push:
-- [ ] Jalankan `node --check server/server.js` (Memastikan tidak ada galat sintaks di backend).
-- [ ] Jalankan `npm run build` (Memastikan bundling Vite React berhasil 100% tanpa error).
+- [ ] Jalankan `npm run check` (Memastikan sintaks backend lolos dan bundling produksi Vite sukses 100%).
+- [ ] Jalankan `npm run health` (Memverifikasi koneksi database Supabase dan status Midtrans).
+- [ ] Jalankan `npm run clean:ports` jika port 3000/5000 terganjal oleh proses background Windows.

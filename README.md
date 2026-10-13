@@ -1,4 +1,4 @@
-# 📖 Wahidiyah Book — Digital Library & Real Midtrans QRIS
+# 📖 Wahidiyah Book — Digital Library, Real Midtrans QRIS & WhatsApp Authenticator
 
 [![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D22-brightgreen.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18.3-blue.svg)](https://react.dev/)
@@ -7,12 +7,13 @@
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8.svg)](https://tailwindcss.com/)
 [![Database](https://img.shields.io/badge/Database-Supabase%20(PostgreSQL)-emerald.svg)](https://supabase.com/)
 [![Payment](https://img.shields.io/badge/Payment-Midtrans%20Core%20API-0052cc.svg)](https://midtrans.com/)
+[![WhatsApp](https://img.shields.io/badge/WhatsApp-Multi--Provider%20Gateway-25D366.svg)](https://whatsapp.com/)
 
-Perpustakaan digital modern berbasis web dengan katalog buku interaktif, pembaca PDF terproteksi, keanggotaan **Pro**, dan pembayaran **QRIS menggunakan Midtrans Core API (Sandbox)** sesungguhnya.
+Perpustakaan digital modern berbasis web dengan katalog buku interaktif, pembaca PDF terproteksi, keanggotaan **Pro**, pembayaran **QRIS menggunakan Midtrans Core API (Sandbox)** sesungguhnya, serta **WhatsApp Authenticator Multi-Provider** dengan pemilih nomor internasional 245 negara dunia.
 
 > 🎓 **Konteks Proyek Skripsi:**
-> Repositori ini adalah implementasi sistem pembayaran **REAL MIDTRANS CORE API**.
-> Seluruh transaksi pembayaran QRIS di-generate secara real-time melalui server Midtrans Engine, divalidasi keaslian tanda tangan digitalnya (*signature key*), dan diselesaikan secara idempoten di sisi backend.
+> Repositori ini adalah implementasi sistem pembayaran **REAL MIDTRANS CORE API** dan **MULTI-CHANNEL AUTHENTICATOR (Email Gmail API & WhatsApp Gateway)**.
+> Seluruh transaksi pembayaran QRIS di-generate secara real-time melalui server Midtrans Engine, divalidasi keaslian tanda tangan digitalnya (*SHA-512 signature key*), dan diselesaikan secara idempoten di sisi backend. Kode OTP registrasi & pemulihan akun dapat dikirim via WhatsApp resmi ke seluruh dunia.
 
 ---
 
@@ -20,12 +21,13 @@ Perpustakaan digital modern berbasis web dengan katalog buku interaktif, pembaca
 1. [Fitur Unggulan Sistem](#-fitur-unggulan-sistem)
 2. [Arsitektur Sistem](#-arsitektur-sistem)
 3. [Alur Pembayaran QRIS Midtrans](#-alur-pembayaran-qris-midtrans)
-4. [Standar Keamanan Sistem (Security Hardening)](#-standar-keamanan-sistem-security-hardening)
-5. [Prasyarat & Konfigurasi Lingkungan (.env)](#-prasyarat--konfigurasi-lingkungan-env)
-6. [Panduan Instalasi & Setup Database](#-panduan-instalasi--setup-database)
-7. [Panduan Menjalankan Aplikasi (NPM Scripts)](#-panduan-menjalankan-aplikasi-npm-scripts)
-8. [Struktur Direktori Proyek](#-struktur-direktori-proyek)
-9. [Histori Rilis & Rekam Jejak Kerja (Memory-Kerja R40–R50)](#-histori-rilis--rekam-jejak-kerja-memory-kerja-r40r50)
+4. [WhatsApp Multi-Provider Gateway](#-whatsapp-multi-provider-gateway)
+5. [Standar Keamanan Sistem (Security Hardening)](#-standar-keamanan-sistem-security-hardening)
+6. [Prasyarat & Konfigurasi Lingkungan (.env)](#-prasyarat--konfigurasi-lingkungan-env)
+7. [Panduan Instalasi & Setup Database](#-panduan-instalasi--setup-database)
+8. [Panduan Menjalankan Aplikasi (NPM Scripts)](#-panduan-menjalankan-aplikasi-npm-scripts)
+9. [Struktur Direktori Proyek](#-struktur-direktori-proyek)
+10. [Histori Rilis & Rekam Jejak Kerja (R40–R61)](#-histori-rilis--rekam-jejak-kerja)
 
 ---
 
@@ -40,10 +42,15 @@ Perpustakaan digital modern berbasis web dengan katalog buku interaktif, pembaca
 - **Last Read Tracker (Ingat Halaman Terakhir):** Otomatis menyimpan progres membaca pengguna di `localStorage` dan menampilkan banner *"Lanjut membaca dari Halaman X?"*.
 - **Mode Tema Pembaca:** Pilihan latar belakang **Terang**, **Sepia (Hangat)**, dan **Malam (Gelap)** untuk kenyamanan mata.
 
-### 2. Autentikasi Pengguna & Keamanan Akun
-- **Registrasi & Verifikasi OTP Email:** Verifikasi pendaftaran 6 digit OTP yang dikirim langsung melalui **Gmail API OAuth2** (berlaku 10 menit dengan proteksi cooldown kirim ulang 60 detik).
-- **Login Akun Google:** Integrasi resmi Google Identity Services / Direct Google OAuth 2.0 dengan verifikasi integritas token ID.
-- **Sesi Aman:** Penyimpanan kata sandi dengan salt hashing `bcrypt` (12 rounds) dan sesi berbasis token `jsonwebtoken` (JWT).
+### 2. Autentikasi Pengguna & WhatsApp Multi-Provider (R61)
+- **Registrasi & Verifikasi Dual-Channel:** Pengguna dapat mendaftar dengan email dan nomor WhatsApp internasional. Kode OTP 6 digit dapat dikirim via **Gmail API OAuth2** maupun pesan **WhatsApp resmi**.
+- **Pemilih Kode Negara Sedunia (245 Negara):**
+  - Menggunakan bendera vektor SVG resmi dari `flag-icons` di `public/flags/[iso].svg` (resolusi tajam di Windows, Linux, Android, iOS tanpa glitch teks emoji).
+  - Integrasi pustaka standar Google `libphonenumber-js` untuk parsing nomor E.164 internasional dan deteksi validitas.
+  - Pencarian dwibahasa (Indonesia & Inggris: *"Jepang"* / *"Japan"*, *"Arab Saudi"* / *"Saudi Arabia"*).
+  - Pembuangan angka nol di awal nomor lokal secara otomatis (`0812...` ➔ `812...` dengan dial `+62`).
+- **Login Akun Google:** Integrasi resmi Direct Google OAuth 2.0 dengan verifikasi token ID.
+- **Sesi Aman:** Penyimpanan kata sandi dengan salt hashing `bcryptjs` (12 rounds) dan sesi berbasis token `jsonwebtoken` (JWT).
 
 ### 3. Sistem Keanggotaan Pro & Pembayaran Real Midtrans QRIS
 - **Integrasi Midtrans Core API:** Charge QRIS dibuat langsung dari backend server dengan nominal dinamis (bebas dari manipulasi harga di sisi klien).
@@ -57,37 +64,40 @@ Perpustakaan digital modern berbasis web dengan katalog buku interaktif, pembaca
 - **Ekspor Laporan 1-Klik:** Unduh riwayat transaksi, data pengguna, dan katalog buku langsung ke format Microsoft Excel (`.xlsx`) via library `xlsx`.
 - **Hero Carousel & Kalender Event:** Manajemen banner beranda dan jadwal agenda majelis.
 
-### 5. Progressive Web App (PWA)
-- Terintegrasi Web App Manifest & Service Worker.
-- Banner otomatis untuk menginstal aplikasi ke Layar Utama (*Home Screen*) HP Android & panduan khusus Safari iOS.
+### 5. Tema Tampilan Menyeluruh (Terang & Malam)
+- **Mode Malam Aplikasi (Dark Mode):** Seluruh antarmuka mendukung palet gelap sadar-tema dengan CSS variable Tailwind.
+- **Progressive Web App (PWA):** Terintegrasi Web App Manifest & Service Worker untuk instalasi ke Layar Utama (*Home Screen*).
+- **Notifikasi Web Push:** Modul mandiri VAPID ES256 + enkripsi `aes128gcm` untuk pengingat agenda H-1.
 
 ---
 
 ## 🏛️ Arsitektur Sistem
 
-Aplikasi dibangun menggunakan prinsip **arsitektur monolitik terpadu (Unified Single-Port Architecture)**:
+Aplikasi dibangun menggunakan prinsip **Arsitektur Monolitik Terpadu (Unified Single-Port Architecture)**:
 
 ```mermaid
 graph TD
-    Client[Browser / Mobile PWA] -->|Port 5000 / 3000| Express[Server Express Node.js]
+    Client["Browser Desktop / Mobile PWA (React 18 + Vite)"] -->|Port 3000 / 5000| Express["Server Express Node.js"]
     
-    subgraph Frontend [React 18 + Vite]
-        UI[Komponen Antarmuka]
-        State[Context Slices: Catalog, Payment, Navigation]
-        Util[Utils: dayjs, tailwind-merge, cn]
+    subgraph Frontend ["Frontend Modular (React 18)"]
+        UI["Komponen Antarmuka (FlagIcon, PhoneInput, BrandMark)"]
+        State["Context Slices (Catalog, Payment, Navigation)"]
+        Util["Pustaka: cn() (clsx + tailwind-merge), dayjs, libphonenumber-js"]
     end
 
-    subgraph Backend [Express API Routes]
-        AuthRoute[/api/auth - JWT, Bcrypt, Google OAuth/]
-        BookRoute[/api/books - Katalog, Upload, Stream PDF/]
-        PayRoute[/api/payments - Midtrans QRIS Charge & Webhook/]
-        AdminRoute[/api/admin - Analitik, Excel Export, Manajemen/]
+    subgraph Backend ["Backend API & Providers (Express.js)"]
+        AuthRoute["/api/auth - JWT, Bcrypt, Google OAuth, OTP"]
+        BookRoute["/api/books - Katalog, Upload, Stream PDF Protected"]
+        PayRoute["/api/payments - Midtrans QRIS Charge & Webhook"]
+        AdminRoute["/api/admin - Analitik, Excel Export, Manajemen"]
+        WAProviders["server/providers/ - Multi-Provider WhatsApp Gateway"]
     end
 
-    subgraph External [Layanan Cloud Pihak Ketiga]
-        Supa[(Supabase PostgreSQL Cloud)]
-        Midtrans[Midtrans Payment Gateway Core API]
-        Gmail[Google Gmail API OAuth2]
+    subgraph External ["Layanan Cloud & Gateway"]
+        Supa[("Supabase PostgreSQL Cloud")]
+        Midtrans["Midtrans Payment Gateway Core API"]
+        Gmail["Google Gmail API OAuth2"]
+        WAGateway["WhatsApp Gateway (Fonnte / Wablas / Twilio)"]
     end
 
     Express --> Frontend
@@ -95,11 +105,8 @@ graph TD
     Backend --> Supa
     Backend --> Midtrans
     Backend --> Gmail
+    WAProviders --> WAGateway
 ```
-
-- **Frontend:** Pure React 18, React Router v7, Vite 6, Tailwind CSS, Headless UI, Lucide Icons, Sonner.
-- **Backend:** Node.js Express 4 (ES Module murni tanpa framework tambahan yang membebani).
-- **State Management:** React Context API modular (`src/context/slices/`) dengan pemisahan domain logic yang bersih.
 
 ---
 
@@ -115,7 +122,7 @@ graph TD
    └──> Transaksi disimpan di Supabase berstatus 'pending'
 
 3. Klien menampilkan QRIS Tajam & Tombol Simpan ke Galeri
-   └──> Pengguna memindai QRIS via GoPay / BCA / DANA / Simulator
+   └──> Pengguna memindai QRIS via GoPay / BCA / DANA / Simulator Sandbox
 
 4. Penyelesaian Transaksi (Idempoten):
    ├── Jalur A: Webhook POST /api/payments/midtrans/notification
@@ -128,17 +135,33 @@ graph TD
 
 ---
 
+## 📱 WhatsApp Multi-Provider Gateway
+
+Gateway WhatsApp menggunakan arsitektur **Strategy / Provider Pattern** di `server/providers/`:
+- **Fonnte (`fonnte`)**: Provider default Indonesia.
+- **Wablas (`wablas`)**: Alternatif provider lokal terpercaya.
+- **WhaCenter (`whacenter`)**: Gateway alternatif berbasis device ID.
+- **Twilio (`twilio`)**: Standar global resmi dengan sandbox gratis.
+- **Webhook (`webhook`)**: Integrasi HTTP webhook ke gateway kustom.
+- **Demo (`demo`)**: Fallback lokal tanpa token, mencetak pesan OTP rapi di terminal server.
+
+Ganti provider kapan saja dengan mengubah satu variabel di `.env`:
+```ini
+WHATSAPP_PROVIDER=fonnte # atau wablas, whacenter, twilio, demo
+```
+
+---
+
 ## 🛡️ Standar Keamanan Sistem (Security Hardening)
 
-Sistem telah diaudit berdasarkan **20 Indikator Pemeriksaan Keamanan Siber**:
 1. **Perlindungan Password:** Bcrypt dengan salt cost 12 rounds.
-2. **Otentikasi Statless:** Token JWT ditandatangani dengan secret berkekuatan tinggi dan masa kedaluwarsa ketat.
-3. **Database RLS (Row Level Security):** Tabel Supabase dilindungi hak akses granular (anonim tidak bisa membaca data sensitif pengguna).
-4. **Validasi Skema Terstruktur:** Menggunakan pustaka `zod` untuk memvalidasi seluruh input request sebelum diproses oleh database.
-5. **Anti Brute-Force Rate Limiting:** Pembatasan frekuensi percobaan request pada endpoint otentikasi dan pembayaran QRIS.
-6. **HTTP Header Hardening:** Integrasi `helmet` untuk proteksi terhadap serangan XSS, Clickjacking, dan sniffing tipe konten.
-7. **Fail-Closed Webhook Guard:** Webhook Midtrans menolak seluruh request tanpa signature digital yang sah.
-8. **Proteksi Hak Cipta PDF:** Nonaktifkan download toolbar, streaming inline, dan larangan context menu.
+2. **Otentikasi Stateless:** Token JWT berkekuatan tinggi dengan masa berlaku ketat 12 jam.
+3. **Database RLS (Row Level Security):** Seluruh tabel Supabase dilindungi hak akses granular.
+4. **Validasi Skema Terstruktur:** Pustaka `zod` memvalidasi seluruh input request.
+5. **Anti Brute-Force Rate Limiting:** Pembatasan frekuensi request pada endpoint auth dan charge QRIS.
+6. **HTTP Header Hardening:** Integrasi `helmet` untuk proteksi XSS, Clickjacking, dan MIME-sniffing.
+7. **Fail-Closed Webhook Guard:** Webhook Midtrans menolak seluruh request tanpa signature digital SHA-512 yang sah.
+8. **Proteksi Hak Cipta PDF:** Nonaktifkan toolbar download, streaming inline, larangan klik kanan, dan pencegahan seleksi teks.
 
 ---
 
@@ -150,7 +173,8 @@ Sistem telah diaudit berdasarkan **20 Indikator Pemeriksaan Keamanan Siber**:
 - **Akun Layanan Cloud:**
   - Akun [Supabase](https://supabase.com/) (Database PostgreSQL)
   - Akun [Midtrans Sandbox](https://dashboard.sandbox.midtrans.com/) (Payment Gateway)
-  - Google Cloud Console Project (OAuth 2.0 Client ID & Secret)
+  - Google Cloud Console Project (OAuth 2.0 Client ID & Secret untuk Gmail API)
+  - Akun WhatsApp Gateway (Fonnte / Wablas / Twilio) atau gunakan mode `demo`
 
 ### 2. Format Berkas `.env`
 Salin template konfigurasi dari `.env.example` ke `.env`:
@@ -181,6 +205,10 @@ GOOGLE_CLIENT_ID=xxxxxxxxxxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxxxx
 GMAIL_SENDER=email-pengirim@gmail.com
 GMAIL_REFRESH_TOKEN=1//04xxxxxxxxxxxx
+
+# WhatsApp Multi-Provider Gateway (fonnte | wablas | whacenter | twilio | webhook | demo)
+WHATSAPP_PROVIDER=fonnte
+FONNTE_TOKEN=your_fonnte_token_here
 ```
 
 ---
@@ -195,21 +223,19 @@ npm install
 ```
 
 ### 2. Migrasi Skema Database Supabase
-Buka dasbor **Supabase** ➔ pilih project Anda ➔ masuk ke menu **SQL Editor** ➔ salin dan jalankan seluruh isi berkas:
+Buka dasbor **Supabase** ➔ pilih project Anda ➔ masuk ke menu **SQL Editor** ➔ jalankan seluruh isi berkas:
 ```
 supabase_database/full_setup.sql
 ```
-Skrip ini akan secara otomatis membuat tabel `users`, `books`, `subscriptions`, `transactions`, `email_verifications`, `events`, `hero_slides`, fungsi trigger, serta aturan keamanan Row Level Security (RLS).
+Skrip ini akan secara otomatis membuat tabel `users` (dengan kolom `phone`), `books`, `subscriptions`, `transactions`, `email_verifications`, `events`, `hero_slides`, `push_subscriptions`, serta aturan keamanan Row Level Security (RLS).
 
 ---
 
 ## 💻 Panduan Menjalankan Aplikasi (NPM Scripts)
 
-Proyek ini telah dilengkapi dengan skrip otomatisasi modern di `package.json`:
-
 | Perintah Terminal | Peran & Deskripsi |
 | :--- | :--- |
-| **`npm run dev`** | **Mode Pengembangan (Harian):** Menjalankan backend Express dan frontend Vite sekaligus dalam 1 port terpadu dengan Hot Module Replacement (HMR). |
+| **`npm run dev`** | **Mode Pengembangan (Harian):** Menjalankan backend Express dan frontend Vite sekaligus dalam 1 port terpadu dengan HMR. |
 | **`npm start`** | **Mode Produksi (Siap Rilis):** Otomatis mem-build aset ke folder `dist/` lalu menyalakan server produksi di port 5000. |
 | **`npm run health`** | **Uji Kesehatan Sistem (5/5 Checklist):** 1-klik periksa koneksi Cloud Supabase, tabel-tabel utama, dan status payment gateway Midtrans. |
 | **`npm run check`** | **Validasi Integritas Kode:** Memeriksa sintaks server Node.js dan memastikan kompilasi bundle frontend 0 error. |
@@ -224,64 +250,55 @@ Proyek ini telah dilengkapi dengan skrip otomatisasi modern di `package.json`:
 
 ```
 Wahidiyah Book + Real Midtrans Skripsi/
-├── public/                 # Aset statis publik (manifest PWA, ikon, favicon)
+├── public/                 # Aset statis publik
+│   └── flags/              # 271 vektor SVG bendera resmi seluruh negara dunia
 ├── scripts/                # Otomasi skrip (dev, start, health-check, clean-ports)
-│   ├── clean-ports.js      # Pembebas port soket Windows
-│   ├── dev.js              # Runner server pengembangan satu port
-│   ├── health-check.js     # Skrip 1-klik verifikasi kesehatan database & gateway
-│   └── start.js            # Runner server produksi terpadu
-├── server/                 # Backend Node.js Express (ESM)
+├── server/                 # Backend Node.js Express (ES Module)
 │   ├── lib/                # Logika bisnis (midtrans, http, images, time, validate)
 │   ├── middleware/         # Middleware upload multer & rate-limiter
-│   ├── routes/             # Rute modular (auth, books, payments, admin, users)
+│   ├── providers/          # Multi-Provider WhatsApp Gateway (Strategy Pattern)
+│   ├── routes/             # Rute modular Express (auth, books, payments, admin, users)
 │   ├── auth.js             # Otentikasi JWT & Bcrypt
 │   ├── config.js           # Konfigurasi sistem & konstanta lingkungan
 │   ├── db.js               # Inisialisasi klien Supabase server
 │   ├── logger.js           # Logger konsol performa tinggi via picocolors
 │   ├── mailer.js           # Pengirim email OTP via Gmail API OAuth2
+│   ├── whatsapp.js         # Delegator pengirim OTP WhatsApp
 │   └── server.js           # Titik masuk utama server Express
 ├── src/                    # Frontend React 18 (Vite)
-│   ├── components/         # Komponen UI global & Banner PWA
+│   ├── components/         # Komponen UI global (FlagIcon, PhoneInput, BrandMark, DeviceFrame)
 │   ├── context/            # AppContext & Modular Slices (catalog, payment, nav)
-│   ├── features/           # Halaman per fitur (home, reader, payment, admin, auth)
-│   │   ├── admin/          # Panel admin & ekspor laporan Excel
-│   │   ├── auth/           # Formulir login, register, dan verifikasi OTP
-│   │   ├── payment/        # Layar QRIS, konversi PNG galeri, dan modal kwitansi
-│   │   └── reader/         # Layar pembaca PDF, tema mode malam, dan resume tracker
-│   ├── lib/                # Helper klien (api, utils, cn, dayjs, format)
+│   ├── features/           # Halaman per fitur (home, reader, payment, admin, auth, profile)
+│   ├── lib/                # Helper klien (api, countryCodes, utils/cn, date, normalizers)
 │   ├── App.jsx             # Router navigasi utama
 │   └── main.jsx            # Entry point React DOM
-├── supabase_database/      # Skrip DDL & patch PostgreSQL Supabase
-│   └── full_setup.sql      # Skrip master database terpadu
-├── docs/                   # Dokumentasi arsitektur, API, dan alur pembayaran
+├── supabase_database/      # Skrip DDL & patch PostgreSQL Supabase (full_setup.sql)
+├── docs/                   # Dokumentasi teknis komprehensif
+├── memory-kerja/           # Rekam jejak rilis individual (R40.md - R61.md)
+├── Master_Memory_Workflow.md # Single Source of Truth teknis sistem
 ├── package.json            # Manifest dependensi & skrip proyek
 └── README.md               # Dokumentasi utama proyek
 ```
 
 ---
 
-## 📓 Histori Rilis & Rekam Jejak Kerja (Memory-Kerja R40–R50)
-
-Seluruh milestone pengembangan telah diselesaikan dan tercatat secara transparan pada folder `memory-kerja/`:
+## 📓 Histori Rilis & Rekam Jejak Kerja
 
 | Rilis | Tanggal | Ruang Lingkup & Pencapaian | Status |
 | :---: | :---: | :--- | :---: |
-| **R40** | 30 Sep 2026 | Penyelesaian utang teknis R37, penanganan kegagalan GIS, dan konsolidasi dependensi atomik. | ✅ Selesai |
-| **R41** | 30 Sep 2026 | Refaktor penanggalan WIB, implementasi sistem pengingat jatuh tempo, dan eliminasi slot iklan. | ✅ Selesai |
-| **R42** | 01 Okt 2026 | Arsitektur Single-Port (Vite middleware di dalam Express), sentralisasi SQL, dan request timeout. | ✅ Selesai |
-| **R43** | 01 Okt 2026 | Penataan panel admin, eliminasi tab redundan, dan konfigurasi resmi pengirim email Gmail API. | ✅ Selesai |
-| **R44** | 02 Okt 2026 | Migrasi `.mjs` ke `.js`, stabilisasi registrasi akun email baru, dan pembenahan header MIME. | ✅ Selesai |
-| **R45** | 03 Okt 2026 | Penutupan celah keamanan P0, pengetatan paywall buku Pro, dan isolasi akses konten. | ✅ Selesai |
-| **R46** | 03 Okt 2026 | Penyegaran antarmuka otentikasi dan penambahan jeda cooldown kirim ulang kode OTP 60 detik. | ✅ Selesai |
-| **R47** | 03 Okt 2026 | Integrasi autentikasi Google Sign-In via Supabase Auth redirect callback. | ✅ Selesai |
-| **R48** | 03 Okt 2026 | Pemindahan alur Google OAuth langsung (*Direct OAuth 2.0*) untuk stabilitas tanpa pihak ketiga. | ✅ Selesai |
-| **R49** | 04 Okt 2026 | Pengecekan pre-launch komprehensif, fitur Hero Carousel banner dinamis, dan pembersihan kode mati. | ✅ Selesai |
-| **R50** | 05–07 Okt 2026 | Audit keamanan RLS Supabase, redaksi kredensial git, standarisasi Pure React & Express (penghapusan total `server/services/`), dekomposisi `AppContext` ke modular slices, integrasi library standar (`dayjs`, `zod`, `tailwind-merge`, `picocolors`), proteksi PDF read-only, dan pembuatan skrip `health-check`. | ✅ Selesai |
+| **R40–R50** | 30 Sep – 05 Okt 2026 | Refaktor penanggalan WIB, arsitektur single-port, Google Direct OAuth 2.0, audit keamanan RLS Supabase, dekomposisi context slice, library terstandar (`dayjs`, `zod`, `picocolors`). | ✅ Selesai |
+| **R51** | 06–07 Okt 2026 | Integrasi Real Midtrans Core API (Sandbox), koreksi EMVCo `qr_string` 244 karakter, migrasi kolom database, dan uji E2E 10/10 lulus. | ✅ Selesai |
+| **R52** | 07–08 Okt 2026 | Proteksi PDF read-only (`#toolbar=0`), Last Read Tracker, tema pembaca 3 mode, simpan QRIS PNG galeri, dan kwitansi resmi. | ✅ Selesai |
+| **R53** | 08 Okt 2026 | Tema Malam (dark mode) menyeluruh dengan token warna sadar-tema CSS variable. | ✅ Selesai |
+| **R54–R56** | 08–10 Okt 2026 | Integrasi Zotero, Web Push Notification agenda H-1, identitas visual `BrandMark` SVG, ekspor Excel lazy. | ✅ Selesai |
+| **R57–R60** | 09–10 Okt 2026 | Optimasi helper error `http.js`, penyatuan komponen bersama, 4 Activity Diagram bebas tembusan, perbaikan namespace layar auth. | ✅ Selesai |
+| **R61** | 13 Okt 2026 | **WhatsApp Authenticator Multi-Provider + Bendera Vektor Sedunia.** Integrasi nomor HP internasional (`users.phone`), Multi-Provider WhatsApp Gateway (`Fonnte`, `Wablas`, `Whacenter`, `Twilio`, `Webhook`, `Demo`), komponen `FlagIcon` + `PhoneInput` 245 negara dunia, pustaka `libphonenumber-js`, `clsx`, `tailwind-merge` (`cn()`), pemadatan memori, dan pembersihan berkas usang. | ✅ Selesai |
 
 ---
 
-## 👨‍💻 Pengembang
+## 👨‍💻 Informasi Pengembang & Skripsi
 
-- **Peneliti / Pengembang:** Daffa
-- **Topik Skripsi:** Sistem Perpustakaan Digital Wahidiyah dengan Keanggotaan Pro dan Pembayaran QRIS via Midtrans Core API
+- **Pengembang:** Daffa
+- **Topik Penelitian Skripsi:** Rancang Bangun Sistem Perpustakaan Digital Wahidiyah Berbasis Web dengan Pembaca PDF Terproteksi, Keanggotaan Pro, Pembayaran QRIS via Midtrans Core API, dan Autentikasi Multi-Channel WhatsApp
+- **Repositori Resmi:** `daffa-789/Wahidiyah-Book-Midtrans`
 - **Lisensi:** Private / Skripsi Project (Hak Cipta Dilindungi)

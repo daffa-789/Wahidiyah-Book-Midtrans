@@ -2,19 +2,22 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { COUNTRY_CODES, DEFAULT_COUNTRY, findCountry, parsePhoneNumber } from '@lib/countryCodes';
 import { FlagIcon } from './FlagIcon';
+import { cn } from '@lib/utils';
 
 /**
- * Komponen input nomor telepon internasional dengan pemilih kode negara / region & bendera.
+ * Komponen input nomor telepon internasional dengan pemilih kode negara / region & bendera SVG.
+ * Mendukung pencarian bilingual (Indonesia & Inggris), format kode negara internasional,
+ * dan normalisasi otomatis.
  * 
- * Props:
- * - value: string nomor HP (bisa format '0812...', '62812...', '+62812...', atau nomor negara lain)
- * - onChange: callback (normalizedFullPhone: string) => void (contoh output: '6281234567890')
- * - placeholder: custom placeholder (opsional)
- * - disabled: boolean
- * - required: boolean
- * - id: string
- * - name: string
- * - className: string kelas tambahan
+ * @param {Object} props
+ * @param {string} [props.value] - String nomor HP (contoh: '0812...', '62812...', '+62812...')
+ * @param {function} [props.onChange] - Callback (fullPhone: string) => void (contoh output: '6281234567890')
+ * @param {string} [props.placeholder] - Custom placeholder
+ * @param {boolean} [props.disabled] - Status nonaktif
+ * @param {boolean} [props.required] - Status wajib diisi
+ * @param {string} [props.id] - ID elemen input
+ * @param {string} [props.name] - Nama field formulir
+ * @param {string} [props.className] - Kelas CSS wrapper
  */
 export const PhoneInput = ({
   value = '',
@@ -47,7 +50,7 @@ export const PhoneInput = ({
     setNationalNumber(next.nationalNumber);
   }, [value]);
 
-  // Tutup dropdown saat klik di luar
+  // Tutup dropdown saat klik di luar atau tombol Escape
   useEffect(() => {
     if (!isOpen) return;
 
@@ -78,7 +81,7 @@ export const PhoneInput = ({
     }
   }, [isOpen]);
 
-  // Filter negara berdasarkan pencarian
+  // Filter negara berdasarkan pencarian (nama Indonesia, Inggris, dial code, atau kode ISO)
   const filteredCountries = useMemo(() => {
     if (!search.trim()) {
       return [...COUNTRY_CODES].sort((a, b) => {
@@ -91,12 +94,15 @@ export const PhoneInput = ({
     return COUNTRY_CODES.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
+        (c.enName && c.enName.toLowerCase().includes(q)) ||
         c.dial.includes(q) ||
         c.dialNum.includes(q) ||
         c.code.toLowerCase().includes(q)
     ).sort((a, b) => {
-      const aStarts = a.name.toLowerCase().startsWith(q);
-      const bStarts = b.name.toLowerCase().startsWith(q);
+      const aStarts =
+        c.name.toLowerCase().startsWith(q) || (c.enName && c.enName.toLowerCase().startsWith(q));
+      const bStarts =
+        b.name.toLowerCase().startsWith(q) || (b.enName && b.enName.toLowerCase().startsWith(q));
       if (aStarts && !bStarts) return -1;
       if (!aStarts && bStarts) return 1;
       return a.name.localeCompare(b.name, 'id');
@@ -134,7 +140,7 @@ export const PhoneInput = ({
   };
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className={cn('relative', className)} ref={dropdownRef}>
       {/* Container Input Utama */}
       <div className="auth-input-wrap flex items-center transition focus-within:ring-2 focus-within:ring-brand-500/20">
         {/* Tombol Pemilih Region & Kode Negara */}
@@ -149,6 +155,7 @@ export const PhoneInput = ({
         >
           <FlagIcon
             code={selectedCountry.code}
+            flag={selectedCountry.flag}
             name={selectedCountry.name}
             className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] shrink-0"
           />
@@ -156,9 +163,10 @@ export const PhoneInput = ({
             {selectedCountry.dial}
           </span>
           <ChevronDown
-            className={`h-3.5 w-3.5 text-ink-400 transition-transform duration-200 ${
-              isOpen ? 'rotate-180 text-brand-700' : ''
-            }`}
+            className={cn(
+              'h-3.5 w-3.5 text-ink-400 transition-transform duration-200',
+              isOpen && 'rotate-180 text-brand-700'
+            )}
           />
         </button>
 
@@ -177,7 +185,7 @@ export const PhoneInput = ({
           onChange={handleNumberChange}
           disabled={disabled}
           required={required}
-          placeholder={placeholder || selectedCountry.placeholder}
+          placeholder={placeholder || (selectedCountry.code === 'ID' ? '812-3456-7890' : '812-3456-789')}
           className="w-full min-w-0 border-0 bg-transparent px-2.5 py-2.5 text-sm font-medium text-ink-900 placeholder:text-ink-400 focus:outline-none disabled:opacity-60"
         />
       </div>
@@ -196,12 +204,12 @@ export const PhoneInput = ({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari negara atau kode..."
+              placeholder="Cari negara (Indonesia, Malaysia, dll)..."
               className="w-full rounded-xl border border-cream-200 bg-white py-1.5 pl-8 pr-3 text-xs font-medium text-ink-800 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
-          {/* Daftar Scrollable Negara */}
+          {/* Daftar Scrollable Negara (240+ Negara Dunia) */}
           <div className="max-h-60 overflow-y-auto space-y-0.5 pr-1 text-xs custom-scrollbar">
             {filteredCountries.length === 0 ? (
               <div className="p-3 text-center text-xs text-ink-400">
@@ -217,15 +225,17 @@ export const PhoneInput = ({
                     role="option"
                     aria-selected={isSelected}
                     onClick={() => handleSelectCountry(country)}
-                    className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left transition ${
+                    className={cn(
+                      'flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left transition',
                       isSelected
                         ? 'bg-brand-50 text-brand-900 font-bold'
                         : 'text-ink-700 hover:bg-cream-150'
-                    }`}
+                    )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <FlagIcon
                         code={country.code}
+                        flag={country.flag}
                         name={country.name}
                         className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] shrink-0"
                       />

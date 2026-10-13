@@ -26,6 +26,7 @@ graph TD
     subgraph Backend ["Node.js Express Server (.js)"]
         Router["HTTP Routes (/api/*)"]
         Middleware["Security & Auth Middleware (Helmet, RateLimit, JWT)"]
+        Providers["WhatsApp Providers (Fonnte, Wablas, Twilio, etc.)"]
         Libs["Helpers & Database Connectors (Sharp, Supabase Server SDK, Mailer)"]
     end
     
@@ -34,15 +35,18 @@ graph TD
         Midtrans["Midtrans Payment Gateway"]
         GoogleAuth["Google Identity (OAuth 2.0)"]
         Gmail["Gmail API (OAuth2)"]
+        WAGateway["WhatsApp Gateway API (Fonnte/Wablas/Twilio)"]
     end
 
     Client -->|HTTPS / JSON| Router
     Router --> Middleware
+    Router --> Providers
     Router --> Libs
     Libs --> Supabase
     Router --> Midtrans
     Router --> GoogleAuth
     Router --> Gmail
+    Providers --> WAGateway
 ```
 
 ---
@@ -54,16 +58,19 @@ Codebase mengikuti arsitektur modular berbasis fitur di frontend dan rute Expres
 ```text
 ├── docs/                   # Dokumentasi teknis & spesifikasi API
 ├── public/                 # Aset statis publik (logo, favicon, PWA manifest)
+│   └── flags/              # 271 vektor SVG bendera resmi seluruh dunia
 ├── server/                 # Backend Node.js Express (.js)
 │   ├── auth.js             # Sesi JWT, hashing password, otorisasi role
 │   ├── config.js           # Konfigurasi terpusat & env mapping
 │   ├── db.js               # Inisialisasi koneksi Supabase Server SDK
 │   ├── lib/                # Helper murni (constants, crypto, http, images, validate)
 │   ├── middleware/         # Express middleware (security, errors, requestLog, uploads)
+│   ├── providers/          # Multi-Provider WhatsApp Gateway (Fonnte, Wablas, Twilio, Webhook, Demo)
 │   ├── routes/             # Rute HTTP Express standar (auth, books, payments, stats)
+│   ├── whatsapp.js         # Wrapper pengirim OTP WhatsApp multi-provider
 │   └── server.js           # Entrypoint Express server
 ├── src/                    # Frontend React 18 SPA (.jsx dan .js)
-│   ├── components/         # Komponen umum & UI reusable (DeviceFrame, Modal, dll)
+│   ├── components/         # Komponen umum & UI reusable (FlagIcon, PhoneInput, Modal, dll)
 │   ├── context/            # Global State (AppProvider & Slices)
 │   │   └── slices/         # Modular hooks: useCatalogSlice, usePaymentSlice, useNavigationSlice
 │   ├── features/           # Modul fitur aplikasi
