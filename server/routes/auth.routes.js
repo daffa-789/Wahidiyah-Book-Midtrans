@@ -27,6 +27,7 @@ import { findLatestOtp, deleteOtpByEmailPurpose, deleteOtpById } from '../otpSto
 import { sendGoogleAccountEmail, isMailerConfigured } from '../mailer.js';
 import { logger } from '../logger.js';
 import { loginSchema, registerSchema } from '../lib/validate.js';
+import { normalizePhone, isValidPhone } from '../whatsapp.js';
 
 export const authRouter = Router();
 
@@ -85,40 +86,76 @@ authRouter.post('/login', async (req, res) => {
 
 authRouter.post('/register', async (req, res) => {
   try {
-    const { name, email, password, dob } = req.body;
+    const { name, email, phone, password, dob, deliveryMethod } = req.body;
     const normalizedEmail = normalizeEmail(email);
+    const normalizedPhone = normalizePhone(phone);
+    const chosenMethod = deliveryMethod === 'whatsapp' ? 'whatsapp' : 'email';
 
-    const parsed = registerSchema.safeParse({ name, email: normalizedEmail, password, dob });
+    const parsed = registerSchema.safeParse({
+      name,
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      password,
+      dob,
+      deliveryMethod: chosenMethod
+    });
     if (!parsed.success) {
       return badRequest(res, parsed.error.issues[0]?.message || 'Input tidak valid');
     }
 
-    const { data: existing } = await supabaseServer
+    const { data: existingEmail } = await supabaseServer
       .from('users')
       .select('id')
       .eq('email', normalizedEmail)
       .maybeSingle();
-    if (existing) {
+    if (existingEmail) {
       return conflict(res, 'Email sudah terdaftar. Silakan masuk atau gunakan email lain.');
     }
 
+    if (normalizedPhone) {
+      const { data: existingPhone } = await supabaseServer
+        .from('users')
+        .select('id')
+        .eq('phone', normalizedPhone)
+        .maybeSingle();
+      if (existingPhone) {
+        return conflict(res, 'Nomor WhatsApp sudah terdaftar pada akun lain. Silakan masuk atau gunakan nomor lain.');
+      }
+    }
+
+    const targetIdentifier = chosenMethod === 'whatsapp' ? normalizedPhone : normalizedEmail;
+
     const { code, deliveredBy } = await issueOtp({
       email: normalizedEmail,
+      phone: normalizedPhone,
+      identifier: targetIdentifier,
+      deliveryMethod: chosenMethod,
       purpose: 'register',
       payload: {
         name: name.trim(),
-
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        deliveryMethod: chosenMethod,
         passwordHash: await hashPassword(password),
         dob: dob || null
       }
     });
 
-    logger.info('OTP', 'Kode pendaftaran dikirim', { email: normalizedEmail, deliveredBy });
+    logger.info('OTP', 'Kode pendaftaran dikirim', {
+      identifier: targetIdentifier,
+      method: chosenMethod,
+      deliveredBy
+    });
+
+    const targetLabel = chosenMethod === 'whatsapp' ? `nomor WhatsApp ${normalizedPhone}` : `email ${normalizedEmail}`;
 
     return res.status(202).json({
       success: true,
-      message: 'Kode verifikasi telah dikirim ke email Anda dan berlaku 10 menit.',
+      message: `Kode verifikasi telah dikirim ke ${targetLabel} dan berlaku 10 menit.`,
       email: normalizedEmail,
+      phone: normalizedPhone,
+      identifier: targetIdentifier,
+      deliveryMethod: chosenMethod,
       devOtp: deliveredBy === 'demo' && canExposeDevOtp() ? code : undefined
     });
   } catch (error) {
@@ -128,13 +165,17 @@ authRouter.post('/register', async (req, res) => {
 
 authRouter.post('/verify-registration', async (req, res) => {
   try {
-    const email = normalizeEmail(req.body?.email);
+    const rawEmail = req.body?.email ? normalizeEmail(req.body.email) : '';
+    const rawPhone = req.body?.phone ? normalizePhone(req.body.phone) : '';
+    const rawIdentifier = req.body?.identifier ? String(req.body.identifier).trim() : '';
+    const identifier = rawIdentifier || rawPhone || rawEmail;
     const code = String(req.body?.code || '').trim();
-    if (!email || !code) {
-      return badRequest(res, 'Email dan kode verifikasi wajib diisi.');
+
+    if (!identifier || !code) {
+      return badRequest(res, 'Identitas akun dan kode verifikasi wajib diisi.');
     }
 
-    const result = await consumeOtp({ email, purpose: 'register', code });
+    const result = await consumeOtp({ identifier, purpose: 'register', code });
     if (!result.ok) {
       return res.status(result.status).json({ success: false, message: result.message });
     }
@@ -149,7 +190,8 @@ authRouter.post('/verify-registration', async (req, res) => {
     const newUser = {
       id: newId,
       name: payload.name,
-      email,
+      email: payload.email || rawEmail,
+      phone: payload.phone || rawPhone || null,
       password: payload.passwordHash,
       role: 'user',
       login_method: 'email',
@@ -159,17 +201,19 @@ authRouter.post('/verify-registration', async (req, res) => {
 
     const { error: insertError } = await supabaseServer.from('users').insert([newUser]);
     if (insertError) {
-
       if (insertError.code === '23505') {
         await deleteOtpById(result.row.id);
-        return conflict(res, 'Email sudah terdaftar. Silakan masuk.');
+        const detail = insertError.message?.toLowerCase().includes('phone')
+          ? 'Nomor WhatsApp sudah terdaftar.'
+          : 'Email sudah terdaftar.';
+        return conflict(res, `${detail} Silakan masuk.`);
       }
       throw insertError;
     }
 
     await deleteOtpById(result.row.id);
 
-    logger.ok('AUTH', 'Registrasi akun baru (email terverifikasi)', { email, id: newId });
+    logger.ok('AUTH', 'Registrasi akun baru berhasil', { email: newUser.email, phone: newUser.phone, id: newId });
 
     return res.status(201).json({
       success: true,
@@ -184,11 +228,66 @@ authRouter.post('/verify-registration', async (req, res) => {
 
 const RESET_UNIFORM_RESPONSE = {
   success: true,
-  message: 'Jika email tersebut terdaftar, kode pemulihan telah dikirim dan berlaku 10 menit.'
+  message: 'Jika akun tersebut terdaftar, kode pemulihan telah dikirim dan berlaku 10 menit.'
 };
 
 authRouter.post('/request-password-reset', wrap(async (req, res) => {
-  const email = normalizeEmail(req.body?.email);
+  const method = req.body?.method === 'whatsapp' || req.body?.phone ? 'whatsapp' : 'email';
+  const rawEmail = req.body?.email;
+  const rawPhone = req.body?.phone || req.body?.identifier;
+
+  if (method === 'whatsapp') {
+    const normalizedPhone = normalizePhone(rawPhone);
+    if (!normalizedPhone || !isValidPhone(normalizedPhone)) {
+      return badRequest(res, 'Masukkan nomor WhatsApp yang valid (contoh: 081234567890).');
+    }
+
+    const { data: account } = await supabaseServer
+      .from('users')
+      .select('id, email, phone, login_method')
+      .eq('phone', normalizedPhone)
+      .maybeSingle();
+
+    const uniformWaResponse = {
+      success: true,
+      method: 'whatsapp',
+      message: 'Jika nomor tersebut terdaftar, kode pemulihan telah dikirim ke WhatsApp dan berlaku 10 menit.'
+    };
+
+    if (!account) {
+      logger.info('OTP', 'Permintaan reset untuk nomor WA tak terdaftar', { phone: normalizedPhone });
+      return res.json(uniformWaResponse);
+    }
+
+    if (account.login_method === 'google') {
+      logger.info('OTP', 'Reset password ditolak: akun terdaftar lewat Google', { phone: normalizedPhone });
+      return res.json(uniformWaResponse);
+    }
+
+    const { code, deliveredBy } = await issueOtp({
+      phone: normalizedPhone,
+      identifier: normalizedPhone,
+      purpose: 'reset',
+      deliveryMethod: 'whatsapp'
+    });
+    const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp();
+
+    logger.info('OTP', 'Permintaan reset password via WhatsApp', {
+      phone: normalizedPhone,
+      deliveredBy,
+      devOtpExposed: exposeDevOtp
+    });
+
+    return res.json({
+      ...uniformWaResponse,
+      phone: normalizedPhone,
+      identifier: normalizedPhone,
+      devOtp: exposeDevOtp ? code : undefined
+    });
+  }
+
+  // Metode Email
+  const email = normalizeEmail(rawEmail || req.body?.identifier);
   if (!email || !email.includes('@')) {
     return badRequest(res, 'Masukkan alamat email yang valid.');
   }
@@ -218,61 +317,75 @@ authRouter.post('/request-password-reset', wrap(async (req, res) => {
     return res.json(RESET_UNIFORM_RESPONSE);
   }
 
-  const { code, deliveredBy } = await issueOtp({ email, purpose: 'reset' });
+  const { code, deliveredBy } = await issueOtp({
+    email,
+    identifier: email,
+    purpose: 'reset',
+    deliveryMethod: 'email'
+  });
   const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp();
 
   logger.info('OTP', 'Permintaan reset password', { email, deliveredBy, devOtpExposed: exposeDevOtp });
 
-  return res.json({ ...RESET_UNIFORM_RESPONSE, devOtp: exposeDevOtp ? code : undefined });
+  return res.json({
+    ...RESET_UNIFORM_RESPONSE,
+    method: 'email',
+    identifier: email,
+    devOtp: exposeDevOtp ? code : undefined
+  });
 }));
 
 authRouter.post('/reset-password', wrap(async (req, res) => {
-  const email = normalizeEmail(req.body?.email);
+  const method = req.body?.method === 'whatsapp' || req.body?.phone ? 'whatsapp' : 'email';
+  const target = method === 'whatsapp'
+    ? normalizePhone(req.body?.phone || req.body?.identifier)
+    : normalizeEmail(req.body?.email || req.body?.identifier);
   const code = String(req.body?.code || '').trim();
   const password = String(req.body?.password || '');
 
-  if (!email || !code) {
-    return badRequest(res, 'Email dan kode verifikasi wajib diisi.');
+  if (!target || !code) {
+    return badRequest(res, 'Identitas akun dan kode verifikasi wajib diisi.');
   }
   if (password.length < 8) {
     return badRequest(res, 'Password baru minimal 8 karakter.');
   }
 
-  const { data: target } = await supabaseServer
-    .from('users')
-    .select('login_method')
-    .eq('email', email)
-    .maybeSingle();
-  if (target?.login_method === 'google') {
-    await deleteOtpByEmailPurpose(email, 'reset');
-    logger.warn('OTP', 'Reset password ditolak: akun terdaftar lewat Google', { email });
+  let userLookup = supabaseServer.from('users').select('id, login_method');
+  userLookup = method === 'whatsapp' ? userLookup.eq('phone', target) : userLookup.eq('email', target);
+  const { data: targetAccount } = await userLookup.maybeSingle();
+
+  if (targetAccount?.login_method === 'google') {
+    await deleteOtpByEmailPurpose(target, 'reset');
+    logger.warn('OTP', 'Reset password ditolak: akun terdaftar lewat Google', { target });
     return badRequest(res, 'Akun ini terdaftar melalui Google sehingga tidak memiliki password. Silakan masuk dengan tombol "Login dengan Google".');
   }
 
-  const result = await consumeOtp({ email, purpose: 'reset', code });
+  const result = await consumeOtp({ identifier: target, purpose: 'reset', code });
   if (!result.ok) {
     return res.status(result.status).json({ success: false, message: result.message });
   }
 
   await deleteOtpById(result.row.id);
-  await supabaseServer
-    .from('users')
-    .update({ password: await hashPassword(password) })
-    .eq('email', email);
 
-  logger.ok('OTP', 'Password berhasil direset', { email });
+  let userUpdate = supabaseServer.from('users').update({ password: await hashPassword(password) });
+  userUpdate = method === 'whatsapp' ? userUpdate.eq('phone', target) : userUpdate.eq('email', target);
+  await userUpdate;
+
+  logger.ok('OTP', 'Password berhasil direset', { target, method });
   return res.json({ success: true, message: 'Password berhasil diperbarui.' });
 }));
 
 authRouter.post('/resend-verification', wrap(async (req, res) => {
-  const email = normalizeEmail(req.body?.email);
+  const method = req.body?.method === 'whatsapp' || req.body?.phone ? 'whatsapp' : 'email';
+  const rawTarget = req.body?.identifier || req.body?.phone || req.body?.email;
+  const target = method === 'whatsapp' ? normalizePhone(rawTarget) : normalizeEmail(rawTarget);
   const purpose = req.body?.purpose === 'reset' ? 'reset' : 'register';
 
-  if (!email || !email.includes('@')) {
-    return badRequest(res, 'Email tidak valid.');
+  if (!target) {
+    return badRequest(res, 'Identitas tujuan verifikasi tidak valid.');
   }
 
-  const existing = await findLatestOtp(email, purpose);
+  const existing = await findLatestOtp(target, purpose);
   if (!existing) {
     return badRequest(res, 'Tidak ada permintaan verifikasi yang aktif. Silakan ulangi dari awal.');
   }
@@ -290,29 +403,32 @@ authRouter.post('/resend-verification', wrap(async (req, res) => {
   }
 
   if (purpose === 'reset') {
-    const { data: account } = await supabaseServer
-      .from('users')
-      .select('login_method')
-      .eq('email', email)
-      .maybeSingle();
+    let checkLookup = supabaseServer.from('users').select('login_method');
+    checkLookup = method === 'whatsapp' ? checkLookup.eq('phone', target) : checkLookup.eq('email', target);
+    const { data: account } = await checkLookup.maybeSingle();
     if (!account || account.login_method === 'google') {
-      return res.json(RESET_UNIFORM_RESPONSE);
+      return res.json({ success: true, message: 'Kode baru telah dikirim dan berlaku 10 menit.' });
     }
   }
 
   const { code, deliveredBy } = await issueOtp({
-    email,
+    identifier: target,
+    phone: method === 'whatsapp' ? target : null,
+    email: method === 'email' ? target : null,
+    deliveryMethod: method,
     purpose,
     payload: existing.payload ?? null
   });
   const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp();
 
-  logger.info('OTP', 'Kode dikirim ulang', { email, purpose, deliveredBy });
+  logger.info('OTP', 'Kode dikirim ulang', { identifier: target, method, purpose, deliveredBy });
 
+  const destinationLabel = method === 'whatsapp' ? 'WhatsApp' : 'email';
   return res.json({
     success: true,
-    message: 'Kode baru telah dikirim dan berlaku 10 menit.',
-    email,
+    message: `Kode baru telah dikirim ke ${destinationLabel} dan berlaku 10 menit.`,
+    identifier: target,
+    method,
     devOtp: exposeDevOtp ? code : undefined
   });
 }));

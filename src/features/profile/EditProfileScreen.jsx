@@ -192,6 +192,23 @@ export const EditProfileScreen = () => {
           </div>
 
           <div>
+            <label htmlFor="edit-phone-input" className={typography.legend}>
+              Nomor WhatsApp
+            </label>
+            <input
+              id="edit-phone-input"
+              type="tel"
+              data-testid="edit-phone"
+              value={user.phone || '-'}
+              readOnly
+              className="h-12 w-full cursor-not-allowed rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-sm font-medium text-ink-500 focus-visible:outline-none"
+            />
+            <p className="mt-1.5 text-caption text-ink-400">
+              Nomor WhatsApp terdaftar untuk autentikasi dan pemulihan akun.
+            </p>
+          </div>
+
+          <div>
             <label htmlFor="edit-dob-input" className={typography.legend}>
               Tanggal Lahir
             </label>

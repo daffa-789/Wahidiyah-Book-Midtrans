@@ -44,8 +44,11 @@ CREATE TABLE public.users (
     subscription_expires_at TIMESTAMPTZ DEFAULT NULL,
     dob DATE DEFAULT NULL,
     avatar TEXT DEFAULT NULL,
+    phone VARCHAR(20) UNIQUE DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_users_phone ON public.users(phone);
 
 CREATE TABLE public.books (
     id VARCHAR(50) PRIMARY KEY,
