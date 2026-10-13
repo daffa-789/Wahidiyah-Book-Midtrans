@@ -34,6 +34,31 @@ export const internalErrorDetail = (error, exposeDetail = includeErrorDetail) =>
   exposeDetail ? error?.message : undefined;
 
 
+/**
+ * Helper jawaban galat 4xx — memampatkan pola yang sebelumnya ditulis tangan
+ * di 81 tempat di seluruh `server/routes/`:
+ *
+ *   return res.status(400).json({ success: false, message: 'Judul wajib diisi' });
+ *   // menjadi
+ *   return badRequest(res, 'Judul wajib diisi');
+ *
+ * Semuanya mengembalikan `res` supaya tetap bisa dipakai dengan `return`,
+ * jadi alur kendali pemanggil tidak berubah sama sekali.
+ *
+ * `extra` disediakan untuk kasus yang butuh bidang tambahan (mis. `code`,
+ * `isDatabaseError`) — tanpa itu, pemanggil kembali menulis objek manual
+ * dan helper-nya jadi setengah berguna.
+ */
+const reject = (status) => (res, message, extra) =>
+  res.status(status).json({ success: false, message, ...extra });
+
+export const badRequest = reject(400);
+export const unauthorized = reject(401);
+export const forbidden = reject(403);
+export const notFound = reject(404);
+export const conflict = reject(409);
+
+
 export const authFailureMessage = (error, exposeDetail = includeErrorDetail) =>
   exposeDetail ? (error?.message || 'Terjadi kesalahan pada server') : 'Terjadi kesalahan pada server';
 

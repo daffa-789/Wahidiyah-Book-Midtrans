@@ -1,7 +1,8 @@
 
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  BellRing,
   Calendar,
   CalendarCheck,
   ChevronLeft,
@@ -13,11 +14,18 @@ import {
   MapPin,
   Pencil,
   Plus,
+  Send,
   Trash2,
   X
 } from 'lucide-react';
-import { toast } from 'sonner';
-import { exportEventsToExcel } from '@lib/excelExport';
+// R56 — `exportEventsToExcel` TIDAK lagi di-import statis di sini. Import statis
+// di berkas ini membuat Rollup mengangkat seluruh chunk `excel` (283 KB) ke
+// dalam bundle AdminDashboard, sehingga setiap admin yang membuka dashboard
+// ikut mengunduhnya. Sekarang di-`await import()` di dalam handler ekspor.
+// R57 — `toast` dari sonner juga sudah tidak dipakai di sini; pelaporan
+// galat kini terpusat lewat `withToast`/`withToastSync`.
+import { apiJson, authHeaders, getStoredSession } from '@lib/api';
+import { withToast, withToastSync } from '@lib/withToast';
 import {
   MONTH_NAMES,
   DAY_NAMES,
@@ -27,18 +35,16 @@ import {
   getCalendarMonthGrid
 } from '@lib/date';
 import { layout, typography, surfaces, controls } from '@lib/styles';
+import { Field } from '@ui/Field';
 
-const CATEGORY_DEFAULT_STYLE = {
+// Keempat kategori sengaja memakai gaya yang sama; disimpan sebagai satu konstanta
+// agar tidak ada objek duplikat yang bisa berbeda diam-diam.
+export const EVENT_CATEGORIES = ['Mujahadah', 'Pengajian', 'Kubro', 'Peringatan'];
+
+const CATEGORY_STYLE = {
   badge: 'bg-brand-50 text-brand-800 border-brand-200',
   dot: 'bg-brand-600',
   border: 'border-brand-200'
-};
-
-const CATEGORY_STYLES = {
-  Mujahadah: CATEGORY_DEFAULT_STYLE,
-  Pengajian: CATEGORY_DEFAULT_STYLE,
-  Kubro: CATEGORY_DEFAULT_STYLE,
-  Peringatan: CATEGORY_DEFAULT_STYLE
 };
 
 export const EventsTab = ({
@@ -59,6 +65,28 @@ export const EventsTab = ({
   cancelEditEvent,
   toggleEventCarousel
 }) => {
+  const [pushStatus, setPushStatus] = useState({ enabled: false, subscribers: 0 });
+  const [sendingId, setSendingId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiJson('/api/notifications/status')
+      .then((data) => { if (!cancelled) setPushStatus(data); })
+      .catch(() => { /* status opsional — jangan ganggu tampilan agenda */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const sendReminder = (eventId) => {
+    setSendingId(eventId);
+    return withToast(
+      () => apiJson(`/api/events/${eventId}/send-reminder`, {
+        method: 'POST',
+        headers: authHeaders(getStoredSession()?.token)
+      }),
+      'Pengingat gagal dikirim.',
+      (result) => result.message || `Pengingat terkirim ke ${result.sent} perangkat.`
+    ).finally(() => setSendingId(null));
+  };
   const calYear = currentCalDate.getFullYear();
   const calMonth = currentCalDate.getMonth();
 
@@ -131,14 +159,11 @@ export const EventsTab = ({
     }
   };
 
-  const handleExportEvents = () => {
-    try {
-      const res = exportEventsToExcel(events);
-      toast.success(`${res.count} data agenda berhasil diekspor (${res.fileName})`);
-    } catch (err) {
-      toast.error(err.message || 'Gagal mengekspor data agenda.');
-    }
-  };
+  const handleExportEvents = () => withToastSync(
+    () => import('@lib/excelExport').then((m) => m.exportEventsToExcel(events)),
+    'Gagal mengekspor data agenda.',
+    (res) => `${res.count} data agenda berhasil diekspor (${res.fileName})`
+  );
 
   return (
     <section className="space-y-6">
@@ -176,6 +201,40 @@ export const EventsTab = ({
                 <div className="space-y-5">
 
                   <div className={surfaces.panel}>
+
+                    <div
+                      className={`mb-4 flex items-start gap-2.5 rounded-2xl border px-3.5 py-3 ${
+                        pushStatus.enabled
+                          ? 'border-brand-200 bg-brand-50'
+                          : 'border-amber-200 bg-amber-50'
+                      }`}
+                    >
+                      <BellRing
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${pushStatus.enabled ? 'text-brand-700' : 'text-amber-700'}`}
+                      />
+                      <div className="min-w-0 text-xs leading-relaxed">
+                        {pushStatus.enabled ? (
+                          <>
+                            <p className="font-bold text-brand-900">
+                              Notifikasi pengingat aktif
+                            </p>
+                            <p className="text-brand-800">
+                              {pushStatus.subscribers > 0
+                                ? `${pushStatus.subscribers} perangkat akan menerima pengingat sehari sebelum agenda. Tombol kirim tersedia di tiap agenda.`
+                                : 'Belum ada perangkat yang mengaktifkan. Ajak pengunjung menekan tombol "Ingatkan saya" di halaman utama.'}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-bold text-amber-900">Notifikasi pengingat belum aktif</p>
+                            <p className="text-amber-800">
+                              Jalankan <code className="font-mono">node scripts/generate-vapid-keys.js</code>,
+                              tempel hasilnya ke <code className="font-mono">.env</code>, lalu restart server.
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-cream-200">
                       <div>
@@ -265,11 +324,10 @@ export const EventsTab = ({
                               {hasEvents && (
                                 <div className="flex items-center gap-0.5">
                                   {dayEvents.slice(0, 3).map((evt, eIdx) => {
-                                    const dotColor = CATEGORY_STYLES[evt.category]?.dot || 'bg-brand-600';
                                     return (
                                       <span
                                         key={eIdx}
-                                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-cream-50' : dotColor}`}
+                                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-cream-50' : CATEGORY_STYLE.dot}`}
                                       />
                                     );
                                   })}
@@ -289,9 +347,9 @@ export const EventsTab = ({
                     <div className="mt-4 pt-3 border-t border-cream-200 flex flex-wrap items-center justify-between text-caption text-ink-400 gap-2">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="font-semibold text-ink-500">Kategori:</span>
-                        {Object.entries(CATEGORY_STYLES).map(([cat, style]) => (
+                        {EVENT_CATEGORIES.map((cat) => (
                           <span key={cat} className="flex items-center gap-1">
-                            <span className={`h-2 w-2 rounded-full ${style.dot}`} />
+                            <span className={`h-2 w-2 rounded-full ${CATEGORY_STYLE.dot}`} />
                             {cat}
                           </span>
                         ))}
@@ -324,7 +382,6 @@ export const EventsTab = ({
                     <div className="mt-4 space-y-3">
                       {selectedDateEvents.length > 0 ? (
                         selectedDateEvents.map((evt) => {
-                          const catStyle = CATEGORY_STYLES[evt.category] || CATEGORY_STYLES.Mujahadah;
                           return (
                             <div
                               key={evt.id}
@@ -332,7 +389,7 @@ export const EventsTab = ({
                             >
                               <div className="space-y-1 min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className={`px-2.5 py-0.5 rounded-full text-micro font-extrabold border ${catStyle.badge}`}>
+                                  <span className={`px-2.5 py-0.5 rounded-full text-micro font-extrabold border ${CATEGORY_STYLE.badge}`}>
                                     {evt.category}
                                   </span>
                                   <h5 className="font-bold text-ink-900 text-sm">{evt.title}</h5>
@@ -364,6 +421,21 @@ export const EventsTab = ({
                                   aria-pressed={evt.showInCarousel}
                                 >
                                   <Images className="h-4 w-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => sendReminder(evt.id)}
+                                  disabled={sendingId === evt.id || !pushStatus.enabled}
+                                  className="p-2 rounded-xl border border-cream-300 text-ink-600 hover:bg-cream-100 transition shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                                  title={
+                                    pushStatus.enabled
+                                      ? `Kirim pengingat notifikasi ke ${pushStatus.subscribers} perangkat`
+                                      : 'Notifikasi belum aktif — isi kunci VAPID di .env'
+                                  }
+                                >
+                                  {sendingId === evt.id
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : <Send className="h-4 w-4" />}
                                 </button>
                                 <button
                                   type="button"
@@ -420,101 +492,79 @@ export const EventsTab = ({
                     </div>
 
                     <div className="space-y-3">
-                      <div>
-                        <label htmlFor="evt-title" className={typography.fieldLabel}>Judul agenda *</label>
-                        <input
-                          required
-                          id="evt-title"
-                          value={eventForm.title}
-                          onChange={(e) => setEventForm((form) => ({ ...form, title: e.target.value }))}
-                          placeholder="Contoh: Mujahadah Kubro Rojabiyah"
-                          className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
-                        />
-                      </div>
+                      <Field
+                        id="evt-title"
+                        label="Judul agenda *"
+                        required
+                        value={eventForm.title}
+                        onChange={(e) => setEventForm((form) => ({ ...form, title: e.target.value }))}
+                        placeholder="Contoh: Mujahadah Kubro Rojabiyah"
+                      />
 
-                      <div>
-                        <label htmlFor="evt-event_date" className={typography.fieldLabel}>Tanggal kegiatan *</label>
-                        <input
-                          required
-                          type="date"
-                          id="evt-event_date"
-                          value={eventForm.event_date}
-                          onChange={(e) => handleEventDateChange(e.target.value)}
-                          className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
-                        />
-                      </div>
+                      <Field
+                        id="evt-event_date"
+                        label="Tanggal kegiatan *"
+                        type="date"
+                        required
+                        value={eventForm.event_date}
+                        onChange={(e) => handleEventDateChange(e.target.value)}
+                      />
 
                       <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label htmlFor="evt-time_start" className={typography.fieldLabel}>Waktu mulai</label>
-                          <input
-                            type="time"
-                            id="evt-time_start"
-                            value={eventForm.time_start}
-                            onChange={(e) => setEventForm((form) => ({ ...form, time_start: e.target.value }))}
-                            className="w-full rounded-xl border border-cream-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="evt-time_end" className={typography.fieldLabel}>Waktu selesai</label>
-                          <input
-                            type="time"
-                            id="evt-time_end"
-                            value={eventForm.time_end}
-                            onChange={(e) => setEventForm((form) => ({ ...form, time_end: e.target.value }))}
-                            className="w-full rounded-xl border border-cream-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label htmlFor="evt-location" className={typography.fieldLabel}>Lokasi kegiatan *</label>
-                        <input
-                          required
-                          id="evt-location"
-                          value={eventForm.location}
-                          onChange={(e) => setEventForm((form) => ({ ...form, location: e.target.value }))}
-                          placeholder="Contoh: Ponpes Kedunglo Kediri / Daring"
-                          className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
+                        <Field
+                          id="evt-time_start"
+                          label="Waktu mulai"
+                          type="time"
+                          value={eventForm.time_start}
+                          onChange={(e) => setEventForm((form) => ({ ...form, time_start: e.target.value }))}
+                        />
+                        <Field
+                          id="evt-time_end"
+                          label="Waktu selesai"
+                          type="time"
+                          value={eventForm.time_end}
+                          onChange={(e) => setEventForm((form) => ({ ...form, time_end: e.target.value }))}
                         />
                       </div>
 
-                      <div>
-                        <label htmlFor="evt-category" className={typography.fieldLabel}>Kategori kegiatan</label>
-                        <select
-                          id="evt-category"
-                          value={eventForm.category}
-                          onChange={(e) => setEventForm((form) => ({ ...form, category: e.target.value }))}
-                          className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
-                        >
-                          {['Mujahadah', 'Pengajian', 'Kubro', 'Peringatan'].map((option) => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
+                      <Field
+                        id="evt-location"
+                        label="Lokasi kegiatan *"
+                        required
+                        value={eventForm.location}
+                        onChange={(e) => setEventForm((form) => ({ ...form, location: e.target.value }))}
+                        placeholder="Contoh: Ponpes Kedunglo Kediri / Daring"
+                      />
 
-                      <div>
-                        <label htmlFor="evt-organizer" className={typography.fieldLabel}>Penyelenggara</label>
-                        <input
-                          id="evt-organizer"
-                          value={eventForm.organizer}
-                          onChange={(e) => setEventForm((form) => ({ ...form, organizer: e.target.value }))}
-                          placeholder="Contoh: DPP PSW"
-                          className="w-full rounded-xl border border-cream-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
-                        />
-                      </div>
+                      <Field
+                        as="select"
+                        id="evt-category"
+                        label="Kategori kegiatan"
+                        value={eventForm.category}
+                        onChange={(e) => setEventForm((form) => ({ ...form, category: e.target.value }))}
+                      >
+                        {EVENT_CATEGORIES.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </Field>
 
-                      <div>
-                        <label htmlFor="evt-description" className={typography.fieldLabel}>Keterangan (opsional)</label>
-                        <textarea
-                          id="evt-description"
-                          value={eventForm.description}
-                          onChange={(e) => setEventForm((form) => ({ ...form, description: e.target.value }))}
-                          placeholder="Catatan tambahan agenda..."
-                          rows="2"
-                          className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600"
-                        />
-                      </div>
+                      <Field
+                        id="evt-organizer"
+                        label="Penyelenggara"
+                        value={eventForm.organizer}
+                        onChange={(e) => setEventForm((form) => ({ ...form, organizer: e.target.value }))}
+                        placeholder="Contoh: DPP PSW"
+                      />
+
+                      <Field
+                        as="textarea"
+                        id="evt-description"
+                        label="Keterangan (opsional)"
+                        value={eventForm.description}
+                        onChange={(e) => setEventForm((form) => ({ ...form, description: e.target.value }))}
+                        placeholder="Catatan tambahan agenda..."
+                        rows="2"
+                      />
 
                       <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-cream-300 bg-cream-50 px-3 py-3">
                         <input
@@ -556,10 +606,9 @@ export const EventsTab = ({
                         className="text-xs rounded-xl border border-cream-300 px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 text-ink-500 font-semibold cursor-pointer"
                       >
                         <option value="Semua">Semua Kategori</option>
-                        <option value="Mujahadah">Mujahadah</option>
-                        <option value="Pengajian">Pengajian</option>
-                        <option value="Kubro">Kubro</option>
-                        <option value="Peringatan">Peringatan</option>
+                        {EVENT_CATEGORIES.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
                       </select>
                     </div>
 

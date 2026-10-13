@@ -9,7 +9,13 @@ import {
   toPublicUser,
   TRANSACTION_PENDING_STATUS
 } from '../auth.js';
-import { internalErrorDetail, wrap } from '../lib/http.js';
+import {
+  badRequest,
+  internalErrorDetail,
+  notFound,
+  unauthorized,
+  wrap
+} from '../lib/http.js';
 import {
   activatePaidMembership,
   activeSubscriptionConflict,
@@ -368,7 +374,7 @@ paymentsRouter.post('/qris/:orderId/simulate-paid', paymentRateLimiter, requireA
   // Midtrans. Di PRODUCTION rute ini mati total (404) — tidak mungkin
   // diaktifkan lewat konfigurasi.
   if (MIDTRANS_IS_PRODUCTION) {
-    return res.status(404).json({ success: false, message: 'Rute tidak tersedia.' });
+    return notFound(res, 'Rute tidak tersedia.');
   }
 
   const { transaction, forbidden } = await loadOwnTransaction(req.params.orderId, req.user);
@@ -413,10 +419,7 @@ paymentsRouter.get('/qris/:orderId/qr.png', qrImageRateLimiter, requireAuth, wra
   }
 
   if (!transaction.midtrans_qr_url) {
-    return res.status(404).json({
-      success: false,
-      message: 'Transaksi ini memakai payload QR (qr_string); tidak ada gambar dari Midtrans.'
-    });
+    return notFound(res, 'Transaksi ini memakai payload QR (qr_string); tidak ada gambar dari Midtrans.');
   }
 
   try {
@@ -442,7 +445,7 @@ paymentsRouter.post('/midtrans/notification', async (req, res) => {
       alasan: verification.reason,
       ip: req.ip
     });
-    return res.status(401).json({ success: false, message: 'Notifikasi tidak terautentikasi.' });
+    return unauthorized(res, 'Notifikasi tidak terautentikasi.');
   }
 
   try {
@@ -454,7 +457,7 @@ paymentsRouter.post('/midtrans/notification', async (req, res) => {
 
     if (!transaction) {
       logger.warn('MIDTRANS', 'Notifikasi untuk order yang tidak dikenal', { orderId: payload.order_id });
-      return res.status(404).json({ success: false, message: 'Transaksi tidak ditemukan.' });
+      return notFound(res, 'Transaksi tidak ditemukan.');
     }
 
     const notifiedAmount = Math.round(Number(payload.gross_amount));
@@ -465,7 +468,7 @@ paymentsRouter.post('/midtrans/notification', async (req, res) => {
         notifiedAmount,
         storedAmount
       });
-      return res.status(400).json({ success: false, message: 'Nominal pembayaran tidak sesuai.' });
+      return badRequest(res, 'Nominal pembayaran tidak sesuai.');
     }
 
     const transactionStatus = String(payload.transaction_status || '').toLowerCase();

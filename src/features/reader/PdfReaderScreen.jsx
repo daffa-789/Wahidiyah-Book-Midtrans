@@ -9,8 +9,7 @@ import {
   BookOpen,
   Bookmark,
   ChevronLeft,
-  ChevronRight,
-  Check
+  ChevronRight
 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiRequest, authHeaders } from '@lib/api';
@@ -55,9 +54,14 @@ export const PdfReaderScreen = () => {
   const [contentStatus, setContentStatus] = useState('idle');
   const [reloadToken, setReloadToken] = useState(0);
 
-  // Theme Reader (Light / Sepia / Dark)
+  // Theme Reader (Light / Sepia / Dark).
+  // Pembaca punya sistem temanya sendiri, jadi saat pertama dibuka ia mengikuti
+  // tema aplikasi (malam → malam) tanpa menimpa pilihan yang sudah tersimpan.
   const [themeMode, setThemeMode] = useState(() => {
-    return localStorage.getItem('wb_reader_theme') || 'light';
+    const stored = localStorage.getItem('wb_reader_theme');
+    if (stored) return stored;
+    const appIsDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    return appIsDark ? 'dark' : 'light';
   });
 
   // Last Read Tracker
@@ -148,7 +152,7 @@ export const PdfReaderScreen = () => {
 
   if (!activeBook) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ink-900 p-6">
+      <div className="theme-light-scope flex min-h-screen items-center justify-center bg-ink-900 p-6">
         <div className="max-w-sm rounded-3xl bg-cream-50 p-7 text-center shadow-2xl">
           <FileText className="mx-auto h-8 w-8 text-brand-600" />
           <h1 className="mt-4 font-black text-ink-900">Buku belum dipilih</h1>
@@ -277,7 +281,7 @@ export const PdfReaderScreen = () => {
   };
 
   return (
-    <main className={`flex min-h-screen flex-col ${currentTheme.bgMain} transition-colors duration-300 page-transition`}>
+    <main className={`theme-light-scope flex min-h-screen flex-col ${currentTheme.bgMain} transition-colors duration-300 page-transition`}>
       {/* Top Sticky Header */}
       <header className={`sticky top-0 z-30 border-b border-white/10 ${currentTheme.header} px-3 py-3 backdrop-blur sm:px-6 shadow-sm`}>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">

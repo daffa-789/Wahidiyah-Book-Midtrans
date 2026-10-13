@@ -37,6 +37,7 @@ import { NON_SPA_EXTENSIONS } from './lib/constants.js';
 import { initOtpStore } from './otpStore.js';
 import { canExposeDevOtp } from './lib/otp.js';
 import { isMailerConfigured } from './mailer.js';
+import { startReminderScheduler } from './lib/eventReminder.js';
 import { logger, banner } from './logger.js';
 import { testConnection } from './db.js';
 
@@ -235,6 +236,15 @@ if (process.env.NODE_ENV !== 'test') {
         perbaikan_2: 'atau isi kredensial Gmail di .env supaya email benar-benar terkirim'
       });
     }
+
+    
+    
+    
+    
+    
+    
+    
+    startReminderScheduler();
   };
 
   if (devHttpServer) {

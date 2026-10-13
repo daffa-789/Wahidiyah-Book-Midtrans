@@ -59,3 +59,20 @@ export const MIDTRANS_QRIS_EXPIRY_MINUTES = (() => {
 
 
 export const MIDTRANS_PAYMENT_METHOD_LABEL = 'QRIS Midtrans';
+
+
+/* ── Web Push (pengingat agenda H-1) ─────────────────────────────────────
+ * Kunci VAPID dibuat sekali lewat `npm run vapid:keys`. Bila kosong atau
+ * cacat, fitur notifikasi otomatis dinonaktifkan — server tetap jalan
+ * normal, hanya tanpa push (fail-soft, bukan fail-closed).
+ */
+export const VAPID_PUBLIC_KEY = (process.env.VAPID_PUBLIC_KEY || '').trim();
+
+export const VAPID_PRIVATE_KEY = (process.env.VAPID_PRIVATE_KEY || '').trim();
+
+export const VAPID_SUBJECT = (process.env.VAPID_SUBJECT || '').trim();
+
+export const PUSH_REMINDER_HOUR = (() => {
+  const raw = String(process.env.PUSH_REMINDER_HOUR || '08:00').trim();
+  return /^\d{2}:\d{2}$/.test(raw) ? raw : '08:00';
+})();

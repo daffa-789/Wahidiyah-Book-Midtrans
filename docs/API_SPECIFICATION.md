@@ -38,21 +38,23 @@ Masuk dengan kredensial email dan password.
 ---
 
 ### `POST /api/auth/register`
-Mendaftarkan akun baru dan meminta pengiriman OTP ke email.
+Mendaftarkan akun baru dan meminta pengiriman OTP ke email serta WhatsApp (jika nomor HP diisi).
 * **Body:**
   ```json
   {
     "name": "Nama Lengkap",
     "email": "user@email.com",
+    "phone": "6281234567890",
     "password": "password123",
     "dob": "1995-08-17"
   }
   ```
+  *(Catatan: `phone` bersifat opsional dan otomatis dinormalisasi ke format E.164 internasional tanpa tanda plus)*
 * **Response (202 Accepted):**
   ```json
   {
     "success": true,
-    "message": "Kode verifikasi telah dikirim ke email Anda dan berlaku 10 menit.",
+    "message": "Kode verifikasi telah dikirim ke email Anda dan WhatsApp (jika nomor terdaftar), berlaku 10 menit.",
     "email": "user@email.com"
   }
   ```
@@ -74,16 +76,49 @@ Memvalidasi kode OTP 6-digit untuk menyelesaikan pembuatan akun.
     "success": true,
     "message": "Akun berhasil dibuat.",
     "token": "eyJhbGciOi...",
-    "user": { ... }
+    "user": {
+      "id": "usr-12345678",
+      "name": "Nama Lengkap",
+      "email": "user@email.com",
+      "phone": "6281234567890",
+      "role": "user",
+      "isPro": false
+    }
+  }
+  ```
+
+---
+
+### `POST /api/auth/resend-otp`
+Meminta pengiriman ulang kode verifikasi pendaftaran dengan proteksi cooldown 60 detik.
+* **Body:**
+  ```json
+  {
+    "email": "user@email.com",
+    "deliveryMethod": "whatsapp"
+  }
+  ```
+  *(Pilihan `deliveryMethod`: `"email"` atau `"whatsapp"`)*
+* **Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "message": "Kode OTP baru telah dikirimkan."
   }
   ```
 
 ---
 
 ### `POST /api/auth/request-password-reset`
-Meminta OTP reset password.
-* **Body:** `{ "email": "user@email.com" }`
-* **Response (200 OK):** `{ "success": true, "message": "..." }`
+Meminta OTP reset password ke email atau nomor WhatsApp terdaftar.
+* **Body:**
+  ```json
+  {
+    "email": "user@email.com",
+    "phone": "6281234567890"
+  }
+  ```
+* **Response (200 OK):** `{ "success": true, "message": "Kode reset password telah dikirim." }`
 
 ---
 
@@ -104,7 +139,20 @@ Mereset password dengan OTP yang valid.
 ### `GET /api/auth/me`
 Mengambil data profil pengguna yang sedang login.
 * **Header:** `Authorization: Bearer <TOKEN>`
-* **Response (200 OK):** `{ "success": true, "user": { ... } }`
+* **Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "user": {
+      "id": "usr-12345678",
+      "name": "Nama Lengkap",
+      "email": "user@email.com",
+      "phone": "6281234567890",
+      "role": "user",
+      "isPro": false
+    }
+  }
+  ```
 
 ---
 
@@ -205,3 +253,28 @@ Webhook endpoint untuk menerima HTTP Notification dari server Midtrans.
 * `GET /api/events` — Mengambil daftar agenda kegiatan Wahidiyah.
 * `GET /api/carousel` — Mengambil daftar banner aktif di beranda.
 * `GET /api/health` — Status kesehatan server dan koneksi database.
+
+---
+
+## 5. WhatsApp Multi-Provider Gateway (`server/providers/`)
+
+Sistem pengiriman pesan WhatsApp menggunakan arsitektur **Strategy / Provider Pattern** yang dapat diganti secara instan via variabel lingkungan `WHATSAPP_PROVIDER` tanpa mengubah kode controller.
+
+### Provider yang Didukung:
+1. **`fonnte` (Fonnte API - Default)**:
+   * `.env`: `WHATSAPP_PROVIDER=fonnte`, `FONNTE_TOKEN=...`
+   * Endpoint: `https://api.fonnte.com/send`
+2. **`wablas` (Wablas API)**:
+   * `.env`: `WHATSAPP_PROVIDER=wablas`, `WABLAS_TOKEN=...`, `WABLAS_SERVER=https://...`
+   * Endpoint: `${WABLAS_SERVER}/api/send-message`
+3. **`whacenter` (WhaCenter API)**:
+   * `.env`: `WHATSAPP_PROVIDER=whacenter`, `WHACENTER_DEVICE_ID=...`
+   * Endpoint: `https://app.whacenter.com/api/send`
+4. **`twilio` (Twilio WhatsApp Sandbox/Prod)**:
+   * `.env`: `WHATSAPP_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID=...`, `TWILIO_AUTH_TOKEN=...`, `TWILIO_WHATSAPP_NUMBER=...`
+   * Endpoint: `https://api.twilio.com/2010-04-01/Accounts/${SID}/Messages.json`
+5. **`webhook` (Custom Internal Gateway)**:
+   * `.env`: `WHATSAPP_PROVIDER=webhook`, `WHATSAPP_WEBHOOK_URL=...`, `WHATSAPP_WEBHOOK_SECRET=...`
+6. **`demo` (Local Terminal Fallback)**:
+   * Otomatis aktif jika tidak ada token provider yang terisi. Mencetak pesan dan kode OTP ke terminal pengembang secara jelas untuk debugging lokal.
+

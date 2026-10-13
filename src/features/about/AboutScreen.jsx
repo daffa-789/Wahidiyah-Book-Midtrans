@@ -1,5 +1,5 @@
 import { BookOpen, Shield, Award } from 'lucide-react';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout } from '@lib/styles';
 
 export const AboutScreen = () => {
   return (

@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { FileUp, Loader2, X, CheckCircle2, FileText } from 'lucide-react';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout, typography, controls } from '@lib/styles';
 
 export const BookModal = ({
   isOpen = true,

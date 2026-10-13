@@ -1,9 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Camera, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
 import { apiJson, authHeaders } from '@lib/api';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { ThemeModeSelector } from '@ui/ThemeToggle';
+import { NotificationToggle } from '@ui/NotificationToggle';
+import { layout, typography, controls } from '@lib/styles';
+import { parsePhoneNumber } from '@lib/countryCodes';
+import { FlagIcon } from '@ui/FlagIcon';
 
 const toIsoDate = (value) => {
   if (!value) return '';
@@ -141,6 +145,20 @@ export const EditProfileScreen = () => {
           <p className="mt-3 text-caption text-ink-400">Ketuk ikon kamera untuk mengubah foto</p>
         </div>
 
+        <div className="mb-6 rounded-2xl border border-cream-300 bg-cream-100 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-bold text-ink-800">Tema Tampilan</p>
+              <p className="mt-0.5 text-caption leading-relaxed text-ink-400">
+                Pilih mode terang, mode malam yang nyaman untuk mata, atau ikuti pengaturan perangkat.
+              </p>
+            </div>
+            <ThemeModeSelector />
+          </div>
+        </div>
+
+        <NotificationToggle />
+
         <form onSubmit={handleSave} className="space-y-5">
 
           <div>
@@ -172,6 +190,39 @@ export const EditProfileScreen = () => {
             />
             <p className="mt-1.5 text-caption text-ink-400">
               Email tidak dapat diubah.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="edit-phone-input" className={typography.legend}>
+              Nomor WhatsApp
+            </label>
+            <div
+              id="edit-phone-input"
+              data-testid="edit-phone"
+              className="flex h-12 w-full items-center gap-2.5 rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-sm font-medium text-ink-700"
+            >
+              {user.phone ? (
+                (() => {
+                  const p = parsePhoneNumber(user.phone);
+                  return (
+                    <>
+                      <FlagIcon
+                        code={p.country.code}
+                        name={p.country.name}
+                        className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] shrink-0"
+                      />
+                      <span className="font-semibold text-ink-800">{p.country.dial}</span>
+                      <span className="text-ink-600 font-mono text-xs">{p.nationalNumber}</span>
+                    </>
+                  );
+                })()
+              ) : (
+                <span className="text-ink-400">-</span>
+              )}
+            </div>
+            <p className="mt-1.5 text-caption text-ink-400">
+              Nomor WhatsApp terdaftar untuk autentikasi dan pemulihan akun.
             </p>
           </div>
 

@@ -40,11 +40,6 @@ function getCoreApi() {
 }
 
 
-export const resetCoreApi = () => {
-  coreApi = null;
-};
-
-
 const pad = (value) => String(value).padStart(2, '0');
 
 

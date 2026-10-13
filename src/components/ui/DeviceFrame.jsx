@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 import { useApp } from '@context/AppContext';
+import { ThemeToggle } from '@ui/ThemeToggle';
+import { BrandMark } from '@ui/BrandMark';
 
 import { tabIdFromPath } from '@lib/navigation';
 import { layout } from '@lib/styles';
@@ -210,9 +212,10 @@ const SidebarContent = React.memo(({
           >
             {isAdminNav
               ? <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.9} />
-              : <BookOpen className="h-[18px] w-[18px]" strokeWidth={1.9} />}
+              : <BrandMark className="h-10 w-10 rounded-xl" />}
           </button>
           {collapseToggle}
+          <ThemeToggle variant="onDark" />
         </div>
 
         <div className="my-1 h-px w-6 bg-ink-700" aria-hidden="true" />
@@ -245,7 +248,7 @@ const SidebarContent = React.memo(({
           >
             {isAdminNav
               ? <ShieldCheck className="h-[15px] w-[15px]" strokeWidth={2} />
-              : <BookOpen className="h-[15px] w-[15px]" strokeWidth={2} />}
+              : <BrandMark className="h-7 w-7 rounded-lg" />}
           </span>
           {isAdminNav ? (
             <span className="flex min-w-0 flex-col">
@@ -262,7 +265,10 @@ const SidebarContent = React.memo(({
             </span>
           )}
         </button>
-        {collapseToggle}
+        <div className="flex items-center gap-1">
+          <ThemeToggle variant="onDark" />
+          {collapseToggle}
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto thin-scrollbar">
@@ -459,7 +465,7 @@ const DeviceFrameBase = ({ children }) => {
   }, [logout]);
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-cream-50 font-sans text-ink-800 md:flex-row">
+    <div className="app-surface relative flex min-h-screen w-full flex-col bg-cream-50 font-sans text-ink-800 md:flex-row">
 
       <aside
         className={`fixed inset-y-0 left-0 z-50 hidden shrink-0 select-none flex-col border-r border-white/[0.06] bg-ink-900 transition-[width] duration-300 ease-out md:flex ${sidebarCollapsed ? 'w-[68px]' : 'w-[248px]'
@@ -499,7 +505,7 @@ const DeviceFrameBase = ({ children }) => {
             >
               {isAdmin
                 ? <ShieldCheck className="h-4 w-4" strokeWidth={2} />
-                : <BookOpen className="h-4 w-4" strokeWidth={2} />}
+                : <BrandMark className="h-8 w-8 rounded-xl" />}
             </span>
             <span className="font-display text-lead font-bold tracking-tight text-ink-900">
               {isAdmin ? 'Panel Admin' : 'Wahidiyah Book'}
@@ -507,22 +513,26 @@ const DeviceFrameBase = ({ children }) => {
           </button>
         </div>
 
-        {!isAdmin && (
-          <button
-            type="button"
-            onClick={() => navigateTo('profile-edit')}
-            aria-label="Buka profil saya"
-            className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-          >
-            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-caption font-bold text-brand-800 ring-1 ring-brand-200">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className={layout.media} />
-              ) : (
-                (user.name || 'U').split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U'
-              )}
-            </span>
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+
+          {!isAdmin && (
+            <button
+              type="button"
+              onClick={() => navigateTo('profile-edit')}
+              aria-label="Buka profil saya"
+              className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            >
+              <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-caption font-bold text-brand-800 ring-1 ring-brand-200">
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className={layout.media} />
+                ) : (
+                  (user.name || 'U').split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U'
+                )}
+              </span>
+            </button>
+          )}
+        </div>
       </header>
 
       <Transition show={mobileMenuOpen} as={Fragment}>

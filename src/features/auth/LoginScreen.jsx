@@ -5,7 +5,9 @@ import { AlertCircle, Eye, EyeOff, Info, Lock, LogIn, Mail } from 'lucide-react'
 import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
 import { ServerStatusBanner } from '@ui/ServerStatusBanner';
+import { AuthBrandHeader } from './AuthBrandHeader';
 import { layout, controls } from '@lib/styles';
+import { useSubmit } from '@lib/useSubmit';
 
 const generateState = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -28,12 +30,11 @@ export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const { error, setError, isSubmitting, runSubmit } = useSubmit('Email atau password belum sesuai.');
   const [notice, setNotice] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
-  const submit = async (event) => {
+  const submit = (event) => {
     event.preventDefault();
     if (!email.trim() || !password) {
       setError('Masukkan alamat email dan password Anda.');
@@ -44,21 +45,15 @@ export const LoginScreen = () => {
       return;
     }
 
-    setIsSubmitting(true);
-    setError('');
     setNotice('');
-    try {
+    return runSubmit(async () => {
       const result = await apiJson('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: email.trim(), password })
       });
       login(result.user, result.token);
-    } catch (requestError) {
-      setError(requestError.message || 'Email atau password belum sesuai.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   const handleGoogleLogin = () => {
@@ -92,9 +87,7 @@ export const LoginScreen = () => {
   return (
     <main className={layout.authShell}>
       <section className={layout.authCard}>
-        <div className="mb-7">
-          <h1 className="font-display text-displaySm font-bold tracking-tight text-ink-900">Masuk ke akun</h1>
-        </div>
+        <AuthBrandHeader title="Masuk ke akun" />
 
         <ServerStatusBanner />
 

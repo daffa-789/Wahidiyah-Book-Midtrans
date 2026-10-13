@@ -11,7 +11,23 @@ const controlHeights = {
   lg: tokens.sizing.control.heightLg,
 };
 
+/* ── Warna berbasis CSS variable (R53: tema malam) ──────────────────────────
+   Setiap token warna kini menunjuk ke CSS variable RGB bertripel
+   (mis. `--cream-50: 251 248 243`) alih-alih hex statis. Dengan begitu satu
+   set utility Tailwind yang sama dapat berganti nilai saat kelas `dark`
+   dipasang di <html>. `<alpha-value>` menjaga modifier opasitas seperti
+   `bg-cream-50/95` tetap bekerja.
+
+   Nilai LIGHT dan DARK untuk tiap variable disuntikkan oleh
+   `src/theme/themeInjector.js` (bersumber dari component.json) dan punya
+   fallback statis di `src/index.css` agar render pertama tidak berkedip. */
+const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
+const scale = (prefix, shades) =>
+  Object.fromEntries(shades.map((shade) => [shade, v(`${prefix}-${shade}`)]));
+
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     borderRadius: {
@@ -35,17 +51,34 @@ export default {
     extend: {
       screens: { ...tokens.breakpoints },
       colors: {
-        brand: tokens.colors.brand,
-        gold: tokens.colors.gold,
-        cream: tokens.colors.cream,
-        ink: tokens.colors.ink,
-        accent: tokens.colors.accent,
-        ui: tokens.colors.ui,
-        semantic: tokens.colors.semantic,
+        brand: scale('brand', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900']),
+        gold: scale('gold', ['300', '400', '500']),
+        cream: scale('cream', ['50', '100', '200', '300', '400']),
+        ink: scale('ink', ['200', '300', '400', '500', '600', '700', '800', '900']),
+        accent: { gold: v('accent-gold') },
+        ui: {
+          background: v('ui-bg'),
+          surface: v('ui-surface'),
+          card: v('ui-card'),
+          border: v('ui-border'),
+          textPrimary: v('ui-text'),
+          textSecondary: v('ui-text-secondary'),
+          textMuted: v('ui-text-muted'),
+        },
+        semantic: {
+          success: v('semantic-success'),
+          successLight: v('semantic-success-light'),
+          warning: v('semantic-warning'),
+          warningLight: v('semantic-warning-light'),
+          danger: v('semantic-danger'),
+          dangerLight: v('semantic-danger-light'),
+          info: v('semantic-info'),
+          infoLight: v('semantic-info-light'),
+        },
         primary: {
-          DEFAULT: tokens.colors.primary,
-          hover: tokens.colors.primaryHover,
-          light: tokens.colors.primaryLight,
+          DEFAULT: v('primary'),
+          hover: v('primary-hover'),
+          light: v('primary-light'),
         },
       },
       fontFamily: {

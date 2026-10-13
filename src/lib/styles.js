@@ -2,7 +2,7 @@ export const layout = {
   authShell: 'auth-shell page-transition',
   authCard: 'auth-card w-full max-w-md',
   pageShell: 'flex min-h-full w-full flex-col gap-section-gap px-page-x py-section-gap',
-  screen: 'min-h-screen bg-cream-50',
+  screen: 'min-h-screen bg-cream-50 app-surface',
   contentCenter: 'mx-auto w-full max-w-2xl',
   rowBetween: 'flex items-center justify-between',
   rowCenter: 'flex items-center justify-center',
@@ -54,9 +54,6 @@ export const controls = {
     'w-full rounded-input border border-cream-300 px-3 py-2.5 text-body transition ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ' +
     'focus-visible:ring-offset-1 focus-visible:ring-offset-cream-50 disabled:opacity-60',
-  inputCompact:
-    'w-full rounded-input border border-cream-300 px-3 py-2 text-body transition ' +
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400',
   inputWrap: 'auth-input-wrap mt-1.5',
   select:
     'w-full rounded-input border border-cream-300 bg-cream-50 px-3 py-2.5 text-body transition ' +
@@ -70,12 +67,4 @@ export const controls = {
   chip:
     'inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 ' +
     'px-3.5 py-2.5 text-caption font-bold text-ink-700 shadow-sm',
-};
-
-export const tone = {
-  success: 'border-semantic-successLight bg-semantic-successLight text-semantic-success',
-  warning: 'border-semantic-warningLight bg-semantic-warningLight text-semantic-warning',
-  danger: 'border-semantic-dangerLight bg-semantic-dangerLight text-semantic-danger',
-  info: 'border-semantic-infoLight bg-semantic-infoLight text-semantic-info',
-  neutral: 'border-cream-300 bg-cream-100 text-ink-600',
 };

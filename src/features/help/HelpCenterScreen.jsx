@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, Mail, MessageCircleQuestion, Clock } from 'lucide-react';
 import { FAQ_ITEMS } from '@data/mockData';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout, typography } from '@lib/styles';
 
 const CONTACT_EMAIL = 'support@bukuku.id';
 

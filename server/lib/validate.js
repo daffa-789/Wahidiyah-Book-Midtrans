@@ -2,6 +2,8 @@
 
 import { z } from 'zod';
 
+import { isValidPhone } from '../whatsapp.js';
+
 export const booleanFlagSchema = z.preprocess((val) => {
   if (typeof val === 'boolean') return val;
   if (typeof val === 'number') return val === 1;
@@ -23,8 +25,12 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
   name: z.string().trim().min(1, 'Nama wajib diisi'),
   email: z.string().trim().email('Format email tidak valid'),
+  phone: z.string({ required_error: 'Nomor WhatsApp wajib diisi' })
+    .trim()
+    .refine(isValidPhone, 'Nomor WhatsApp tidak valid (contoh: 081234567890 atau format internasional)'),
   password: z.string().min(8, 'Password minimal 8 karakter'),
-  dob: z.string().optional().nullable()
+  dob: z.string().optional().nullable(),
+  deliveryMethod: z.enum(['whatsapp', 'email']).optional().default('whatsapp')
 });
 
 export const bookInputSchema = z.object({

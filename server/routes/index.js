@@ -10,6 +10,7 @@ import { subscriptionsRouter } from './subscriptions.routes.js';
 import { eventsRouter } from './events.routes.js';
 import { carouselRouter } from './carousel.routes.js';
 import { adminRouter } from './admin.routes.js';
+import { notificationsRouter } from './notifications.routes.js';
 
 
 const ROUTERS = [
@@ -22,6 +23,7 @@ const ROUTERS = [
   { path: '/api', router: subscriptionsRouter },
   { path: '/api', router: eventsRouter },       
   { path: '/api', router: carouselRouter },     
+  { path: '/api', router: notificationsRouter },
   { path: '/api', router: adminRouter }         
 ];
 

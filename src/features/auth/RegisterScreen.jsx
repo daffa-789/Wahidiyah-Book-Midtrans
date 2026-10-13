@@ -1,10 +1,13 @@
 import { useRef, useState } from 'react';
-import { AlertCircle, CalendarDays, Eye, EyeOff, FileText, Lock, Mail, UserRound, X } from 'lucide-react';
+import { AlertCircle, CalendarDays, Eye, EyeOff, FileText, Lock, Mail, Phone, UserRound, X } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 import { apiJson } from '@lib/api';
 import { ServerStatusBanner } from '@ui/ServerStatusBanner';
-import { layout } from '@lib/styles';
+import { PhoneInput } from '@ui/PhoneInput';
+import { AuthBrandHeader } from './AuthBrandHeader';
+import { layout, controls } from '@lib/styles';
+import { useSubmit } from '@lib/useSubmit';
 
 const POLICY_COPY = {
   terms: {
@@ -18,9 +21,9 @@ const POLICY_COPY = {
   privacy: {
     title: 'Kebijakan Privasi',
     paragraphs: [
-      'Prototipe menyimpan nama, email, password yang sudah di-hash, serta pengaturan akun di database Supabase Cloud untuk menjalankan fitur aplikasi.',
-      'Aplikasi tidak mengirim email, WhatsApp, atau pesan ke nomor telepon. Pendaftaran akun aktif seketika tanpa verifikasi kode.',
-      'Kebijakan ini akan diperbarui dengan kebijakan resmi saat integrasi pengiriman notifikasi benar-benar dibuat.'
+      'Prototipe menyimpan nama, email, nomor WhatsApp, password yang sudah di-hash, serta pengaturan akun di database Supabase Cloud untuk menjalankan fitur aplikasi.',
+      'Aplikasi mengirim kode verifikasi OTP melalui WhatsApp atau email sesuai preferensi pendaftaran Anda.',
+      'Kebijakan ini akan diperbarui dengan kebijakan resmi saat aplikasi dipublikasikan.'
     ]
   }
 };
@@ -51,6 +54,8 @@ export const RegisterScreen = () => {
   const { navigateTo, setVerification } = useApp();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [deliveryMethod, setDeliveryMethod] = useState('whatsapp');
 
   const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
@@ -58,49 +63,101 @@ export const RegisterScreen = () => {
   const [agreed, setAgreed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { error, setError, isSubmitting, runSubmit } = useSubmit('Pendaftaran belum dapat diproses.');
   const [policy, setPolicy] = useState(null);
 
-  const submit = async (event) => {
+  const submit = (event) => {
     event.preventDefault();
     if (!name.trim()) return setError('Nama lengkap wajib diisi.');
     if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Masukkan alamat email yang valid.');
+    
+    const standardPhone = String(phone || '').trim().replace(/[^0-9]/g, '');
+    if (!standardPhone || standardPhone.length < 8 || standardPhone.length > 15) {
+      return setError('Masukkan nomor WhatsApp yang valid.');
+    }
+
     if (password.length < 8) return setError('Password minimal 8 karakter.');
     if (password !== confirmation) return setError('Konfirmasi password belum sesuai.');
     if (!agreed) return setError('Setujui ketentuan layanan dan kebijakan privasi terlebih dahulu.');
 
-    setIsSubmitting(true);
-    setError('');
-    try {
-      const target = email.trim().toLowerCase();
+    return runSubmit(async () => {
+      const targetEmail = email.trim().toLowerCase();
       const result = await apiJson('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: target, password, dob: dob || null })
+        body: JSON.stringify({
+          name: name.trim(),
+          email: targetEmail,
+          phone: standardPhone,
+          password,
+          dob: dob || null,
+          deliveryMethod
+        })
       });
 
-      setVerification({ email: target, purpose: 'register', devOtp: result.devOtp });
+      setVerification({
+        email: targetEmail,
+        phone: standardPhone,
+        method: deliveryMethod,
+        identifier: result.identifier,
+        purpose: 'register',
+        devOtp: result.devOtp
+      });
       navigateTo('verify-email');
-    } catch (requestError) {
-      setError(requestError.message || 'Pendaftaran belum dapat diproses.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   return (
     <main className={layout.authShell}>
       <section className={layout.authCard}>
-        <div className="mb-7">
-          <h1 className="font-display text-displaySm font-bold tracking-tight text-ink-900">Buat akun</h1>
-        </div>
+        <AuthBrandHeader title="Buat akun" />
 
         <ServerStatusBanner />
 
         <form onSubmit={submit} className="mt-4 space-y-3.5" noValidate>
           <label className="block"><span className="auth-label">Nama lengkap</span><span className={controls.inputWrap}><UserRound className="auth-input-icon" /><input value={name} onChange={(event) => { setName(event.target.value); setError(''); }} autoComplete="name" placeholder="Nama Anda" /></span></label>
           <label className="block"><span className="auth-label">Alamat email</span><span className={controls.inputWrap}><Mail className="auth-input-icon" /><input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} autoComplete="email" placeholder="nama@email.com" /></span></label>
+          
+          <div className="block">
+            <label htmlFor="reg-phone" className="auth-label">Nomor WhatsApp</label>
+            <PhoneInput
+              id="reg-phone"
+              value={phone}
+              onChange={(val) => { setPhone(val); setError(''); }}
+              className="mt-1.5"
+            />
+          </div>
+
+          <div className="pt-0.5">
+            <span className="auth-label block mb-1.5">Kirim kode verifikasi ke</span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => { setDeliveryMethod('whatsapp'); setError(''); }}
+                className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition border ${
+                  deliveryMethod === 'whatsapp'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-400 shadow-xs'
+                    : 'bg-white text-ink-500 border-cream-300 hover:bg-cream-100'
+                }`}
+              >
+                <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                WhatsApp
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDeliveryMethod('email'); setError(''); }}
+                className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition border ${
+                  deliveryMethod === 'email'
+                    ? 'bg-brand-50 text-brand-800 border-brand-400 shadow-xs'
+                    : 'bg-white text-ink-500 border-cream-300 hover:bg-cream-100'
+                }`}
+              >
+                <Mail className="h-3.5 w-3.5 text-brand-600" />
+                Email
+              </button>
+            </div>
+          </div>
+
           <label className="block"><span className="auth-label">Tanggal lahir <span className="font-normal text-ink-400">(opsional)</span></span><span className={controls.inputWrap}><CalendarDays className="auth-input-icon" /><input type="date" value={dob} onChange={(event) => { setDob(event.target.value); setError(''); }} max={new Date().toISOString().slice(0, 10)} data-testid="register-dob" /></span></label>
           <label className="block"><span className="auth-label">Password</span><span className={controls.inputWrap}><Lock className="auth-input-icon" /><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Minimal 8 karakter" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="auth-icon-button" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
           <label className="block"><span className="auth-label">Konfirmasi password</span><span className={controls.inputWrap}><Lock className="auth-input-icon" /><input type={showConfirmation ? 'text' : 'password'} value={confirmation} onChange={(event) => { setConfirmation(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Tulis ulang password" /><button type="button" onClick={() => setShowConfirmation((value) => !value)} className="auth-icon-button" aria-label={showConfirmation ? 'Sembunyikan konfirmasi password' : 'Tampilkan ulang password'}>{showConfirmation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>

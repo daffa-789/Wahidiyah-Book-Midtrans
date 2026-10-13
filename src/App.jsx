@@ -12,7 +12,7 @@ import { HomeScreen } from '@features/home/HomeScreen';
 import { CalendarScreen } from '@features/calendar/CalendarScreen';
 import { ProScreen } from '@features/subscription/ProScreen';
 import { PaymentMethodScreen } from '@features/payment/PaymentMethodScreen';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout } from '@lib/styles';
 
 
 
@@ -89,6 +89,12 @@ const GuestOnly = ({ children }) => {
 
 const Framed = ({ children }) => (
   <DeviceFrame>{children}</DeviceFrame>
+);
+
+const authPage = (node) => (
+  <div className={layout.screen}>
+    {node}
+  </div>
 );
 
 
@@ -232,15 +238,15 @@ export function App() {
         <Route path="/about" element={shellPage(<AboutScreen />)} />
 
         
-        <Route path="/login" element={<div className={layout.screen}><LoginScreen /></div>} />
-        <Route path="/register" element={<div className={layout.screen}><RegisterScreen /></div>} />
-        <Route path="/verify-email" element={<div className={layout.screen}><Suspense fallback={<ScreenLoading />}><VerifyEmailScreen /></Suspense></div>} />
-        <Route path="/forgot-password" element={<div className={layout.screen}><Suspense fallback={<ScreenLoading />}><ForgotPasswordScreen /></Suspense></div>} />
+        <Route path="/login" element={authPage(<LoginScreen />)} />
+        <Route path="/register" element={authPage(<RegisterScreen />)} />
+        <Route path="/verify-email" element={authPage(<Suspense fallback={<ScreenLoading />}><VerifyEmailScreen /></Suspense>)} />
+        <Route path="/forgot-password" element={authPage(<Suspense fallback={<ScreenLoading />}><ForgotPasswordScreen /></Suspense>)} />
         
-        <Route path="/auth/callback" element={<div className={layout.screen}><Suspense fallback={<ScreenLoading />}><AuthCallbackScreen /></Suspense></div>} />
+        <Route path="/auth/callback" element={authPage(<Suspense fallback={<ScreenLoading />}><AuthCallbackScreen /></Suspense>)} />
 
         
-        <Route path="/auth/success" element={<div className={layout.screen}><Suspense fallback={<ScreenLoading />}><GoogleSuccessScreen /></Suspense></div>} />
+        <Route path="/auth/success" element={authPage(<Suspense fallback={<ScreenLoading />}><GoogleSuccessScreen /></Suspense>)} />
 
         
         <Route path="/admin" element={adminPortalPage} />
@@ -248,7 +254,7 @@ export function App() {
         <Route path="/admin/:tab" element={adminPortalPage} />
 
         
-        <Route path="*" element={<div className={layout.screen}><LoginScreen /></div>} />
+        <Route path="*" element={authPage(<LoginScreen />)} />
       </Routes>
       </Suspense>
     </>

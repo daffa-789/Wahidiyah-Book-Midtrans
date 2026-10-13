@@ -64,7 +64,7 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/@supabase/')) {
               return 'supabase-sdk';
             }
-                        if (id.includes('node_modules/@headlessui/')) {
+            if (id.includes('node_modules/@headlessui/')) {
               return 'headlessui';
             }
             if (id.includes('node_modules/sonner')) {

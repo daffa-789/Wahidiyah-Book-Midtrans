@@ -12,7 +12,8 @@ import {
 import { toast } from 'sonner';
 import { apiJson, authHeaders } from '@lib/api';
 import { dateLabel, getTodayStr } from '@lib/date';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { withToast } from '@lib/withToast';
+import { layout, typography, controls } from '@lib/styles';
 
 const EMPTY_SLIDE_FORM = {
   title: '',
@@ -63,26 +64,27 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
     });
   };
 
-  const uploadImage = async (slideId, file) => {
-    if (!(file instanceof File)) return;
+  const uploadImage = (slideId, file) => {
+    if (!(file instanceof File)) return undefined;
     if (file.size > MAX_IMAGE_BYTES) {
       toast.error('Ukuran gambar melebihi 8 MB.');
-      return;
+      return undefined;
     }
     const data = new FormData();
     data.set('image', file);
-    try {
-      await apiJson(`/api/carousel/${encodeURIComponent(slideId)}/image`, {
-        method: 'POST',
-        headers,
-        body: data,
-        timeoutMs: 60000
-      });
-      toast.success('Gambar banner diperbarui.');
-      await refreshCarousel();
-    } catch (error) {
-      toast.error(error.message || 'Gambar banner gagal diunggah.');
-    }
+    return withToast(
+      async () => {
+        await apiJson(`/api/carousel/${encodeURIComponent(slideId)}/image`, {
+          method: 'POST',
+          headers,
+          body: data,
+          timeoutMs: 60000
+        });
+        await refreshCarousel();
+      },
+      'Gambar banner gagal diunggah.',
+      'Gambar banner diperbarui.'
+    );
   };
 
   const submitSlide = async (event) => {
@@ -93,98 +95,96 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
     }
 
     setIsSaving(true);
-    try {
-      const payload = {
-        title: form.title.trim(),
-        description: (form.description || '').trim(),
-        sort_order: Number(form.sort_order) || 0,
-        is_active: form.is_active
-      };
+    // Pesan sukses berbeda untuk tambah vs perbarui, jadi dipasang di dalam
+    // aksi; pola galatnya tetap terpusat di `withToast`.
+    return withToast(
+      async () => {
+        const payload = {
+          title: form.title.trim(),
+          description: (form.description || '').trim(),
+          sort_order: Number(form.sort_order) || 0,
+          is_active: form.is_active
+        };
 
-      if (editingId) {
-        await apiJson(`/api/carousel/${encodeURIComponent(editingId)}`, {
+        if (editingId) {
+          await apiJson(`/api/carousel/${encodeURIComponent(editingId)}`, {
+            method: 'PUT',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          toast.success('Banner berhasil diperbarui.');
+        } else {
+          const created = await apiJson('/api/carousel', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          toast.success('Banner berhasil ditambahkan.');
+          const file = imageInputRef.current?.files?.[0];
+          if (file && created.slideId) {
+            await uploadImage(created.slideId, file);
+          }
+        }
+
+        resetForm();
+        await refreshCarousel();
+      },
+      'Banner gagal disimpan.'
+    ).finally(() => setIsSaving(false));
+  };
+
+  const toggleActive = (slide) => {
+    setBusyId(slide.id);
+    return withToast(
+      async () => {
+        await apiJson(`/api/carousel/${encodeURIComponent(slide.id)}`, {
           method: 'PUT',
           headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ is_active: !slide.isActive })
         });
-        toast.success('Banner berhasil diperbarui.');
-      } else {
-        const created = await apiJson('/api/carousel', {
-          method: 'POST',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        toast.success('Banner berhasil ditambahkan.');
-        const file = imageInputRef.current?.files?.[0];
-        if (file && created.slideId) {
-          await uploadImage(created.slideId, file);
-        }
-      }
-
-      resetForm();
-      await refreshCarousel();
-    } catch (error) {
-      toast.error(error.message || 'Banner gagal disimpan.');
-    } finally {
-      setIsSaving(false);
-    }
+        await refreshCarousel();
+      },
+      'Status banner gagal diubah.',
+      slide.isActive ? 'Banner dinonaktifkan.' : 'Banner diaktifkan.'
+    ).finally(() => setBusyId(null));
   };
 
-  const toggleActive = async (slide) => {
-    setBusyId(slide.id);
-    try {
-      await apiJson(`/api/carousel/${encodeURIComponent(slide.id)}`, {
-        method: 'PUT',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !slide.isActive })
-      });
-      toast.success(slide.isActive ? 'Banner dinonaktifkan.' : 'Banner diaktifkan.');
-      await refreshCarousel();
-    } catch (error) {
-      toast.error(error.message || 'Status banner gagal diubah.');
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const moveSlide = async (slide, direction) => {
+  const moveSlide = (slide, direction) => {
     const ordered = [...slides].sort((a, b) => a.sortOrder - b.sortOrder);
     const position = ordered.findIndex((item) => item.id === slide.id);
     const neighbour = ordered[position + direction];
-    if (!neighbour) return;
+    if (!neighbour) return undefined;
 
     setBusyId(slide.id);
-    try {
-      const patch = (id, sortOrder) => apiJson(`/api/carousel/${encodeURIComponent(id)}`, {
-        method: 'PUT',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sort_order: sortOrder })
-      });
-      await Promise.all([
-        patch(slide.id, neighbour.sortOrder),
-        patch(neighbour.id, slide.sortOrder)
-      ]);
-      await refreshCarousel();
-    } catch (error) {
-      toast.error(error.message || 'Urutan banner gagal diubah.');
-    } finally {
-      setBusyId(null);
-    }
+    return withToast(
+      async () => {
+        const patch = (id, sortOrder) => apiJson(`/api/carousel/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sort_order: sortOrder })
+        });
+        await Promise.all([
+          patch(slide.id, neighbour.sortOrder),
+          patch(neighbour.id, slide.sortOrder)
+        ]);
+        await refreshCarousel();
+      },
+      'Urutan banner gagal diubah.'
+    ).finally(() => setBusyId(null));
   };
 
-  const deleteSlide = async (slide) => {
-    if (!window.confirm(`Hapus banner “${slide.title}”?`)) return;
+  const deleteSlide = (slide) => {
+    if (!window.confirm(`Hapus banner “${slide.title}”?`)) return undefined;
     setBusyId(slide.id);
-    try {
-      await apiJson(`/api/carousel/${encodeURIComponent(slide.id)}`, { method: 'DELETE', headers });
-      toast.success('Banner berhasil dihapus.');
-      if (editingId === slide.id) resetForm();
-      await refreshCarousel();
-    } catch (error) {
-      toast.error(error.message || 'Banner gagal dihapus.');
-    } finally {
-      setBusyId(null);
-    }
+    return withToast(
+      async () => {
+        await apiJson(`/api/carousel/${encodeURIComponent(slide.id)}`, { method: 'DELETE', headers });
+        if (editingId === slide.id) resetForm();
+        await refreshCarousel();
+      },
+      'Banner gagal dihapus.',
+      'Banner berhasil dihapus.'
+    ).finally(() => setBusyId(null));
   };
 
   const orderedSlides = useMemo(

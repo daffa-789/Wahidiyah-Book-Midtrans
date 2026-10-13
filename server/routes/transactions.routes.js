@@ -12,7 +12,13 @@ import {
   toPublicUser,
   TRANSACTION_PENDING_STATUS
 } from '../auth.js';
-import { internalErrorDetail, wrap } from '../lib/http.js';
+import {
+  badRequest,
+  conflict,
+  internalErrorDetail,
+  notFound,
+  wrap
+} from '../lib/http.js';
 import {
   activatePaidMembership,
   activeSubscriptionConflict,
@@ -54,7 +60,7 @@ transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wr
   
   
   if (!isOneOf(action, ['approve', 'reject'])) {
-    return res.status(400).json({ success: false, message: 'Aksi harus "approve" atau "reject".' });
+    return badRequest(res, 'Aksi harus "approve" atau "reject".');
   }
 
   const { data: tx } = await supabaseServer
@@ -63,7 +69,7 @@ transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wr
     .eq('id', id)
     .maybeSingle();
   if (!tx) {
-    return res.status(404).json({ success: false, message: 'Transaksi tidak ditemukan' });
+    return notFound(res, 'Transaksi tidak ditemukan');
   }
 
   const decision = decideTransactionVerification(tx.status, action);
@@ -95,10 +101,7 @@ transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wr
   if (claimError) throw claimError;
 
   if (!claimed || claimed.length === 0) {
-    return res.status(409).json({
-      success: false,
-      message: 'Transaksi baru saja diproses permintaan lain. Silakan muat ulang daftar transaksi.'
-    });
+    return conflict(res, 'Transaksi baru saja diproses permintaan lain. Silakan muat ulang daftar transaksi.');
   }
 
   if (action === 'approve') {
@@ -121,14 +124,14 @@ transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wr
 transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
   const { plan_name, amount, admin_fee, total_paid, payment_method } = req.body;
   if (!plan_name || !amount) {
-    return res.status(400).json({ success: false, message: 'Nama paket dan nominal wajib diisi.' });
+    return badRequest(res, 'Nama paket dan nominal wajib diisi.');
   }
 
   
   
   const numAmount = toPositiveNumber(amount);
   if (numAmount === null) {
-    return res.status(400).json({ success: false, message: 'Nominal pembayaran tidak valid.' });
+    return badRequest(res, 'Nominal pembayaran tidak valid.');
   }
 
   try {

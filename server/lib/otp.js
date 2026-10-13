@@ -2,6 +2,7 @@
 
 import crypto from 'crypto';
 import { isMailerConfigured, sendOtpEmail } from '../mailer.js';
+import { sendOtpWhatsApp } from '../whatsapp.js';
 import {
   deleteOtpByEmailPurpose,
   deleteOtpById,
@@ -11,21 +12,14 @@ import {
 } from '../otpStore.js';
 import { logger } from '../logger.js';
 
-
 const OTP_TTL_MS = 10 * 60 * 1000;
-
-
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
-
-
 const OTP_MAX_ATTEMPTS = 5;
 
-const hashOtp = (email, purpose, code) =>
-  crypto.createHash('sha256').update(`${purpose}:${email}:${code}`).digest('hex');
-
+const hashOtp = (identifier, purpose, code) =>
+  crypto.createHash('sha256').update(`${purpose}:${identifier}:${code}`).digest('hex');
 
 export const canExposeDevOtp = () => process.env.NODE_ENV === 'development';
-
 
 export function resendCooldownRemaining(row) {
   if (!row?.created_at) return 0;
@@ -36,36 +30,48 @@ export function resendCooldownRemaining(row) {
   return Math.ceil((OTP_RESEND_COOLDOWN_MS - elapsed) / 1000);
 }
 
-
-export async function issueOtp({ email, purpose, payload = null }) {
+export async function issueOtp({ email, phone, identifier, purpose, payload = null, deliveryMethod = 'email' }) {
+  const target = identifier || (deliveryMethod === 'whatsapp' && phone ? phone : email);
   const code = String(crypto.randomInt(100000, 1000000));
 
-  await deleteOtpByEmailPurpose(email, purpose);
+  await deleteOtpByEmailPurpose(target, purpose);
   await insertOtp({
-    email,
+    email: target,
     purpose,
-    codeHash: hashOtp(email, purpose, code),
+    codeHash: hashOtp(target, purpose, code),
     payload,
     expiresAt: new Date(Date.now() + OTP_TTL_MS).toISOString()
   });
 
   let deliveredBy = 'demo';
-  if (isMailerConfigured()) {
+  if (deliveryMethod === 'whatsapp' && (phone || target)) {
     try {
-      await sendOtpEmail(email, code, purpose);
+      const res = await sendOtpWhatsApp({ phone: phone || target, code, purpose });
+      deliveredBy = res.deliveredBy;
+    } catch (waError) {
+      logger.error('WHATSAPP', 'Gagal mengirim kode via WA, memakai mode demo', {
+        pesan: waError.message
+      });
+      deliveredBy = 'demo';
+    }
+  } else if (isMailerConfigured() && (email || target)) {
+    try {
+      await sendOtpEmail(email || target, code, purpose);
       deliveredBy = 'email';
     } catch (mailError) {
       logger.error('MAIL', 'Gagal mengirim kode, memakai mode pengembangan', {
         pesan: mailError.message
       });
+      deliveredBy = 'demo';
     }
   }
-  return { code, deliveredBy };
+
+  return { code, deliveredBy, identifier: target };
 }
 
-
-export async function consumeOtp({ email, purpose, code }) {
-  const row = await findLatestOtp(email, purpose);
+export async function consumeOtp({ email, phone, identifier, purpose, code }) {
+  const target = identifier || phone || email;
+  const row = await findLatestOtp(target, purpose);
 
   if (!row) {
     return { ok: false, status: 400, message: 'Kode verifikasi tidak ditemukan. Minta kode baru terlebih dahulu.' };
@@ -78,7 +84,7 @@ export async function consumeOtp({ email, purpose, code }) {
     await deleteOtpById(row.id);
     return { ok: false, status: 400, message: 'Kode verifikasi sudah kedaluwarsa. Minta kode baru.' };
   }
-  if (hashOtp(email, purpose, code) !== row.code_hash) {
+  if (hashOtp(target, purpose, code) !== row.code_hash) {
     await incrementOtpAttempts(row.id);
     return { ok: false, status: 400, message: 'Kode verifikasi salah.' };
   }

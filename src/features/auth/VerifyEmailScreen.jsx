@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, ArrowLeft, CheckCircle2, MessageSquare, Phone } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
-import { layout } from '@lib/styles';
+import { layout, typography, controls } from '@lib/styles';
+import { parsePhoneNumber } from '@lib/countryCodes';
+import { FlagIcon } from '@ui/FlagIcon';
 
 export const VerifyEmailScreen = () => {
   const { verification, clearVerification, login, navigateTo } = useApp();
@@ -17,25 +19,30 @@ export const VerifyEmailScreen = () => {
   const [resendNotice, setResendNotice] = useState('');
   const [done, setDone] = useState(false);
 
-  const [completedEmail, setCompletedEmail] = useState('');
-
+  const [completedTarget, setCompletedTarget] = useState('');
   const [devOtp, setDevOtp] = useState(verification?.devOtp || '');
   const codeInputRef = useRef(null);
 
+  const method = verification?.method || (verification?.phone && !verification?.email ? 'whatsapp' : 'email');
+  const isWhatsApp = method === 'whatsapp';
+  const target = isWhatsApp
+    ? (verification?.phone || verification?.identifier || verification?.email || '')
+    : (verification?.email || verification?.identifier || verification?.phone || '');
   const email = verification?.email || '';
+  const phone = verification?.phone || '';
   const purpose = verification?.purpose === 'reset' ? 'reset' : 'register';
   const isReset = purpose === 'reset';
 
   const startedRef = useRef(false);
   useEffect(() => {
-    if (email) {
+    if (target) {
       startedRef.current = true;
       return;
     }
     if (!startedRef.current) {
       navigateTo(isReset ? 'forgot-password' : 'register', { replace: true });
     }
-  }, [email, isReset, navigateTo]);
+  }, [target, isReset, navigateTo]);
 
   useEffect(() => {
     codeInputRef.current?.focus();
@@ -66,19 +73,31 @@ export const VerifyEmailScreen = () => {
         await apiJson('/api/auth/reset-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, code: trimmed, password })
+          body: JSON.stringify({
+            method,
+            identifier: target,
+            email,
+            phone,
+            code: trimmed,
+            password
+          })
         });
         clearVerification();
-        setCompletedEmail(email);
+        setCompletedTarget(target);
         setDone(true);
       } else {
         const result = await apiJson('/api/auth/verify-registration', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, code: trimmed })
+          body: JSON.stringify({
+            method,
+            identifier: target,
+            email,
+            phone,
+            code: trimmed
+          })
         });
         clearVerification();
-
         login(result.user, result.token);
       }
     } catch (requestError) {
@@ -99,7 +118,13 @@ export const VerifyEmailScreen = () => {
       const result = await apiJson('/api/auth/resend-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, purpose })
+        body: JSON.stringify({
+          method,
+          identifier: target,
+          email,
+          phone,
+          purpose
+        })
       });
       setResendNotice(result.message || 'Kode baru telah dikirim.');
       if (result.devOtp) setDevOtp(result.devOtp);
@@ -120,7 +145,7 @@ export const VerifyEmailScreen = () => {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><CheckCircle2 className="h-6 w-6" /></div>
           <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-ink-900">Password diperbarui</h1>
           <p className={typography.helperRelaxed}>
-            Password akun <strong className="text-ink-700">{completedEmail || email}</strong> sudah diganti.
+            Password akun <strong className="text-ink-700">{completedTarget || target}</strong> sudah diganti.
             Silakan masuk dengan password baru Anda.
           </p>
           <button type="button" onClick={() => navigateTo('login', { replace: true })} className="auth-primary-button mt-7">Masuk sekarang</button>
@@ -134,20 +159,44 @@ export const VerifyEmailScreen = () => {
       <section className={layout.authCard}>
         <button type="button" onClick={() => { clearVerification(); navigateTo(isReset ? 'forgot-password' : 'register', { replace: true }); }} className="mb-6 inline-flex min-h-6 items-center gap-1 px-1 text-xs font-bold text-ink-400 transition hover:text-brand-700"><ArrowLeft className="h-4 w-4" /> Kembali</button>
 
-        <h1 className="font-display text-2xl font-bold tracking-tight text-ink-900">Cek email Anda</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-ink-900">
+          {isWhatsApp ? 'Cek WhatsApp Anda' : 'Cek email Anda'}
+        </h1>
         <p className={typography.helperRelaxed}>
           {isReset
             ? 'Kami mengirim kode pemulihan ke '
             : 'Kami mengirim kode verifikasi ke '}
-          <strong className="text-ink-700">{email}</strong>. Buka kotak masuk (dan folder spam),
-          lalu masukkan kodenya di bawah. Kode berlaku 10 menit.
+          {isWhatsApp && target ? (
+            (() => {
+              const p = parsePhoneNumber(target);
+              return (
+                <span className="inline-flex items-center gap-1.5 font-bold text-ink-800 align-baseline">
+                  <FlagIcon
+                    code={p.country.code}
+                    name={p.country.name}
+                    className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] inline-block align-middle"
+                  />
+                  <span>{p.country.dial} {p.nationalNumber}</span>
+                </span>
+              );
+            })()
+          ) : (
+            <strong className="text-ink-700">{target}</strong>
+          )}{' '}
+          via {isWhatsApp ? 'WhatsApp' : 'email'}.{' '}
+          {isWhatsApp
+            ? 'Buka aplikasi WhatsApp Anda, lalu masukkan kodenya di bawah. '
+            : 'Buka kotak masuk (dan folder spam), lalu masukkan kodenya di bawah. '}
+          Kode berlaku 10 menit.
         </p>
 
         {devOtp && (
           <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <p className="text-caption font-bold uppercase tracking-wide text-amber-700">Mode pengembangan — pengiriman email belum aktif</p>
+            <p className="text-caption font-bold uppercase tracking-wide text-amber-700">
+              Mode pengembangan — pengiriman {isWhatsApp ? 'WhatsApp' : 'email'} belum aktif
+            </p>
             <p className="mt-1 text-xs leading-relaxed text-amber-800">
-              Email belum dikonfigurasi, jadi kode ditampilkan di sini. Kode Anda:{' '}
+              {isWhatsApp ? 'Gateway WhatsApp (Fonnte)' : 'Pengiriman email'} belum dikonfigurasi, jadi kode ditampilkan di sini. Kode Anda:{' '}
               <strong className="font-mono text-base tracking-[0.2em]">{devOtp}</strong>
             </p>
           </div>
@@ -155,7 +204,7 @@ export const VerifyEmailScreen = () => {
 
         <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
           <label className="block">
-            <span className="auth-label">Kode verifikasi</span>
+            <span className="auth-label">Kode verifikasi (6 angka)</span>
             <span className={controls.inputWrap}>
               <input
                 ref={codeInputRef}
@@ -217,7 +266,7 @@ export const VerifyEmailScreen = () => {
 
         {!isReset && (
           <p className="mt-4 text-center text-caption leading-relaxed text-ink-400">
-            Salah menulis email?{' '}
+            Salah menulis {isWhatsApp ? 'nomor telepon' : 'alamat email'}?{' '}
             <button type="button" onClick={() => { clearVerification(); navigateTo('register', { replace: true }); }} className="auth-link">Daftar ulang</button>
           </p>
         )}

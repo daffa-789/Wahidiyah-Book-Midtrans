@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ServerCrash, RefreshCw } from 'lucide-react';
-import { layout, typography, surfaces, controls } from '@lib/styles';
+import { layout } from '@lib/styles';
 
 export const ServerStatusBanner = () => {
   const [status, setStatus] = useState('checking');

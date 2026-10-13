@@ -3,7 +3,12 @@
 import { Router } from 'express';
 import { supabaseServer } from '../db.js';
 import { generateId, requireAdmin, requireAuth } from '../auth.js';
-import { isSafeRawImageFallback, wrap } from '../lib/http.js';
+import {
+  badRequest,
+  isSafeRawImageFallback,
+  notFound,
+  wrap
+} from '../lib/http.js';
 import { toDataUrl, toWebp } from '../lib/images.js';
 import {
   CAROUSEL_DESCRIPTION_MAX,
@@ -121,10 +126,10 @@ carouselRouter.get('/carousel/all', requireAuth, requireAdmin, wrap(async (req, 
 carouselRouter.post('/carousel', requireAuth, requireAdmin, wrap(async (req, res) => {
   const { fields } = readSlideInput(req.body);
   if (!fields.title) {
-    return res.status(400).json({ success: false, message: 'Judul banner wajib diisi' });
+    return badRequest(res, 'Judul banner wajib diisi');
   }
   if (fields.starts_at && fields.ends_at && fields.ends_at < fields.starts_at) {
-    return res.status(400).json({ success: false, message: 'Tanggal selesai tidak boleh sebelum tanggal mulai' });
+    return badRequest(res, 'Tanggal selesai tidak boleh sebelum tanggal mulai');
   }
 
   const id = generateId('slide');
@@ -156,13 +161,13 @@ carouselRouter.post('/carousel', requireAuth, requireAdmin, wrap(async (req, res
 carouselRouter.put('/carousel/:id', requireAuth, requireAdmin, wrap(async (req, res) => {
   const { fields, has } = readSlideInput(req.body);
   if (has.title && !fields.title) {
-    return res.status(400).json({ success: false, message: 'Judul banner wajib diisi' });
+    return badRequest(res, 'Judul banner wajib diisi');
   }
 
   const startsAt = fields.starts_at;
   const endsAt = fields.ends_at;
   if (startsAt && endsAt && endsAt < startsAt) {
-    return res.status(400).json({ success: false, message: 'Tanggal selesai tidak boleh sebelum tanggal mulai' });
+    return badRequest(res, 'Tanggal selesai tidak boleh sebelum tanggal mulai');
   }
 
   const patch = { ...fields, updated_at: new Date().toISOString() };
@@ -178,7 +183,7 @@ carouselRouter.put('/carousel/:id', requireAuth, requireAdmin, wrap(async (req, 
     }
     throw error;
   }
-  if (!data?.length) return res.status(404).json({ success: false, message: 'Banner tidak ditemukan' });
+  if (!data?.length) return notFound(res, 'Banner tidak ditemukan');
 
   res.json({ success: true, message: 'Banner berhasil diperbarui' });
 }));
@@ -196,14 +201,14 @@ carouselRouter.delete('/carousel/:id', requireAuth, requireAdmin, wrap(async (re
     }
     throw error;
   }
-  if (!data?.length) return res.status(404).json({ success: false, message: 'Banner tidak ditemukan' });
+  if (!data?.length) return notFound(res, 'Banner tidak ditemukan');
 
   res.json({ success: true, message: 'Banner berhasil dihapus' });
 }));
 
 carouselRouter.post('/carousel/:id/image', requireAuth, requireAdmin, uploadCarouselImage, wrap(async (req, res) => {
   if (!req.file?.buffer?.length) {
-    return res.status(400).json({ success: false, message: 'Tidak ada berkas gambar yang diterima' });
+    return badRequest(res, 'Tidak ada berkas gambar yang diterima');
   }
 
   const originalMime = req.file.mimetype || 'application/octet-stream';
@@ -229,7 +234,7 @@ carouselRouter.post('/carousel/:id/image', requireAuth, requireAdmin, uploadCaro
     }
     throw error;
   }
-  if (!data?.length) return res.status(404).json({ success: false, message: 'Banner tidak ditemukan' });
+  if (!data?.length) return notFound(res, 'Banner tidak ditemukan');
 
   res.json({ success: true, message: 'Gambar banner berhasil diperbarui' });
 }));

@@ -31,12 +31,6 @@ export const formatWIB = (dateInput, { withTime = true, withSeconds = false } = 
   return d.format(withSeconds ? 'DD MMM YYYY, HH.mm.ss' : 'DD MMM YYYY, HH.mm');
 };
 
-export const parseYMD = (value) => {
-  if (!value) return null;
-  const d = dayjs(value);
-  return d.isValid() ? d.toDate() : null;
-};
-
 export const dateLabel = (value) => {
   if (!value) return '—';
   const d = dayjs(value).tz(WIB_TIME_ZONE);
