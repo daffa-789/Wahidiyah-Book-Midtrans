@@ -2,13 +2,15 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { logger } from './logger.js';
+import {
+  getActiveWhatsAppProvider,
+  getProviderByName,
+  listSupportedProviders
+} from './providers/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 dotenv.config();
-
-const FONNTE_TOKEN = process.env.FONNTE_TOKEN || '';
-const FONNTE_API_URL = 'https://api.fonnte.com/send';
 
 /**
  * Normalisasi nomor HP (Indonesia maupun internasional) ke format standar angka (E.164 tanpa +).
@@ -41,11 +43,30 @@ export const isValidPhone = (raw) => {
   return /^[1-9][0-9]{7,14}$/.test(normalized);
 };
 
-export const isWhatsAppConfigured = () => Boolean(FONNTE_TOKEN);
+/**
+ * Memeriksa apakah provider WhatsApp aktif sudah terkonfigurasi secara nyata
+ * (bukan sekadar fallback mode demo).
+ */
+export const isWhatsAppConfigured = () => {
+  const active = getActiveWhatsAppProvider();
+  return active.isConfigured() && active.name !== 'demo';
+};
 
 /**
- * Mengirim pesan WhatsApp berisi kode OTP.
- * Jika FONNTE_TOKEN belum diisi, otomatis berjalan dalam mode demo/development.
+ * Mendapatkan informasi metadata provider yang sedang aktif.
+ */
+export const getWhatsAppProviderInfo = () => {
+  const active = getActiveWhatsAppProvider();
+  return {
+    activeProvider: active.name,
+    isConfigured: isWhatsAppConfigured(),
+    supportedProviders: listSupportedProviders()
+  };
+};
+
+/**
+ * Mengirim pesan WhatsApp berisi kode OTP menggunakan provider aktif.
+ * Mendukung Fonnte, Wablas, Whacenter, Twilio, Webhook custom, serta mode demo.
  */
 export async function sendOtpWhatsApp({ phone, code, purpose = 'register' }) {
   const normalized = normalizePhone(phone);
@@ -53,53 +74,25 @@ export async function sendOtpWhatsApp({ phone, code, purpose = 'register' }) {
     throw new Error('Nomor telepon tujuan tidak valid.');
   }
 
-  const isRegister = purpose === 'register';
-  const actionText = isRegister ? 'pendaftaran akun' : 'pemulihan (reset password)';
-  const message =
-    `*Assalamu'alaikum Warahmatullahi Wabarakatuh*\n\n` +
-    `Kode verifikasi ${actionText} *Buku Wahidiyah* Anda adalah:\n\n` +
-    `🔑 *${code}*\n\n` +
-    `_Kode ini bersifat rahasia dan berlaku selama 10 menit._\n` +
-    `Jangan berikan kode ini kepada siapa pun termasuk pihak pengelola.\n\n` +
-    `Terima kasih.`;
+  const provider = getActiveWhatsAppProvider();
 
-  if (isWhatsAppConfigured()) {
+  // Jika provider nyata aktif dan terkonfigurasi, coba kirim
+  if (provider.isConfigured() && provider.name !== 'demo') {
     try {
-      const response = await fetch(FONNTE_API_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: FONNTE_TOKEN,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          target: normalized,
-          message: message,
-          countryCode: '62'
-        })
-      });
-
-      const resJson = await response.json().catch(() => ({}));
-      if (!response.ok || resJson.status === false) {
-        throw new Error(resJson.reason || resJson.message || `HTTP ${response.status}`);
-      }
-
-      logger.ok('WHATSAPP', `OTP berhasil terkirim via Fonnte ke ${normalized}`, {
-        purpose,
-        provider: 'fonnte'
-      });
-      return { deliveredBy: 'whatsapp', success: true };
+      const result = await provider.sendOtp({ phone: normalized, code, purpose });
+      return result;
     } catch (err) {
-      logger.error('WHATSAPP', `Gagal kirim via gateway WA (${err.message}). Menggunakan mode demo.`, {
-        phone: normalized
+      logger.error('WHATSAPP', `Gagal kirim via gateway WA ${provider.name} (${err.message}). Menggunakan mode demo.`, {
+        phone: normalized,
+        provider: provider.name
       });
       return { deliveredBy: 'demo', success: false, error: err.message };
     }
   }
 
-  // Fallback demo/development
-  logger.info('WHATSAPP', `[DEMO OTP] Pesan ke ${normalized}: Kode = ${code}`, {
-    purpose,
-    mode: 'demo (FONNTE_TOKEN belum diisi)'
-  });
-  return { deliveredBy: 'demo', success: true };
+  // Fallback demo/development jika belum ada kredensial gateway yang aktif
+  const demoResult = await getProviderByName('demo').sendOtp({ phone: normalized, code, purpose });
+  return demoResult;
 }
+
+export { getActiveWhatsAppProvider, listSupportedProviders, getProviderByName };

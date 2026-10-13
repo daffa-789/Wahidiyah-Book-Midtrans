@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { COUNTRY_CODES, DEFAULT_COUNTRY, findCountry, parsePhoneNumber } from '@lib/countryCodes';
+import { FlagIcon } from './FlagIcon';
 
 /**
  * Komponen input nomor telepon internasional dengan pemilih kode negara / region & bendera.
@@ -79,7 +80,13 @@ export const PhoneInput = ({
 
   // Filter negara berdasarkan pencarian
   const filteredCountries = useMemo(() => {
-    if (!search.trim()) return COUNTRY_CODES;
+    if (!search.trim()) {
+      return [...COUNTRY_CODES].sort((a, b) => {
+        if (a.priority && !b.priority) return -1;
+        if (!a.priority && b.priority) return 1;
+        return a.name.localeCompare(b.name, 'id');
+      });
+    }
     const q = search.trim().toLowerCase();
     return COUNTRY_CODES.filter(
       (c) =>
@@ -87,7 +94,13 @@ export const PhoneInput = ({
         c.dial.includes(q) ||
         c.dialNum.includes(q) ||
         c.code.toLowerCase().includes(q)
-    );
+    ).sort((a, b) => {
+      const aStarts = a.name.toLowerCase().startsWith(q);
+      const bStarts = b.name.toLowerCase().startsWith(q);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return a.name.localeCompare(b.name, 'id');
+    });
   }, [search]);
 
   // Handler saat negara dipilih
@@ -132,11 +145,13 @@ export const PhoneInput = ({
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           aria-label={`Pilih negara (saat ini ${selectedCountry.name} ${selectedCountry.dial})`}
-          className="flex shrink-0 items-center gap-1.5 rounded-l-lg py-2.5 pl-3 pr-2 text-sm font-semibold text-ink-800 transition hover:bg-cream-200/60 focus:outline-none disabled:opacity-50"
+          className="flex shrink-0 items-center gap-2 rounded-l-lg py-2.5 pl-3 pr-2 text-sm font-semibold text-ink-800 transition hover:bg-cream-200/60 focus:outline-none disabled:opacity-50"
         >
-          <span className="text-base leading-none select-none" role="img" aria-hidden="true">
-            {selectedCountry.flag}
-          </span>
+          <FlagIcon
+            code={selectedCountry.code}
+            name={selectedCountry.name}
+            className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] shrink-0"
+          />
           <span className="text-xs font-bold tracking-tight text-ink-700">
             {selectedCountry.dial}
           </span>
@@ -171,7 +186,7 @@ export const PhoneInput = ({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 top-full z-50 mt-1.5 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-cream-200 bg-cream-50 p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 top-full z-50 mt-1.5 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-cream-200 bg-cream-50 p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Kolom Pencarian */}
           <div className="relative mb-2">
@@ -187,7 +202,7 @@ export const PhoneInput = ({
           </div>
 
           {/* Daftar Scrollable Negara */}
-          <div className="max-h-56 overflow-y-auto space-y-0.5 pr-1 text-xs custom-scrollbar">
+          <div className="max-h-60 overflow-y-auto space-y-0.5 pr-1 text-xs custom-scrollbar">
             {filteredCountries.length === 0 ? (
               <div className="p-3 text-center text-xs text-ink-400">
                 Negara tidak ditemukan
@@ -208,10 +223,12 @@ export const PhoneInput = ({
                         : 'text-ink-700 hover:bg-cream-150'
                     }`}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-base select-none" role="img" aria-hidden="true">
-                        {country.flag}
-                      </span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <FlagIcon
+                        code={country.code}
+                        name={country.name}
+                        className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] shrink-0"
+                      />
                       <span className="truncate">{country.name}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 ml-2">

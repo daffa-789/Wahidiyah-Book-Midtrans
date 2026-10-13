@@ -7,6 +7,7 @@ import { ThemeModeSelector } from '@ui/ThemeToggle';
 import { NotificationToggle } from '@ui/NotificationToggle';
 import { layout, typography, controls } from '@lib/styles';
 import { parsePhoneNumber } from '@lib/countryCodes';
+import { FlagIcon } from '@ui/FlagIcon';
 
 const toIsoDate = (value) => {
   if (!value) return '';
@@ -196,21 +197,30 @@ export const EditProfileScreen = () => {
             <label htmlFor="edit-phone-input" className={typography.legend}>
               Nomor WhatsApp
             </label>
-            <input
+            <div
               id="edit-phone-input"
-              type="text"
               data-testid="edit-phone"
-              value={
-                user.phone
-                  ? (() => {
-                      const p = parsePhoneNumber(user.phone);
-                      return `${p.country.flag} ${p.country.dial} ${p.nationalNumber}`;
-                    })()
-                  : '-'
-              }
-              readOnly
-              className="h-12 w-full cursor-not-allowed rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-sm font-medium text-ink-600 focus-visible:outline-none"
-            />
+              className="flex h-12 w-full items-center gap-2.5 rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-sm font-medium text-ink-700"
+            >
+              {user.phone ? (
+                (() => {
+                  const p = parsePhoneNumber(user.phone);
+                  return (
+                    <>
+                      <FlagIcon
+                        code={p.country.code}
+                        name={p.country.name}
+                        className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] shrink-0"
+                      />
+                      <span className="font-semibold text-ink-800">{p.country.dial}</span>
+                      <span className="text-ink-600 font-mono text-xs">{p.nationalNumber}</span>
+                    </>
+                  );
+                })()
+              ) : (
+                <span className="text-ink-400">-</span>
+              )}
+            </div>
             <p className="mt-1.5 text-caption text-ink-400">
               Nomor WhatsApp terdaftar untuk autentikasi dan pemulihan akun.
             </p>
