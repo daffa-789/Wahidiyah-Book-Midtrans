@@ -274,8 +274,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 │   └── main.jsx            # Entry point React DOM
 ├── supabase_database/      # Skrip DDL & patch PostgreSQL Supabase (full_setup.sql)
 ├── docs/                   # Dokumentasi teknis komprehensif
-├── memory-kerja/           # Rekam jejak rilis individual (R40.md - R61.md)
-├── Master_Memory_Workflow.md # Single Source of Truth teknis sistem
+├── Master_Memory_Workflow.md # Single Source of Truth teknis sistem terpadu
 ├── package.json            # Manifest dependensi & skrip proyek
 └── README.md               # Dokumentasi utama proyek
 ```
