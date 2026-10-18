@@ -59,7 +59,8 @@ const EMPTY_EVENT_FORM = {
   category: 'Mujahadah',
   description: '',
   organizer: 'DPP PSW',
-  show_in_carousel: false
+  show_in_carousel: false,
+  broadcast_notification: true
 };
 
 const toEventForm = (event) => ({
@@ -71,7 +72,8 @@ const toEventForm = (event) => ({
   category: event.category || 'Mujahadah',
   description: event.description || '',
   organizer: event.organizer || 'DPP PSW',
-  show_in_carousel: Boolean(event.showInCarousel)
+  show_in_carousel: Boolean(event.showInCarousel),
+  broadcast_notification: false
 });
 
 const formatCurrency = formatRupiah;
@@ -243,19 +245,23 @@ export const AdminDashboard = () => {
     return withToast(
       async () => {
         if (editingEventId) {
-          await apiJson(`/api/events/${encodeURIComponent(editingEventId)}`, {
+          const res = await apiJson(`/api/events/${encodeURIComponent(editingEventId)}`, {
             method: 'PUT',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(eventForm)
           });
-          toast.success('Agenda berhasil diperbarui.');
+          toast.success(res?.message || 'Agenda berhasil diperbarui.');
         } else {
-          await apiJson('/api/events', {
+          const res = await apiJson('/api/events', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify(eventForm)
           });
-          toast.success('Agenda berhasil ditambahkan.');
+          if (res?.announcementSent > 0) {
+            toast.success(`Agenda ditambahkan & disiarkan ke ${res.announcementSent} perangkat!`);
+          } else {
+            toast.success(res?.message || 'Agenda berhasil ditambahkan.');
+          }
         }
         const savedDate = eventForm.event_date || selectedCalDate;
         setSelectedCalDate(savedDate);
@@ -351,7 +357,7 @@ export const AdminDashboard = () => {
   ];
 
   if (!isValidTabSlug(tabParam)) {
-    return <Navigate to="/admin/ringkasan" replace />;
+    return <Navigate to="/admin/beranda" replace />;
   }
 
   return (
@@ -372,7 +378,7 @@ export const AdminDashboard = () => {
             <section className="space-y-6">
               <div className={layout.toolbarRow}>
                 <div>
-                  <h2 className={typography.sectionTitlePlain}>Ringkasan operasional</h2>
+                  <h2 className={typography.sectionTitlePlain}>Beranda operasional</h2>
                   <p className={typography.helper}>Semua angka diambil langsung dari database Supabase Cloud.</p>
                 </div>
                 <div className={layout.rowWrap}>

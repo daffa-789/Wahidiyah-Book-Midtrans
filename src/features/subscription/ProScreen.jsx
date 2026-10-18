@@ -24,13 +24,9 @@ export const ProScreen = () => {
   }, [isSubscribed, setSelectedPlan, navigateTo, clearLastPaymentResult]);
 
   return (
-    <div className="min-h-[700px] flex flex-col bg-cream-50 page-transition pb-8">
-      <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-
-        <div className="flex justify-center max-w-lg mx-auto items-stretch">
-
-          <div className="w-full bg-cream-50 rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative group hover:border-brand-200">
+    <div className="flex-1 flex flex-col justify-center items-center bg-cream-50 page-transition px-4 py-8 sm:px-6 lg:px-8">
+      <div className="w-full max-w-lg">
+        <div className="w-full bg-cream-50 rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative group hover:border-brand-200">
             <div>
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -107,8 +103,6 @@ export const ProScreen = () => {
             )}
           </div>
         </div>
-
       </div>
-    </div>
-  );
-};
+    );
+  };

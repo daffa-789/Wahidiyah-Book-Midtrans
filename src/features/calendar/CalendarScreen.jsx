@@ -14,6 +14,7 @@ import {
   getTodayStr
 } from '@lib/date';
 import { layout, controls } from '@lib/styles';
+import { NotificationToggle } from '@ui/NotificationToggle';
 
 export const CalendarScreen = () => {
   const { events, agendaError, refreshEvents } = useApp();
@@ -65,7 +66,7 @@ export const CalendarScreen = () => {
 
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-800 via-brand-800 to-brand-900 p-5 text-cream-50 shadow-lg shadow-brand-900/15">
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-cream-50/10 rounded-full blur-xl pointer-events-none" />
-          <div className="relative z-10 flex items-center justify-between">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <span className="inline-block bg-cream-50/20 backdrop-blur-sm text-brand-100 text-micro font-bold px-2.5 py-0.5 rounded-full mb-1.5">
                 Jadwal & Agenda Spiritual
@@ -77,8 +78,11 @@ export const CalendarScreen = () => {
                 Jadwal Mujahadah, Pengajian & Catatan Bacaan
               </p>
             </div>
-            <div className="w-12 h-12 bg-cream-50/15 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm border border-white/20">
-              📅
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <NotificationToggle variant="header-compact" />
+              <div className="w-12 h-12 bg-cream-50/15 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm border border-white/20 shrink-0">
+                📅
+              </div>
             </div>
           </div>
         </div>

@@ -1,25 +1,10 @@
-
-
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { formatWIB } from '@lib/date';
 import { formatRupiah } from '@lib/formatUtils';
 
-const calculateColWidths = (rows) => {
-  if (!rows || !rows.length) return [];
-  const keys = Object.keys(rows[0]);
-  return keys.map((key) => {
-    let maxLen = key.length;
-    for (const row of rows) {
-      const val = row[key];
-      const strVal = val === null || val === undefined ? '' : String(val);
-      if (strVal.length > maxLen) {
-        maxLen = strVal.length;
-      }
-    }
-
-    return { wch: Math.min(Math.max(maxLen + 4, 10), 60) };
-  });
-};
+const BRAND_GREEN = 'FF14523A';
+const CREAM_LIGHT = 'FFFBF8F3';
+const BORDER_GRAY = 'FFE2E8F0';
 
 const getFileDateSuffix = () => {
   const now = new Date();
@@ -29,227 +14,471 @@ const getFileDateSuffix = () => {
   return `${y}-${m}-${d}`;
 };
 
-export const exportUsersToExcel = (users = []) => {
+const applySheetStyling = (worksheet) => {
+  worksheet.views = [{ showGridLines: true }];
+
+  const headerRow = worksheet.getRow(1);
+  headerRow.height = 28;
+  headerRow.eachCell((cell) => {
+    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND_GREEN } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = {
+      top: { style: 'thin', color: { argb: BRAND_GREEN } },
+      bottom: { style: 'medium', color: { argb: BRAND_GREEN } },
+      left: { style: 'thin', color: { argb: 'FF1F6D4F' } },
+      right: { style: 'thin', color: { argb: 'FF1F6D4F' } }
+    };
+  });
+
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    row.height = 22;
+    const isEven = rowNumber % 2 === 0;
+
+    row.eachCell((cell) => {
+      cell.font = { name: 'Calibri', size: 10 };
+      if (isEven) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CREAM_LIGHT } };
+      }
+      cell.border = {
+        top: { style: 'thin', color: { argb: BORDER_GRAY } },
+        bottom: { style: 'thin', color: { argb: BORDER_GRAY } },
+        left: { style: 'thin', color: { argb: BORDER_GRAY } },
+        right: { style: 'thin', color: { argb: BORDER_GRAY } }
+      };
+      cell.alignment = { vertical: 'middle', ...cell.alignment };
+    });
+  });
+
+  worksheet.columns.forEach((column) => {
+    let maxLen = column.header ? String(column.header).length : 10;
+    column.eachCell({ includeEmpty: false }, (cell) => {
+      const cellLen = cell.value ? String(cell.value).length : 0;
+      if (cellLen > maxLen) maxLen = cellLen;
+    });
+    column.width = Math.min(Math.max(maxLen + 4, 12), 48);
+  });
+};
+
+const saveWorkbook = async (workbook, fileName) => {
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+};
+
+export const exportUsersToExcel = async (users = []) => {
   if (!users.length) {
     throw new Error('Tidak ada data pengguna untuk diekspor.');
   }
 
-  const rows = users.map((u, idx) => ({
-    'No': idx + 1,
-    'ID Pengguna': u.id || '-',
-    'Nama Lengkap': u.name || '-',
-    'Alamat Email': u.email || '-',
-    'Role Akun': u.role === 'admin' ? 'Administrator' : 'User (Pengguna)',
-    'Metode Masuk': u.loginMethod === 'google' ? 'Google OAuth' : 'Email & Password',
-    'Status Member': u.isPro ? 'Pro Aktif' : 'Reguler (Gratis)',
-    'Masa Aktif Pro': u.subscriptionExpiresAt ? formatWIB(u.subscriptionExpiresAt) : '-',
-    'Tanggal Lahir': u.dob || '-',
-    'Tanggal Terdaftar': formatWIB(u.createdAt)
-  }));
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Perpustakaan Digital Wahidiyah';
+  workbook.created = new Date();
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = calculateColWidths(rows);
+  const worksheet = workbook.addWorksheet('Data Pengguna');
+  worksheet.columns = [
+    { header: 'No', key: 'no', width: 6 },
+    { header: 'ID Pengguna', key: 'id', width: 22 },
+    { header: 'Nama Lengkap', key: 'name', width: 26 },
+    { header: 'Alamat Email', key: 'email', width: 28 },
+    { header: 'Role Akun', key: 'role', width: 18 },
+    { header: 'Metode Masuk', key: 'loginMethod', width: 18 },
+    { header: 'Status Member', key: 'isPro', width: 18 },
+    { header: 'Masa Aktif Pro', key: 'expiresAt', width: 22 },
+    { header: 'Tanggal Lahir', key: 'dob', width: 16 },
+    { header: 'Tanggal Terdaftar', key: 'createdAt', width: 22 },
+  ];
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Data Pengguna');
+  users.forEach((u, idx) => {
+    worksheet.addRow({
+      no: idx + 1,
+      id: u.id || '-',
+      name: u.name || '-',
+      email: u.email || '-',
+      role: u.role === 'admin' ? 'Administrator' : 'User (Pengguna)',
+      loginMethod: u.loginMethod === 'google' ? 'Google OAuth' : 'Email & Password',
+      isPro: u.isPro ? 'Pro Aktif' : 'Reguler (Gratis)',
+      expiresAt: u.subscriptionExpiresAt ? formatWIB(u.subscriptionExpiresAt) : '-',
+      dob: u.dob || '-',
+      createdAt: formatWIB(u.createdAt)
+    });
+  });
+
+  applySheetStyling(worksheet);
+
   const fileName = `Laporan_Pengguna_Wahidiyah_${getFileDateSuffix()}.xlsx`;
-  XLSX.writeFile(wb, fileName);
-  return { fileName, count: rows.length };
+  await saveWorkbook(workbook, fileName);
+  return { fileName, count: users.length };
 };
 
-export const exportTransactionsToExcel = (transactions = []) => {
+export const exportTransactionsToExcel = async (transactions = []) => {
   if (!transactions.length) {
     throw new Error('Tidak ada data transaksi untuk diekspor.');
   }
 
-  const rows = transactions.map((t, idx) => {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Perpustakaan Digital Wahidiyah';
+  workbook.created = new Date();
+
+  const worksheet = workbook.addWorksheet('Data Transaksi');
+  worksheet.columns = [
+    { header: 'No', key: 'no', width: 6 },
+    { header: 'No. Referensi', key: 'refNo', width: 20 },
+    { header: 'ID Transaksi', key: 'id', width: 22 },
+    { header: 'Nama Pembeli', key: 'userName', width: 24 },
+    { header: 'Email Pembeli', key: 'userEmail', width: 28 },
+    { header: 'Paket Langganan', key: 'planName', width: 18 },
+    { header: 'Nominal (Rp)', key: 'amount', width: 16 },
+    { header: 'Biaya Admin (Rp)', key: 'adminFee', width: 16 },
+    { header: 'Total Bayar (Rp)', key: 'totalPaid', width: 18 },
+    { header: 'Metode Pembayaran', key: 'paymentMethod', width: 18 },
+    { header: 'Status Transaksi', key: 'status', width: 16 },
+    { header: 'Tanggal Transaksi', key: 'createdAt', width: 22 },
+    { header: 'Waktu Verifikasi', key: 'verifiedAt', width: 22 },
+  ];
+
+  transactions.forEach((t, idx) => {
     let statusLabel = 'Menunggu';
     if (t.status === 'success') statusLabel = 'Berhasil';
     else if (t.status === 'rejected') statusLabel = 'Ditolak';
 
-    return {
-      'No': idx + 1,
-      'No. Referensi': t.refNo || '-',
-      'ID Transaksi': t.id || '-',
-      'Nama Pembeli': t.userName || '-',
-      'Email Pembeli': t.userEmail || '-',
-      'Paket Langganan': t.planName || 'Paket Bulanan',
-      'Nominal (Rp)': Number(t.amount || 0),
-      'Biaya Admin (Rp)': Number(t.adminFee || 0),
-      'Total Bayar (Rp)': Number(t.totalPaid || 0),
-      'Metode Pembayaran': t.paymentMethod || 'QRIS',
-      'Status Transaksi': statusLabel,
-      'Tanggal Transaksi': formatWIB(t.createdAt),
-      'Waktu Verifikasi': t.verifiedAt ? formatWIB(t.verifiedAt) : '-'
+    worksheet.addRow({
+      no: idx + 1,
+      refNo: t.refNo || '-',
+      id: t.id || '-',
+      userName: t.userName || '-',
+      userEmail: t.userEmail || '-',
+      planName: t.planName || 'Paket Bulanan',
+      amount: Number(t.amount || 0),
+      adminFee: Number(t.adminFee || 0),
+      totalPaid: Number(t.totalPaid || 0),
+      paymentMethod: t.paymentMethod || 'QRIS',
+      status: statusLabel,
+      createdAt: formatWIB(t.createdAt),
+      verifiedAt: t.verifiedAt ? formatWIB(t.verifiedAt) : '-'
+    });
+  });
+
+  const lastRowIdx = transactions.length + 1;
+  const totalRow = worksheet.addRow({
+    no: '',
+    refNo: '',
+    id: '',
+    userName: '',
+    userEmail: '',
+    planName: 'TOTAL KESELURUHAN',
+    amount: { formula: `SUM(G2:G${lastRowIdx})` },
+    adminFee: { formula: `SUM(H2:H${lastRowIdx})` },
+    totalPaid: { formula: `SUM(I2:I${lastRowIdx})` },
+    paymentMethod: '',
+    status: '',
+    createdAt: '',
+    verifiedAt: ''
+  });
+
+  totalRow.eachCell((cell) => {
+    cell.font = { name: 'Calibri', size: 10, bold: true };
+    cell.border = {
+      top: { style: 'thin', color: { argb: BRAND_GREEN } },
+      bottom: { style: 'double', color: { argb: BRAND_GREEN } }
     };
   });
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = calculateColWidths(rows);
+  applySheetStyling(worksheet);
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Data Transaksi');
   const fileName = `Laporan_Transaksi_Wahidiyah_${getFileDateSuffix()}.xlsx`;
-  XLSX.writeFile(wb, fileName);
-  return { fileName, count: rows.length };
+  await saveWorkbook(workbook, fileName);
+  return { fileName, count: transactions.length };
 };
 
-export const exportBooksToExcel = (books = []) => {
+export const exportBooksToExcel = async (books = []) => {
   if (!books.length) {
     throw new Error('Tidak ada data buku untuk diekspor.');
   }
 
-  const rows = books.map((b, idx) => ({
-    'No': idx + 1,
-    'ID Buku': b.id || '-',
-    'Judul Buku': b.title || '-',
-    'Subjudul': b.subtitle || '-',
-    'Penulis': b.author || '-',
-    'Kategori': b.category || 'Umum',
-    'Akses Konten': b.isLocked ? 'Member Pro Eksklusif' : 'Semua Pembaca (Gratis)',
-    'Jumlah Halaman': b.totalPages || b.pages || 0,
-    'Format Lampiran': (b.contentExtension || b.contentType || 'PDF').toUpperCase(),
-    'Nama File': b.contentName || 'Belum diunggah',
-    'Deskripsi Ringkas': b.description || '-',
-    'Tanggal Unggah': formatWIB(b.createdAt)
-  }));
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Perpustakaan Digital Wahidiyah';
+  workbook.created = new Date();
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = calculateColWidths(rows);
+  const worksheet = workbook.addWorksheet('Katalog Buku');
+  worksheet.columns = [
+    { header: 'No', key: 'no', width: 6 },
+    { header: 'ID Buku', key: 'id', width: 22 },
+    { header: 'Judul Buku', key: 'title', width: 30 },
+    { header: 'Subjudul', key: 'subtitle', width: 24 },
+    { header: 'Penulis', key: 'author', width: 22 },
+    { header: 'Kategori', key: 'category', width: 16 },
+    { header: 'Akses Konten', key: 'isLocked', width: 22 },
+    { header: 'Jumlah Halaman', key: 'pages', width: 16 },
+    { header: 'Format Lampiran', key: 'format', width: 16 },
+    { header: 'Nama File', key: 'contentName', width: 24 },
+    { header: 'Deskripsi Ringkas', key: 'description', width: 36 },
+    { header: 'Tanggal Unggah', key: 'createdAt', width: 22 },
+  ];
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Katalog Buku');
+  books.forEach((b, idx) => {
+    worksheet.addRow({
+      no: idx + 1,
+      id: b.id || '-',
+      title: b.title || '-',
+      subtitle: b.subtitle || '-',
+      author: b.author || '-',
+      category: b.category || 'Umum',
+      isLocked: b.isLocked ? 'Member Pro Eksklusif' : 'Semua Pembaca (Gratis)',
+      pages: b.totalPages || b.pages || 0,
+      format: (b.contentExtension || b.contentType || 'PDF').toUpperCase(),
+      contentName: b.contentName || 'Belum diunggah',
+      description: b.description || '-',
+      createdAt: formatWIB(b.createdAt)
+    });
+  });
+
+  applySheetStyling(worksheet);
+
   const fileName = `Laporan_Katalog_Buku_Wahidiyah_${getFileDateSuffix()}.xlsx`;
-  XLSX.writeFile(wb, fileName);
-  return { fileName, count: rows.length };
+  await saveWorkbook(workbook, fileName);
+  return { fileName, count: books.length };
 };
 
-export const exportEventsToExcel = (events = []) => {
+export const exportEventsToExcel = async (events = []) => {
   if (!events.length) {
     throw new Error('Tidak ada data agenda untuk diekspor.');
   }
 
-  const rows = events.map((e, idx) => ({
-    'No': idx + 1,
-    'ID Agenda': e.id || '-',
-    'Judul Kegiatan': e.title || '-',
-    'Tanggal Acara': e.date || '-',
-    'Waktu Pelaksanaan': e.time || '-',
-    'Lokasi Acara': e.location || 'Online / Belum ditentukan',
-    'Kategori': e.category || 'Umum',
-    'Penyelenggara': e.organizer || 'DPP PSW',
-    'Keterangan': e.description || '-',
-    'Tanggal Dibuat': formatWIB(e.createdAt)
-  }));
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Perpustakaan Digital Wahidiyah';
+  workbook.created = new Date();
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = calculateColWidths(rows);
+  const worksheet = workbook.addWorksheet('Agenda Kegiatan');
+  worksheet.columns = [
+    { header: 'No', key: 'no', width: 6 },
+    { header: 'ID Agenda', key: 'id', width: 22 },
+    { header: 'Judul Kegiatan', key: 'title', width: 30 },
+    { header: 'Tanggal Acara', key: 'date', width: 16 },
+    { header: 'Waktu Pelaksanaan', key: 'time', width: 18 },
+    { header: 'Lokasi Acara', key: 'location', width: 28 },
+    { header: 'Kategori', key: 'category', width: 16 },
+    { header: 'Penyelenggara', key: 'organizer', width: 20 },
+    { header: 'Keterangan', key: 'description', width: 34 },
+    { header: 'Tanggal Dibuat', key: 'createdAt', width: 22 },
+  ];
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Agenda Kegiatan');
+  events.forEach((e, idx) => {
+    worksheet.addRow({
+      no: idx + 1,
+      id: e.id || '-',
+      title: e.title || '-',
+      date: e.date || '-',
+      time: e.time || '-',
+      location: e.location || 'Online / Belum ditentukan',
+      category: e.category || 'Umum',
+      organizer: e.organizer || 'DPP PSW',
+      description: e.description || '-',
+      createdAt: formatWIB(e.createdAt)
+    });
+  });
+
+  applySheetStyling(worksheet);
+
   const fileName = `Laporan_Agenda_Wahidiyah_${getFileDateSuffix()}.xlsx`;
-  XLSX.writeFile(wb, fileName);
-  return { fileName, count: rows.length };
+  await saveWorkbook(workbook, fileName);
+  return { fileName, count: events.length };
 };
 
-export const exportFullReportToExcel = ({
+export const exportFullReportToExcel = async ({
   users = [],
   transactions = [],
   books = [],
-  events = [],
-  stats = null
+  events = []
 }) => {
-  const wb = XLSX.utils.book_new();
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Perpustakaan Digital Wahidiyah';
+  workbook.created = new Date();
+
+  // 1. Ringkasan Eksekutif
+  const wsSummary = workbook.addWorksheet('Ringkasan Eksekutif');
+  wsSummary.columns = [
+    { header: 'Metrik Laporan', key: 'metric', width: 32 },
+    { header: 'Keterangan', key: 'value', width: 45 }
+  ];
 
   const successTx = transactions.filter((t) => t.status === 'success');
   const totalRevenue = successTx.reduce((acc, curr) => acc + Number(curr.totalPaid || 0), 0);
   const proCount = users.filter((u) => Boolean(u.isPro)).length;
 
   const summaryRows = [
-    { 'Metrik Laporan': 'Nama Aplikasi', 'Keterangan': 'Perpustakaan Digital Wahidiyah' },
-    { 'Metrik Laporan': 'Tanggal Cetak Laporan', 'Keterangan': formatWIB(new Date(), { withSeconds: true }) },
-    { 'Metrik Laporan': 'Zona Waktu', 'Keterangan': 'WIB (Asia/Jakarta, UTC+7)' },
-    { 'Metrik Laporan': 'Total Pengguna Terdaftar', 'Keterangan': `${users.length} akun` },
-    { 'Metrik Laporan': 'Pengguna Member Pro Aktif', 'Keterangan': `${proCount} akun` },
-    { 'Metrik Laporan': 'Pengguna Reguler', 'Keterangan': `${Math.max(users.length - proCount, 0)} akun` },
-    { 'Metrik Laporan': 'Total Judul Buku', 'Keterangan': `${books.length} judul` },
-    { 'Metrik Laporan': 'Total Agenda Kegiatan', 'Keterangan': `${events.length} agenda` },
-    { 'Metrik Laporan': 'Total Transaksi Sukses', 'Keterangan': `${successTx.length} transaksi` },
-    { 'Metrik Laporan': 'Total Pendapatan Tervalidasi', 'Keterangan': formatRupiah(totalRevenue) },
+    { metric: 'Nama Aplikasi', value: 'Perpustakaan Digital Wahidiyah' },
+    { metric: 'Tanggal Cetak Laporan', value: formatWIB(new Date(), { withSeconds: true }) },
+    { metric: 'Zona Waktu', value: 'WIB (Asia/Jakarta, UTC+7)' },
+    { metric: 'Total Pengguna Terdaftar', value: `${users.length} akun` },
+    { metric: 'Pengguna Member Pro Aktif', value: `${proCount} akun` },
+    { metric: 'Pengguna Reguler', value: `${Math.max(users.length - proCount, 0)} akun` },
+    { metric: 'Total Judul Buku', value: `${books.length} judul` },
+    { metric: 'Total Agenda Kegiatan', value: `${events.length} agenda` },
+    { metric: 'Total Transaksi Sukses', value: `${successTx.length} transaksi` },
+    { metric: 'Total Pendapatan Tervalidasi', value: formatRupiah(totalRevenue) },
   ];
 
-  const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
-  wsSummary['!cols'] = [{ wch: 32 }, { wch: 45 }];
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan Eksekutif');
+  summaryRows.forEach((r) => wsSummary.addRow(r));
+  applySheetStyling(wsSummary);
 
+  // 2. Transaksi
   if (transactions.length > 0) {
-    const txRows = transactions.map((t, idx) => ({
-      'No': idx + 1,
-      'No. Referensi': t.refNo || '-',
-      'Nama Pembeli': t.userName || '-',
-      'Email Pembeli': t.userEmail || '-',
-      'Paket': t.planName || 'Paket Bulanan',
-      'Nominal (Rp)': Number(t.amount || 0),
-      'Biaya Admin (Rp)': Number(t.adminFee || 0),
-      'Total Bayar (Rp)': Number(t.totalPaid || 0),
-      'Metode': t.paymentMethod || 'QRIS',
-      'Status': t.status === 'success' ? 'Berhasil' : t.status === 'pending' ? 'Menunggu' : 'Ditolak',
-      'Tanggal Transaksi': formatWIB(t.createdAt),
-      'Tanggal Verifikasi': t.verifiedAt ? formatWIB(t.verifiedAt) : '-'
-    }));
-    const wsTx = XLSX.utils.json_to_sheet(txRows);
-    wsTx['!cols'] = calculateColWidths(txRows);
-    XLSX.utils.book_append_sheet(wb, wsTx, 'Transaksi');
+    const wsTx = workbook.addWorksheet('Transaksi');
+    wsTx.columns = [
+      { header: 'No', key: 'no', width: 6 },
+      { header: 'No. Referensi', key: 'refNo', width: 20 },
+      { header: 'Nama Pembeli', key: 'userName', width: 24 },
+      { header: 'Email Pembeli', key: 'userEmail', width: 28 },
+      { header: 'Paket', key: 'planName', width: 18 },
+      { header: 'Nominal (Rp)', key: 'amount', width: 16 },
+      { header: 'Biaya Admin (Rp)', key: 'adminFee', width: 16 },
+      { header: 'Total Bayar (Rp)', key: 'totalPaid', width: 18 },
+      { header: 'Metode', key: 'paymentMethod', width: 16 },
+      { header: 'Status', key: 'status', width: 16 },
+      { header: 'Tanggal Transaksi', key: 'createdAt', width: 22 },
+      { header: 'Tanggal Verifikasi', key: 'verifiedAt', width: 22 }
+    ];
+
+    transactions.forEach((t, idx) => {
+      wsTx.addRow({
+        no: idx + 1,
+        refNo: t.refNo || '-',
+        userName: t.userName || '-',
+        userEmail: t.userEmail || '-',
+        planName: t.planName || 'Paket Bulanan',
+        amount: Number(t.amount || 0),
+        adminFee: Number(t.adminFee || 0),
+        totalPaid: Number(t.totalPaid || 0),
+        paymentMethod: t.paymentMethod || 'QRIS',
+        status: t.status === 'success' ? 'Berhasil' : t.status === 'pending' ? 'Menunggu' : 'Ditolak',
+        createdAt: formatWIB(t.createdAt),
+        verifiedAt: t.verifiedAt ? formatWIB(t.verifiedAt) : '-'
+      });
+    });
+
+    const lastIdx = transactions.length + 1;
+    const totalRow = wsTx.addRow({
+      no: '',
+      refNo: '',
+      userName: '',
+      userEmail: '',
+      planName: 'TOTAL',
+      amount: { formula: `SUM(F2:F${lastIdx})` },
+      adminFee: { formula: `SUM(G2:G${lastIdx})` },
+      totalPaid: { formula: `SUM(H2:H${lastIdx})` },
+      paymentMethod: '',
+      status: '',
+      createdAt: '',
+      verifiedAt: ''
+    });
+    totalRow.eachCell((cell) => {
+      cell.font = { name: 'Calibri', size: 10, bold: true };
+      cell.border = { top: { style: 'thin' }, bottom: { style: 'double' } };
+    });
+
+    applySheetStyling(wsTx);
   }
 
+  // 3. Pengguna
   if (users.length > 0) {
-    const userRows = users.map((u, idx) => ({
-      'No': idx + 1,
-      'Nama Lengkap': u.name || '-',
-      'Email': u.email || '-',
-      'Role': u.role === 'admin' ? 'Administrator' : 'User',
-      'Metode Masuk': u.loginMethod === 'google' ? 'Google' : 'Email',
-      'Status Pro': u.isPro ? 'Pro' : 'Reguler',
-      'Masa Aktif Pro': u.subscriptionExpiresAt ? formatWIB(u.subscriptionExpiresAt) : '-',
-      'Terdaftar Pada': formatWIB(u.createdAt)
-    }));
-    const wsUsers = XLSX.utils.json_to_sheet(userRows);
-    wsUsers['!cols'] = calculateColWidths(userRows);
-    XLSX.utils.book_append_sheet(wb, wsUsers, 'Pengguna');
+    const wsUsers = workbook.addWorksheet('Pengguna');
+    wsUsers.columns = [
+      { header: 'No', key: 'no', width: 6 },
+      { header: 'Nama Lengkap', key: 'name', width: 26 },
+      { header: 'Email', key: 'email', width: 28 },
+      { header: 'Role', key: 'role', width: 16 },
+      { header: 'Metode Masuk', key: 'loginMethod', width: 18 },
+      { header: 'Status Pro', key: 'isPro', width: 18 },
+      { header: 'Masa Aktif Pro', key: 'expiresAt', width: 22 },
+      { header: 'Terdaftar Pada', key: 'createdAt', width: 22 }
+    ];
+
+    users.forEach((u, idx) => {
+      wsUsers.addRow({
+        no: idx + 1,
+        name: u.name || '-',
+        email: u.email || '-',
+        role: u.role === 'admin' ? 'Administrator' : 'User',
+        loginMethod: u.loginMethod === 'google' ? 'Google' : 'Email',
+        isPro: u.isPro ? 'Pro' : 'Reguler',
+        expiresAt: u.subscriptionExpiresAt ? formatWIB(u.subscriptionExpiresAt) : '-',
+        createdAt: formatWIB(u.createdAt)
+      });
+    });
+
+    applySheetStyling(wsUsers);
   }
 
+  // 4. Katalog Buku
   if (books.length > 0) {
-    const bookRows = books.map((b, idx) => ({
-      'No': idx + 1,
-      'Judul': b.title || '-',
-      'Penulis': b.author || '-',
-      'Kategori': b.category || 'Umum',
-      'Akses': b.isLocked ? 'Pro' : 'Gratis',
-      'Halaman': b.totalPages || b.pages || 0,
-      'Format': (b.contentExtension || b.contentType || 'PDF').toUpperCase(),
-      'Nama File': b.contentName || '-'
-    }));
-    const wsBooks = XLSX.utils.json_to_sheet(bookRows);
-    wsBooks['!cols'] = calculateColWidths(bookRows);
-    XLSX.utils.book_append_sheet(wb, wsBooks, 'Katalog Buku');
+    const wsBooks = workbook.addWorksheet('Katalog Buku');
+    wsBooks.columns = [
+      { header: 'No', key: 'no', width: 6 },
+      { header: 'Judul', key: 'title', width: 30 },
+      { header: 'Penulis', key: 'author', width: 22 },
+      { header: 'Kategori', key: 'category', width: 16 },
+      { header: 'Akses', key: 'isLocked', width: 18 },
+      { header: 'Halaman', key: 'pages', width: 14 },
+      { header: 'Format', key: 'format', width: 14 },
+      { header: 'Nama File', key: 'contentName', width: 24 }
+    ];
+
+    books.forEach((b, idx) => {
+      wsBooks.addRow({
+        no: idx + 1,
+        title: b.title || '-',
+        author: b.author || '-',
+        category: b.category || 'Umum',
+        isLocked: b.isLocked ? 'Pro' : 'Gratis',
+        pages: b.totalPages || b.pages || 0,
+        format: (b.contentExtension || b.contentType || 'PDF').toUpperCase(),
+        contentName: b.contentName || '-'
+      });
+    });
+
+    applySheetStyling(wsBooks);
   }
 
+  // 5. Agenda
   if (events.length > 0) {
-    const eventRows = events.map((e, idx) => ({
-      'No': idx + 1,
-      'Judul': e.title || '-',
-      'Tanggal': e.date || '-',
-      'Waktu': e.time || '-',
-      'Lokasi': e.location || '-',
-      'Kategori': e.category || 'Umum',
-      'Penyelenggara': e.organizer || '-'
-    }));
-    const wsEvents = XLSX.utils.json_to_sheet(eventRows);
-    wsEvents['!cols'] = calculateColWidths(eventRows);
-    XLSX.utils.book_append_sheet(wb, wsEvents, 'Agenda');
+    const wsEvents = workbook.addWorksheet('Agenda');
+    wsEvents.columns = [
+      { header: 'No', key: 'no', width: 6 },
+      { header: 'Judul', key: 'title', width: 30 },
+      { header: 'Tanggal', key: 'date', width: 16 },
+      { header: 'Waktu', key: 'time', width: 18 },
+      { header: 'Lokasi', key: 'location', width: 28 },
+      { header: 'Kategori', key: 'category', width: 16 },
+      { header: 'Penyelenggara', key: 'organizer', width: 20 }
+    ];
+
+    events.forEach((e, idx) => {
+      wsEvents.addRow({
+        no: idx + 1,
+        title: e.title || '-',
+        date: e.date || '-',
+        time: e.time || '-',
+        location: e.location || '-',
+        category: e.category || 'Umum',
+        organizer: e.organizer || '-'
+      });
+    });
+
+    applySheetStyling(wsEvents);
   }
 
   const fileName = `Laporan_Lengkap_Perpustakaan_Wahidiyah_${getFileDateSuffix()}.xlsx`;
-  XLSX.writeFile(wb, fileName);
-  return { fileName, sheetsCount: wb.SheetNames.length };
+  await saveWorkbook(workbook, fileName);
+  return { fileName, sheetsCount: workbook.worksheets.length };
 };

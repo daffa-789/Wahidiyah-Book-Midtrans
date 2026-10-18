@@ -5,7 +5,8 @@
 // versi lama dibuang saat activate — kali ini karena server ikut melayani dist/.
 // v8 (R20): referensi `/api/categories` yang sudah mati dibuang dari rute cache.
 // v9 (R55): handler Web Push (pengingat agenda H-1) + aksi notificationclick.
-const CACHE_NAME = 'wahidiyah-app-shell-v9';
+// v10: pengumuman agenda mujahadah baru + pengingat H-1.
+const CACHE_NAME = 'wahidiyah-app-shell-v10';
 const PRECACHE_URLS = [
   '/',
   '/index.html',

@@ -66,7 +66,14 @@ export const NotificationToggle = ({ variant = 'panel', className = '' }) => {
     ? 'border-brand-300 bg-brand-50 text-brand-800 hover:bg-brand-100'
     : 'border-cream-300 bg-cream-50 text-ink-600 hover:bg-cream-100';
 
-  if (variant === 'compact') {
+  if (variant === 'compact' || variant === 'header-compact') {
+    const isHeader = variant === 'header-compact';
+    const compactClass = isHeader
+      ? (isOn
+          ? 'border-white/40 bg-white text-brand-900 hover:bg-white/95 shadow-sm'
+          : 'border-white/30 bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm')
+      : buttonClass;
+
     return (
       <button
         type="button"
@@ -74,10 +81,10 @@ export const NotificationToggle = ({ variant = 'panel', className = '' }) => {
         disabled={busy || blocked}
         aria-pressed={isOn}
         title={label}
-        className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 text-caption font-bold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass} ${className}`}
+        className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 text-caption font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:cursor-not-allowed disabled:opacity-60 ${compactClass} ${className}`}
       >
         <Icon className={`h-3.5 w-3.5 ${busy ? 'animate-spin' : ''}`} strokeWidth={2} />
-        <span>{isOn ? 'Notifikasi aktif' : 'Ingatkan saya'}</span>
+        <span>{isOn ? 'Notifikasi Aktif' : 'Ingatkan Pengumuman'}</span>
       </button>
     );
   }
@@ -86,11 +93,11 @@ export const NotificationToggle = ({ variant = 'panel', className = '' }) => {
     <div className={`mb-6 rounded-2xl border border-cream-300 bg-cream-100 p-4 ${className}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-ink-800">Pengingat Agenda</p>
+          <p className="text-sm font-bold text-ink-800">Pengumuman & Pengingat Mujahadah</p>
           <p className="mt-0.5 text-caption leading-relaxed text-ink-400">
             {blocked
               ? 'Izin notifikasi diblokir di peramban ini. Aktifkan lewat setelan situs, lalu muat ulang halaman.'
-              : 'Dapatkan pemberitahuan sehari sebelum majelis mujahadah, langsung di perangkat Anda.'}
+              : 'Dapatkan pemberitahuan otomatis saat agenda mujahadah baru diumumkan serta pengingat H-1 sebelum majelis dimulai.'}
           </p>
         </div>
         <button

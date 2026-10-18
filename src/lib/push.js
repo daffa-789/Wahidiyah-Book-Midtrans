@@ -107,7 +107,7 @@ export const enablePushNotifications = async () => {
     keys: json.keys
   });
 
-  return { ok: true, message: 'Notifikasi aktif — Anda akan diingatkan sehari sebelum agenda.' };
+  return { ok: true, message: 'Notifikasi aktif — Anda akan menerima pengumuman & pengingat agenda mujahadah.' };
 };
 
 /** Matikan notifikasi: batalkan di peramban DAN hapus di server. */

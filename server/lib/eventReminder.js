@@ -128,18 +128,57 @@ export const countActiveSubscriptions = async () => {
 
 const EVENT_ICON = '/icon-192.png';
 
-const buildEventPayload = (event) => {
+export const buildEventPayload = (event, { type = 'auto' } = {}) => {
+  const tomorrow = addDaysYmd(todayWib(), 1);
+  const eventYmd = String(event.event_date || '').slice(0, 10);
+  const isTomorrow = eventYmd === tomorrow;
+
   const time = [event.time_start, event.time_end].filter(Boolean).join('–');
-  const parts = [time, event.location].filter(Boolean);
+
+  let formattedDate = '';
+  try {
+    if (event.event_date) {
+      const [y, m, d] = String(event.event_date).slice(0, 10).split('-').map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      formattedDate = dt.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta'
+      });
+    }
+  } catch {}
+
+  let title = '';
+  let body = '';
+  const isAnnouncement = type === 'announcement' || (!isTomorrow && type !== 'reminder');
+
+  if (isAnnouncement) {
+    title = `📢 Pengumuman Mujahadah: ${event.title}`;
+    const parts = [
+      formattedDate,
+      time ? `Pukul ${time} WIB` : '',
+      event.location ? `di ${event.location}` : ''
+    ].filter(Boolean);
+    body = parts.join(' · ') || 'Jadwal majelis baru telah diumumkan. Ketuk untuk melihat kalender.';
+  } else {
+    title = `⏰ Pengingat Besok: ${event.title}`;
+    const parts = [
+      time ? `Pukul ${time} WIB` : '',
+      event.location ? `di ${event.location}` : ''
+    ].filter(Boolean);
+    body = parts.join(' · ') || 'Agenda majelis besok. Ketuk untuk membuka jadwal lengkap.';
+  }
 
   return {
-    title: `Besok: ${event.title}`,
-    body: parts.join(' · ') || 'Agenda majelis besok. Ketuk untuk melihat jadwal lengkap.',
+    title,
+    body,
     icon: EVENT_ICON,
     badge: EVENT_ICON,
-    tag: `agenda-${event.id}`,
+    tag: isAnnouncement ? `agenda-announcement-${event.id}` : `agenda-reminder-${event.id}`,
     url: '/calendar',
-    kind: 'event-reminder'
+    kind: isAnnouncement ? 'event-announcement' : 'event-reminder'
   };
 };
 
@@ -211,8 +250,41 @@ const addDaysYmd = (ymd, days) => {
   return date.toISOString().slice(0, 10);
 };
 
-/** Kirim pengingat untuk SATU agenda, bila agendanya jatuh tempo besok. */
-export const sendEventReminderNow = async (eventId, { force = false } = {}) => {
+/** Kirim PENGUMUMAN untuk SATU agenda ke seluruh perangkat jemaah yang aktif. */
+export const sendEventAnnouncementNow = async (eventId) => {
+  if (!isPushConfigured()) {
+    return { sent: 0, skipped: true, reason: 'vapid-not-configured' };
+  }
+
+  const { data: event, error } = await supabaseServer
+    .from('events')
+    .select('id, title, event_date, time_start, time_end, location')
+    .eq('id', eventId)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingSchema(error)) {
+      warnSchemaOnce(error, 'PUSH');
+      return { sent: 0, skipped: true, reason: 'schema-missing' };
+    }
+    throw error;
+  }
+  if (!event) return { sent: 0, skipped: true, reason: 'not-found' };
+
+  const payload = buildEventPayload(event, { type: 'announcement' });
+  const result = await broadcastPush({ payload });
+
+  logger.ok('PUSH', 'Pengumuman agenda mujahadah berhasil disiarkan', {
+    agenda: eventId,
+    judul: event.title,
+    terkirim: result.sent
+  });
+
+  return result;
+};
+
+/** Kirim pengingat untuk SATU agenda, bila agendanya jatuh tempo besok (atau force). */
+export const sendEventReminderNow = async (eventId, { force = false, type = 'auto' } = {}) => {
   if (!isPushConfigured()) {
     return { sent: 0, skipped: true, reason: 'vapid-not-configured' };
   }
@@ -242,11 +314,11 @@ export const sendEventReminderNow = async (eventId, { force = false } = {}) => {
     return { sent: 0, skipped: true, reason: 'not-due-tomorrow' };
   }
 
-  const result = await broadcastPush({ payload: buildEventPayload(event) });
+  const payloadType = type !== 'auto' ? type : (eventYmd === tomorrow ? 'reminder' : 'announcement');
+  const result = await broadcastPush({ payload: buildEventPayload(event, { type: payloadType }) });
 
-  /* Tandai terkirim HANYA bila benar-benar ada yang menerima; kalau belum ada
-     pelanggan sama sekali, biarkan penjadwal berikutnya mencoba lagi hari ini. */
-  if (result.sent > 0) {
+  /* Tandai terkirim HANYA bila benar-benar ada yang menerima dan memang jadwal besok */
+  if (result.sent > 0 && eventYmd === tomorrow) {
     const { error: markError } = await supabaseServer
       .from('events')
       .update({ reminder_sent_at: new Date().toISOString() })

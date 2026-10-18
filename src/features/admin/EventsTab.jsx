@@ -83,8 +83,8 @@ export const EventsTab = ({
         method: 'POST',
         headers: authHeaders(getStoredSession()?.token)
       }),
-      'Pengingat gagal dikirim.',
-      (result) => result.message || `Pengingat terkirim ke ${result.sent} perangkat.`
+      'Pengumuman gagal disiarkan.',
+      (result) => result.message || `Pengumuman terkirim ke ${result.sent} perangkat.`
     ).finally(() => setSendingId(null));
   };
   const calYear = currentCalDate.getFullYear();
@@ -216,12 +216,12 @@ export const EventsTab = ({
                         {pushStatus.enabled ? (
                           <>
                             <p className="font-bold text-brand-900">
-                              Notifikasi pengingat aktif
+                              Notifikasi Pengumuman &amp; Pengingat Mujahadah Aktif
                             </p>
                             <p className="text-brand-800">
                               {pushStatus.subscribers > 0
-                                ? `${pushStatus.subscribers} perangkat akan menerima pengingat sehari sebelum agenda. Tombol kirim tersedia di tiap agenda.`
-                                : 'Belum ada perangkat yang mengaktifkan. Ajak pengunjung menekan tombol "Ingatkan saya" di halaman utama.'}
+                                ? `${pushStatus.subscribers} perangkat terhubung. Pengumuman otomatis disiarkan saat agenda dibuat atau lewat tombol kirim.`
+                                : 'Belum ada perangkat yang mengaktifkan. Ajak jemaah menekan tombol "Aktifkan notifikasi" di menu Profil.'}
                             </p>
                           </>
                         ) : (
@@ -429,7 +429,7 @@ export const EventsTab = ({
                                   className="p-2 rounded-xl border border-cream-300 text-ink-600 hover:bg-cream-100 transition shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                                   title={
                                     pushStatus.enabled
-                                      ? `Kirim pengingat notifikasi ke ${pushStatus.subscribers} perangkat`
+                                      ? `Siarkan notifikasi pengumuman agenda ini ke ${pushStatus.subscribers} perangkat`
                                       : 'Notifikasi belum aktif — isi kunci VAPID di .env'
                                   }
                                 >
@@ -580,6 +580,24 @@ export const EventsTab = ({
                           </span>
                           <span className="mt-0.5 block text-caption text-ink-400">
                             Agenda ini otomatis muncul sebagai banner di beranda jemaah.
+                          </span>
+                        </span>
+                      </label>
+
+                      <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-cream-300 bg-cream-50 px-3 py-3">
+                        <input
+                          type="checkbox"
+                          checked={eventForm.broadcast_notification ?? true}
+                          onChange={(e) => setEventForm((form) => ({ ...form, broadcast_notification: e.target.checked }))}
+                          className="mt-0.5 h-4 w-4 rounded border-cream-300 text-brand-700 focus:ring-brand-300"
+                        />
+                        <span>
+                          <span className="flex items-center gap-1.5 text-xs font-bold text-ink-800">
+                            <BellRing className="h-3.5 w-3.5 text-brand-700" />
+                            Kirim Notifikasi Pengumuman ke Jemaah
+                          </span>
+                          <span className="mt-0.5 block text-caption text-ink-400">
+                            Kirimkan push notification langsung ke HP/perangkat jemaah saat agenda ini disimpan.
                           </span>
                         </span>
                       </label>

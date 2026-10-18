@@ -6,14 +6,22 @@ import { logger } from './logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
-dotenv.config({ path: path.resolve(__dirname, '.env') });
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '..', '.env'), override: true });
+dotenv.config({ path: path.resolve(__dirname, '.env'), override: true });
+dotenv.config({ override: true });
 
 
 
 const supaUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://pdimjmbjutlzjdfjaqgt.supabase.co';
-const supaKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_-6KjklXt9Oti0_ikobXiVw_aWdjxQ0Q';
+
+const supaKey =
+  process.env.SUPABASE_SECRET_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  'sb_publishable_-6KjklXt9Oti0_ikobXiVw_aWdjxQ0Q';
+
+const hasServiceRoleKey = Boolean(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 export const supabaseServer = (supaUrl && supaKey) ? createClient(supaUrl, supaKey) : null;
 
@@ -27,6 +35,9 @@ export async function testConnection() {
     const { error } = await supabaseServer.from('users').select('id').limit(1);
     if (error) throw error;
     logger.ok('DB', 'Berhasil terhubung ke Supabase Cloud (Skripsi_Project)');
+    if (!hasServiceRoleKey) {
+      logger.warn('DB', '⚠️ Backend berjalan dengan Anon Key karena SUPABASE_SECRET_KEY belum diisi di .env! Operasi INSERT/UPDATE akan diblokir oleh Row-Level Security (RLS).');
+    }
     return true;
   } catch (e) {
     logger.error('DB', 'Gagal terhubung ke Supabase', { reason: e.message });

@@ -130,7 +130,7 @@ const SIDEBAR_ITEM_DEFS = {
   profile: { label: 'Profil', icon: UserRound, target: 'profile-edit' },
   logout: { label: 'Log Out', icon: LogOut, target: 'logout', danger: true },
 
-  'admin-overview': { label: 'Ringkasan', icon: LayoutDashboard, target: 'admin:overview' },
+  'admin-overview': { label: 'Beranda', icon: LayoutDashboard, target: 'admin:overview' },
   'admin-books': { label: 'Koleksi', icon: BookOpen, target: 'admin:books' },
   'admin-users': { label: 'Pengguna', icon: Users, target: 'admin:users' },
   'admin-events': { label: 'Agenda', icon: CalendarDays, target: 'admin:events' },
@@ -325,11 +325,6 @@ const LogoutConfirmDialog = ({ isOpen, userName, onCancel, onConfirm }) => (
           <h2 id="logout-dialog-title" className="mt-4 font-display text-h3 font-bold text-ink-900">
             Log Out dari akun?
           </h2>
-          <p className="mt-1.5 text-xs leading-relaxed text-ink-500">
-            Apakah Anda yakin ingin keluar dari sesi{' '}
-            <span className="font-semibold text-ink-700">{userName || 'akun ini'}</span>?
-            Masuk kembali diperlukan untuk mengakses koleksi Pro.
-          </p>
           <div className="mt-6 grid grid-cols-2 gap-2.5">
             <button
               type="button"

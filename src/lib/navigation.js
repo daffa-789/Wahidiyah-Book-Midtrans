@@ -62,6 +62,7 @@ export const PATH_TO_SCREEN = {
   '/admin': 'admin-dashboard',
   '/admin-dashboard': 'admin-dashboard',
 
+  '/admin/beranda': 'admin-dashboard',
   '/admin/ringkasan': 'admin-dashboard',
   '/admin/koleksi': 'admin-dashboard',
   '/admin/pengguna': 'admin-dashboard',
@@ -75,6 +76,7 @@ export const ADMIN_DEFAULT_TAB = 'overview';
 const ADMIN_PATH_TO_TAB = {
   '/admin': ADMIN_DEFAULT_TAB,
   '/admin-dashboard': ADMIN_DEFAULT_TAB,
+  '/admin/beranda': 'overview',
   '/admin/ringkasan': 'overview',
   '/admin/koleksi': 'books',
   '/admin/pengguna': 'users',

@@ -11,7 +11,7 @@ import {
 } from '../lib/http.js';
 import { clippedText, parseBooleanFlag, toDateYmd } from '../lib/validate.js';
 import { logger } from '../logger.js';
-import { sendEventReminderNow } from '../lib/eventReminder.js';
+import { sendEventReminderNow, sendEventAnnouncementNow } from '../lib/eventReminder.js';
 
 export const eventsRouter = Router();
 
@@ -161,6 +161,17 @@ eventsRouter.post('/events', requireAuth, requireAdmin, wrap(async (req, res) =>
     }
   }
 
+  const broadcastNotification = req.body.broadcast_notification === undefined || parseBooleanFlag(req.body.broadcast_notification);
+  let announcementSent = 0;
+  if (broadcastNotification) {
+    try {
+      const annResult = await sendEventAnnouncementNow(id);
+      announcementSent = annResult?.sent || 0;
+    } catch (annError) {
+      logger.warn('PUSH', 'Gagal menyiarkan pengumuman agenda baru', { agenda: id, pesan: annError.message });
+    }
+  }
+
   const reminder = await trySendReminder(id);
 
   res.status(201).json({
@@ -168,6 +179,7 @@ eventsRouter.post('/events', requireAuth, requireAdmin, wrap(async (req, res) =>
     message: carouselAdded ? 'Jadwal berhasil ditambahkan dan masuk ke carousel.' : 'Jadwal berhasil ditambahkan',
     eventId: id,
     carouselAdded,
+    announcementSent,
     reminderSent: reminder?.sent || 0
   });
 }));
@@ -243,7 +255,8 @@ eventsRouter.post('/events/:id/send-reminder', requireAuth, requireAdmin, wrap(a
   if (error) throw error;
   if (!event) return notFound(res, 'Agenda tidak ditemukan');
 
-  const result = await sendEventReminderNow(req.params.id, { force: true });
+  const type = req.body?.type || req.query?.type || 'auto';
+  const result = await sendEventReminderNow(req.params.id, { force: true, type });
 
   if (result.skipped && result.reason === 'vapid-not-configured') {
     return res.status(503).json({
@@ -266,6 +279,6 @@ eventsRouter.post('/events/:id/send-reminder', requireAuth, requireAdmin, wrap(a
     success: true,
     sent: result.sent,
     failed: result.failed || 0,
-    message: `Pengingat terkirim ke ${result.sent} perangkat.`
+    message: `Pengumuman agenda berhasil disiarkan ke ${result.sent} perangkat.`
   });
 }));
