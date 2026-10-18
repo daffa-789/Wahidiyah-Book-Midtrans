@@ -37,6 +37,7 @@ import { NON_SPA_EXTENSIONS } from './lib/constants.js';
 import { initOtpStore } from './otpStore.js';
 import { canExposeDevOtp } from './lib/otp.js';
 import { isMailerConfigured } from './mailer.js';
+import { getWhatsAppProviderInfo, isWhatsAppConfigured } from './whatsapp.js';
 import { startReminderScheduler } from './lib/eventReminder.js';
 import { logger, banner } from './logger.js';
 import { testConnection } from './db.js';
@@ -237,13 +238,14 @@ if (process.env.NODE_ENV !== 'test') {
       });
     }
 
-    
-    
-    
-    
-    
-    
-    
+    const waConfigured = isWhatsAppConfigured();
+    const waInfo = getWhatsAppProviderInfo();
+    if (waConfigured) {
+      logger.ok('BOOT', `WhatsApp Gateway AKTIF — provider: ${waInfo.activeProvider}`);
+    } else {
+      logger.info('BOOT', `WhatsApp Gateway mode demo (cetak OTP di terminal) — provider: ${waInfo.activeProvider}`);
+    }
+
     startReminderScheduler();
   };
 

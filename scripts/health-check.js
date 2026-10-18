@@ -33,6 +33,17 @@ const midtransServer = process.env.MIDTRANS_SERVER_KEY;
 const midtransClient = process.env.MIDTRANS_CLIENT_KEY;
 report('Midtrans Gateway', Boolean(midtransServer && midtransClient), midtransServer ? `Mode: ${process.env.MIDTRANS_IS_PRODUCTION === 'true' ? 'Production' : 'Sandbox'}` : 'Key belum diisi');
 
+const waProvider = process.env.WHATSAPP_PROVIDER || 'fonnte';
+const isWaConfigured = Boolean(
+  waProvider === 'demo' ||
+  (waProvider === 'fonnte' && process.env.FONNTE_TOKEN) ||
+  (waProvider === 'wablas' && process.env.WABLAS_TOKEN) ||
+  (waProvider === 'whacenter' && process.env.WHACENTER_DEVICE_ID) ||
+  (waProvider === 'twilio' && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) ||
+  (waProvider === 'webhook' && process.env.WHATSAPP_WEBHOOK_URL)
+);
+report('WhatsApp Gateway', isWaConfigured, `Provider: ${waProvider}${waProvider === 'demo' ? ' (Testing)' : ''}`);
+
 // 2. Supabase Database Connection & Tables Check
 async function checkDatabase() {
   if (!supabaseUrl || !supabaseKey) {

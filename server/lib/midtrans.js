@@ -147,6 +147,23 @@ export function verifySignatureKey(payload = {}) {
     : { ok: false, reason: 'Signature key tidak valid.' };
 }
 
+/**
+ * Memeriksa apakah status transaksi Midtrans menyatakan pembayaran sudah lunas / sukses.
+ * Khusus QRIS dan e-wallet (GoPay/ShopeePay), fraud_status tidak dikembalikan oleh Midtrans
+ * sehingga pengecekan fraud_status bersifat fleksibel (kosong atau 'accept').
+ * Untuk kartu kredit, status 'capture' memerlukan fraud_status 'accept'.
+ */
+export const isTransactionSettled = (transactionStatus, fraudStatus = '') => {
+  const status = String(transactionStatus || '').toLowerCase();
+  const fraud = String(fraudStatus || '').toLowerCase();
+  if (status === 'settlement') {
+    return !fraud || fraud === 'accept';
+  }
+  if (status === 'capture') {
+    return fraud === 'accept';
+  }
+  return false;
+};
 
 export const QR_IMAGE_TIMEOUT_MS = 10_000;
 

@@ -56,7 +56,7 @@ Proyek ini sengaja dibangun menggunakan fondasi web modern yang ringan, stabil, 
 │   └── main.jsx                # Entry point render React DOM
 ├── supabase_database/          # Skrip Skema SQL Supabase
 │   └── full_setup.sql          # Skrip instalasi lengkap database (tabel, RLS, view, indeks)
-├── .env.example                # Template variabel lingkungan
+├── .env                        # Konfigurasi variabel lingkungan sistem
 └── package.json                # Dependensi & skrip npm
 ```
 

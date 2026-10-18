@@ -177,7 +177,7 @@ WHATSAPP_PROVIDER=fonnte # atau wablas, whacenter, twilio, demo
   - Akun WhatsApp Gateway (Fonnte / Wablas / Twilio) atau gunakan mode `demo`
 
 ### 2. Format Berkas `.env`
-Salin template konfigurasi dari `.env.example` ke `.env`:
+Gunakan berkas konfigurasi `.env` langsung di akar proyek:
 
 ```env
 # Port Server

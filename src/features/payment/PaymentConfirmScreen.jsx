@@ -52,31 +52,42 @@ export const PaymentConfirmScreen = () => {
         canvas.width = size;
         canvas.height = size + 60;
         
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+
         img.onload = () => {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          
-          ctx.fillStyle = '#14523A';
-          ctx.font = 'bold 16px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('QRIS — WAHIDIYAH BOOK', canvas.width / 2, 28);
-          
-          ctx.drawImage(img, (canvas.width - 240) / 2, 42, 240, 240);
-          
-          ctx.fillStyle = '#64748B';
-          ctx.font = '11px sans-serif';
-          ctx.fillText('Scan via DANA, BCA, GoPay, OVO, ShopeePay', canvas.width / 2, canvas.height - 12);
-          
-          const pngUrl = canvas.toDataURL('image/png');
-          const downloadLink = document.createElement('a');
-          downloadLink.href = pngUrl;
-          downloadLink.download = `QRIS-Wahidiyah-Book-${selectedPlan?.id || 'pro'}.png`;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          toast.success('Gambar QRIS berhasil disimpan ke galeri! Buka DANA/BCA untuk scan.');
+          try {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#14523A';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('QRIS — WAHIDIYAH BOOK', canvas.width / 2, 28);
+            
+            ctx.drawImage(img, (canvas.width - 240) / 2, 42, 240, 240);
+            
+            ctx.fillStyle = '#64748B';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('Scan via DANA, BCA, GoPay, OVO, ShopeePay', canvas.width / 2, canvas.height - 12);
+            
+            const pngUrl = canvas.toDataURL('image/png');
+            const downloadLink = document.createElement('a');
+            downloadLink.href = pngUrl;
+            downloadLink.download = `QRIS-Wahidiyah-Book-${selectedPlan?.id || 'pro'}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            toast.success('Gambar QRIS berhasil disimpan ke galeri! Buka DANA/BCA untuk scan.');
+          } finally {
+            URL.revokeObjectURL(svgUrl);
+          }
         };
-        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        img.onerror = () => {
+          URL.revokeObjectURL(svgUrl);
+          toast.error('Gagal memproses gambar QRIS');
+        };
+        img.src = svgUrl;
       } else if (qrTransaction?.qrImageUrl) {
         const downloadLink = document.createElement('a');
         downloadLink.href = qrTransaction.qrImageUrl;

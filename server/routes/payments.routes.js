@@ -32,6 +32,7 @@ import {
   fetchQrImage,
   getTransactionStatus,
   isMidtransConfigured,
+  isTransactionSettled,
   verifySignatureKey
 } from '../lib/midtrans.js';
 import { logger } from '../logger.js';
@@ -349,7 +350,7 @@ paymentsRouter.get('/qris/:orderId/status', requireAuth, wrap(async (req, res) =
     const transactionStatus = String(status?.transaction_status || 'pending').toLowerCase();
     const fraudStatus = String(status?.fraud_status || '').toLowerCase();
 
-    if (transactionStatus === 'settlement' && fraudStatus === 'accept') {
+    if (isTransactionSettled(transactionStatus, fraudStatus)) {
       await settleTransaction(transaction);
       return res.json({ ...baseResponse, status: 'settlement', isPaid: true });
     }
@@ -474,7 +475,7 @@ paymentsRouter.post('/midtrans/notification', async (req, res) => {
     const transactionStatus = String(payload.transaction_status || '').toLowerCase();
     const fraudStatus = String(payload.fraud_status || '').toLowerCase();
 
-    if (transactionStatus === 'settlement' && fraudStatus === 'accept') {
+    if (isTransactionSettled(transactionStatus, fraudStatus)) {
       const { alreadyProcessed } = await settleTransaction(transaction);
       return res.json({ success: true, alreadyProcessed });
     }

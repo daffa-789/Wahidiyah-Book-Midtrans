@@ -28,7 +28,7 @@ Midtrans balas qr_string + actions[]   simpan payload QR + URL gambar cadangan +
 Polling tiap 3 detik: GET /api/payments/qris/:orderId/status
   │  server menanyakan status langsung ke Midtrans
   ▼
-transaction_status = settlement + fraud_status = accept
+transaction_status = settlement (fraud_status = accept atau kosong pada QRIS/GoPay)
   │
   ▼
 server mengaktifkan membership Pro (activatePaidMembership) — SEKALI SAJA
