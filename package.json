@@ -21,7 +21,7 @@
     "server:dev": "node --watch server/server.js",
     "gmail:token": "node scripts/get-gmail-token.js",
     "vapid:keys": "node scripts/generate-vapid-keys.js",
-    "audit:security": "npm audit --audit-level=high"
+    "audit:security": "npm audit --ignore-scripts --audit-level=high"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.10",
