@@ -48,7 +48,6 @@ pnpm-debug.log*
 # Catatan tetap tersimpan di mesin lokal, hanya tidak dipublikasikan.
 .workbuddy-ai/
 memory-kerja/
-Master_Memory_Workflow.md
 
 # R36 — penyimpanan OTP sementara (pengembangan). Isinya kode + data pendaftaran.
 # Sengaja di AKAR proyek, bukan di dalam `server/`: berkas ini ditulis setiap kali
