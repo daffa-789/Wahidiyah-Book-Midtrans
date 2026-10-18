@@ -86,7 +86,7 @@ authRouter.post('/login', async (req, res) => {
 
 authRouter.post('/register', async (req, res) => {
   try {
-    const { name, email, phone, password, dob, deliveryMethod } = req.body;
+    const { name, email, phone, password, deliveryMethod } = req.body;
     const normalizedEmail = normalizeEmail(email);
     const normalizedPhone = normalizePhone(phone);
     const chosenMethod = deliveryMethod === 'whatsapp' ? 'whatsapp' : 'email';
@@ -96,7 +96,6 @@ authRouter.post('/register', async (req, res) => {
       email: normalizedEmail,
       phone: normalizedPhone,
       password,
-      dob,
       deliveryMethod: chosenMethod
     });
     if (!parsed.success) {
@@ -136,8 +135,7 @@ authRouter.post('/register', async (req, res) => {
         email: normalizedEmail,
         phone: normalizedPhone,
         deliveryMethod: chosenMethod,
-        passwordHash: await hashPassword(password),
-        dob: dob || null
+        passwordHash: await hashPassword(password)
       }
     });
 
@@ -195,8 +193,7 @@ authRouter.post('/verify-registration', async (req, res) => {
       password: payload.passwordHash,
       role: 'user',
       login_method: 'email',
-      is_pro: false,
-      dob: payload.dob || null
+      is_pro: false
     };
 
     const { error: insertError } = await supabaseServer.from('users').insert([newUser]);

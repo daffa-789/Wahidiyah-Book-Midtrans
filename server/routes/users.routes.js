@@ -21,30 +21,20 @@ import {
 } from '../lib/http.js';
 import { compressAvatarDataUrl } from '../lib/images.js';
 import { ENDED_SUBSCRIPTION_STATUS } from '../lib/membership.js';
-import { parseBooleanFlag, toPastDateYmd } from '../lib/validate.js';
+import { parseBooleanFlag } from '../lib/validate.js';
 import { logger } from '../logger.js';
 
 export const usersRouter = Router();
 
 
 usersRouter.put('/users/profile', requireAuth, async (req, res) => {
-  const { name, dob, avatar } = req.body;
+  const { name, avatar } = req.body;
   if (!name || !name.trim()) {
     return badRequest(res, 'Nama lengkap wajib diisi.');
   }
 
   try {
     const updates = { name: name.trim() };
-
-    
-    
-    if (dob !== undefined) {
-      const validDob = toPastDateYmd(dob);
-      if (dob && !validDob) {
-        return badRequest(res, 'Format tanggal lahir tidak valid (YYYY-MM-DD).');
-      }
-      updates.dob = validDob;
-    }
 
     
     if (avatar !== undefined) {
@@ -73,7 +63,6 @@ usersRouter.put('/users/profile', requireAuth, async (req, res) => {
     logger.data('PROFILE', 'Profil diperbarui', {
       id: req.user.id,
       name: updates.name,
-      dob: updates.dob || null
     });
 
     res.json({
@@ -148,7 +137,7 @@ usersRouter.put('/users/:id/pro', requireAuth, requireAdmin, wrap(async (req, re
 
 
 usersRouter.post('/users', requireAuth, requireAdmin, wrap(async (req, res) => {
-  const { name, email, role, is_pro, password, dob } = req.body;
+  const { name, email, role, is_pro, password } = req.body;
   if (!name || !email) {
     return badRequest(res, 'Nama dan email wajib diisi');
   }
@@ -176,7 +165,6 @@ usersRouter.post('/users', requireAuth, requireAdmin, wrap(async (req, res) => {
     role: role === 'admin' ? 'admin' : 'user',
     login_method: 'email',
     is_pro: parseBooleanFlag(is_pro),
-    dob: dob || null
   });
   if (error) throw error;
 

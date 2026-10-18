@@ -76,7 +76,7 @@ export const FAQ_ITEMS = [
   {
     id: 1,
     question: "Bagaimana cara mengubah informasi profil saya?",
-    answer: "Untuk mengubah informasi profil Anda, silakan buka menu Profile > Profile Saya. Di halaman tersebut Anda dapat memperbarui foto profil, nama lengkap, email, dan tanggal lahir. Klik tombol 'Save changes' berwarna hijau untuk menyimpan pembaruan."
+    answer: "Untuk mengubah informasi profil Anda, silakan buka menu Akun > Edit Profil. Di halaman tersebut Anda dapat memperbarui foto profil dan nama lengkap. Klik tombol 'Simpan Perubahan' untuk menyimpan pembaruan."
   },
   {
     id: 2,

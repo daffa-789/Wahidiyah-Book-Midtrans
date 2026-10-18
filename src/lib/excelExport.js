@@ -95,7 +95,6 @@ export const exportUsersToExcel = async (users = []) => {
     { header: 'Metode Masuk', key: 'loginMethod', width: 18 },
     { header: 'Status Member', key: 'isPro', width: 18 },
     { header: 'Masa Aktif Pro', key: 'expiresAt', width: 22 },
-    { header: 'Tanggal Lahir', key: 'dob', width: 16 },
     { header: 'Tanggal Terdaftar', key: 'createdAt', width: 22 },
   ];
 
@@ -109,7 +108,6 @@ export const exportUsersToExcel = async (users = []) => {
       loginMethod: u.loginMethod === 'google' ? 'Google OAuth' : 'Email & Password',
       isPro: u.isPro ? 'Pro Aktif' : 'Reguler (Gratis)',
       expiresAt: u.subscriptionExpiresAt ? formatWIB(u.subscriptionExpiresAt) : '-',
-      dob: u.dob || '-',
       createdAt: formatWIB(u.createdAt)
     });
   });

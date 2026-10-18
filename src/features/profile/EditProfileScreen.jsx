@@ -9,18 +9,6 @@ import { layout, typography, controls } from '@lib/styles';
 import { parsePhoneNumber } from '@lib/countryCodes';
 import { FlagIcon } from '@ui/FlagIcon';
 
-const toIsoDate = (value) => {
-  if (!value) return '';
-  const raw = String(value).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  const match = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (match) {
-    const [, day, month, year] = match;
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  }
-  return '';
-};
-
 export const EditProfileScreen = () => {
 
   const { user, patchUser, sessionToken, navigateTo } = useApp();
@@ -28,7 +16,6 @@ export const EditProfileScreen = () => {
   const [name, setName] = useState(user.name || '');
   const [email] = useState(user.email || '');
 
-  const [dob, setDob] = useState(toIsoDate(user.dob));
   const [avatar, setAvatar] = useState(user.avatar);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,18 +25,13 @@ export const EditProfileScreen = () => {
   useEffect(() => {
     if (user.avatar) setAvatar(user.avatar);
     if (user.name) setName(user.name);
-    if (user.dob) setDob(toIsoDate(user.dob));
-  }, [user.avatar, user.name, user.dob]);
+  }, [user.avatar, user.name]);
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
-
-  const handleDateChange = (event) => {
-    setDob(event.target.value);
-  };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
@@ -89,7 +71,6 @@ export const EditProfileScreen = () => {
         },
         body: JSON.stringify({
           name: name.trim(),
-          dob,
           avatar: avatar || null
         })
       });
@@ -98,7 +79,7 @@ export const EditProfileScreen = () => {
 
         patchUser(payload.user);
       } else {
-        patchUser({ name: name.trim(), dob, avatar });
+        patchUser({ name: name.trim(), avatar });
       }
 
       setSavedSuccess(true);
@@ -226,20 +207,6 @@ export const EditProfileScreen = () => {
             </p>
           </div>
 
-          <div>
-            <label htmlFor="edit-dob-input" className={typography.legend}>
-              Tanggal Lahir
-            </label>
-            <input
-              id="edit-dob-input"
-              type="date"
-              data-testid="edit-dob"
-              value={dob}
-              onChange={handleDateChange}
-              max={new Date().toISOString().slice(0, 10)}
-              className="h-12 w-full rounded-xl border border-cream-300 bg-cream-50 px-3.5 text-sm font-medium text-ink-800 transition-colors duration-200 focus:border-brand-600 focus:bg-cream-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-100"
-            />
-          </div>
 
           {errorMessage && (
             <div role="alert" className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800 page-transition">

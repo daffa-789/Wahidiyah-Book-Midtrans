@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { AlertCircle, CalendarDays, Eye, EyeOff, FileText, Lock, Mail, Phone, UserRound, X } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, FileText, Lock, Mail, Phone, UserRound, X } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 import { apiJson } from '@lib/api';
@@ -57,7 +57,6 @@ export const RegisterScreen = () => {
   const [phone, setPhone] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('whatsapp');
 
-  const [dob, setDob] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [agreed, setAgreed] = useState(false);
@@ -90,7 +89,6 @@ export const RegisterScreen = () => {
           email: targetEmail,
           phone: standardPhone,
           password,
-          dob: dob || null,
           deliveryMethod
         })
       });
@@ -157,8 +155,6 @@ export const RegisterScreen = () => {
               </button>
             </div>
           </div>
-
-          <label className="block"><span className="auth-label">Tanggal lahir <span className="font-normal text-ink-400">(opsional)</span></span><span className={controls.inputWrap}><CalendarDays className="auth-input-icon" /><input type="date" value={dob} onChange={(event) => { setDob(event.target.value); setError(''); }} max={new Date().toISOString().slice(0, 10)} data-testid="register-dob" /></span></label>
           <label className="block"><span className="auth-label">Password</span><span className={controls.inputWrap}><Lock className="auth-input-icon" /><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Minimal 8 karakter" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="auth-icon-button" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
           <label className="block"><span className="auth-label">Konfirmasi password</span><span className={controls.inputWrap}><Lock className="auth-input-icon" /><input type={showConfirmation ? 'text' : 'password'} value={confirmation} onChange={(event) => { setConfirmation(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Tulis ulang password" /><button type="button" onClick={() => setShowConfirmation((value) => !value)} className="auth-icon-button" aria-label={showConfirmation ? 'Sembunyikan konfirmasi password' : 'Tampilkan ulang password'}>{showConfirmation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
 

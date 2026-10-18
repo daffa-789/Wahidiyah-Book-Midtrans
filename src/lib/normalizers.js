@@ -41,7 +41,6 @@ export const EMPTY_USER = {
   isPro: false,
   activePlan: null,
   avatar: null,
-  dob: null,
   subscriptionPeriod: null,
   subscriptionExpiresAt: null,
   createdAt: null
@@ -59,7 +58,6 @@ export const normalizeUser = (data = {}) => {
     isPro,
     activePlan: null,
     avatar: data.avatar || null,
-    dob: data.dob || null,
     subscriptionPeriod: isPro ? (pick(data, 'subscription_period', 'subscriptionPeriod') ?? null) : null,
     subscriptionExpiresAt: isPro ? (pick(data, 'subscription_expires_at', 'subscriptionExpiresAt') ?? null) : null,
     createdAt: pick(data, 'created_at', 'createdAt') ?? null
@@ -75,7 +73,6 @@ export const userSignature = (target = EMPTY_USER) => JSON.stringify([
   Boolean(target.isPro),
   target.activePlan ?? null,
   target.avatar ?? null,
-  target.dob ?? null,
   target.subscriptionPeriod ?? null,
   target.subscriptionExpiresAt ?? null,
   target.createdAt ?? null

@@ -64,24 +64,20 @@ export const CalendarScreen = () => {
     <div className="min-h-[640px] flex flex-col justify-between bg-cream-50 page-transition pb-6 font-sans">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
 
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-800 via-brand-800 to-brand-900 p-5 text-cream-50 shadow-lg shadow-brand-900/15">
-          <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-cream-50/10 rounded-full blur-xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-3xl bg-brand-900 p-6 text-cream-50 shadow-md">
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <span className="inline-block bg-cream-50/20 backdrop-blur-sm text-brand-100 text-micro font-bold px-2.5 py-0.5 rounded-full mb-1.5">
-                Jadwal & Agenda Spiritual
-              </span>
-              <h1 className="font-display text-lg font-bold tracking-tight">
-                Kalender Wahidiyah
+              <h1 className="font-display text-xl font-bold tracking-tight text-white">
+                Kalender Majelis Wahidiyah
               </h1>
-              <p className="text-xs text-cream-100 font-medium mt-0.5">
-                Jadwal Mujahadah, Pengajian & Catatan Bacaan
+              <p className="mt-1 text-xs text-cream-200/90 leading-relaxed max-w-md">
+                Jadwal resmi Mujahadah Kubro, pengajian selapanan, dan agenda bimbingan ruhani.
               </p>
             </div>
             <div className="flex items-center gap-3 self-start sm:self-auto">
               <NotificationToggle variant="header-compact" />
-              <div className="w-12 h-12 bg-cream-50/15 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm border border-white/20 shrink-0">
-                📅
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-sm shrink-0">
+                <CalendarIcon className="h-5 w-5 text-emerald-200" strokeWidth={1.8} />
               </div>
             </div>
           </div>
