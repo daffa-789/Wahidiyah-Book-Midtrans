@@ -1,8 +1,25 @@
 
 
-import pc from 'picocolors';
+/* Helper warna ANSI ringan (pengganti picocolors agar server tidak menarik
+   dependensi lint/dev). Otomatis nonaktif saat output bukan TTY atau saat
+   NO_COLOR dipasang — log yang di-pipe ke berkas tetap bersih. */
+const ansiEnabled = Boolean(process.stdout?.isTTY) && !process.env.NO_COLOR;
 
-export const color = pc;
+const wrapAnsi = (code) => (text) =>
+  ansiEnabled ? `\x1b[${code}m${text}\x1b[0m` : String(text);
+
+export const color = {
+  cyan: wrapAnsi(36),
+  green: wrapAnsi(32),
+  yellow: wrapAnsi(33),
+  red: wrapAnsi(31),
+  blue: wrapAnsi(34),
+  magenta: wrapAnsi(35),
+  white: wrapAnsi(37),
+  gray: wrapAnsi(90),
+  dim: wrapAnsi(2),
+  bold: wrapAnsi(1)
+};
 
 
 const timeWIB = () =>

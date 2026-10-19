@@ -97,7 +97,7 @@ export const HelpCenterScreen = () => {
             </div>
 
             <div className="rounded-2xl border border-cream-300 bg-cream-50 p-5 shadow-sm">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gold-400/15 text-gold-700 flex items-center justify-center">
                 <Clock className="w-5 h-5" />
               </div>
               <h3 className="mt-3 text-sm font-bold text-ink-900">Jam Layanan</h3>

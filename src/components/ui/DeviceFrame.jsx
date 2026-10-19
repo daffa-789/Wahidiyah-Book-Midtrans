@@ -40,7 +40,7 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         aria-label={item.label}
         aria-current={item.isActive ? 'page' : undefined}
         className={`relative h-11 w-11 rounded-xl flex items-center justify-center transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
-          ? 'focus-visible:ring-rose-400'
+          ? 'focus-visible:ring-semantic-danger'
           : 'focus-visible:ring-brand-500'
           } ${item.isActive
             ? 'bg-brand-700 text-cream-50 shadow-sm'
@@ -58,7 +58,7 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
       onClick={() => onNavClick(item.target)}
       aria-current={item.isActive ? 'page' : undefined}
       className={`group relative w-full h-11 flex items-center gap-3 pl-3 pr-3 rounded-xl transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
-        ? 'focus-visible:ring-rose-400'
+        ? 'focus-visible:ring-semantic-danger'
         : 'focus-visible:ring-brand-500'
         } ${item.isActive
           ? 'bg-brand-700 text-cream-50 shadow-sm'
@@ -74,7 +74,7 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${item.isActive
           ? 'text-cream-50'
           : isDanger
-            ? 'text-rose-300/70 group-hover:text-rose-200'
+            ? 'text-semantic-danger/70 group-hover:text-semantic-danger'
             : 'text-ink-400 group-hover:text-cream-100'
           }`}
         strokeWidth={1.9}
@@ -319,7 +319,7 @@ const LogoutConfirmDialog = ({ isOpen, userName, onCancel, onConfirm }) => (
           aria-labelledby="logout-dialog-title"
           className="relative w-full max-w-sm rounded-3xl border border-cream-300 bg-cream-50 p-6 text-center shadow-2xl shadow-ink-900/25"
         >
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-semantic-dangerLight text-semantic-danger">
             <LogOut className="h-5 w-5" strokeWidth={2} />
           </div>
           <h2 id="logout-dialog-title" className="mt-4 font-display text-h3 font-bold text-ink-900">
@@ -337,7 +337,7 @@ const LogoutConfirmDialog = ({ isOpen, userName, onCancel, onConfirm }) => (
               type="button"
               data-testid="confirm-logout-btn"
               onClick={onConfirm}
-              className="h-11 rounded-2xl bg-rose-600 text-xs font-bold text-white shadow-sm transition-colors duration-200 hover:bg-rose-700 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+              className="h-11 rounded-2xl bg-semantic-danger text-xs font-bold text-white dark:text-semantic-dangerLight shadow-sm transition-colors duration-200 hover:bg-semantic-danger/85 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-semantic-danger/50"
             >
               Ya, Log Out
             </button>

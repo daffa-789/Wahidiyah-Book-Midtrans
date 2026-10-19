@@ -70,7 +70,7 @@ export const PaymentSuccessScreen = () => {
           )}
         </div>
 
-        <section className="overflow-hidden rounded-3xl border border-cream-300 bg-white shadow-xl shadow-brand-900/5">
+        <section className="overflow-hidden rounded-3xl border border-cream-300 bg-ui-card shadow-xl shadow-brand-900/5">
           <div className="space-y-4 p-5 sm:p-6">
             <div className="border-b border-cream-200 pb-4 text-center">
               <p className="text-micro font-bold uppercase tracking-wider text-ink-300">Total pembayaran</p>
@@ -93,7 +93,7 @@ export const PaymentSuccessScreen = () => {
           <button
             type="button"
             onClick={() => setShowReceiptModal(true)}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-brand-700 bg-white px-4 py-3.5 text-sm font-bold text-brand-800 transition hover:bg-brand-50 shadow-xs"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-brand-700 bg-ui-card px-4 py-3.5 text-sm font-bold text-brand-800 transition hover:bg-brand-50 shadow-xs"
           >
             <Printer className="w-4 h-4 text-brand-700" />
             <span>Cetak Kwitansi Pembayaran</span>

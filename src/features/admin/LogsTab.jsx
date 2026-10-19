@@ -119,11 +119,11 @@ export const LogsTab = ({ sessionToken }) => {
       </div>
 
       {error && (
-        <div className="flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+        <div className="flex items-start gap-2.5 rounded-2xl border border-semantic-danger/30 bg-semantic-dangerLight px-4 py-3">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-semantic-danger" />
           <div className="min-w-0">
-            <p className="text-xs font-bold text-rose-800">Gagal memuat log aktivitas</p>
-            <p className="mt-0.5 text-xs text-rose-600">{error}</p>
+            <p className="text-xs font-bold text-semantic-danger">Gagal memuat log aktivitas</p>
+            <p className="mt-0.5 text-xs text-semantic-danger/85">{error}</p>
           </div>
         </div>
       )}

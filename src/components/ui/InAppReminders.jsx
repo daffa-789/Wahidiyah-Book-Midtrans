@@ -7,16 +7,16 @@ import { buildReminders, wereRemindersSeen, markRemindersSeen } from '@lib/remin
 
 const TONE = {
   urgent: {
-    wrap: 'border-rose-300 bg-rose-50',
-    icon: 'bg-rose-100 text-rose-700',
-    title: 'text-rose-900',
-    body: 'text-rose-800'
+    wrap: 'border-semantic-danger/40 bg-semantic-dangerLight',
+    icon: 'bg-semantic-danger/15 text-semantic-danger',
+    title: 'text-semantic-danger',
+    body: 'text-semantic-danger/85'
   },
   warning: {
-    wrap: 'border-amber-300 bg-amber-50',
-    icon: 'bg-amber-100 text-amber-700',
-    title: 'text-amber-900',
-    body: 'text-amber-800'
+    wrap: 'border-semantic-warning/40 bg-semantic-warningLight',
+    icon: 'bg-semantic-warning/15 text-semantic-warning',
+    title: 'text-semantic-warning',
+    body: 'text-semantic-warning/85'
   },
   info: {
     wrap: 'border-brand-300 bg-brand-50',
@@ -82,7 +82,7 @@ export const InAppReminders = () => {
               type="button"
               onClick={handleDismiss}
               aria-label="Tutup pengingat"
-              className={`-mr-1 -mt-1 shrink-0 rounded-lg p-1 transition hover:bg-black/5 ${tone.body}`}
+              className={`-mr-1 -mt-1 shrink-0 rounded-lg p-1 transition hover:bg-ink-900/5 ${tone.body}`}
             >
               <X className="h-3.5 w-3.5" />
             </button>

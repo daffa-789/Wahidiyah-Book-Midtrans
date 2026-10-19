@@ -317,7 +317,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                     type="button"
                     onClick={() => deleteSlide(slide)}
                     disabled={busyId === slide.id}
-                    className="rounded-xl border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+                    className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight disabled:opacity-50"
                     title="Hapus banner"
                   >
                     {busyId === slide.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}

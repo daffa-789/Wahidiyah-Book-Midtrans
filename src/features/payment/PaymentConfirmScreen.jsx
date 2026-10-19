@@ -219,22 +219,22 @@ export const PaymentConfirmScreen = () => {
         {isQrisMethod ? (
           <div className="bg-cream-100 border border-cream-300 rounded-3xl p-6 shadow-sm space-y-5 text-center">
 
-            <div className="flex items-center justify-between bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white px-4 py-2.5 rounded-2xl shadow-sm">
+            <div className="flex items-center justify-between bg-qris-600 text-white px-4 py-2.5 rounded-2xl shadow-sm">
               <div className="flex items-center gap-2">
                 <QrCode className="w-5 h-5" />
                 <span className="font-black text-xs tracking-wider uppercase">QRIS PEMBAYARAN</span>
               </div>
-              <span className="text-micro font-bold bg-white/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-emerald-300" />
+              <span className="text-micro font-bold bg-cream-50/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-cream-100" />
                 WAHIDIYAH BOOK
               </span>
             </div>
 
             {!isQrisPaid && qrTransaction && (
               <div className="flex items-center justify-center gap-1.5 text-xs text-ink-500 font-semibold">
-                <Clock className="w-3.5 h-3.5 text-amber-600" />
+                <Clock className="w-3.5 h-3.5 text-semantic-warning" />
                 <span>Masa berlaku QR:</span>
-                <span className="font-mono font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">
+                <span className="font-mono font-bold text-semantic-warning bg-semantic-warningLight px-2.5 py-0.5 rounded-lg border border-semantic-warning/30">
                   {formattedCountdown}
                 </span>
               </div>
@@ -248,8 +248,8 @@ export const PaymentConfirmScreen = () => {
                 </div>
               ) : qrError ? (
                 <div className="p-3 text-center space-y-2">
-                  <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
-                  <p className="text-xs text-rose-600 font-medium">{qrError}</p>
+                  <AlertCircle className="w-8 h-8 text-semantic-danger mx-auto" />
+                  <p className="text-xs text-semantic-danger font-medium">{qrError}</p>
                   <button
                     onClick={regenerateQr}
                     className="px-3 py-1.5 bg-cream-300 hover:bg-cream-300 rounded-lg text-xs font-bold text-ink-800 inline-flex items-center gap-1"
@@ -267,7 +267,7 @@ export const PaymentConfirmScreen = () => {
                   <span className={typography.helperInline}>Mengaktifkan paket Pro...</span>
                 </div>
               ) : isExpired ? (
-                <div className="flex flex-col items-center gap-2 text-amber-600">
+                <div className="flex flex-col items-center gap-2 text-semantic-warning">
                   <Clock className="w-8 h-8" />
                   <span className="text-xs font-bold">Kode QR kedaluwarsa</span>
                   <button
@@ -312,7 +312,7 @@ export const PaymentConfirmScreen = () => {
                   data-testid="qris-simulate-paid"
                   onClick={simulatePaid}
                   disabled={isSimulating}
-                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gold-600 hover:bg-gold-700 active:bg-gold-700 dark:bg-gold-700 dark:hover:bg-gold-700/80 dark:active:bg-gold-700/80 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
                 >
                   {isSimulating ? (
                     <>
@@ -327,7 +327,7 @@ export const PaymentConfirmScreen = () => {
                   )}
                 </button>
                 <p className="text-micro text-ink-400 leading-relaxed">
-                  Hanya untuk <span className="font-semibold text-amber-700">sandbox</span>. Di production
+                  Hanya untuk <span className="font-semibold text-semantic-warning">sandbox</span>. Di production
                   tombol ini hilang dan pembayaran diverifikasi lewat webhook Midtrans sungguhan.
                 </p>
               </div>
@@ -373,7 +373,7 @@ export const PaymentConfirmScreen = () => {
               </label>
             </div>
 
-            {error && <p className="text-red-500 text-xs mt-2 font-medium">{error}</p>}
+            {error && <p className="text-semantic-danger text-xs mt-2 font-medium">{error}</p>}
 
             <button
               type="submit"

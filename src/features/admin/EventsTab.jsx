@@ -206,11 +206,11 @@ export const EventsTab = ({
                       className={`mb-4 flex items-start gap-2.5 rounded-2xl border px-3.5 py-3 ${
                         pushStatus.enabled
                           ? 'border-brand-200 bg-brand-50'
-                          : 'border-amber-200 bg-amber-50'
+                          : 'border-semantic-warning/30 bg-semantic-warningLight'
                       }`}
                     >
                       <BellRing
-                        className={`mt-0.5 h-4 w-4 shrink-0 ${pushStatus.enabled ? 'text-brand-700' : 'text-amber-700'}`}
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${pushStatus.enabled ? 'text-brand-700' : 'text-semantic-warning'}`}
                       />
                       <div className="min-w-0 text-xs leading-relaxed">
                         {pushStatus.enabled ? (
@@ -226,8 +226,8 @@ export const EventsTab = ({
                           </>
                         ) : (
                           <>
-                            <p className="font-bold text-amber-900">Notifikasi pengingat belum aktif</p>
-                            <p className="text-amber-800">
+                            <p className="font-bold text-semantic-warning">Notifikasi pengingat belum aktif</p>
+                            <p className="text-semantic-warning/85">
                               Jalankan <code className="font-mono">node scripts/generate-vapid-keys.js</code>,
                               tempel hasilnya ke <code className="font-mono">.env</code>, lalu restart server.
                             </p>
@@ -448,7 +448,7 @@ export const EventsTab = ({
                                 <button
                                   type="button"
                                   onClick={() => deleteEvent(evt)}
-                                  className="p-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition shrink-0 cursor-pointer"
+                                  className="p-2 rounded-xl border border-semantic-danger/30 text-semantic-danger hover:bg-semantic-dangerLight transition shrink-0 cursor-pointer"
                                   title="Hapus agenda ini"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -649,7 +649,7 @@ export const EventsTab = ({
                             <button
                               type="button"
                               onClick={() => deleteEvent(evt)}
-                              className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition cursor-pointer"
+                              className="p-1.5 rounded-lg text-semantic-danger hover:bg-semantic-dangerLight transition cursor-pointer"
                               title="Hapus"
                             >
                               <Trash2 className="h-3.5 w-3.5" />

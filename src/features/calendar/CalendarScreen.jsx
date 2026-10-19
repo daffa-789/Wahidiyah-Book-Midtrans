@@ -76,8 +76,8 @@ export const CalendarScreen = () => {
             </div>
             <div className="flex items-center gap-3 self-start sm:self-auto">
               <NotificationToggle variant="header-compact" />
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-sm shrink-0">
-                <CalendarIcon className="h-5 w-5 text-emerald-200" strokeWidth={1.8} />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cream-50/15 bg-cream-50/10 text-white backdrop-blur-sm shrink-0">
+                <CalendarIcon className="h-5 w-5 text-brand-100" strokeWidth={1.8} />
               </div>
             </div>
           </div>
@@ -267,8 +267,8 @@ export const CalendarScreen = () => {
 
           <div className="space-y-2">
             {agendaError ? (
-              <div className="rounded-2xl border border-dashed border-rose-300 bg-rose-50 p-6 text-center" role="alert">
-                <p className="text-xs font-bold text-rose-700">Agenda gagal dimuat: {agendaError}</p>
+              <div className="rounded-2xl border border-dashed border-semantic-danger/40 bg-semantic-dangerLight p-6 text-center" role="alert">
+                <p className="text-xs font-bold text-semantic-danger">Agenda gagal dimuat: {agendaError}</p>
                 <button type="button" onClick={() => refreshEvents().catch(() => {})} className="mt-3 min-h-6 rounded-xl bg-brand-700 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-brand-700">Coba muat ulang</button>
               </div>
             ) : filteredEvents.length === 0 ? (

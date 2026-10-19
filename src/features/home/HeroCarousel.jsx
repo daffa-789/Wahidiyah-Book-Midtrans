@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { dateLabel, fullDateLabel } from '@lib/date';
 import { layout } from '@lib/styles';
 
@@ -109,13 +109,13 @@ const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
               className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(184,134,11,0.30),transparent_58%)]"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-950/85 via-brand-900/45 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-900/85 via-brand-900/45 to-transparent" />
 
           <div className="absolute inset-0 flex items-end">
             <div className="w-full p-4 sm:p-6 lg:p-8">
               {activeLabel && (
                 <p className="inline-flex items-center gap-1.5 rounded-full bg-gold-500/20 px-2.5 py-1 text-micro font-extrabold uppercase tracking-wider text-gold-300 ring-1 ring-gold-400/40">
-                  <span aria-hidden="true">🗓️</span>
+                  <CalendarDays className="h-3 w-3" aria-hidden="true" />
                   <time dateTime={active.eventDate}>{activeLabel.short}</time>
                   <span className="sr-only"> — {activeLabel.long}</span>
                 </p>
@@ -138,7 +138,7 @@ const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
               type="button"
               onClick={() => goTo(index - 1)}
               aria-label="Banner sebelumnya"
-              className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-brand-950/45 p-2 text-cream-50 backdrop-blur transition hover:bg-brand-950/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 sm:block"
+              className="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-ink-900/45 p-2 text-cream-50 backdrop-blur transition hover:bg-ink-900/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 sm:block"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -146,7 +146,7 @@ const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
               type="button"
               onClick={() => goTo(index + 1)}
               aria-label="Banner berikutnya"
-              className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-brand-950/45 p-2 text-cream-50 backdrop-blur transition hover:bg-brand-950/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 sm:block"
+              className="absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-ink-900/45 p-2 text-cream-50 backdrop-blur transition hover:bg-ink-900/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 sm:block"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -178,7 +178,7 @@ const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
                 type="button"
                 onClick={() => setIsPaused((paused) => !paused)}
                 aria-label={isPaused ? 'Jalankan banner otomatis' : 'Jeda banner otomatis'}
-                className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-cream-300 bg-white px-2.5 py-1 text-caption font-bold text-ink-600 transition hover:bg-cream-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-cream-300 bg-ui-card px-2.5 py-1 text-caption font-bold text-ink-600 transition hover:bg-cream-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               >
                 {isPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
                 <span className="hidden sm:inline">{isPaused ? 'Putar' : 'Jeda'}</span>

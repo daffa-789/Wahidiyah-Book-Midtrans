@@ -31,10 +31,16 @@
     "primary": "#14523A",
     "primaryHover": "#0E3D2C",
     "primaryLight": "#DCEDE4",
+    "qris": {
+      "600": "#E30613",
+      "700": "#C00511"
+    },
     "gold": {
       "300": "#E5C877",
       "400": "#D4AF4F",
-      "500": "#B8860B"
+      "500": "#B8860B",
+      "600": "#96690A",
+      "700": "#7A5608"
     },
     "accent": {
       "gold": "#B8860B"
@@ -68,7 +74,7 @@
     "semantic": {
       "success": "#216B4C",
       "successLight": "#DCEDE4",
-      "warning": "#96690A",
+      "warning": "#7A5608",
       "warningLight": "#FAF0D3",
       "danger": "#A62F26",
       "dangerLight": "#F7E1DF",
@@ -92,7 +98,9 @@
       "gold": {
         "300": "#E9D08A",
         "400": "#D9B44A",
-        "500": "#C99A2E"
+        "500": "#C99A2E",
+        "600": "#B8860B",
+        "700": "#96690A"
       },
       "accent": {
         "gold": "#D9B44A"

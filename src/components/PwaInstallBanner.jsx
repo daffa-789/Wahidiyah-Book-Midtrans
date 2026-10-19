@@ -114,7 +114,7 @@ export const PwaInstallBanner = () => {
         <button
           type="button"
           onClick={handleDismiss}
-          className="p-1 rounded-lg text-cream-300/60 hover:text-white hover:bg-white/10 transition"
+          className="p-1 rounded-lg text-cream-300/60 hover:text-cream-50 hover:bg-cream-50/10 transition"
           aria-label="Tutup banner"
         >
           <X className="w-4 h-4" />

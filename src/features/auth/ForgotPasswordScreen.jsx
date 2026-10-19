@@ -68,7 +68,7 @@ export const ForgotPasswordScreen = () => {
       <section className={layout.authCard}>
         <button type="button" onClick={() => navigateTo('login')} className="mb-6 inline-flex min-h-6 items-center gap-1 px-1 text-xs font-bold text-ink-400 transition hover:text-brand-700"><ArrowLeft className="h-4 w-4" /> Kembali ke masuk</button>
 
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-700"><KeyRound className="h-6 w-6" /></div>
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><KeyRound className="h-6 w-6" /></div>
         <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-ink-900">Atur ulang password</h1>
         <p className={typography.helperRelaxed}>
           {method === 'whatsapp'
@@ -83,11 +83,11 @@ export const ForgotPasswordScreen = () => {
             onClick={() => { setMethod('whatsapp'); setError(''); }}
             className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition ${
               method === 'whatsapp'
-                ? 'bg-white text-emerald-800 shadow-sm'
+                ? 'bg-cream-50 text-brand-800 shadow-sm'
                 : 'text-ink-500 hover:text-ink-800'
             }`}
           >
-            <Phone className="h-3.5 w-3.5 text-emerald-600" />
+            <Phone className="h-3.5 w-3.5 text-brand-600" />
             WhatsApp
           </button>
           <button
@@ -95,7 +95,7 @@ export const ForgotPasswordScreen = () => {
             onClick={() => { setMethod('email'); setError(''); }}
             className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition ${
               method === 'email'
-                ? 'bg-white text-brand-800 shadow-sm'
+                ? 'bg-cream-50 text-brand-800 shadow-sm'
                 : 'text-ink-500 hover:text-ink-800'
             }`}
           >

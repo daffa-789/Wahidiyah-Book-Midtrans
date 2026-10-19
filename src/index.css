@@ -48,6 +48,8 @@
   --gold-300: 229 200 119;
   --gold-400: 212 175 79;
   --gold-500: 184 134 11;
+  --gold-600: 150 105 10;
+  --gold-700: 122 86 8;
   --accent-gold: 184 134 11;
 
   --cream-50: 251 248 243;
@@ -75,7 +77,7 @@
 
   --semantic-success: 33 107 76;
   --semantic-success-light: 220 237 228;
-  --semantic-warning: 150 105 10;
+  --semantic-warning: 122 86 8;
   --semantic-warning-light: 250 240 211;
   --semantic-danger: 166 47 38;
   --semantic-danger-light: 247 225 223;
@@ -120,6 +122,8 @@
   --gold-300: 233 208 138;
   --gold-400: 217 180 74;
   --gold-500: 201 154 46;
+  --gold-600: 184 134 11;
+  --gold-700: 150 105 10;
   --accent-gold: 217 180 74;
 
   --cream-50: 20 19 15;
@@ -706,10 +710,6 @@ body,
   background-color: rgb(244 239 227 / 0.08);
 }
 
-.dark .app-surface .bg-cream-50\/15 {
-  background-color: rgb(244 239 227 / 0.10);
-}
-
 .dark .app-surface .bg-cream-50\/20 {
   background-color: rgb(244 239 227 / 0.12);
 }
@@ -822,116 +822,12 @@ body,
   background-color: #357154;
 }
 
-/* 8. Lencana status (warna bawaan Tailwind) → versi malam yang lembut */
-.dark .app-surface .bg-rose-50,
-.dark .app-surface .bg-rose-50\/90,
-.dark .app-surface .hover\:bg-rose-50:hover {
-  background-color: rgb(240 169 162 / 0.12);
-}
-
-.dark .app-surface .bg-rose-100,
-.dark .app-surface .hover\:bg-rose-100:hover {
-  background-color: rgb(240 169 162 / 0.18);
-}
-
-.dark .app-surface .text-rose-500,
-.dark .app-surface .text-rose-600,
-.dark .app-surface .text-rose-700,
-.dark .app-surface .text-rose-800,
-.dark .app-surface .text-rose-900 {
-  color: #F0A9A2;
-}
-
-.dark .app-surface .border-rose-200,
-.dark .app-surface .border-rose-200\/70,
-.dark .app-surface .border-rose-300 {
-  border-color: rgb(240 169 162 / 0.35);
-}
-
-.dark .app-surface .bg-amber-50,
-.dark .app-surface .bg-amber-50\/90 {
-  background-color: rgb(232 199 122 / 0.12);
-}
-
-.dark .app-surface .bg-amber-100 {
-  background-color: rgb(232 199 122 / 0.18);
-}
-
-.dark .app-surface .text-amber-600,
-.dark .app-surface .text-amber-700,
-.dark .app-surface .text-amber-800,
-.dark .app-surface .text-amber-900 {
-  color: #E8C77A;
-}
-
-.dark .app-surface .border-amber-200,
-.dark .app-surface .border-amber-200\/70,
-.dark .app-surface .border-amber-300 {
-  border-color: rgb(232 199 122 / 0.32);
-}
-
-.dark .app-surface .bg-blue-50,
-.dark .app-surface .bg-blue-50\/90 {
-  background-color: rgb(156 199 236 / 0.12);
-}
-
-.dark .app-surface .text-blue-600,
-.dark .app-surface .text-blue-700,
-.dark .app-surface .text-blue-800 {
-  color: #9CC7EC;
-}
-
-.dark .app-surface .border-blue-100,
-.dark .app-surface .border-blue-200,
-.dark .app-surface .border-blue-200\/70 {
-  border-color: rgb(156 199 236 / 0.30);
-}
-
-.dark .app-surface .bg-red-50 {
-  background-color: rgb(240 169 162 / 0.12);
-}
-
-.dark .app-surface .bg-red-100 {
-  background-color: rgb(240 169 162 / 0.18);
-}
-
-.dark .app-surface .text-red-500,
-.dark .app-surface .text-red-600 {
-  color: #F0A9A2;
-}
-
-.dark .app-surface .border-red-100 {
-  border-color: rgb(240 169 162 / 0.30);
-}
-
-.dark .app-surface .bg-emerald-100 {
-  background-color: rgb(111 196 155 / 0.18);
-}
-
-.dark .app-surface .text-emerald-700,
-.dark .app-surface .text-emerald-800 {
-  color: #6FC49B;
-}
-
-.dark .app-surface .border-emerald-300 {
-  border-color: rgb(111 196 155 / 0.32);
-}
-
-.dark .app-surface .bg-indigo-50\/90 {
-  background-color: rgb(165 180 252 / 0.12);
-}
-
-.dark .app-surface .text-indigo-700 {
-  color: #B4C0F5;
-}
-
-.dark .app-surface .border-indigo-200\/70 {
-  border-color: rgb(165 180 252 / 0.30);
-}
-
 /* ══════════════════════════════════════════════════════════════════════════
    MODE MALAM — KELAS KUSTOM (index.css)
-   ══════════════════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════════════════
+   Lencana status & panel semantik kini memakai token semantic-* yang sudah
+   sadar-tema, sehingga blok override lama (rose/amber/blue/red/emerald/
+   indigo) tidak lagi diperlukan dan telah dibuang. */
 
 .dark .app-surface .auth-shell {
   background:

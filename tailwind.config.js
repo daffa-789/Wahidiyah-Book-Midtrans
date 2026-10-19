@@ -52,10 +52,13 @@ export default {
       screens: { ...tokens.breakpoints },
       colors: {
         brand: scale('brand', ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900']),
-        gold: scale('gold', ['300', '400', '500']),
+        gold: scale('gold', ['300', '400', '500', '600', '700']),
         cream: scale('cream', ['50', '100', '200', '300', '400']),
         ink: scale('ink', ['200', '300', '400', '500', '600', '700', '800', '900']),
         accent: { gold: v('accent-gold') },
+        /* QRIS red — token brand pihak ketiga yang SENGAJA tetap (fixed),
+           tidak mengikuti tema (lihat DESIGN.md 1.5 whitelist). */
+        qris: tokens.colors.qris,
         ui: {
           background: v('ui-bg'),
           surface: v('ui-surface'),

@@ -18,7 +18,7 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-cream-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-cream-200 bg-cream-50 print:hidden">
@@ -44,8 +44,8 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
             </div>
             <p className="text-xs text-ink-400 font-medium">Perpustakaan Digital & Dokumen Pengamalan Wahidiyah</p>
             <div className="pt-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black tracking-wide border border-emerald-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-semantic-successLight text-semantic-success text-xs font-black tracking-wide border border-semantic-success/30">
+                <CheckCircle2 className="w-4 h-4 text-semantic-success" />
                 PEMBAYARAN LUNAS (SETTLED)
               </span>
             </div>

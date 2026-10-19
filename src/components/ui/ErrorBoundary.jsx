@@ -29,8 +29,8 @@ export class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-cream-100 flex items-center justify-center p-6">
-          <div className="w-full max-w-md bg-cream-50 rounded-3xl border border-red-100 shadow-2xl p-7 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4 border border-red-100 shadow-sm">
+          <div className="w-full max-w-md bg-cream-50 rounded-3xl border border-semantic-danger/25 shadow-2xl p-7 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-semantic-dangerLight text-semantic-danger flex items-center justify-center mx-auto mb-4 border border-semantic-danger/30 shadow-sm">
               <AlertTriangle className="w-7 h-7" />
             </div>
             <h2 className="text-xl font-black text-ink-900 mb-2">Terjadi Kendala Memuat Layar</h2>

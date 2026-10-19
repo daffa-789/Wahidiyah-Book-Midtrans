@@ -50,11 +50,11 @@ export const ServerStatusBanner = () => {
   return (
     <div
       role="alert"
-      className="mb-5 p-3.5 rounded-2xl border transition-all duration-200 text-xs bg-rose-50/90 border-rose-200 text-rose-900 shadow-sm"
+      className="mb-5 p-3.5 rounded-2xl border transition-all duration-200 text-xs bg-semantic-dangerLight border-semantic-danger/30 text-semantic-danger shadow-sm"
     >
       <div className="flex items-start justify-between gap-2.5">
         <div className={layout.rowStartGap}>
-          <div className="p-1.5 rounded-xl shrink-0 mt-0.5 bg-rose-100 text-rose-700">
+          <div className="p-1.5 rounded-xl shrink-0 mt-0.5 bg-semantic-danger/15 text-semantic-danger">
             <ServerCrash className="w-4 h-4" />
           </div>
           <div>
@@ -70,7 +70,7 @@ export const ServerStatusBanner = () => {
           onClick={checkHealth}
           disabled={isRefreshing}
           title="Periksa Ulang Status Koneksi"
-          className="p-1.5 hover:bg-black/5 rounded-lg text-ink-400 hover:text-ink-800 transition shrink-0"
+          className="p-1.5 hover:bg-ink-900/5 rounded-lg text-ink-400 hover:text-ink-800 transition shrink-0"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-brand-600' : ''}`} />
         </button>

@@ -209,8 +209,8 @@ export const EditProfileScreen = () => {
 
 
           {errorMessage && (
-            <div role="alert" className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-800 page-transition">
-              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" strokeWidth={2} />
+            <div role="alert" className="flex items-center gap-2.5 rounded-xl border border-semantic-danger/30 bg-semantic-dangerLight p-3 text-xs font-semibold text-semantic-danger page-transition">
+              <AlertCircle className="h-4 w-4 shrink-0 text-semantic-danger" strokeWidth={2} />
               <span>{errorMessage}</span>
             </div>
           )}

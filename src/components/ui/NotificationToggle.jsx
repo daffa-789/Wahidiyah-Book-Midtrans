@@ -70,8 +70,8 @@ export const NotificationToggle = ({ variant = 'panel', className = '' }) => {
     const isHeader = variant === 'header-compact';
     const compactClass = isHeader
       ? (isOn
-          ? 'border-emerald-400/40 bg-emerald-800/80 text-emerald-100 hover:bg-emerald-800 shadow-sm'
-          : 'border-white/20 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm')
+          ? 'border-brand-400/40 bg-brand-700/80 text-brand-100 hover:bg-brand-700 shadow-sm'
+          : 'border-cream-50/20 bg-cream-50/10 text-white hover:bg-cream-50/20 backdrop-blur-sm')
       : buttonClass;
 
     return (

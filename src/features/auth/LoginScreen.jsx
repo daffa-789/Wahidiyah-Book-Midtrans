@@ -130,8 +130,8 @@ export const LoginScreen = () => {
 
           {error && <div role="alert" className="auth-alert"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
           {notice && (
-            <div role="status" className="flex items-start gap-2 rounded-2xl border border-blue-200 bg-blue-50/90 p-3 text-xs font-semibold text-blue-800 page-transition">
-              <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
+            <div role="status" className="flex items-start gap-2 rounded-2xl border border-semantic-info/30 bg-semantic-infoLight p-3 text-xs font-semibold text-semantic-info page-transition">
+              <Info className="h-4 w-4 shrink-0 text-semantic-info mt-0.5" />
               <span>{notice}</span>
             </div>
           )}
@@ -154,7 +154,7 @@ export const LoginScreen = () => {
           type="button"
           onClick={handleGoogleLogin}
           disabled={isSubmitting || isGoogleSubmitting}
-          className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-cream-300 bg-white px-4 py-3 text-sm font-semibold text-ink-700 transition hover:border-cream-400 hover:bg-cream-50 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-cream-300 bg-ui-card px-4 py-3 text-sm font-semibold text-ink-700 transition hover:border-cream-400 hover:bg-cream-50 disabled:opacity-50"
         >
           {isGoogleSubmitting ? (
             <><span className="auth-spinner" />Mengarahkan ke Google…</>

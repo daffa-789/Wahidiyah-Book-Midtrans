@@ -17,8 +17,8 @@ export const AuthStatus = ({ error, errorTitle, loadingText, onBack }) => {
       <main className={layout.authShell}>
         <section className={layout.authCard}>
           <div className="flex flex-col items-center text-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-              <AlertCircle className="h-6 w-6 text-red-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-semantic-dangerLight">
+              <AlertCircle className="h-6 w-6 text-semantic-danger" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-ink-900">{errorTitle}</h2>

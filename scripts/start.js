@@ -6,7 +6,6 @@ import fs from 'fs';
 import net from 'net';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import pc from 'picocolors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

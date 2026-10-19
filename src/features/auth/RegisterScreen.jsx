@@ -134,11 +134,11 @@ export const RegisterScreen = () => {
                 onClick={() => { setDeliveryMethod('whatsapp'); setError(''); }}
                 className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition border ${
                   deliveryMethod === 'whatsapp'
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-400 shadow-xs'
-                    : 'bg-white text-ink-500 border-cream-300 hover:bg-cream-100'
+                    ? 'bg-brand-50 text-brand-800 border-brand-400 shadow-xs'
+                    : 'bg-ui-card text-ink-500 border-cream-300 hover:bg-cream-100'
                 }`}
               >
-                <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                <Phone className="h-3.5 w-3.5 text-brand-600" />
                 WhatsApp
               </button>
               <button
@@ -147,7 +147,7 @@ export const RegisterScreen = () => {
                 className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition border ${
                   deliveryMethod === 'email'
                     ? 'bg-brand-50 text-brand-800 border-brand-400 shadow-xs'
-                    : 'bg-white text-ink-500 border-cream-300 hover:bg-cream-100'
+                    : 'bg-ui-card text-ink-500 border-cream-300 hover:bg-cream-100'
                 }`}
               >
                 <Mail className="h-3.5 w-3.5 text-brand-600" />

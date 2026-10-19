@@ -366,9 +366,9 @@ export const AdminDashboard = () => {
       <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
 
           {error && (
-            <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-semantic-danger/30 bg-semantic-dangerLight px-4 py-3 text-sm font-medium text-semantic-danger">
               <span>{error}</span>
-              <button type="button" onClick={loadDashboard} className="min-h-6 rounded-xl border border-rose-300 bg-cream-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100">
+              <button type="button" onClick={loadDashboard} className="min-h-6 rounded-xl border border-semantic-danger/40 bg-cream-50 px-3 py-1.5 text-xs font-bold text-semantic-danger transition hover:bg-semantic-dangerLight">
                 Coba muat ulang
               </button>
             </div>
@@ -541,7 +541,7 @@ export const AdminDashboard = () => {
                 </div>
               </div>
               <div className="overflow-hidden rounded-3xl border border-cream-300 bg-cream-50 shadow-sm">
-                {books.length === 0 ? <div className="p-12 text-center"><BookOpen className={controls.emptyIcon} /><p className="mt-3 font-bold text-ink-700">Koleksi masih kosong</p><p className={typography.helper}>Tambahkan buku pertama beserta thumbnail dan lampirannya.</p></div> : <div className={layout.divider}>{books.map((book) => <div key={book.id} className="flex flex-wrap items-center gap-4 p-4"><div className="h-14 w-11 overflow-hidden rounded-xl bg-gradient-to-tr from-brand-800 to-brand-800 flex items-center justify-center text-white shrink-0 shadow-sm">{book.coverUrl ? <img src={book.coverUrl} alt={book.title} className={layout.media} onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <BookOpen className="h-5 w-5 text-white/80" />}</div><div className="min-w-[180px] flex-1"><p className="font-bold text-ink-900">{book.title}</p><p className={typography.helperTight}>{book.author} • {book.category}</p><p className="mt-1 text-caption text-ink-500">{book.contentName || 'Tanpa lampiran'} {book.isLocked ? '• Pro' : ''}</p></div><button type="button" onClick={() => deleteBook(book)} className="rounded-xl border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50" title="Hapus buku"><Trash2 className="h-4 w-4" /></button></div>)}</div>}
+                {books.length === 0 ? <div className="p-12 text-center"><BookOpen className={controls.emptyIcon} /><p className="mt-3 font-bold text-ink-700">Koleksi masih kosong</p><p className={typography.helper}>Tambahkan buku pertama beserta thumbnail dan lampirannya.</p></div> : <div className={layout.divider}>{books.map((book) => <div key={book.id} className="flex flex-wrap items-center gap-4 p-4"><div className="h-14 w-11 overflow-hidden rounded-xl bg-gradient-to-tr from-brand-800 to-brand-800 flex items-center justify-center text-white shrink-0 shadow-sm">{book.coverUrl ? <img src={book.coverUrl} alt={book.title} className={layout.media} onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <BookOpen className="h-5 w-5 text-white/80" />}</div><div className="min-w-[180px] flex-1"><p className="font-bold text-ink-900">{book.title}</p><p className={typography.helperTight}>{book.author} • {book.category}</p><p className="mt-1 text-caption text-ink-500">{book.contentName || 'Tanpa lampiran'} {book.isLocked ? '• Pro' : ''}</p></div><button type="button" onClick={() => deleteBook(book)} className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight" title="Hapus buku"><Trash2 className="h-4 w-4" /></button></div>)}</div>}
               </div>
             </section>
           )}
@@ -582,8 +582,8 @@ export const AdminDashboard = () => {
                     <div className="flex items-center justify-between text-xs pt-2.5 border-t border-cream-200/80">
                       <div className="flex items-center gap-2">
                         {item.loginMethod === 'google' ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-micro font-bold text-blue-700 border border-blue-100">
-                            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> Google
+                          <span className="inline-flex items-center gap-1 rounded-full bg-semantic-infoLight px-2 py-0.5 text-micro font-bold text-semantic-info border border-semantic-info/30">
+                            <span className="h-1.5 w-1.5 rounded-full bg-semantic-info" /> Google
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-cream-200 px-2 py-0.5 text-micro font-bold text-ink-600 border border-cream-300/60">
@@ -634,8 +634,8 @@ export const AdminDashboard = () => {
                         </td>
                         <td className="px-4 py-3">
                           {item.loginMethod === 'google' ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-100">
-                              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-semantic-infoLight px-2.5 py-1 text-xs font-bold text-semantic-info border border-semantic-info/30">
+                              <span className="h-1.5 w-1.5 rounded-full bg-semantic-info" />
                               Google
                             </span>
                           ) : (

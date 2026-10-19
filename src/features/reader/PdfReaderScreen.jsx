@@ -173,7 +173,7 @@ export const PdfReaderScreen = () => {
 
   const lockedCard = (
     <div className="reader-empty-state">
-      <Lock className="mx-auto h-9 w-9 text-amber-400" />
+      <Lock className="mx-auto h-9 w-9 text-gold-400" />
       <h2 className="mt-4 text-lg font-black text-white">Konten khusus pembaca Pro</h2>
       <p className="mt-2 max-w-md text-sm leading-relaxed text-cream-300">
         Aktifkan paket Pro untuk membuka kitab eksklusif ini.
@@ -377,7 +377,7 @@ export const PdfReaderScreen = () => {
         <div className="sticky top-16 z-20 mx-auto my-2 max-w-md w-full px-4 animate-in fade-in slide-in-from-top-3">
           <div className="flex items-center justify-between gap-3 bg-brand-800 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-brand-600">
             <div className="flex items-center gap-2 text-xs">
-              <Bookmark className="h-4 w-4 text-amber-300" />
+              <Bookmark className="h-4 w-4 text-gold-300" />
               <span>Terakhir Anda membaca di <strong>Halaman {resumePrompt.page}</strong></span>
             </div>
             <div className="flex items-center gap-1.5">

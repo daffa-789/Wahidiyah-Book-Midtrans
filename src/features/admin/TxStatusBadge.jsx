@@ -6,10 +6,10 @@
  */
 const STATUS_MAP = {
   success: { label: 'Sukses', className: 'bg-brand-50 text-brand-700 border border-brand-200' },
-  pending: { label: 'Pending', className: 'bg-amber-50 text-amber-700 border border-amber-200' }
+  pending: { label: 'Pending', className: 'bg-semantic-warningLight text-semantic-warning border border-semantic-warning/30' }
 };
 
-const FALLBACK = { label: 'Gagal', className: 'bg-rose-50 text-rose-700 border border-rose-200' };
+const FALLBACK = { label: 'Gagal', className: 'bg-semantic-dangerLight text-semantic-danger border border-semantic-danger/30' };
 
 export const TxStatusBadge = ({ status }) => {
   const { label, className } = STATUS_MAP[status] || FALLBACK;

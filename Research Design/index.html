@@ -1,0 +1,3086 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wahidiyah Book — Research Design, Themes & Wireframe Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ══════════════════════════════════════════════════════════════════════════
+       1. CSS VARIABLES & THEME ENGINE (Default: Editorial Elegan - Emerald)
+       ══════════════════════════════════════════════════════════════════════════ */
+    :root {
+      /* Theme 1 Default: Editorial Elegan (Zamrud + Krem + Emas) */
+      --primary: #14523A;
+      --primary-hover: #0E3D2C;
+      --primary-light: #DCEDE4;
+      --primary-rgb: 20, 82, 58;
+
+      --accent: #B8860B;
+      --accent-hover: #96690A;
+      --accent-light: #FBF4E2;
+      --accent-rgb: 184, 134, 11;
+
+      --bg: #FBF8F3;
+      --surface: #F7F2E9;
+      --card: #FFFDFA;
+      --border: #E4D9C6;
+      --border-subtle: #EDE5D8;
+
+      --ink-primary: #1D1B17;
+      --ink-secondary: #5A544C;
+      --ink-muted: #7C756C;
+      --ink-inverted: #FFFFFF;
+
+      --sidebar-bg: #141210;
+      --sidebar-text: #E4D9C6;
+      --sidebar-active: #14523A;
+      --sidebar-hover: rgba(255, 255, 255, 0.06);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+      --radius-full: 9999px;
+
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-display: 'Newsreader', Georgia, serif;
+      --font-arabic: 'Amiri', 'Traditional Arabic', serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-sm: 0 1px 2px rgba(29, 27, 23, 0.04);
+      --shadow-md: 0 4px 12px -2px rgba(29, 27, 23, 0.08), 0 2px 4px -1px rgba(29, 27, 23, 0.03);
+      --shadow-lg: 0 12px 28px -6px rgba(29, 27, 23, 0.12), 0 4px 8px -2px rgba(29, 27, 23, 0.04);
+      --shadow-xl: 0 24px 48px -12px rgba(29, 27, 23, 0.18);
+
+      --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+      --transition-fast: 160ms var(--ease-spring);
+      --transition-normal: 240ms var(--ease-spring);
+    }
+
+    /* THEME PRESETS */
+    [data-theme="modern-sage"] {
+      --primary: #2D5A46;
+      --primary-hover: #1F3E30;
+      --primary-light: #E4EDE7;
+      --primary-rgb: 45, 90, 70;
+      --accent: #A37D45;
+      --accent-hover: #8C6834;
+      --accent-light: #F6F1EA;
+      --bg: #F8F7F4;
+      --surface: #EFECE6;
+      --card: #FFFFFF;
+      --border: #DFDDD7;
+      --border-subtle: #EBE9E4;
+      --ink-primary: #1A201D;
+      --ink-secondary: #525E57;
+      --ink-muted: #7E8B84;
+      --sidebar-bg: #161D1A;
+    }
+
+    [data-theme="royal-lapis"] {
+      --primary: #1E3A5F;
+      --primary-hover: #142740;
+      --primary-light: #DBE6F2;
+      --primary-rgb: 30, 58, 95;
+      --accent: #C88A2C;
+      --accent-hover: #B0741E;
+      --accent-light: #FAF2E6;
+      --bg: #F9F9F6;
+      --surface: #F1F2EE;
+      --card: #FFFFFF;
+      --border: #DEE2E6;
+      --border-subtle: #E9ECEF;
+      --ink-primary: #151B22;
+      --ink-secondary: #4A5568;
+      --ink-muted: #718096;
+      --sidebar-bg: #111720;
+    }
+
+    [data-theme="midnight-oasis"] {
+      --primary: #34D399;
+      --primary-hover: #10B981;
+      --primary-light: #163628;
+      --primary-rgb: 52, 211, 153;
+      --accent: #F3C766;
+      --accent-hover: #E5B64E;
+      --accent-light: #2C2616;
+      --bg: #0C1612;
+      --surface: #13221C;
+      --card: #182C24;
+      --border: #243E33;
+      --border-subtle: #1C332A;
+      --ink-primary: #E8ECE9;
+      --ink-secondary: #A3B5AC;
+      --ink-muted: #6E8076;
+      --sidebar-bg: #080E0C;
+      --sidebar-text: #A3B5AC;
+      --sidebar-active: #163628;
+    }
+
+    [data-theme="academic-litho"] {
+      --primary: #181818;
+      --primary-hover: #000000;
+      --primary-light: #E6E4DD;
+      --primary-rgb: 24, 24, 24;
+      --accent: #8C6239;
+      --accent-hover: #734F2C;
+      --accent-light: #F4EFEA;
+      --bg: #F5F3EF;
+      --surface: #EBE7DF;
+      --card: #FAFAF7;
+      --border: #DCD7CB;
+      --border-subtle: #E6E2D8;
+      --ink-primary: #161616;
+      --ink-secondary: #57544E;
+      --ink-muted: #827E77;
+      --sidebar-bg: #161616;
+    }
+
+    [data-theme="terracotta-olive"] {
+      --primary: #3B4E3E;
+      --primary-hover: #2B3B2E;
+      --primary-light: #E6EDE7;
+      --primary-rgb: 59, 78, 62;
+      --accent: #B4533C;
+      --accent-hover: #9A3F2A;
+      --accent-light: #F9EBE8;
+      --bg: #FAF7F2;
+      --surface: #F2ECE2;
+      --card: #FFFFFF;
+      --border: #E2D8CC;
+      --border-subtle: #ECE4D9;
+      --ink-primary: #231E1B;
+      --ink-secondary: #5E534D;
+      --ink-muted: #8A7E77;
+      --sidebar-bg: #1F1916;
+    }
+
+    /* DARK MODE OVERRIDES (When toggled via button) */
+    .dark-mode {
+      --bg: #14130F !important;
+      --surface: #1B1A14 !important;
+      --card: #201E17 !important;
+      --border: #443E33 !important;
+      --border-subtle: #2D2A22 !important;
+      --ink-primary: #F4EFE3 !important;
+      --ink-secondary: #C0B7A4 !important;
+      --ink-muted: #948B79 !important;
+      --sidebar-bg: #0D0C0A !important;
+      --sidebar-text: #D5CCB9 !important;
+      --sidebar-hover: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       2. BASE & RESET
+       ══════════════════════════════════════════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--ink-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color var(--transition-normal), color var(--transition-normal);
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       3. TOP CONTROL & RESEARCH LABORATORY BAR
+       ══════════════════════════════════════════════════════════════════════════ */
+    .lab-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .lab-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-svg-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+
+    .brand-titles h1 {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink-primary);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      background: var(--primary-light);
+      color: var(--primary);
+      letter-spacing: 0.04em;
+    }
+
+    .brand-titles p {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+    }
+
+    .lab-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .lab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 13px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink-primary);
+      transition: all var(--transition-fast);
+      user-select: none;
+    }
+
+    .lab-btn:hover {
+      background: var(--card);
+      border-color: var(--ink-muted);
+      transform: translateY(-1px);
+    }
+
+    .lab-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    .lab-btn-accent {
+      background: var(--accent);
+      color: #FFFFFF;
+      border-color: var(--accent);
+    }
+    .lab-btn-accent:hover {
+      background: var(--accent-hover);
+      color: #FFFFFF;
+    }
+
+    .theme-select {
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--ink-primary);
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* MINI SHOLAWAT AUDIO PILL */
+    .audio-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px 4px 6px;
+      border-radius: var(--radius-full);
+      background: var(--primary-light);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .audio-pill:hover {
+      transform: scale(1.02);
+    }
+    .play-btn-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .waveform-bars {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 12px;
+    }
+    .waveform-bar {
+      width: 2px;
+      height: 100%;
+      background: var(--primary);
+      border-radius: 1px;
+      animation: wave 1.2s ease-in-out infinite alternate;
+    }
+    .waveform-bar:nth-child(2) { animation-delay: 0.2s; height: 60%; }
+    .waveform-bar:nth-child(3) { animation-delay: 0.4s; height: 90%; }
+    .waveform-bar:nth-child(4) { animation-delay: 0.1s; height: 40%; }
+    @keyframes wave {
+      0% { transform: scaleY(0.3); }
+      100% { transform: scaleY(1); }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       4. MAIN APP LAYOUT (Sidebar + Main Content Area)
+       ══════════════════════════════════════════════════════════════════════════ */
+    .app-viewport-wrapper {
+      min-height: calc(100vh - 55px);
+      display: flex;
+      justify-content: center;
+      padding: 0;
+      transition: padding var(--transition-normal);
+    }
+
+    /* VIEWPORT: DESKTOP FULL */
+    .view-desktop {
+      width: 100%;
+      display: flex;
+    }
+
+    /* VIEWPORT: MOBILE PHONE FRAME */
+    .view-mobile-frame {
+      width: 420px;
+      max-width: 100%;
+      margin: 24px auto;
+      height: 860px;
+      background: var(--bg);
+      border: 12px solid #1E1D1A;
+      border-radius: 46px;
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .mobile-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 24px;
+      background: #1E1D1A;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .notch-camera {
+      width: 10px;
+      height: 10px;
+      background: #090909;
+      border-radius: 50%;
+    }
+    .mobile-status-bar {
+      height: 38px;
+      padding: 8px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      z-index: 40;
+    }
+
+    /* SIDEBAR (Desktop) */
+    .sidebar {
+      width: 256px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.07);
+      transition: width var(--transition-normal);
+      user-select: none;
+      position: relative;
+    }
+
+    .sidebar.collapsed {
+      width: 72px;
+    }
+
+    .sidebar-header {
+      padding: 20px 18px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-brand-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .sidebar-brand-text {
+      white-space: nowrap;
+      transition: opacity var(--transition-fast);
+    }
+    .sidebar.collapsed .sidebar-brand-text {
+      opacity: 0;
+      display: none;
+    }
+
+    .sidebar-brand-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.01em;
+    }
+    .sidebar-brand-sub {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-toggle-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.7);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .sidebar-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFFFFF;
+    }
+
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .nav-section-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.4);
+      padding: 0 10px;
+      margin-bottom: 6px;
+      white-space: nowrap;
+    }
+    .sidebar.collapsed .nav-section-title {
+      text-align: center;
+      padding: 0;
+      font-size: 9px;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .nav-item-btn {
+      width: 100%;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.72);
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: left;
+      position: relative;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .nav-item-btn:hover {
+      background: var(--sidebar-hover);
+      color: #FFFFFF;
+    }
+
+    .nav-item-btn.active {
+      background: var(--sidebar-active);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    .nav-item-btn.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3.5px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-badge-pill {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .sidebar.collapsed .nav-item-btn {
+      justify-content: center;
+      padding: 0;
+    }
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .nav-badge-pill {
+      display: none;
+    }
+
+    /* SIDEBAR USER FOOTER */
+    .sidebar-footer {
+      padding: 14px 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .user-avatar-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .user-meta {
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .user-name {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+    .user-role-badge {
+      font-size: 10px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .sidebar.collapsed .user-meta {
+      display: none;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       5. CONTENT STAGE (Screens Container)
+       ══════════════════════════════════════════════════════════════════════════ */
+    .content-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--bg);
+      position: relative;
+    }
+
+    /* TOP APP HEADER */
+    .app-header {
+      padding: 14px 28px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .header-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    .header-breadcrumb strong {
+      color: var(--ink-primary);
+      font-weight: 700;
+    }
+    .header-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 7px 14px;
+      width: 280px;
+      max-width: 100%;
+    }
+    .header-search input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 13px;
+      color: var(--ink-primary);
+      width: 100%;
+    }
+    .header-search kbd {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 5px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--ink-muted);
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 6px #10B981;
+    }
+
+    /* SCREEN CONTAINER */
+    .screen-panel {
+      display: none;
+      padding: 28px;
+      animation: fadeIn 220ms ease;
+    }
+    .screen-panel.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* MOBILE BOTTOM NAV BAR (Rendered inside mobile frame or on small viewports) */
+    .mobile-bottom-nav {
+      display: none;
+      position: sticky;
+      bottom: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 8px 12px 14px;
+      z-index: 60;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+    }
+    .view-mobile-frame .mobile-bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .view-mobile-frame .sidebar {
+      display: none !important;
+    }
+    .view-mobile-frame .app-header {
+      padding: 10px 16px;
+    }
+    .view-mobile-frame .screen-panel {
+      padding: 16px;
+    }
+    .mob-nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: transparent;
+      border: none;
+      color: var(--ink-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+    }
+    .mob-nav-btn.active {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .mob-nav-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       6. SCREEN 1: BERANDA & KATALOG BUKU
+       ══════════════════════════════════════════════════════════════════════════ */
+    .hero-banner {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #FFFFFF;
+      border-radius: var(--radius-xl);
+      padding: 32px 36px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hero-content {
+      max-width: 620px;
+      z-index: 2;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(255, 255, 255, 0.16);
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+    .hero-desc {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-white {
+      background: #FFFFFF;
+      color: var(--primary);
+      padding: 9px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+    }
+    .btn-white:hover {
+      background: var(--surface);
+      transform: translateY(-1px);
+    }
+    .btn-outline-white {
+      background: transparent;
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 9px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* QUICK ACTION BAR */
+    .quick-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .quick-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-fast);
+    }
+    .quick-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .quick-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .quick-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+    .quick-sub {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+    }
+
+    /* CATEGORIES BAR */
+    .category-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+    .cat-pill {
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--card);
+      border: 1px solid var(--border);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .cat-pill:hover,
+    .cat-pill.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    /* BOOKS GRID */
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 20px;
+    }
+    .book-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-normal);
+      position: relative;
+    }
+    .book-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+    .book-cover {
+      width: 100%;
+      aspect-ratio: 3 / 4.2;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #1C2621, #0E1612);
+      color: #FFFFFF;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 3px 0 6px rgba(0,0,0,0.4), 0 3px 10px rgba(0,0,0,0.15);
+      border-left: 3px solid rgba(255, 255, 255, 0.2);
+    }
+    .book-spine-line {
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .book-badge-lock {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--accent);
+      color: #FFFFFF;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .book-cover-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-top: 24px;
+    }
+    .book-cover-author {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .book-info {
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .book-cat-tag {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .book-main-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .book-meta {
+      font-size: 11px;
+      color: var(--ink-muted);
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       7. SCREEN 2: DIGITAL PDF READER WIREFRAME
+       ══════════════════════════════════════════════════════════════════════════ */
+    .reader-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+    }
+    .reader-toolbar {
+      padding: 10px 18px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .reader-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .reader-paper {
+      max-width: 800px;
+      margin: 32px auto;
+      background: #FFFEFC;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 56px 64px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      color: #1A1A18;
+      line-height: 1.8;
+      font-size: 15.5px;
+    }
+    .reader-paper[data-paper="sepia"] {
+      background: #F4ECD8;
+      color: #2F2B20;
+      border-color: #DFD3BC;
+    }
+    .reader-paper[data-paper="night"] {
+      background: #141615;
+      color: #DDE2DE;
+      border-color: #262E2A;
+    }
+    .reader-arabic-box {
+      font-family: var(--font-arabic);
+      font-size: 26px;
+      line-height: 2.2;
+      text-align: right;
+      direction: rtl;
+      padding: 20px 0;
+      color: var(--primary);
+      border-bottom: 1px dashed var(--border);
+      margin-bottom: 24px;
+    }
+    .reader-paper[data-paper="night"] .reader-arabic-box {
+      color: #34D399;
+    }
+    .reader-translation {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-style: italic;
+      color: var(--ink-secondary);
+      margin-bottom: 20px;
+    }
+    .reader-footnote {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+    .reader-scrubber {
+      padding: 12px 24px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .scrubber-slider {
+      flex: 1;
+      accent-color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       8. SCREEN 3: PRO MEMBERSHIP & MIDTRANS QRIS FLOW
+       ══════════════════════════════════════════════════════════════════════════ */
+    .pro-header-banner {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 36px;
+    }
+    .pro-header-banner h2 {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin-bottom: 8px;
+    }
+    .pro-header-banner p {
+      font-size: 14.5px;
+      color: var(--ink-muted);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .price-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .price-card.featured {
+      border: 2px solid var(--accent);
+      box-shadow: var(--shadow-lg);
+    }
+    .price-featured-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 14px;
+      border-radius: var(--radius-full);
+    }
+    .price-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink-primary);
+      margin-bottom: 6px;
+    }
+    .price-amount {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    .price-period {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-bottom: 20px;
+    }
+    .features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+    .feature-item {
+      font-size: 13px;
+      color: var(--ink-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .check-icon {
+      color: #10B981;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .btn-checkout {
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      background: var(--primary);
+      color: #FFFFFF;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-checkout:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    /* MIDTRANS QRIS SIMULATOR MODAL / CARD */
+    .qris-box {
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+    .qris-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 18px;
+    }
+    .qris-logo {
+      font-weight: 900;
+      font-size: 18px;
+      color: #EA2127;
+      letter-spacing: -0.02em;
+    }
+    .qris-timer {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #D97706;
+      background: #FEF3C7;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .qris-code-frame {
+      width: 220px;
+      height: 220px;
+      margin: 0 auto 18px;
+      background: #FFFFFF;
+      border: 2px solid #E5E7EB;
+      border-radius: var(--radius-lg);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .qris-amount-tag {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      margin-bottom: 4px;
+    }
+    .qris-amount-val {
+      font-size: 24px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--ink-primary);
+      margin-bottom: 18px;
+    }
+    .btn-simulate-pay {
+      background: #10B981;
+      color: #FFFFFF;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 13.5px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+    }
+    .btn-simulate-pay:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       9. SCREEN 4: KALENDER KEGIATAN & JADWAL MUJAHADAH
+       ══════════════════════════════════════════════════════════════════════════ */
+    .calendar-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+    }
+    @media (max-width: 860px) {
+      .calendar-layout { grid-template-columns: 1fr; }
+    }
+    .cal-matrix-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .cal-matrix-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+    .cal-day-head {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      padding-bottom: 6px;
+    }
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition-fast);
+    }
+    .cal-cell:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .cal-cell.today {
+      border: 2px solid var(--primary);
+      font-weight: 800;
+    }
+    .cal-cell.has-event::after {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: absolute;
+      bottom: 4px;
+    }
+    .event-cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .event-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .event-time-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      width: fit-content;
+    }
+    .event-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+    .event-loc {
+      font-size: 12px;
+      color: var(--ink-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       10. SCREEN 5: ADMIN MANAGEMENT DASHBOARD
+       ══════════════════════════════════════════════════════════════════════════ */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+    .kpi-title {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .kpi-val {
+      font-size: 26px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--ink-primary);
+    }
+    .kpi-trend {
+      font-size: 11px;
+      color: #10B981;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .admin-table-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .table-header-bar {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    .admin-table th {
+      background: var(--surface);
+      padding: 10px 18px;
+      color: var(--ink-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    .admin-table td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--ink-primary);
+    }
+    .status-badge-settlement {
+      font-size: 11px;
+      font-weight: 700;
+      color: #065F46;
+      background: #D1FAE5;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .status-badge-pending {
+      font-size: 11px;
+      font-weight: 700;
+      color: #92400E;
+      background: #FEF3C7;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       11. SCREEN 6: PROFIL PENGAMAL & PENGATURAN
+       ══════════════════════════════════════════════════════════════════════════ */
+    .profile-card {
+      max-width: 680px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+    .profile-header-area {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .profile-avatar-large {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      color: #FFFFFF;
+      font-size: 26px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+    }
+    .profile-info h3 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink-primary);
+    }
+    .profile-info p {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .setting-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+    .setting-desc {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       12. INTERACTIVE THEME CUSTOMIZER DRAWER ("Nanti Saya Sesuaikan")
+       ══════════════════════════════════════════════════════════════════════════ */
+    .customizer-drawer {
+      position: fixed;
+      top: 0;
+      right: -380px;
+      width: 360px;
+      height: 100vh;
+      background: var(--card);
+      border-left: 1px solid var(--border);
+      box-shadow: var(--shadow-xl);
+      z-index: 200;
+      transition: right var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+    }
+    .customizer-drawer.open {
+      right: 0;
+    }
+    .drawer-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink-primary);
+    }
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .token-control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .token-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+    .token-color-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .color-input-picker {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      padding: 0;
+      cursor: pointer;
+    }
+    .color-text-input {
+      flex: 1;
+      height: 38px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      padding: 0 10px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--ink-primary);
+    }
+    .drawer-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--surface);
+    }
+
+    /* MODAL OVERLAYS */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 150;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      max-width: 480px;
+      width: 100%;
+      padding: 28px;
+      box-shadow: var(--shadow-xl);
+      animation: popIn 200ms ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast-box {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--ink-primary);
+      color: var(--bg);
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      z-index: 300;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 260ms var(--ease-spring);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toast-box.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       TOP LABORATORY & THEME CONTROL BAR
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <header class="lab-bar">
+    <div class="lab-brand">
+      <div class="brand-svg-mark">
+        <!-- SVG BrandMark Wahidiyah Book Official -->
+        <svg viewBox="0 0 512 512" width="22" height="22" fill="currentColor">
+          <path d="M120 160c0-17.7 14.3-32 32-32h80c35.3 0 64 28.7 64 64v192c-17-10-37.5-16-64-16h-80c-17.7 0-32-14.3-32-32V160z" opacity="0.95"/>
+          <path d="M392 160c0-17.7-14.3-32-32-32h-80c-35.3 0-64 28.7-64 64v192c17-10 37.5-16 64-16h80c17.7 0 32-14.3 32-32V160z" opacity="0.9"/>
+          <path d="M256 192v192" stroke="#E5C877" stroke-width="14" stroke-linecap="round"/>
+          <circle cx="256" cy="150" r="16" fill="#E5C877"/>
+        </svg>
+      </div>
+      <div class="brand-titles">
+        <h1>Wahidiyah Book <span class="brand-badge">Research Design</span></h1>
+        <p>Wireframe Interaktif &amp; Multi-Theme Laboratory (1 HTML)</p>
+      </div>
+    </div>
+
+    <!-- AUDIO SHOLAWAT MINI PILL -->
+    <div class="audio-pill" id="audioPlayerPill" title="Lantunan Sholawat Wahidiyah (Nada Pelan)">
+      <div class="play-btn-circle" id="audioPlayIcon">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <span>Sholawat Wahidiyah</span>
+      <div class="waveform-bars">
+        <span class="waveform-bar"></span>
+        <span class="waveform-bar"></span>
+        <span class="waveform-bar"></span>
+        <span class="waveform-bar"></span>
+      </div>
+    </div>
+
+    <!-- LAB CONTROLS: THEME SWITCHER, CUSTOMIZER, VIEWPORT TOGGLE -->
+    <div class="lab-actions">
+      <!-- THEME PRESET DROPDOWN -->
+      <select class="theme-select" id="themeSelectDropdown" title="Pilih Tema Visual">
+        <option value="editorial-elegan">🌿 1. Editorial Elegan (Emerald Skripsi)</option>
+        <option value="modern-sage">🍃 2. Modern Sage Islamic (Sand)</option>
+        <option value="royal-lapis">🔷 3. Royal Islamic Blue (Lapis Lazuli)</option>
+        <option value="midnight-oasis">✨ 4. Spiritual Midnight (Obsidian Oasis)</option>
+        <option value="academic-litho">📜 5. Monochrome Academic (Litho Paper)</option>
+        <option value="terracotta-olive">🏺 6. Terracotta &amp; Olive Nusantara</option>
+      </select>
+
+      <!-- DARK / LIGHT MODE TOGGLE -->
+      <button class="lab-btn" id="darkModeToggle" title="Ganti Mode Terang / Malam">
+        <span id="darkIcon">🌙</span> <span id="darkLabel">Malam</span>
+      </button>
+
+      <!-- VIEWPORT TOGGLE (DESKTOP / MOBILE FRAME) -->
+      <button class="lab-btn active" id="viewDesktopBtn" title="Tampilan Desktop (1440px)">
+        🖥️ Desktop
+      </button>
+      <button class="lab-btn" id="viewMobileBtn" title="Tampilan Frame HP (iPhone/Android)">
+        📱 HP Frame
+      </button>
+
+      <!-- CUSTOMIZE THEME DRAWER TRIGGER -->
+      <button class="lab-btn lab-btn-accent" id="openCustomizerBtn" title="Sesuaikan Token CSS &amp; Warna">
+        🎨 Sesuaikan Tema
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       MAIN APPLICATION VIEWPORT
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="app-viewport-wrapper" id="appViewportWrapper">
+    <div class="view-desktop" id="viewContainer">
+
+      <!-- MOBILE NOTCH & STATUS BAR (Only visible in mobile frame mode) -->
+      <div class="mobile-notch">
+        <div class="notch-camera"></div>
+      </div>
+      <div class="mobile-status-bar">
+        <span>09:41</span>
+        <span>5G 📶 100%</span>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════════
+           SIDEBAR NAVIGATION (DESKTOP)
+           ══════════════════════════════════════════════════════════════════════ -->
+      <aside class="sidebar" id="appSidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-brand-box">
+            <div class="brand-svg-mark" style="width:28px;height:28px;border-radius:7px;">
+              <svg viewBox="0 0 512 512" width="16" height="16" fill="currentColor">
+                <path d="M120 160c0-17.7 14.3-32 32-32h80c35.3 0 64 28.7 64 64v192c-17-10-37.5-16-64-16h-80c-17.7 0-32-14.3-32-32V160z" opacity="0.95"/>
+                <path d="M392 160c0-17.7-14.3-32-32-32h-80c-35.3 0-64 28.7-64 64v192c17-10 37.5-16 64-16h80c17.7 0 32-14.3 32-32V160z" opacity="0.9"/>
+                <circle cx="256" cy="150" r="16" fill="#E5C877"/>
+              </svg>
+            </div>
+            <div class="sidebar-brand-text">
+              <div class="sidebar-brand-title">Wahidiyah Book</div>
+              <div class="sidebar-brand-sub">Perpustakaan Digital</div>
+            </div>
+          </div>
+          <button class="sidebar-toggle-btn" id="sidebarCollapseBtn" title="Lipat / Perlebar Sidebar">
+            ◀
+          </button>
+        </div>
+
+        <div class="sidebar-scroll">
+          <!-- GROUP 1: UTAMA -->
+          <div>
+            <div class="nav-section-title">Menu Utama</div>
+            <ul class="nav-list">
+              <li>
+                <button class="nav-item-btn active" data-screen="screen-home">
+                  <span class="nav-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  </span>
+                  <span class="nav-label">Katalog &amp; Beranda</span>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-btn" data-screen="screen-reader">
+                  <span class="nav-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  </span>
+                  <span class="nav-label">Digital PDF Reader</span>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-btn" data-screen="screen-calendar">
+                  <span class="nav-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                  </span>
+                  <span class="nav-label">Kalender Mujahadah</span>
+                  <span class="nav-badge-pill">3 Acara</span>
+                </button>
+              </li>
+              <li>
+                <button class="nav-item-btn" data-screen="screen-pro">
+                  <span class="nav-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                  </span>
+                  <span class="nav-label">Membership Pro &amp; QRIS</span>
+                  <span class="nav-badge-pill" style="background:#B8860B;">PRO</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- GROUP 2: ADMINISTRASI -->
+          <div>
+            <div class="nav-section-title">Administrasi Skripsi</div>
+            <ul class="nav-list">
+              <li>
+                <button class="nav-item-btn" data-screen="screen-admin">
+                  <span class="nav-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                  </span>
+                  <span class="nav-label">Dashboard Admin</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- GROUP 3: AKUN -->
+          <div>
+            <div class="nav-section-title">Akun &amp; Pengaturan</div>
+            <ul class="nav-list">
+              <li>
+                <button class="nav-item-btn" data-screen="screen-profile">
+                  <span class="nav-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </span>
+                  <span class="nav-label">Profil Pengamal</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- SIDEBAR USER FOOTER -->
+        <div class="sidebar-footer">
+          <div class="user-avatar-circle">AM</div>
+          <div class="user-meta">
+            <div class="user-name">Ahmad Mujahid</div>
+            <div class="user-role-badge">★ Pro Member Aktif</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ══════════════════════════════════════════════════════════════════════
+           MAIN CONTENT STAGE
+           ══════════════════════════════════════════════════════════════════════ -->
+      <main class="content-stage">
+        <!-- APP TOP HEADER BAR -->
+        <div class="app-header">
+          <div class="header-breadcrumb">
+            <span>Perpustakaan</span>
+            <span>/</span>
+            <strong id="activeScreenBreadcrumb">Katalog &amp; Beranda</strong>
+          </div>
+
+          <div class="header-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-muted);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" placeholder="Cari kitab, ajaran, sholawat...">
+            <kbd>Ctrl+K</kbd>
+          </div>
+
+          <div class="header-right">
+            <div class="status-pill" title="Koneksi Midtrans Sandbox Skripsi">
+              <span class="status-dot"></span>
+              <span>Midtrans Sandbox Online</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             SCREEN 1: BERANDA & KATALOG BUKU
+             ────────────────────────────────────────────────────────────────── -->
+        <section class="screen-panel active" id="screen-home">
+          <!-- HERO BANNER -->
+          <div class="hero-banner">
+            <div class="hero-content">
+              <span class="hero-tag">★ Peringatan Haul Akbar &amp; Mujahadah Kubro</span>
+              <h2 class="hero-title">Digitalisasi Literatur &amp; Tuntunan Sholawat Wahidiyah</h2>
+              <p class="hero-desc">
+                Pelajari ajaran Fafirruu Ilallah wa Rosuulihi SAW, telaah kitab-kitab tasawuf, dan ikuti panduan mujahadah terpadu dengan pembaca digital berfitur audio.
+              </p>
+              <div class="hero-btns">
+                <button class="btn-white" onclick="switchScreen('screen-reader')">
+                  📖 Mulai Membaca Sekarang
+                </button>
+                <button class="btn-outline-white" onclick="switchScreen('screen-pro')">
+                  Lihat Paket Pro Rp15.000
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- QUICK ACTION BAR -->
+          <div class="quick-bar">
+            <div class="quick-card" onclick="switchScreen('screen-reader')">
+              <div class="quick-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+              <div>
+                <div class="quick-title">Mujahadah Yaumiyah</div>
+                <div class="quick-sub">Amalan harian fardhu &amp; nafl</div>
+              </div>
+            </div>
+
+            <div class="quick-card" onclick="switchScreen('screen-calendar')">
+              <div class="quick-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              </div>
+              <div>
+                <div class="quick-title">Jadwal Acara</div>
+                <div class="quick-sub">Mujahadah Usbuiyah &amp; Kubro</div>
+              </div>
+            </div>
+
+            <div class="quick-card" onclick="switchScreen('screen-pro')">
+              <div class="quick-icon-box" style="background:var(--accent-light);color:var(--accent);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+              <div>
+                <div class="quick-title">Upgrade Pro Midtrans</div>
+                <div class="quick-sub">Akses 100+ Kitab &amp; Audio HQ</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORY FILTER CHIPS -->
+          <div class="category-pills">
+            <button class="cat-pill active">Semua Kategori</button>
+            <button class="cat-pill">Tasawuf</button>
+            <button class="cat-pill">Kuliah Wahidiyah</button>
+            <button class="cat-pill">Kitab Kuning</button>
+            <button class="cat-pill">Doa &amp; Zikir</button>
+            <button class="cat-pill">Ajaran &amp; Falsafah</button>
+            <button class="cat-pill">Sejarah Muallif</button>
+          </div>
+
+          <!-- BOOKS GRID -->
+          <div class="books-grid">
+            <!-- BOOK 1 -->
+            <div class="book-card" onclick="openBookModal('Panduan Mujahadah 40 Hari', 'KH. Mohammad Oesman Al-Ishaqi', 'Tasawuf', '142 Halaman', 'Gratis', 'Buku panduan mujahadah 40 hari lengkap dengan fadhilah, tata cara pelaksanaan, doa pembuka, dan tertib bacaan Sholawat Wahidiyah.')">
+              <div class="book-cover">
+                <span class="book-spine-line"></span>
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);">Edisi Resmi YPW</span>
+                <div class="book-cover-title">Panduan Mujahadah 40 Hari</div>
+                <div class="book-cover-author">Dewan Da'wah Wahidiyah</div>
+              </div>
+              <div class="book-info">
+                <span class="book-cat-tag">Tasawuf &amp; Amalan</span>
+                <div class="book-main-title">Panduan Mujahadah 40 Hari Sholawat Wahidiyah</div>
+                <div class="book-meta">
+                  <span>142 Hal</span>
+                  <span style="color:#10B981;font-weight:700;">Gratis</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOOK 2 -->
+            <div class="book-card" onclick="openBookModal('Kuliah Wahidiyah: Landasan Hukum &amp; Falsafah', 'DPP Yayasan Perjuangan Wahidiyah', 'Ajaran', '320 Halaman', 'PRO Locked', 'Ulasan komprehensif mengenai landasan syariat Islam, dalil-dalil Al-Quran dan As-Sunnah, serta kajian tasawuf mukasyafah.')">
+              <div class="book-cover">
+                <span class="book-spine-line"></span>
+                <div class="book-badge-lock">🔒 PRO</div>
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);">Kitab Rujukan Utama</span>
+                <div class="book-cover-title">Kuliah Wahidiyah: Landasan &amp; Falsafah</div>
+                <div class="book-cover-author">Penyusun Dewan Syura YPW</div>
+              </div>
+              <div class="book-info">
+                <span class="book-cat-tag">Ajaran &amp; Falsafah</span>
+                <div class="book-main-title">Kuliah Wahidiyah: Landasan Hukum &amp; Falsafah</div>
+                <div class="book-meta">
+                  <span>320 Hal</span>
+                  <span style="color:var(--accent);font-weight:800;">PRO MEMBER</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOOK 3 -->
+            <div class="book-card" onclick="openBookModal('Risalah Tauhid &amp; Marifatullah', 'Hadhratus Syaikh Muallif QS', 'Tauhid', '210 Halaman', 'PRO Locked', 'Risalah mendalam tentang penanaman Lillah Billah dan Lirrosul Birrosul dalam setiap hembusan nafas dan ibadah.')">
+              <div class="book-cover" style="background:linear-gradient(135deg, #1E2D3E, #111A24);">
+                <span class="book-spine-line"></span>
+                <div class="book-badge-lock">🔒 PRO</div>
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#93C5FD;">Kajian Tauhid</span>
+                <div class="book-cover-title">Risalah Tauhid &amp; Ma'rifatullah</div>
+                <div class="book-cover-author">Hadhratus Syaikh QS</div>
+              </div>
+              <div class="book-info">
+                <span class="book-cat-tag">Tauhid &amp; Ma'rifat</span>
+                <div class="book-main-title">Risalah Tauhid &amp; Ma'rifatullah Sejati</div>
+                <div class="book-meta">
+                  <span>210 Hal</span>
+                  <span style="color:var(--accent);font-weight:800;">PRO MEMBER</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOOK 4 -->
+            <div class="book-card" onclick="openBookModal('Tuntunan Doa &amp; Asmaul Husna', 'YPW Pusat Kedunglo', 'Doa & Zikir', '96 Halaman', 'Gratis', 'Kompilasi doa-doa mustajab, khususi, dan wirid asmaul husna sesudah mujahadah.')">
+              <div class="book-cover">
+                <span class="book-spine-line"></span>
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);">Saku Santri</span>
+                <div class="book-cover-title">Tuntunan Doa &amp; Asmaul Husna</div>
+                <div class="book-cover-author">Tim Peneliti YPW</div>
+              </div>
+              <div class="book-info">
+                <span class="book-cat-tag">Doa &amp; Zikir</span>
+                <div class="book-main-title">Tuntunan Doa &amp; Asmaul Husna Wahidiyah</div>
+                <div class="book-meta">
+                  <span>96 Hal</span>
+                  <span style="color:#10B981;font-weight:700;">Gratis</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOOK 5 -->
+            <div class="book-card" onclick="openBookModal('Sejarah Perjuangan Wahidiyah', 'Biro Sejarah DPP YPW', 'Sejarah', '450 Halaman', 'PRO Locked', 'Naskah sejarah autentik lahirnya Sholawat Wahidiyah di Kedunglo Kediri.')">
+              <div class="book-cover" style="background:linear-gradient(135deg, #2D201A, #18120F);">
+                <span class="book-spine-line"></span>
+                <div class="book-badge-lock">🔒 PRO</div>
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#FCA5A5;">Dokumenter Sejarah</span>
+                <div class="book-cover-title">Sejarah Perjuangan Wahidiyah</div>
+                <div class="book-cover-author">Biro Sejarah DPP YPW</div>
+              </div>
+              <div class="book-info">
+                <span class="book-cat-tag">Sejarah &amp; Biografi</span>
+                <div class="book-main-title">Sejarah Perjuangan Wahidiyah &amp; Biografi Muallif</div>
+                <div class="book-meta">
+                  <span>450 Hal</span>
+                  <span style="color:var(--accent);font-weight:800;">PRO MEMBER</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOOK 6 -->
+            <div class="book-card" onclick="openBookModal('Kitab Fathul Qorib Al-Mujib (Terjemah)', 'Syaikh Ibnu Qosim Al-Ghazi', 'Kitab Kuning', '520 Halaman', 'PRO Locked', 'Kitab fikih standar pesantren dengan makna gandul Jawa pegon dan terjemah Indonesia.')">
+              <div class="book-cover" style="background:linear-gradient(135deg, #2C261A, #19160E);">
+                <span class="book-spine-line"></span>
+                <div class="book-badge-lock">🔒 PRO</div>
+                <span style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#FDE68A;">Turats Pesantren</span>
+                <div class="book-cover-title">Fathul Qorib Al-Mujib (Terjemah)</div>
+                <div class="book-cover-author">Ibnu Qosim Al-Ghazi</div>
+              </div>
+              <div class="book-info">
+                <span class="book-cat-tag">Kitab Kuning</span>
+                <div class="book-main-title">Fathul Qorib Al-Mujib Makna Pegon</div>
+                <div class="book-meta">
+                  <span>520 Hal</span>
+                  <span style="color:var(--accent);font-weight:800;">PRO MEMBER</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             SCREEN 2: DIGITAL PDF READER WIREFRAME
+             ────────────────────────────────────────────────────────────────── -->
+        <section class="screen-panel" id="screen-reader">
+          <div class="reader-container">
+            <div class="reader-toolbar">
+              <div class="reader-toolbar-group">
+                <button class="lab-btn" onclick="switchScreen('screen-home')">
+                  ◀ Kembali ke Katalog
+                </button>
+                <strong style="font-size:13px;color:var(--ink-primary);margin-left:8px;">
+                  Kuliah Wahidiyah — Bab II: Hakikat Fafirruu Ilallah
+                </strong>
+              </div>
+
+              <div class="reader-toolbar-group">
+                <span style="font-size:11.5px;color:var(--ink-muted);">Kertas:</span>
+                <button class="lab-btn active" onclick="setPaperMode('white')">Putih</button>
+                <button class="lab-btn" onclick="setPaperMode('sepia')">Sepia</button>
+                <button class="lab-btn" onclick="setPaperMode('night')">Malam</button>
+
+                <div style="width:1px;height:18px;background:var(--border);margin:0 4px;"></div>
+                <button class="lab-btn" id="zoomOutBtn">A-</button>
+                <button class="lab-btn" id="zoomInBtn">A+</button>
+              </div>
+            </div>
+
+            <!-- READER READING CANVAS -->
+            <div class="reader-paper" id="readerPaperBox">
+              <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">
+                Faslun: Ajaran Fafirruu Ilallah
+              </div>
+              <h2 style="font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:18px;">
+                Makna dan Pengamalan Lillah-Billah
+              </h2>
+
+              <div class="reader-arabic-box">
+                فَفِرُّوْا إِلَى اللهِ، إِنِّي لَكُمْ مِنْهُ نَذِيْرٌ مُبِيْنٌ
+              </div>
+
+              <p class="reader-translation">
+                "Maka larilah kembali kepada Allah. Sesungguhnya aku seorang pemberi peringatan yang nyata dari Allah untukmu." (QS. Adz-Dzariyat: 50)
+              </p>
+
+              <p style="margin-bottom:16px;">
+                Segala amal perbuatan, baik yang berkaitan dengan hubungan vertikal kepada Sang Khaliq maupun muamalah horizontal antar sesama makhluk, wajib dilandasi dengan kesadaran hati yang murni: semata-mata mengharapkan ridho Allah SWT (Lillah) dan menyadari dengan tulus bahwa tidak ada daya maupun upaya melainkan karena pertolongan dan anugerah Allah SWT semata (Billah).
+              </p>
+
+              <div class="reader-arabic-box">
+                اللَّهُمَّ كَمَا أَنْتَ أَهْلُهُ، صَلِّ وَسَلِّمْ وَبَارِكْ عَلَى سَيِّدِنَا وَمَوْلَانَا مُحَمَّدٍ وَعَلَى آلِهِ وَصَحْبِهِ وَسَلِّمْ
+              </div>
+
+              <p style="margin-bottom:16px;">
+                Dengan memperbanyak membaca Sholawat Wahidiyah, hati yang semula lalai (ghaflah) perlahan dibersihkan menuju ketenangan batin (thuma'ninah) dan ma'rifat sejati, mengikis penyakit egois, takabur, dan merasa memiliki kebaikan sendiri.
+              </p>
+
+              <div class="reader-footnote">
+                <strong>Catatan Kaki [1]:</strong> Muallif Sholawat Wahidiyah QS menekankan pentingnya adab batiniah di samping pemenuhan rukun syariat lahiriah. Dikutip dari Risalah Kuliah Wahidiyah Jilid I, hal 42.
+              </div>
+            </div>
+
+            <!-- READER BOTTOM SCRUBBER -->
+            <div class="reader-scrubber">
+              <button class="lab-btn">◀ Hal Sebelumnya</button>
+              <div style="display:flex;align-items:center;gap:12px;flex:1;max-width:400px;">
+                <input type="range" class="scrubber-slider" min="1" max="180" value="42">
+                <span style="font-size:12px;font-family:var(--font-mono);font-weight:700;white-space:nowrap;">
+                  Hal 42 / 180 (23%)
+                </span>
+              </div>
+              <button class="lab-btn">Hal Selanjutnya ▶</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             SCREEN 3: PRO MEMBERSHIP & MIDTRANS QRIS FLOW
+             ────────────────────────────────────────────────────────────────── -->
+        <section class="screen-panel" id="screen-pro">
+          <div class="pro-header-banner">
+            <span class="hero-tag" style="background:var(--primary-light);color:var(--primary);">
+              Sistem Pembayaran Skripsi Midtrans Core API
+            </span>
+            <h2>Pilih Paket Langganan Wahidiyah Book Pro</h2>
+            <p>Dukung digitalisasi dan pelestarian literatur Sholawat Wahidiyah serta nikmati kemudahan akses kitab lengkap tanpa batasan.</p>
+          </div>
+
+          <div class="pricing-grid">
+            <!-- TIER 1: SANTRI GRATIS -->
+            <div class="price-card">
+              <div class="price-name">Santri Reguler</div>
+              <div class="price-amount">Rp 0</div>
+              <div class="price-period">Akses dasar selamanya</div>
+              <ul class="features-list">
+                <li class="feature-item"><span class="check-icon">✓</span> Akses 5 Kitab Dasar Pilihan</li>
+                <li class="feature-item"><span class="check-icon">✓</span> Pembaca PDF Standar</li>
+                <li class="feature-item"><span class="check-icon">✓</span> Kalender Mujahadah Bulanan</li>
+                <li class="feature-item" style="color:var(--ink-muted);"><span style="color:#9CA3AF;">✕</span> Audio Sholawat Berkualitas Tinggi</li>
+                <li class="feature-item" style="color:var(--ink-muted);"><span style="color:#9CA3AF;">✕</span> Akses Unduh Kitab Offline</li>
+              </ul>
+              <button class="btn-checkout" style="background:var(--surface);color:var(--ink-primary);border:1px solid var(--border);">
+                Paket Anda Saat Ini
+              </button>
+            </div>
+
+            <!-- TIER 2: PRO BULANAN (FEATURED) -->
+            <div class="price-card featured">
+              <div class="price-featured-badge">Paling Populer</div>
+              <div class="price-name">Pengamal Pro</div>
+              <div class="price-amount">Rp 15.000</div>
+              <div class="price-period">per bulan (Midtrans QRIS)</div>
+              <ul class="features-list">
+                <li class="feature-item"><span class="check-icon">✓</span> <strong>Akses 100+ Kitab Digital Lengkap</strong></li>
+                <li class="feature-item"><span class="check-icon">✓</span> Audio Syi'ir Pelan &amp; Cepat HQ</li>
+                <li class="feature-item"><span class="check-icon">✓</span> Fitur Stabilo &amp; Catatan Pribadi</li>
+                <li class="feature-item"><span class="check-icon">✓</span> Bebas Iklan &amp; Akses Unduh Offline</li>
+                <li class="feature-item"><span class="check-icon">✓</span> Lencana Donatur Digital di Profil</li>
+              </ul>
+              <button class="btn-checkout" onclick="openPaymentFlow('Pengamal Pro', 15000)">
+                ⚡ Langganan Sekarang Rp15.000
+              </button>
+            </div>
+
+            <!-- TIER 3: DONATUR ABADI -->
+            <div class="price-card">
+              <div class="price-name">Donatur Tahunan</div>
+              <div class="price-amount">Rp 150.000</div>
+              <div class="price-period">per tahun (Hemat Rp30.000)</div>
+              <ul class="features-list">
+                <li class="feature-item"><span class="check-icon">✓</span> Seluruh Fasilitas Pengamal Pro</li>
+                <li class="feature-item"><span class="check-icon">✓</span> Wakaf Digitalisasi 5 Naskah Kitab</li>
+                <li class="feature-item"><span class="check-icon">✓</span> Sertifikat Donatur Resmi YPW</li>
+                <li class="feature-item"><span class="check-icon">✓</span> Bantuan Prioritas Pengurus</li>
+              </ul>
+              <button class="btn-checkout" style="background:var(--accent);" onclick="openPaymentFlow('Donatur Tahunan', 150000)">
+                Pilih Donatur Tahunan
+              </button>
+            </div>
+          </div>
+
+          <!-- MIDTRANS QRIS INTERACTIVE CHECKOUT BOX -->
+          <div class="qris-box" id="qrisCheckoutSection" style="display:none;">
+            <div class="qris-header">
+              <div class="qris-logo">QRIS · MIDTRANS</div>
+              <div class="qris-timer" id="qrisTimerCountdown">14:59</div>
+            </div>
+
+            <p style="font-size:13px;color:var(--ink-secondary);margin-bottom:12px;">
+              Pindai QRIS menggunakan BCA Mobile, GoPay, ShopeePay, DANA, OVO, atau Livin' Mandiri
+            </p>
+
+            <div class="qris-code-frame">
+              <!-- SVG QR CODE MOCKUP -->
+              <svg viewBox="0 0 100 100" width="180" height="180" fill="currentColor">
+                <!-- Outer Corners -->
+                <rect x="5" y="5" width="25" height="25" fill="#000" rx="4"/>
+                <rect x="9" y="9" width="17" height="17" fill="#FFF" rx="2"/>
+                <rect x="13" y="13" width="9" height="9" fill="#000" rx="1"/>
+
+                <rect x="70" y="5" width="25" height="25" fill="#000" rx="4"/>
+                <rect x="74" y="9" width="17" height="17" fill="#FFF" rx="2"/>
+                <rect x="78" y="13" width="9" height="9" fill="#000" rx="1"/>
+
+                <rect x="5" y="70" width="25" height="25" fill="#000" rx="4"/>
+                <rect x="9" y="74" width="17" height="17" fill="#FFF" rx="2"/>
+                <rect x="13" y="78" width="9" height="9" fill="#000" rx="1"/>
+
+                <!-- Random QR Grid Pattern -->
+                <rect x="36" y="8" width="6" height="6" fill="#000"/>
+                <rect x="46" y="8" width="6" height="6" fill="#000"/>
+                <rect x="56" y="8" width="6" height="6" fill="#000"/>
+                <rect x="36" y="20" width="16" height="6" fill="#000"/>
+                <rect x="8" y="36" width="6" height="16" fill="#000"/>
+                <rect x="20" y="36" width="6" height="6" fill="#000"/>
+                <rect x="36" y="36" width="26" height="26" fill="var(--primary)" rx="4"/>
+                <circle cx="49" cy="49" r="6" fill="#FFF"/>
+
+                <rect x="70" y="36" width="6" height="16" fill="#000"/>
+                <rect x="82" y="36" width="12" height="6" fill="#000"/>
+                <rect x="36" y="70" width="12" height="6" fill="#000"/>
+                <rect x="54" y="70" width="6" height="16" fill="#000"/>
+                <rect x="68" y="70" width="24" height="24" fill="#000" rx="2"/>
+                <circle cx="80" cy="82" r="4" fill="#FFF"/>
+              </svg>
+            </div>
+
+            <div class="qris-amount-tag">Total Pembayaran Terverifikasi:</div>
+            <div class="qris-amount-val" id="qrisTotalAmountDisplay">Rp 15.000</div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn-simulate-pay" onclick="simulatePaymentSuccess()">
+                ⚡ Simulasi Bayar Berhasil (Webhook Midtrans)
+              </button>
+              <button class="lab-btn" onclick="document.getElementById('qrisCheckoutSection').style.display='none'">
+                Batalkan Transaksi
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             SCREEN 4: KALENDER KEGIATAN & JADWAL MUJAHADAH
+             ────────────────────────────────────────────────────────────────── -->
+        <section class="screen-panel" id="screen-calendar">
+          <div class="calendar-layout">
+            <!-- CALENDAR MATRIX -->
+            <div class="cal-matrix-card">
+              <div class="cal-matrix-header">
+                <div>
+                  <h3 style="font-size:18px;font-weight:800;color:var(--ink-primary);">Oktober 2026</h3>
+                  <p style="font-size:12px;color:var(--ink-muted);">Rabiul Akhir 1448 Hijriyah</p>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button class="lab-btn">◀</button>
+                  <button class="lab-btn">▶</button>
+                </div>
+              </div>
+
+              <div class="cal-grid">
+                <div class="cal-day-head">Ahd</div>
+                <div class="cal-day-head">Sen</div>
+                <div class="cal-day-head">Sel</div>
+                <div class="cal-day-head">Rab</div>
+                <div class="cal-day-head">Kam</div>
+                <div class="cal-day-head">Jum</div>
+                <div class="cal-day-head">Sab</div>
+
+                <!-- DAYS MATRIX -->
+                <div class="cal-cell" style="opacity:0.4;">27</div>
+                <div class="cal-cell" style="opacity:0.4;">28</div>
+                <div class="cal-cell" style="opacity:0.4;">29</div>
+                <div class="cal-cell" style="opacity:0.4;">30</div>
+                <div class="cal-cell">1</div>
+                <div class="cal-cell has-event">2</div>
+                <div class="cal-cell">3</div>
+
+                <div class="cal-cell">4</div>
+                <div class="cal-cell">5</div>
+                <div class="cal-cell">6</div>
+                <div class="cal-cell">7</div>
+                <div class="cal-cell has-event">8</div>
+                <div class="cal-cell">9</div>
+                <div class="cal-cell">10</div>
+
+                <div class="cal-cell">11</div>
+                <div class="cal-cell">12</div>
+                <div class="cal-cell">13</div>
+                <div class="cal-cell">14</div>
+                <div class="cal-cell has-event">15</div>
+                <div class="cal-cell">16</div>
+                <div class="cal-cell">17</div>
+
+                <div class="cal-cell">18</div>
+                <div class="cal-cell today has-event">19</div>
+                <div class="cal-cell">20</div>
+                <div class="cal-cell">21</div>
+                <div class="cal-cell has-event">22</div>
+                <div class="cal-cell has-event">23</div>
+                <div class="cal-cell has-event">24</div>
+
+                <div class="cal-cell">25</div>
+                <div class="cal-cell">26</div>
+                <div class="cal-cell">27</div>
+                <div class="cal-cell">28</div>
+                <div class="cal-cell">29</div>
+                <div class="cal-cell">30</div>
+                <div class="cal-cell">31</div>
+              </div>
+            </div>
+
+            <!-- EVENT LIST COLUMN -->
+            <div>
+              <h3 style="font-size:16px;font-weight:800;color:var(--ink-primary);margin-bottom:12px;">
+                Agenda Mujahadah Terdekat
+              </h3>
+
+              <div class="event-cards-list">
+                <!-- EVENT 1 -->
+                <div class="event-card">
+                  <span class="event-time-badge">Malam Ini · 19:30 WIB</span>
+                  <div class="event-title">Mujahadah Usbuiyah Wilayah</div>
+                  <div class="event-loc">
+                    📍 Masjid Jami' Al-Ikhlas &amp; Google Meet
+                  </div>
+                </div>
+
+                <!-- EVENT 2 -->
+                <div class="event-card" style="border-left:4px solid var(--accent);">
+                  <span class="event-time-badge" style="background:var(--accent-light);color:var(--accent);">
+                    22 - 24 Oktober 2026
+                  </span>
+                  <div class="event-title">Mujahadah Kubro Kedunglo Kediri</div>
+                  <div class="event-loc">
+                    📍 Pesantren Kedunglo, Kediri, Jawa Timur
+                  </div>
+                </div>
+
+                <!-- EVENT 3 -->
+                <div class="event-card">
+                  <span class="event-time-badge">Ahad Pagi · 06:00 WIB</span>
+                  <div class="event-title">Khataman Sholawat Wahidiyah Santri</div>
+                  <div class="event-loc">
+                    📍 Asrama Santri &amp; Siaran Radio YPW
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             SCREEN 5: ADMIN MANAGEMENT DASHBOARD
+             ────────────────────────────────────────────────────────────────── -->
+        <section class="screen-panel" id="screen-admin">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+              <h2 style="font-size:22px;font-weight:800;color:var(--ink-primary);">Dashboard Administrasi Skripsi</h2>
+              <p style="font-size:12.5px;color:var(--ink-muted);">Monitoring Real-Time Transaksi QRIS Midtrans &amp; Katalog Buku</p>
+            </div>
+            <button class="lab-btn lab-btn-accent" onclick="showToast('Fitur Tambah Kitab siap dikonfigurasi.')">
+              + Tambah Kitab Baru
+            </button>
+          </div>
+
+          <!-- KPI STAT CARDS -->
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-title">Total Santri &amp; Pengamal</div>
+              <div class="kpi-val">24,850</div>
+              <div class="kpi-trend">↑ 12% bulan ini</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-title">Pendapatan QRIS Skripsi</div>
+              <div class="kpi-val">Rp 18.45 Jt</div>
+              <div class="kpi-trend">100% Settlement</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-title">Total Judul Kitab Digital</div>
+              <div class="kpi-val">48 Kitab</div>
+              <div class="kpi-trend">32 Pro · 16 Gratis</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-title">Pembaca Harian Aktif</div>
+              <div class="kpi-val">3,420</div>
+              <div class="kpi-trend">Rata-rata 24 mnt/sesi</div>
+            </div>
+          </div>
+
+          <!-- TRANSACTIONS TABLE -->
+          <div class="admin-table-box">
+            <div class="table-header-bar">
+              <div class="table-title">Log Transaksi Real Midtrans Core API</div>
+              <span style="font-size:12px;color:var(--ink-muted);">Diperbarui 1 menit lalu</span>
+            </div>
+
+            <div style="overflow-x:auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Nama Pengamal</th>
+                    <th>Metode</th>
+                    <th>Nominal</th>
+                    <th>Status Midtrans</th>
+                    <th>Waktu Transaksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="font-family:var(--font-mono);font-weight:600;">WB-20261019-9821</td>
+                    <td>Ahmad Mujahid Wahid</td>
+                    <td>QRIS (GoPay)</td>
+                    <td style="font-family:var(--font-mono);font-weight:700;">Rp 15.000</td>
+                    <td><span class="status-badge-settlement">SETTLEMENT</span></td>
+                    <td style="font-size:12px;color:var(--ink-muted);">19 Okt 2026, 15:42</td>
+                  </tr>
+                  <tr>
+                    <td style="font-family:var(--font-mono);font-weight:600;">WB-20261019-8742</td>
+                    <td>Siti Nur Azizah</td>
+                    <td>BCA VA</td>
+                    <td style="font-family:var(--font-mono);font-weight:700;">Rp 150.000</td>
+                    <td><span class="status-badge-settlement">SETTLEMENT</span></td>
+                    <td style="font-size:12px;color:var(--ink-muted);">19 Okt 2026, 14:10</td>
+                  </tr>
+                  <tr>
+                    <td style="font-family:var(--font-mono);font-weight:600;">WB-20261019-8650</td>
+                    <td>Muhammad Rofi'i</td>
+                    <td>QRIS (ShopeePay)</td>
+                    <td style="font-family:var(--font-mono);font-weight:700;">Rp 15.000</td>
+                    <td><span class="status-badge-pending">PENDING</span></td>
+                    <td style="font-size:12px;color:var(--ink-muted);">19 Okt 2026, 13:55</td>
+                  </tr>
+                  <tr>
+                    <td style="font-family:var(--font-mono);font-weight:600;">WB-20261018-7410</td>
+                    <td>Hj. Fatimah Zahra</td>
+                    <td>Mandiri Bill</td>
+                    <td style="font-family:var(--font-mono);font-weight:700;">Rp 15.000</td>
+                    <td><span class="status-badge-settlement">SETTLEMENT</span></td>
+                    <td style="font-size:12px;color:var(--ink-muted);">18 Okt 2026, 21:04</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────────────────────────────────────────
+             SCREEN 6: PROFIL PENGAMAL & PENGATURAN
+             ────────────────────────────────────────────────────────────────── -->
+        <section class="screen-panel" id="screen-profile">
+          <div class="profile-card">
+            <div class="profile-header-area">
+              <div class="profile-avatar-large">AM</div>
+              <div class="profile-info">
+                <h3>Ahmad Mujahid Wahid</h3>
+                <p>ahmad.mujahid@example.com · +62 812-3456-7890</p>
+                <div style="margin-top:6px;">
+                  <span class="brand-badge" style="background:#FEF3C7;color:#B45309;">
+                    ★ Pengamal Pro (Aktif s.d 19 Nov 2026)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 style="font-size:14px;font-weight:800;color:var(--ink-primary);margin-bottom:10px;">
+                Pengaturan Preferensi Membaca
+              </h4>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-title">Notifikasi Pengingat Mujahadah</div>
+                  <div class="setting-desc">Dapatkan notifikasi 15 menit sebelum waktu amalan yaumiyah</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--primary);">
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-title">Unduh Kitab Offline Otomatis</div>
+                  <div class="setting-desc">Simpan kitab yang sedang dibaca ke penyimpanan lokal browser</div>
+                </div>
+                <input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--primary);">
+              </div>
+
+              <div class="setting-row">
+                <div>
+                  <div class="setting-title">Kualitas Audio Sholawat</div>
+                  <div class="setting-desc">Pilihan streaming rekaman audio syi'ir jernih (HQ 320kbps)</div>
+                </div>
+                <select class="theme-select" style="padding:4px 8px;">
+                  <option>Tinggi (HQ 320kbps)</option>
+                  <option>Standar (128kbps)</option>
+                  <option>Hemat Kuota (64kbps)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- ══════════════════════════════════════════════════════════════════════
+           MOBILE BOTTOM NAVIGATION BAR
+           ══════════════════════════════════════════════════════════════════════ -->
+      <nav class="mobile-bottom-nav">
+        <button class="mob-nav-btn active" data-screen="screen-home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Beranda</span>
+        </button>
+        <button class="mob-nav-btn" data-screen="screen-reader">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span>Reader</span>
+        </button>
+        <button class="mob-nav-btn" data-screen="screen-calendar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span>Kalender</span>
+        </button>
+        <button class="mob-nav-btn" data-screen="screen-pro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          <span>Pro</span>
+        </button>
+        <button class="mob-nav-btn" data-screen="screen-profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Profil</span>
+        </button>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       THEME CUSTOMIZER DRAWER ("Nanti Saya Sesuaikan")
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <aside class="customizer-drawer" id="customizerDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title">🎨 Theme Studio &amp; Token Lab</div>
+      <button class="lab-btn" id="closeCustomizerBtn">✕ Tutup</button>
+    </div>
+
+    <div class="drawer-body">
+      <p style="font-size:12px;color:var(--ink-muted);">
+        Sesuaikan variabel desain di bawah ini secara langsung. Perubahan akan seketika diuji pada seluruh wireframe di layar!
+      </p>
+
+      <!-- COLOR 1: PRIMARY BRAND -->
+      <div class="token-control-group">
+        <label class="token-label">
+          <span>Primary Brand (Hijau/Brand)</span>
+          <span id="labelValPrimary">#14523A</span>
+        </label>
+        <div class="token-color-picker-row">
+          <input type="color" class="color-input-picker" id="pickerPrimary" value="#14523A">
+          <input type="text" class="color-text-input" id="textPrimary" value="#14523A">
+        </div>
+      </div>
+
+      <!-- COLOR 2: ACCENT GOLD -->
+      <div class="token-control-group">
+        <label class="token-label">
+          <span>Accent Gold (Aksen Emas)</span>
+          <span id="labelValAccent">#B8860B</span>
+        </label>
+        <div class="token-color-picker-row">
+          <input type="color" class="color-input-picker" id="pickerAccent" value="#B8860B">
+          <input type="text" class="color-text-input" id="textAccent" value="#B8860B">
+        </div>
+      </div>
+
+      <!-- COLOR 3: CANVAS BACKGROUND -->
+      <div class="token-control-group">
+        <label class="token-label">
+          <span>Background / Latar Krem</span>
+          <span id="labelValBg">#FBF8F3</span>
+        </label>
+        <div class="token-color-picker-row">
+          <input type="color" class="color-input-picker" id="pickerBg" value="#FBF8F3">
+          <input type="text" class="color-text-input" id="textBg" value="#FBF8F3">
+        </div>
+      </div>
+
+      <!-- COLOR 4: SURFACE / CARD -->
+      <div class="token-control-group">
+        <label class="token-label">
+          <span>Card &amp; Surface</span>
+          <span id="labelValCard">#FFFDFA</span>
+        </label>
+        <div class="token-color-picker-row">
+          <input type="color" class="color-input-picker" id="pickerCard" value="#FFFDFA">
+          <input type="text" class="color-text-input" id="textCard" value="#FFFDFA">
+        </div>
+      </div>
+
+      <!-- BORDER RADIUS SLIDER -->
+      <div class="token-control-group">
+        <label class="token-label">
+          <span>Corner Radius (Kelengkungan)</span>
+          <span id="labelValRadius">10px</span>
+        </label>
+        <input type="range" min="0" max="24" value="10" id="sliderRadius" style="accent-color:var(--primary);">
+      </div>
+
+      <!-- CONTRAST RATIO AUDIT -->
+      <div style="background:var(--surface);padding:12px;border-radius:var(--radius-md);border:1px solid var(--border);">
+        <div style="font-size:11px;font-weight:700;color:var(--ink-muted);text-transform:uppercase;">
+          WCAG AA Contrast Score
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+          <strong style="font-size:14px;color:#10B981;">✓ 8.4:1 — PASS AAA</strong>
+          <span style="font-size:11px;color:var(--ink-secondary);">Sangat Aman Dibaca</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="lab-btn lab-btn-accent" style="justify-content:center;padding:10px;" id="copyCssVariablesBtn">
+        📋 Salin CSS Variables (index.css)
+      </button>
+      <button class="lab-btn" style="justify-content:center;padding:10px;" id="exportComponentJsonBtn">
+        💾 Ekspor format component.json
+      </button>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       MODAL: DETAIL BUKU
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="bookDetailModalBackdrop">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <span class="brand-badge" id="modalBookCategory">Tasawuf</span>
+        <button class="lab-btn" style="padding:4px 8px;" onclick="closeBookModal()">✕</button>
+      </div>
+
+      <h3 style="font-size:20px;font-weight:800;color:var(--ink-primary);margin-bottom:4px;" id="modalBookTitle">
+        Judul Buku
+      </h3>
+      <p style="font-size:12px;color:var(--ink-muted);margin-bottom:14px;" id="modalBookAuthor">
+        Pengarang
+      </p>
+
+      <p style="font-size:13.5px;color:var(--ink-secondary);line-height:1.6;margin-bottom:20px;" id="modalBookSynopsis">
+        Sinopsis buku akan ditampilkan di sini.
+      </p>
+
+      <div style="display:flex;gap:10px;">
+        <button class="btn-checkout" style="flex:1;" onclick="closeBookModal(); switchScreen('screen-reader');">
+          📖 Baca Sekarang
+        </button>
+        <button class="lab-btn" onclick="closeBookModal()">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       MODAL: SIMULASI MIDTRANS PAYMENT SUCCESS RECEIPT
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="paymentSuccessModalBackdrop">
+    <div class="modal-card" style="text-align:center;">
+      <div style="width:64px;height:64px;background:#D1FAE5;color:#065F46;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;">
+        ✓
+      </div>
+      <h3 style="font-size:20px;font-weight:800;color:var(--ink-primary);margin-bottom:6px;">
+        Pembayaran Midtrans Berhasil!
+      </h3>
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:18px;">
+        Terima kasih, keanggotaan <strong>Pengamal Pro</strong> Anda telah aktif seketika.
+      </p>
+
+      <div style="background:var(--surface);padding:14px;border-radius:var(--radius-md);text-align:left;font-size:12px;margin-bottom:20px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--ink-muted);">Order ID:</span>
+          <strong style="font-family:var(--font-mono);">WB-20261019-9821</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--ink-muted);">Status Midtrans:</span>
+          <strong style="color:#10B981;">SETTLEMENT (100%)</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--ink-muted);">Metode Pembayaran:</span>
+          <strong>QRIS Core API (GoPay)</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--ink-muted);">Masa Berlaku:</span>
+          <strong>Hingga 19 November 2026</strong>
+        </div>
+      </div>
+
+      <button class="btn-checkout" onclick="closePaymentSuccessModal()">
+        Buka Katalog Kitab Lengkap
+      </button>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-box" id="globalToast">
+    <span id="toastMessage">Pemberitahuan</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       13. VANILLA JS LOGIC ENGINE
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <script>
+    // 1. SCREEN SWITCHING LOGIC
+    const screenTitles = {
+      'screen-home': 'Katalog & Beranda',
+      'screen-reader': 'Digital PDF Reader',
+      'screen-calendar': 'Kalender Mujahadah',
+      'screen-pro': 'Membership Pro & QRIS Midtrans',
+      'screen-admin': 'Dashboard Administrasi Skripsi',
+      'screen-profile': 'Profil Pengamal & Pengaturan'
+    };
+
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen-panel').forEach(p => p.classList.remove('active'));
+      const targetPanel = document.getElementById(screenId);
+      if (targetPanel) {
+        targetPanel.classList.add('active');
+      }
+
+      // Update desktop sidebar buttons
+      document.querySelectorAll('.nav-item-btn').forEach(btn => {
+        if (btn.getAttribute('data-screen') === screenId) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Update mobile bottom nav buttons
+      document.querySelectorAll('.mob-nav-btn').forEach(btn => {
+        if (btn.getAttribute('data-screen') === screenId) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Update breadcrumb
+      const bcrumb = document.getElementById('activeScreenBreadcrumb');
+      if (bcrumb && screenTitles[screenId]) {
+        bcrumb.textContent = screenTitles[screenId];
+      }
+
+      // Scroll content stage to top
+      document.querySelector('.content-stage').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Attach listeners to all nav buttons
+    document.querySelectorAll('[data-screen]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchScreen(btn.getAttribute('data-screen'));
+      });
+    });
+
+    // 2. THEME SWITCHING LOGIC
+    const themeDropdown = document.getElementById('themeSelectDropdown');
+    themeDropdown.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      if (selected === 'editorial-elegan') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', selected);
+      }
+      syncTokenInputsFromCurrentTheme();
+      showToast(`Tema diterapkan: ${e.target.options[e.target.selectedIndex].text}`);
+    });
+
+    // 3. DARK / LIGHT MODE TOGGLE
+    const darkModeBtn = document.getElementById('darkModeToggle');
+    const darkIcon = document.getElementById('darkIcon');
+    const darkLabel = document.getElementById('darkLabel');
+    let isDarkMode = false;
+
+    darkModeBtn.addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('dark-mode', isDarkMode);
+      if (isDarkMode) {
+        darkIcon.textContent = '☀️';
+        darkLabel.textContent = 'Terang';
+        showToast('Mode Malam (Spiritual Dark) diaktifkan');
+      } else {
+        darkIcon.textContent = '🌙';
+        darkLabel.textContent = 'Malam';
+        showToast('Mode Terang diaktifkan');
+      }
+    });
+
+    // 4. VIEWPORT TOGGLE (DESKTOP / MOBILE FRAME)
+    const viewContainer = document.getElementById('viewContainer');
+    const viewDesktopBtn = document.getElementById('viewDesktopBtn');
+    const viewMobileBtn = document.getElementById('viewMobileBtn');
+
+    viewDesktopBtn.addEventListener('click', () => {
+      viewDesktopBtn.classList.add('active');
+      viewMobileBtn.classList.remove('active');
+      viewContainer.className = 'view-desktop';
+      showToast('Tampilan Desktop 1440px aktif');
+    });
+
+    viewMobileBtn.addEventListener('click', () => {
+      viewMobileBtn.classList.add('active');
+      viewDesktopBtn.classList.remove('active');
+      viewContainer.className = 'view-mobile-frame';
+      showToast('Tampilan Frame Mobile (iPhone/Android) aktif');
+    });
+
+    // 5. SIDEBAR COLLAPSE TOGGLE
+    const appSidebar = document.getElementById('appSidebar');
+    const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+    let isSidebarCollapsed = false;
+
+    sidebarCollapseBtn.addEventListener('click', () => {
+      isSidebarCollapsed = !isSidebarCollapsed;
+      appSidebar.classList.toggle('collapsed', isSidebarCollapsed);
+      sidebarCollapseBtn.textContent = isSidebarCollapsed ? '▶' : '◀';
+    });
+
+    // 6. READER PAPER MODES & ZOOM
+    function setPaperMode(mode) {
+      const paper = document.getElementById('readerPaperBox');
+      paper.setAttribute('data-paper', mode);
+    }
+
+    let readerFontSize = 15.5;
+    document.getElementById('zoomInBtn').addEventListener('click', () => {
+      readerFontSize += 1.5;
+      document.getElementById('readerPaperBox').style.fontSize = readerFontSize + 'px';
+    });
+    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+      if (readerFontSize > 12) {
+        readerFontSize -= 1.5;
+        document.getElementById('readerPaperBox').style.fontSize = readerFontSize + 'px';
+      }
+    });
+
+    // 7. BOOK DETAIL MODAL
+    function openBookModal(title, author, category, pages, status, synopsis) {
+      document.getElementById('modalBookTitle').textContent = title;
+      document.getElementById('modalBookAuthor').textContent = author + ' · ' + pages + ' · Status: ' + status;
+      document.getElementById('modalBookCategory').textContent = category;
+      document.getElementById('modalBookSynopsis').textContent = synopsis;
+      document.getElementById('bookDetailModalBackdrop').classList.add('open');
+    }
+    function closeBookModal() {
+      document.getElementById('bookDetailModalBackdrop').classList.remove('open');
+    }
+
+    // 8. PAYMENT & QRIS SIMULATION
+    function openPaymentFlow(planName, amount) {
+      const qrisBox = document.getElementById('qrisCheckoutSection');
+      qrisBox.style.display = 'block';
+      document.getElementById('qrisTotalAmountDisplay').textContent = 'Rp ' + amount.toLocaleString('id-ID');
+      qrisBox.scrollIntoView({ behavior: 'smooth' });
+      showToast(`Membuka simulasi pembayaran QRIS untuk ${planName}`);
+    }
+
+    function simulatePaymentSuccess() {
+      document.getElementById('paymentSuccessModalBackdrop').classList.add('open');
+    }
+    function closePaymentSuccessModal() {
+      document.getElementById('paymentSuccessModalBackdrop').classList.remove('open');
+      document.getElementById('qrisCheckoutSection').style.display = 'none';
+      switchScreen('screen-home');
+      showToast('Akses Pro berhasil dibuka!');
+    }
+
+    // 9. THEME CUSTOMIZER DRAWER ("Nanti Saya Sesuaikan")
+    const customizerDrawer = document.getElementById('customizerDrawer');
+    document.getElementById('openCustomizerBtn').addEventListener('click', () => {
+      customizerDrawer.classList.add('open');
+      syncTokenInputsFromCurrentTheme();
+    });
+    document.getElementById('closeCustomizerBtn').addEventListener('click', () => {
+      customizerDrawer.classList.remove('open');
+    });
+
+    function syncTokenInputsFromCurrentTheme() {
+      const computed = getComputedStyle(document.documentElement);
+      const pri = computed.getPropertyValue('--primary').trim() || '#14523A';
+      const acc = computed.getPropertyValue('--accent').trim() || '#B8860B';
+      const bg = computed.getPropertyValue('--bg').trim() || '#FBF8F3';
+      const card = computed.getPropertyValue('--card').trim() || '#FFFDFA';
+
+      document.getElementById('pickerPrimary').value = pri;
+      document.getElementById('textPrimary').value = pri;
+      document.getElementById('labelValPrimary').textContent = pri;
+
+      document.getElementById('pickerAccent').value = acc;
+      document.getElementById('textAccent').value = acc;
+      document.getElementById('labelValAccent').textContent = acc;
+
+      document.getElementById('pickerBg').value = bg;
+      document.getElementById('textBg').value = bg;
+      document.getElementById('labelValBg').textContent = bg;
+
+      document.getElementById('pickerCard').value = card;
+      document.getElementById('textCard').value = card;
+      document.getElementById('labelValCard').textContent = card;
+    }
+
+    function bindColorControl(pickerId, textId, labelId, cssVarName) {
+      const picker = document.getElementById(pickerId);
+      const text = document.getElementById(textId);
+      const label = document.getElementById(labelId);
+
+      const update = (val) => {
+        picker.value = val;
+        text.value = val;
+        label.textContent = val;
+        document.documentElement.style.setProperty(cssVarName, val);
+      };
+
+      picker.addEventListener('input', (e) => update(e.target.value));
+      text.addEventListener('change', (e) => update(e.target.value));
+    }
+
+    bindColorControl('pickerPrimary', 'textPrimary', 'labelValPrimary', '--primary');
+    bindColorControl('pickerAccent', 'textAccent', 'labelValAccent', '--accent');
+    bindColorControl('pickerBg', 'textBg', 'labelValBg', '--bg');
+    bindColorControl('pickerCard', 'textCard', 'labelValCard', '--card');
+
+    document.getElementById('sliderRadius').addEventListener('input', (e) => {
+      const val = e.target.value + 'px';
+      document.getElementById('labelValRadius').textContent = val;
+      document.documentElement.style.setProperty('--radius-md', val);
+      document.documentElement.style.setProperty('--radius-lg', (parseInt(val) + 4) + 'px');
+    });
+
+    // 10. COPY CSS & EXPORT JSON
+    document.getElementById('copyCssVariablesBtn').addEventListener('click', () => {
+      const computed = getComputedStyle(document.documentElement);
+      const cssString = `:root {
+  --primary: ${computed.getPropertyValue('--primary').trim()};
+  --accent: ${computed.getPropertyValue('--accent').trim()};
+  --bg: ${computed.getPropertyValue('--bg').trim()};
+  --card: ${computed.getPropertyValue('--card').trim()};
+  --radius-md: ${computed.getPropertyValue('--radius-md').trim()};
+}`;
+      navigator.clipboard.writeText(cssString).then(() => {
+        showToast('✓ CSS Variables berhasil disalin ke clipboard!');
+      });
+    });
+
+    document.getElementById('exportComponentJsonBtn').addEventListener('click', () => {
+      const computed = getComputedStyle(document.documentElement);
+      const jsonObj = {
+        name: "Wahidiyah Book Custom Theme",
+        colors: {
+          primary: computed.getPropertyValue('--primary').trim(),
+          accent: { gold: computed.getPropertyValue('--accent').trim() },
+          ui: {
+            background: computed.getPropertyValue('--bg').trim(),
+            card: computed.getPropertyValue('--card').trim()
+          }
+        },
+        shapes: {
+          componentRadius: {
+            button: computed.getPropertyValue('--radius-md').trim(),
+            card: computed.getPropertyValue('--radius-lg').trim()
+          }
+        }
+      };
+      navigator.clipboard.writeText(JSON.stringify(jsonObj, null, 2)).then(() => {
+        showToast('✓ JSON format component.json berhasil disalin!');
+      });
+    });
+
+    // 11. AUDIO PLAYER TOGGLE SIMULATION
+    let isPlaying = false;
+    document.getElementById('audioPlayerPill').addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      const playIcon = document.getElementById('audioPlayIcon');
+      if (isPlaying) {
+        playIcon.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+        showToast('Memutar Audio Sholawat Wahidiyah (HQ Audio Streaming)');
+      } else {
+        playIcon.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+        showToast('Audio dijeda (Paused)');
+      }
+    });
+
+    // 12. TOAST SYSTEM
+    function showToast(msg) {
+      const toast = document.getElementById('globalToast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

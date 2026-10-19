@@ -205,7 +205,7 @@ export const PhoneInput = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari negara (Indonesia, Malaysia, dll)..."
-              className="w-full rounded-xl border border-cream-200 bg-white py-1.5 pl-8 pr-3 text-xs font-medium text-ink-800 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="w-full rounded-xl border border-cream-200 bg-ui-card py-1.5 pl-8 pr-3 text-xs font-medium text-ink-800 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
