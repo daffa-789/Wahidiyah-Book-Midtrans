@@ -3,7 +3,6 @@ import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
 import { apiJson, authHeaders } from '@lib/api';
-import { ThemeModeSelector } from '@ui/ThemeToggle';
 import { NotificationToggle } from '@ui/NotificationToggle';
 import { typography, controls } from '@lib/styles';
 import { parsePhoneNumber } from '@lib/countryCodes';
@@ -77,18 +76,6 @@ export const EditProfileScreen = () => {
 
 
       <div className="mx-auto w-full max-w-content-narrow">
-
-        <div className="mb-6 rounded-2xl border border-cream-300 bg-cream-100 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-bold text-ink-800">Tema Tampilan</p>
-              <p className="mt-0.5 text-caption leading-relaxed text-ink-400">
-                Pilih mode terang, mode malam yang nyaman untuk mata, atau ikuti pengaturan perangkat.
-              </p>
-            </div>
-            <ThemeModeSelector />
-          </div>
-        </div>
 
         <NotificationToggle />
 

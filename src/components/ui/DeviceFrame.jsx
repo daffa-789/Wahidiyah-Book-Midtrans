@@ -217,8 +217,6 @@ const SidebarContent = React.memo(({
           <ThemeToggle variant="onDark" />
         </div>
 
-        <div className="my-1 h-px w-6 bg-ink-700" aria-hidden="true" />
-
         <nav className="flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto thin-scrollbar">
           {sections.map((section) => (
             <SidebarNavSection
@@ -259,8 +257,8 @@ const SidebarContent = React.memo(({
               </span>
             </span>
           ) : (
-            <span className="truncate font-display text-lead font-bold tracking-tight text-cream-50">
-              Wahidiyah Book
+            <span className="min-w-0 font-display text-lead font-bold leading-[1.15] tracking-tight text-cream-50">
+              Wahidiyah<br />Book
             </span>
           )}
         </button>

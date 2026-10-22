@@ -18,7 +18,12 @@ export const PwaInstallBanner = () => {
       ? navigator.userAgentData.mobile || isIpadOs
       : /android|iphone|ipad|ipod/i.test(ua) || isIpadOs;
 
-    if (!isMobileOrTablet) {
+    /* Penjaga kedua: perangkat sentuh. Chrome desktop tetap memicu
+       `beforeinstallprompt` di Windows, jadi UA saja tidak cukup — kursor
+       halus (mouse/trackpad) berarti ini desktop, apa pun kata UA-nya. */
+    const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches === true;
+
+    if (!isMobileOrTablet || !hasCoarsePointer) {
       return;
     }
 
