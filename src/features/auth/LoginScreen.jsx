@@ -1,6 +1,6 @@
 
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertCircle, Eye, EyeOff, Info, Lock, LogIn, Mail } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
@@ -33,6 +33,18 @@ export const LoginScreen = () => {
   const { error, setError, isSubmitting, runSubmit } = useSubmit('Email atau password belum sesuai.');
   const [notice, setNotice] = useState('');
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
+  /* Tombol Google menyalakan state ini lalu halaman pergi ke accounts.google.com.
+     Ketika pengguna menekan Back, Chrome memulihkan /login dari bfcache dengan
+     state masih menyala, jadi tombolnya macet "Mengarahkan ke Google…" selamanya.
+     pageshow dengan persisted === true adalah sinyal pemulihan itu. */
+  useEffect(() => {
+    const pulihkan = (event) => {
+      if (event.persisted) setIsGoogleSubmitting(false);
+    };
+    window.addEventListener('pageshow', pulihkan);
+    return () => window.removeEventListener('pageshow', pulihkan);
+  }, []);
 
   const submit = (event) => {
     event.preventDefault();
