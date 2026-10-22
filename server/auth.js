@@ -90,7 +90,6 @@ export const toPublicUser = (user, now = new Date()) => {
     is_pro: isPro,
 
     subscription_expires_at: toIsoOrNull(user.subscription_expires_at),
-    avatar: user.avatar || null,
     phone: user.phone || null,
     created_at: toIsoOrNull(user.created_at)
   };

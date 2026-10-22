@@ -19,7 +19,6 @@ import {
   notFound,
   wrap
 } from '../lib/http.js';
-import { compressAvatarDataUrl } from '../lib/images.js';
 import { ENDED_SUBSCRIPTION_STATUS } from '../lib/membership.js';
 import { parseBooleanFlag } from '../lib/validate.js';
 import { logger } from '../logger.js';
@@ -28,29 +27,13 @@ export const usersRouter = Router();
 
 
 usersRouter.put('/users/profile', requireAuth, async (req, res) => {
-  const { name, avatar } = req.body;
+  const { name } = req.body;
   if (!name || !name.trim()) {
     return badRequest(res, 'Nama lengkap wajib diisi.');
   }
 
   try {
     const updates = { name: name.trim() };
-
-    
-    if (avatar !== undefined) {
-      if (!avatar) {
-        updates.avatar = null;
-      } else {
-        const compressed = await compressAvatarDataUrl(avatar);
-        if (compressed && 'rejected' in compressed) {
-          return res.status(415).json({
-            success: false,
-            message: 'Avatar tidak dapat diproses. Gunakan PNG, JPG, atau WebP.'
-          });
-        }
-        updates.avatar = compressed?.dataUrl ?? avatar;
-      }
-    }
 
     const { data: updatedUser, error: updateError } = await supabaseServer
       .from('users')

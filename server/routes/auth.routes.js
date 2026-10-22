@@ -476,7 +476,6 @@ authRouter.post('/google-supabase', async (req, res) => {
         role: 'user',
         login_method: 'google',
         is_pro: false,
-        avatar: googleUser.avatar || null,
       };
       const { error: insertError } = await supabaseServer.from('users').insert([newUser]);
       if (insertError) {
@@ -620,8 +619,7 @@ authRouter.get('/google/callback', async (req, res) => {
         password: null,
         role: 'user',
         login_method: 'google',
-        is_pro: false,
-        avatar: payload.picture || null
+        is_pro: false
       };
       const { error: insertError } = await supabaseServer.from('users').insert([newUser]);
       if (insertError) {

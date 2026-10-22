@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Camera, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
 import { apiJson, authHeaders } from '@lib/api';
 import { ThemeModeSelector } from '@ui/ThemeToggle';
 import { NotificationToggle } from '@ui/NotificationToggle';
-import { layout, typography, controls } from '@lib/styles';
+import { typography, controls } from '@lib/styles';
 import { parsePhoneNumber } from '@lib/countryCodes';
 import { FlagIcon } from '@ui/FlagIcon';
 
@@ -16,42 +16,20 @@ export const EditProfileScreen = () => {
   const [name, setName] = useState(user.name || '');
   const [email] = useState(user.email || '');
 
-  const [avatar, setAvatar] = useState(user.avatar);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const timeoutRef = useRef(null);
 
   useEffect(() => {
-    if (user.avatar) setAvatar(user.avatar);
     if (user.name) setName(user.name);
-  }, [user.avatar, user.name]);
+  }, [user.name]);
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setErrorMessage('File harus berupa gambar (PNG, JPG, SVG, WebP).');
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        setErrorMessage('Ukuran file maksimal 2 MB.');
-        return;
-      }
-      setErrorMessage('');
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -70,8 +48,7 @@ export const EditProfileScreen = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: name.trim(),
-          avatar: avatar || null
+          name: name.trim()
         })
       });
 
@@ -79,7 +56,7 @@ export const EditProfileScreen = () => {
 
         patchUser(payload.user);
       } else {
-        patchUser({ name: name.trim(), avatar });
+        patchUser({ name: name.trim() });
       }
 
       setSavedSuccess(true);
@@ -100,31 +77,6 @@ export const EditProfileScreen = () => {
 
 
       <div className="mx-auto w-full max-w-content-narrow">
-
-        <div className="flex flex-col items-center mb-8">
-          <div className="relative">
-            <div className="h-24 w-24 overflow-hidden rounded-full bg-brand-100 ring-1 ring-cream-300">
-              <img
-                src={avatar}
-                alt={`Foto profil ${user.name || 'pengguna'}`}
-                className={layout.media}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/avatars/avatar-default.svg';
-                }}
-              />
-            </div>
-            <label
-              className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-brand-700 text-cream-50 shadow-sm ring-[3px] ring-cream-50 transition-colors duration-200 hover:bg-brand-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-brand-500"
-              aria-label="Ubah foto profil"
-              title="Ubah foto profil"
-            >
-              <Camera className="h-4 w-4" strokeWidth={2} />
-              <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-            </label>
-          </div>
-          <p className="mt-3 text-caption text-ink-400">Ketuk ikon kamera untuk mengubah foto</p>
-        </div>
 
         <div className="mb-6 rounded-2xl border border-cream-300 bg-cream-100 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -236,15 +188,6 @@ export const EditProfileScreen = () => {
               ) : (
                 <span>Simpan Perubahan</span>
               )}
-            </button>
-            <button
-              type="button"
-              data-testid="cancel-edit-profile-btn"
-              onClick={() => navigateTo('home')}
-              disabled={isSubmitting}
-              className="h-11 w-full rounded-xl text-sm font-semibold text-ink-500 transition-colors duration-200 hover:bg-cream-200 hover:text-ink-800 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              Batal
             </button>
           </div>
         </form>

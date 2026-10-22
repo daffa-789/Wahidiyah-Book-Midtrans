@@ -37,7 +37,6 @@ export const AuthCallbackScreen = () => {
               name: session.user.user_metadata?.full_name
                 || session.user.user_metadata?.name
                 || session.user.email?.split('@')[0] || 'Pengguna',
-              avatar: session.user.user_metadata?.avatar_url || null,
             },
           }),
         });

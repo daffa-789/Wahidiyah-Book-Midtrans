@@ -25,7 +25,6 @@ import { ThemeToggle } from '@ui/ThemeToggle';
 import { BrandMark } from '@ui/BrandMark';
 
 import { tabIdFromPath } from '@lib/navigation';
-import { layout } from '@lib/styles';
 
 const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
   const Icon = item.icon;
@@ -519,11 +518,7 @@ const DeviceFrameBase = ({ children }) => {
               className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-caption font-bold text-brand-800 ring-1 ring-brand-200">
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} className={layout.media} />
-                ) : (
-                  (user.name || 'U').split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U'
-                )}
+                {(user.name || 'U').split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U'}
               </span>
             </button>
           )}
