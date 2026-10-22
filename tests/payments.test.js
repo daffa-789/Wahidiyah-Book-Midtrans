@@ -65,6 +65,16 @@ test('isVoidAcknowledged: hanya akui Midtrans benar-benar mematikan order', asyn
   assert.equal(isVoidAcknowledged({ status_code: '204' }), true, 'berhasil di-expire/dibatalkan');
   assert.equal(isVoidAcknowledged({ status_code: '200', transaction_status: 'expired' }), true);
   assert.equal(
+    isVoidAcknowledged({ status_code: '407', status_message: 'Success, transaction is expired' }),
+    true,
+    'expire QRIS berhasil — Midtrans memakai kode 4xx untuk sukses (terukur di sandbox)'
+  );
+  assert.equal(
+    isVoidAcknowledged({ status_code: '412', status_message: 'Transaction status cannot be updated.' }),
+    false,
+    'cancel QRIS ditolak: order masih bisa dibayar'
+  );
+  assert.equal(
     isVoidAcknowledged({ status_code: '404', status_message: "Transaction doesn't exist." }),
     true,
     'order tidak ada di Midtrans = tidak ada yang bisa dibayar'

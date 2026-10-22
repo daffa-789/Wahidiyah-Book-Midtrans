@@ -141,17 +141,26 @@ export async function cancelQrisTransaction(orderId) {
 /**
  * Apakah Midtrans sudah mengakui order ini tidak bisa dibayar lagi?
  *
- * 2xx = berhasil di-expire/dibatalkan. 404 "Transaction doesn't exist" juga
- * aman: tidak ada apa pun di sisi Midtrans yang menunggu pembayaran.
+ * Kode Midtrans tidak mengikuti konvensi HTTP di sini (terukur 22 Okt 2026 pada
+ * order QRIS sandbox):
+ *  - 2xx = sukses generik.
+ *  - 407 = "Success, transaction is expired" → expire QRIS BERHASIL. Kode 4xx
+ *          ini bukan kegagalan dan wajib diakui; dulu tidak, sehingga
+ *          pembatalan yang sebenarnya sukses disangka ditolak Midtrans.
+ *  - 404 "Transaction doesn't exist" = aman, memang tidak ada yang menunggu
+ *          pembayaran.
+ *  - 412 "Transaction status cannot be updated" (mis. /cancel untuk QRIS, atau
+ *          order yang sudah lunas) = TIDAK diakui.
  *
- * Status lain (mis. sudah settlement) berarti baris lokal TIDAK boleh
- * dimatikan — kalau tidak, uang pengguna bisa masuk ke order yang sudah kita
- * matikan dan tidak akan pernah diaktifkan lagi.
+ * Kalau tidak diakui, baris lokal tidak boleh dimatikan — uang pengguna bisa
+ * masuk ke order yang sudah kita matikan dan tidak akan pernah diaktifkan lagi.
  */
 export function isVoidAcknowledged(payload = {}) {
   const code = String(payload?.status_code ?? '').trim();
+  const pesan = String(payload?.status_message ?? '');
   if (code.startsWith('2')) return true;
-  if (code === '404') return /does ?n'?t exist|not found|tidak ditemukan/i.test(String(payload?.status_message ?? ''));
+  if (code === '407') return /success|expired/i.test(pesan);
+  if (code === '404') return /does ?n'?t exist|not found|tidak ditemukan/i.test(pesan);
   return false;
 }
 
