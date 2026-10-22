@@ -362,17 +362,17 @@ body,
     align-items: center;
     justify-content: center;
     padding: 2rem 1rem;
-    background:
-      radial-gradient(circle at 12% 8%, rgba(20, 82, 58, 0.09), transparent 27rem),
-      radial-gradient(circle at 88% 92%, rgba(184, 134, 11, 0.07), transparent 25rem),
-      #FBF8F3;
+    /* Latar polos: dua radial-gradient "glow" yang lama sudah dihapus atas
+       permintaan pemilik. Kartu login tidak lagi perlu menahan cahaya latar,
+       jadi warnanya juga dibuat pekat (lihat .auth-card). */
+    background: #FBF8F3;
   }
 
   .auth-card {
     border: 1px solid rgba(228, 217, 198, 0.9);
     border-radius: 12px;
     padding: 1.75rem;
-    background: rgba(251, 248, 243, 0.96);
+    background: #FBF8F3;
     box-shadow: 0 24px 60px rgba(28, 26, 23, 0.10);
   }
 
@@ -865,15 +865,12 @@ body,
    indigo) tidak lagi diperlukan dan telah dibuang. */
 
 .dark .app-surface .auth-shell {
-  background:
-    radial-gradient(circle at 12% 8%, rgba(111, 196, 155, 0.10), transparent 27rem),
-    radial-gradient(circle at 88% 92%, rgba(217, 180, 74, 0.07), transparent 25rem),
-    var(--color-ui-bg);
+  background: var(--color-ui-bg);
 }
 
 .dark .app-surface .auth-card {
   border-color: rgba(68, 62, 51, 0.95);
-  background: rgba(32, 30, 23, 0.96);
+  background: #201E17;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 

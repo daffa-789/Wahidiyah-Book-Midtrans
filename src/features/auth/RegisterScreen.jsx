@@ -36,7 +36,7 @@ const PolicyModal = ({ type, onClose }) => {
 
   if (!type || !policy) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="policy-title">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4" role="dialog" aria-modal="true" aria-labelledby="policy-title">
       <article ref={panelRef} tabIndex={-1} className="w-full max-w-lg rounded-3xl bg-cream-50 p-6 shadow-2xl page-transition focus:outline-none">
         <div className={layout.rowEnd}>
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><FileText className="h-5 w-5" /></div>
