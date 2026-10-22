@@ -86,7 +86,7 @@ export const FAQ_ITEMS = [
   {
     id: 3,
     question: "Apa saja fitur utama aplikasi ini?",
-    answer: "Aplikasi Buku Wahidiyah menyediakan katalog lengkap literatur dan ajaran Sholawat Wahidiyah, pembaca PDF interaktif dengan navigasi halaman, zoom kontrol, mode layar penuh (mobile & desktop), bookmark, rotasi, mode tema, serta akses offline untuk pengguna berlangganan Pro."
+    answer: "Aplikasi Buku Wahidiyah menyediakan katalog lengkap literatur dan ajaran Sholawat Wahidiyah, pembaca PDF interaktif dengan navigasi halaman, zoom kontrol, rotasi, mode layar penuh (mobile & desktop), dan mode tema. Pengguna berlangganan Pro mendapatkan akses ke koleksi yang terkunci."
   },
   {
     id: 4,

@@ -72,7 +72,7 @@ const BookCard = React.memo(({ book, isLocked, onBookClick, onPaywallClick, hasE
 
       <div className="relative w-full aspect-[3/4.2] bg-ink-800 rounded-2xl overflow-hidden mb-3 flex items-center justify-center shadow-md shadow-cream-300/80 group-hover:shadow-lg group-hover:shadow-brand-900/15 transition-all duration-300">
         <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-ink-900/40 via-cream-50/20 to-transparent pointer-events-none z-10 rounded-l-2xl" />
-        <div className="absolute inset-0 ring-1 ring-inset ring-black/10 pointer-events-none z-10 rounded-2xl" />
+        <div className="absolute inset-0 ring-1 ring-inset ring-ink-900/10 pointer-events-none z-10 rounded-2xl" />
 
         {!hasError && book.coverUrl ? (
           <img
@@ -84,7 +84,7 @@ const BookCard = React.memo(({ book, isLocked, onBookClick, onPaywallClick, hasE
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-brand-900 via-brand-800 to-brand-800 p-4 flex flex-col justify-end text-white text-left">
+          <div className="w-full h-full bg-gradient-to-br from-brand-900 via-brand-800 to-brand-800 p-4 flex flex-col justify-end text-cream-50 text-left">
 
             <div>
               <p className="font-extrabold text-sm leading-snug line-clamp-2">{book.title}</p>
@@ -96,7 +96,7 @@ const BookCard = React.memo(({ book, isLocked, onBookClick, onPaywallClick, hasE
         {isLocked && (
           <div
             data-testid={`lock-badge-${book.id}`}
-            className="absolute top-2.5 left-2.5 z-20 bg-gradient-to-r from-gold-600 to-gold-700 text-white text-micro font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-md shadow-gold-500/30 border border-gold-400/30 tracking-wider uppercase"
+            className="absolute top-2.5 left-2.5 z-20 bg-gradient-to-r from-gold-600 to-gold-700 text-cream-50 text-micro font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-md shadow-gold-500/30 border border-gold-400/30 tracking-wider uppercase"
           >
             <Lock className="w-3 h-3" />
             <span>Pro</span>
@@ -135,7 +135,7 @@ const BookCard = React.memo(({ book, isLocked, onBookClick, onPaywallClick, hasE
               e.stopPropagation();
               onPaywallClick(book);
             }}
-            className="w-full min-h-11 mt-3.5 py-2.5 px-3 bg-gradient-to-r from-gold-600 via-gold-600 to-gold-700 hover:from-gold-700 hover:to-gold-700 active:from-gold-600 active:to-gold-700 text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md hover:shadow-gold-500/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5 group/btn cursor-pointer"
+            className="w-full min-h-11 mt-3.5 py-2.5 px-3 bg-gradient-to-r from-gold-600 via-gold-600 to-gold-700 hover:from-gold-700 hover:to-gold-700 active:from-gold-600 active:to-gold-700 text-cream-50 text-xs font-bold rounded-xl shadow-sm hover:shadow-md hover:shadow-gold-500/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5 group/btn cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5 transition-transform group-hover/btn:scale-110" />
             <span>Terkunci (Pro)</span>
@@ -148,7 +148,7 @@ const BookCard = React.memo(({ book, isLocked, onBookClick, onPaywallClick, hasE
               e.stopPropagation();
               onBookClick(book);
             }}
-            className="w-full min-h-11 mt-3.5 py-2.5 px-3 bg-gradient-to-r from-brand-800 to-brand-900 hover:from-brand-900 active:from-brand-900 text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md hover:shadow-brand-600/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5 group/btn cursor-pointer"
+            className="w-full min-h-11 mt-3.5 py-2.5 px-3 bg-gradient-to-r from-brand-800 to-brand-900 hover:from-brand-900 active:from-brand-900 text-cream-50 text-xs font-bold rounded-xl shadow-sm hover:shadow-md hover:shadow-brand-600/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5 group/btn cursor-pointer"
           >
             <BookOpen className="w-3.5 h-3.5 transition-transform group-hover/btn:scale-110" />
             <span>Baca</span>
@@ -198,7 +198,7 @@ export const HomeScreen = () => {
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-semantic-danger/15 text-semantic-danger"><BookOpen className="h-7 w-7" /></div>
             <h1 className="mt-5 font-display text-xl font-bold tracking-tight text-ink-900">Koleksi gagal dimuat</h1>
             <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-500">{catalogError}</p>
-            <button type="button" onClick={() => refreshBooks().catch(() => {})} className="mt-5 rounded-2xl bg-brand-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-brand-700">Coba muat ulang</button>
+            <button type="button" onClick={() => refreshBooks().catch(() => {})} className="mt-5 rounded-2xl bg-brand-700 px-4 py-3 text-sm font-bold text-cream-50 transition hover:bg-brand-700">Coba muat ulang</button>
           </section>
         ) : books.length === 0 ? (
           <section className="my-auto w-full max-w-xl rounded-3xl border border-dashed border-cream-300 bg-cream-100 p-10 text-center">
@@ -268,7 +268,7 @@ export const HomeScreen = () => {
                   setPaywallBook(null);
                   navigateTo('pro');
                 }}
-                className="w-full min-h-11 py-3 bg-gradient-to-r from-brand-800 to-brand-900 hover:from-brand-900 text-white font-bold text-xs rounded-2xl shadow-md shadow-brand-600/20 transition flex items-center justify-center gap-1.5"
+                className="w-full min-h-11 py-3 bg-gradient-to-r from-brand-800 to-brand-900 hover:from-brand-900 text-cream-50 font-bold text-xs rounded-2xl shadow-md shadow-brand-600/20 transition flex items-center justify-center gap-1.5"
               >
                 <Sparkles className="w-4 h-4 text-gold-300" />
                 <span>Lihat Paket Langganan Pro</span>

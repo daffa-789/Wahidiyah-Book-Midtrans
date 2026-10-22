@@ -29,7 +29,8 @@
     R53 — Tema malam. Skrip kecil ini memasang kelas `dark` SEBELUM halaman
     dilukis, supaya pengguna yang memilih mode malam tidak melihat kedipan
     terang lebih dulu. Logikanya sengaja diduplikasi minimal dari
-    src/theme/themeMode.js (tidak bisa mengimpor modul ES di titik ini).
+    src/theme/themeMode.js (tidak bisa mengimpor modul ES di titik ini) —
+    termasuk theme-color, karena bilah status PWA ikut dilukis saat pra-cat.
   -->
   <script>
     (function () {
@@ -41,6 +42,8 @@
         if (isDark) root.classList.add('dark');
         root.setAttribute('data-theme', isDark ? 'dark' : 'light');
         root.style.colorScheme = isDark ? 'dark' : 'light';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', isDark ? '#14130F' : '#14523A');
       } catch (e) { /* storage diblokir — tetap pakai mode terang */ }
     })();
   </script>

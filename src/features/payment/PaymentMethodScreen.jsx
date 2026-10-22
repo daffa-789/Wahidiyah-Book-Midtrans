@@ -92,7 +92,7 @@ export const PaymentMethodScreen = () => {
                           ) : null}
                           <span
                             style={{ display: opt.logoUrl ? 'none' : 'flex', backgroundColor: opt.color }}
-                            className="w-full h-full text-white items-center justify-center text-xs font-bold rounded-lg shadow-inner"
+                            className="w-full h-full text-cream-50 items-center justify-center text-xs font-bold rounded-lg shadow-inner"
                           >
                             {opt.id.slice(0, 3).toUpperCase()}
                           </span>
@@ -107,7 +107,7 @@ export const PaymentMethodScreen = () => {
 
                       <div className="text-brand-800 shrink-0">
                         {isSelected ? (
-                          <CheckCircle2 className="w-6 h-6 fill-brand-500 text-white drop-shadow-sm" />
+                          <CheckCircle2 className="w-6 h-6 fill-brand-500 text-cream-50 drop-shadow-sm" />
                         ) : (
                           <Circle className="w-6 h-6 text-ink-200 group-hover:text-brand-800/40 transition" />
                         )}
@@ -128,7 +128,7 @@ export const PaymentMethodScreen = () => {
           <button
             type="button"
             onClick={handleContinue}
-            className="w-full bg-brand-700 hover:bg-brand-700 active:bg-brand-800 text-white font-bold py-3.5 rounded-2xl shadow-md shadow-brand-600/20 transition text-sm"
+            className="w-full bg-brand-700 hover:bg-brand-700 active:bg-brand-800 text-cream-50 font-bold py-3.5 rounded-2xl shadow-md shadow-brand-600/20 transition text-sm"
           >
             Lanjutkan Pembayaran
           </button>

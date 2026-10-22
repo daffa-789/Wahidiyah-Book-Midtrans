@@ -15,7 +15,7 @@ import { twMerge } from 'tailwind-merge';
  * @returns {string} String kelas CSS yang telah di-merge secara rapi
  *
  * @example
- * cn('bg-brand-700 text-white', isSuccess && 'bg-gold-600', className)
+ * cn('bg-brand-700 text-cream-50', isSuccess && 'bg-gold-600', className)
  */
 export function cn(...inputs) {
   return twMerge(clsx(inputs));

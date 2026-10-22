@@ -45,7 +45,7 @@ export const HelpCenterScreen = () => {
 
                     <span className={`w-7 h-7 rounded-xl flex items-center justify-center text-caption font-black shrink-0 transition ${
                       isExpanded
-                        ? 'bg-brand-700 text-white'
+                        ? 'bg-brand-700 text-cream-50'
                         : 'bg-cream-200 text-ink-400'
                     }`}>
                       {index + 1}

@@ -71,7 +71,7 @@ export const NotificationToggle = ({ variant = 'panel', className = '' }) => {
     const compactClass = isHeader
       ? (isOn
           ? 'border-brand-400/40 bg-brand-700/80 text-brand-100 hover:bg-brand-700 shadow-sm'
-          : 'border-cream-50/20 bg-cream-50/10 text-white hover:bg-cream-50/20 backdrop-blur-sm')
+          : 'border-cream-50/20 bg-cream-50/10 text-cream-50 hover:bg-cream-50/20 backdrop-blur-sm')
       : buttonClass;
 
     return (

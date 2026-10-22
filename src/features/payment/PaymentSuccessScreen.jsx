@@ -101,7 +101,7 @@ export const PaymentSuccessScreen = () => {
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-brand-800 shadow"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3.5 text-sm font-bold text-cream-50 transition hover:bg-brand-800 shadow"
           >
             <span>Mulai Membaca Buku</span>
           </button>

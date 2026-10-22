@@ -71,13 +71,13 @@ export const PwaInstallBanner = () => {
 
   return (
     <div className="app-surface fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-40 animate-in slide-in-from-bottom-5 duration-300">
-      <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-ink-900 text-white shadow-2xl border border-white/10 backdrop-blur-md">
+      <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-ink-900 text-cream-50 shadow-2xl border border-cream-50/10 backdrop-blur-md">
         <div className="p-2.5 rounded-xl bg-brand-800 text-brand-300 shrink-0">
           <Smartphone className="w-6 h-6" />
         </div>
 
         <div className="flex-1 min-w-0 pr-1">
-          <h4 className="text-xs font-bold text-white tracking-wide">
+          <h4 className="text-xs font-bold text-cream-50 tracking-wide">
             Pasang Aplikasi Wahidiyah Book
           </h4>
           <p className="mt-0.5 text-micro text-cream-300/80 leading-relaxed">
@@ -95,7 +95,7 @@ export const PwaInstallBanner = () => {
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-micro font-bold shadow-xs transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-cream-50 text-micro font-bold shadow-xs transition"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Install Sekarang</span>
@@ -103,7 +103,7 @@ export const PwaInstallBanner = () => {
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="px-2.5 py-1.5 rounded-lg text-cream-300/70 hover:text-white text-micro font-medium transition"
+                className="px-2.5 py-1.5 rounded-lg text-cream-300/70 hover:text-cream-50 text-micro font-medium transition"
               >
                 Nanti Saja
               </button>

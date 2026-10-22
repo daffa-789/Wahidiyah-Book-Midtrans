@@ -29,13 +29,13 @@ export const typography = {
   cardTitle: 'text-h2 font-bold text-ink-900',
   emphasis: 'font-bold text-ink-900',
   emphasisInline: 'text-h2 font-bold text-ink-900',
-  helper: 'mt-1 text-body text-ink-400',
+  helper: 'mt-1 text-body text-ink-500',
   helperMuted: 'mt-1 text-body text-ink-500',
-  helperRelaxed: 'mt-2 text-body leading-relaxed text-ink-400',
-  helperTight: 'mt-0.5 text-caption text-ink-400',
-  helperInline: 'text-caption text-ink-400',
-  meta: 'text-small text-ink-400',
-  metaTight: 'text-small text-ink-400 mt-0.5',
+  helperRelaxed: 'mt-2 text-body leading-relaxed text-ink-500',
+  helperTight: 'mt-0.5 text-caption text-ink-500',
+  helperInline: 'text-caption text-ink-500',
+  meta: 'text-small text-ink-500',
+  metaTight: 'text-small text-ink-500 mt-0.5',
 };
 
 export const surfaces = {
@@ -44,7 +44,7 @@ export const surfaces = {
   panelMuted: 'rounded-card border border-cream-300 bg-cream-100 shadow-sm',
   dropzone:
     'flex h-full items-center justify-center rounded-2xl border border-dashed ' +
-    'border-cream-300 bg-cream-100 text-center text-small text-ink-400',
+    'border-cream-300 bg-cream-100 text-center text-small text-ink-500',
   statBadge:
     'w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center shrink-0 mt-0.5',
 };
@@ -52,12 +52,12 @@ export const surfaces = {
 export const controls = {
   input:
     'w-full rounded-input border border-cream-300 px-3 py-2.5 text-body transition ' +
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ' +
-    'focus-visible:ring-offset-1 focus-visible:ring-offset-cream-50 disabled:opacity-60',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 ' +
+    'focus-visible:ring-offset-2 focus-visible:ring-offset-cream-50 disabled:opacity-60',
   inputWrap: 'auth-input-wrap mt-1.5',
   select:
     'w-full rounded-input border border-cream-300 bg-cream-50 px-3 py-2.5 text-body transition ' +
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
   iconSm: 'w-3.5 h-3.5 text-brand-800',
   iconMd: 'w-4 h-4 text-brand-800',
   iconXs: 'w-3 h-3 text-brand-600',

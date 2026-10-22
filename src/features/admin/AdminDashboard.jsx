@@ -394,7 +394,7 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleExportFull}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-brand-800"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-2.5 text-xs font-bold text-cream-50 shadow-sm transition hover:bg-brand-800"
                     title="Ekspor buku kerja lengkap (Semua sheet: KPI, Transaksi, Pengguna, Buku, Agenda)"
                   >
                     <FileSpreadsheet className="h-4 w-4 text-brand-100" />
@@ -535,13 +535,13 @@ export const AdminDashboard = () => {
                     <FileSpreadsheet className="h-4 w-4 text-brand-700" />
                     Export Excel
                   </button>
-                  <button type="button" onClick={() => setIsBookModalOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-brand-800">
+                  <button type="button" onClick={() => setIsBookModalOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-cream-50 shadow-sm transition hover:bg-brand-800">
                     <Plus className="h-4 w-4" /> Tambah buku
                   </button>
                 </div>
               </div>
               <div className="overflow-hidden rounded-3xl border border-cream-300 bg-cream-50 shadow-sm">
-                {books.length === 0 ? <div className="p-12 text-center"><BookOpen className={controls.emptyIcon} /><p className="mt-3 font-bold text-ink-700">Koleksi masih kosong</p><p className={typography.helper}>Tambahkan buku pertama beserta thumbnail dan lampirannya.</p></div> : <div className={layout.divider}>{books.map((book) => <div key={book.id} className="flex flex-wrap items-center gap-4 p-4"><div className="h-14 w-11 overflow-hidden rounded-xl bg-gradient-to-tr from-brand-800 to-brand-800 flex items-center justify-center text-white shrink-0 shadow-sm">{book.coverUrl ? <img src={book.coverUrl} alt={book.title} className={layout.media} onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <BookOpen className="h-5 w-5 text-white/80" />}</div><div className="min-w-[180px] flex-1"><p className="font-bold text-ink-900">{book.title}</p><p className={typography.helperTight}>{book.author} • {book.category}</p><p className="mt-1 text-caption text-ink-500">{book.contentName || 'Tanpa lampiran'} {book.isLocked ? '• Pro' : ''}</p></div><button type="button" onClick={() => deleteBook(book)} className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight" title="Hapus buku"><Trash2 className="h-4 w-4" /></button></div>)}</div>}
+                {books.length === 0 ? <div className="p-12 text-center"><BookOpen className={controls.emptyIcon} /><p className="mt-3 font-bold text-ink-700">Koleksi masih kosong</p><p className={typography.helper}>Tambahkan buku pertama beserta thumbnail dan lampirannya.</p></div> : <div className={layout.divider}>{books.map((book) => <div key={book.id} className="flex flex-wrap items-center gap-4 p-4"><div className="h-14 w-11 overflow-hidden rounded-xl bg-gradient-to-tr from-brand-800 to-brand-800 flex items-center justify-center text-cream-50 shrink-0 shadow-sm">{book.coverUrl ? <img src={book.coverUrl} alt={book.title} className={layout.media} onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <BookOpen className="h-5 w-5 text-cream-50/80" />}</div><div className="min-w-[180px] flex-1"><p className="font-bold text-ink-900">{book.title}</p><p className={typography.helperTight}>{book.author} • {book.category}</p><p className="mt-1 text-caption text-ink-500">{book.contentName || 'Tanpa lampiran'} {book.isLocked ? '• Pro' : ''}</p></div><button type="button" onClick={() => deleteBook(book)} className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight" title="Hapus buku"><Trash2 className="h-4 w-4" /></button></div>)}</div>}
               </div>
             </section>
           )}

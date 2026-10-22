@@ -429,7 +429,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
           <button
             type="submit"
             disabled={isSaving}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-brand-800 disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 disabled:opacity-60"
           >
             {isSaving ? <Loader2 className={controls.spinner} /> : (editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
             {editingId ? 'Simpan perubahan' : 'Tambah banner'}

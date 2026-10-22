@@ -219,7 +219,7 @@ export const PaymentConfirmScreen = () => {
         {isQrisMethod ? (
           <div className="bg-cream-100 border border-cream-300 rounded-3xl p-6 shadow-sm space-y-5 text-center">
 
-            <div className="flex items-center justify-between bg-qris-600 text-white px-4 py-2.5 rounded-2xl shadow-sm">
+            <div className="flex items-center justify-between bg-qris-600 text-cream-50 px-4 py-2.5 rounded-2xl shadow-sm">
               <div className="flex items-center gap-2">
                 <QrCode className="w-5 h-5" />
                 <span className="font-black text-xs tracking-wider uppercase">QRIS PEMBAYARAN</span>
@@ -301,7 +301,7 @@ export const PaymentConfirmScreen = () => {
                 <button
                   type="button"
                   onClick={handleDownloadQr}
-                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 >
                   <Download className="w-4 h-4" />
                   <span>Simpan QRIS ke Galeri (Buka di DANA/BCA)</span>
@@ -312,7 +312,7 @@ export const PaymentConfirmScreen = () => {
                   data-testid="qris-simulate-paid"
                   onClick={simulatePaid}
                   disabled={isSimulating}
-                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gold-600 hover:bg-gold-700 active:bg-gold-700 dark:bg-gold-700 dark:hover:bg-gold-700/80 dark:active:bg-gold-700/80 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gold-600 hover:bg-gold-700 active:bg-gold-700 dark:bg-gold-700 dark:hover:bg-gold-700/80 dark:active:bg-gold-700/80 disabled:opacity-60 disabled:cursor-not-allowed text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
                 >
                   {isSimulating ? (
                     <>
@@ -377,7 +377,7 @@ export const PaymentConfirmScreen = () => {
 
             <button
               type="submit"
-              className="w-full mt-4 bg-brand-700 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3.5 rounded-2xl shadow-md shadow-brand-600/20 transition text-sm flex items-center justify-center gap-2"
+              className="w-full mt-4 bg-brand-700 hover:bg-brand-700 active:bg-brand-800 text-cream-50 font-semibold py-3.5 rounded-2xl shadow-md shadow-brand-600/20 transition text-sm flex items-center justify-center gap-2"
             >
               <span>Bayar Sekarang</span>
             </button>

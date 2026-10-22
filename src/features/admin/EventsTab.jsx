@@ -306,7 +306,7 @@ export const EventsTab = ({
                             onClick={() => onSelectDate(item.ymd)}
                             className={`h-14 sm:h-16 p-1 rounded-2xl border transition flex flex-col justify-between items-center cursor-pointer relative ${
                               isSelected
-                                ? 'bg-brand-700 border-brand-800 text-white shadow-md shadow-brand-700/20'
+                                ? 'bg-brand-700 border-brand-800 text-cream-50 shadow-md shadow-brand-700/20'
                                 : item.isToday
                                 ? 'bg-brand-50/70 border-brand-300 text-brand-900 font-black'
                                 : hasEvents
@@ -315,7 +315,7 @@ export const EventsTab = ({
                             }`}
                           >
                             <span className={`text-xs font-extrabold mt-0.5 ${
-                              isSelected ? 'text-white' : item.isToday ? 'text-brand-700' : ''
+                              isSelected ? 'text-cream-50' : item.isToday ? 'text-brand-700' : ''
                             }`}>
                               {item.day}
                             </span>
@@ -332,7 +332,7 @@ export const EventsTab = ({
                                     );
                                   })}
                                   {dayEvents.length > 3 && (
-                                    <span className={`text-overline font-bold ${isSelected ? 'text-white' : 'text-brand-700'}`}>
+                                    <span className={`text-overline font-bold ${isSelected ? 'text-cream-50' : 'text-brand-700'}`}>
                                       +{dayEvents.length - 3}
                                     </span>
                                   )}
@@ -605,7 +605,7 @@ export const EventsTab = ({
 
                     <button
                       disabled={isSavingEvent}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-brand-800 disabled:opacity-60 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 disabled:opacity-60 cursor-pointer"
                     >
                       {isSavingEvent
                         ? <Loader2 className={controls.spinner} />

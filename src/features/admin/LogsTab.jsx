@@ -75,7 +75,7 @@ export const LogsTab = ({ sessionToken }) => {
               onClick={() => setFilterType('all')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                 filterType === 'all'
-                  ? 'bg-ink-800 text-white shadow-xs'
+                  ? 'bg-ink-800 text-cream-50 shadow-xs'
                   : 'bg-cream-200 text-ink-500 hover:bg-cream-300'
               }`}
             >
@@ -86,7 +86,7 @@ export const LogsTab = ({ sessionToken }) => {
               onClick={() => setFilterType('subscription')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                 filterType === 'subscription'
-                  ? 'bg-brand-700 text-white shadow-xs'
+                  ? 'bg-brand-700 text-cream-50 shadow-xs'
                   : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
               }`}
             >
@@ -97,7 +97,7 @@ export const LogsTab = ({ sessionToken }) => {
               onClick={() => setFilterType('user')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                 filterType === 'user'
-                  ? 'bg-ink-700 text-white shadow-xs'
+                  ? 'bg-ink-700 text-cream-50 shadow-xs'
                   : 'bg-cream-100 text-ink-700 hover:bg-cream-200'
               }`}
             >

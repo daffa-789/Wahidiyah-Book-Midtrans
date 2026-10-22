@@ -136,7 +136,7 @@ export const BookModal = ({
             <button
               type="submit"
               disabled={isSavingBook}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-brand-700 disabled:opacity-60 cursor-pointer shadow-sm"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3.5 text-sm font-bold text-cream-50 transition hover:bg-brand-700 disabled:opacity-60 cursor-pointer shadow-sm"
             >
               {isSavingBook ? (
                 <>

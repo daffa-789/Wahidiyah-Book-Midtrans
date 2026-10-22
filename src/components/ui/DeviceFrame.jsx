@@ -40,11 +40,11 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         aria-label={item.label}
         aria-current={item.isActive ? 'page' : undefined}
         className={`relative h-11 w-11 rounded-xl flex items-center justify-center transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
-          ? 'focus-visible:ring-semantic-danger'
+          ? 'focus-visible:ring-semantic-danger-on-dark'
           : 'focus-visible:ring-brand-500'
           } ${item.isActive
             ? 'bg-brand-700 text-cream-50 shadow-sm'
-            : 'text-ink-400 hover:text-cream-50 hover:bg-cream-50/5'
+            : 'text-semantic-muted-on-dark hover:text-cream-50 hover:bg-cream-50/5'
           }`}
       >
         <Icon className="w-[18px] h-[18px]" strokeWidth={1.9} />
@@ -58,11 +58,11 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
       onClick={() => onNavClick(item.target)}
       aria-current={item.isActive ? 'page' : undefined}
       className={`group relative w-full h-11 flex items-center gap-3 pl-3 pr-3 rounded-xl transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
-        ? 'focus-visible:ring-semantic-danger'
+        ? 'focus-visible:ring-semantic-danger-on-dark'
         : 'focus-visible:ring-brand-500'
         } ${item.isActive
           ? 'bg-brand-700 text-cream-50 shadow-sm'
-          : 'text-ink-300 hover:text-cream-50 hover:bg-cream-50/5'
+          : 'text-semantic-muted-on-dark hover:text-cream-50 hover:bg-cream-50/5'
         }`}
     >
       <span
@@ -74,8 +74,8 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${item.isActive
           ? 'text-cream-50'
           : isDanger
-            ? 'text-semantic-danger/70 group-hover:text-semantic-danger'
-            : 'text-ink-400 group-hover:text-cream-100'
+            ? 'text-semantic-danger-on-dark'
+            : 'text-semantic-muted-on-dark group-hover:text-cream-100'
           }`}
         strokeWidth={1.9}
       />
@@ -192,7 +192,7 @@ const SidebarContent = React.memo(({
       onClick={handleToggleCollapse}
       title={isMobile ? 'Tutup menu' : isCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
       aria-label={isMobile ? 'Tutup menu' : isCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-ink-400 transition-colors duration-200 hover:bg-cream-50/5 hover:text-cream-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-semantic-muted-on-dark transition-colors duration-200 hover:bg-cream-50/5 hover:text-cream-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
     >
       <PanelLeft className="h-[17px] w-[17px]" strokeWidth={1.9} />
     </button>
@@ -337,7 +337,7 @@ const LogoutConfirmDialog = ({ isOpen, userName, onCancel, onConfirm }) => (
               type="button"
               data-testid="confirm-logout-btn"
               onClick={onConfirm}
-              className="h-11 rounded-2xl bg-semantic-danger text-xs font-bold text-white dark:text-semantic-dangerLight shadow-sm transition-colors duration-200 hover:bg-semantic-danger/85 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-semantic-danger/50"
+              className="h-11 rounded-2xl bg-semantic-danger text-semantic-dangerLight text-xs font-bold shadow-sm transition-colors duration-200 hover:bg-semantic-danger/85 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-semantic-danger/50"
             >
               Ya, Log Out
             </button>
@@ -463,7 +463,7 @@ const DeviceFrameBase = ({ children }) => {
     <div className="app-surface relative flex min-h-screen w-full flex-col bg-cream-50 font-sans text-ink-800 md:flex-row">
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 hidden shrink-0 select-none flex-col border-r border-white/[0.06] bg-ink-900 transition-[width] duration-300 ease-out md:flex ${sidebarCollapsed ? 'w-[68px]' : 'w-[248px]'
+        className={`fixed inset-y-0 left-0 z-50 hidden shrink-0 select-none flex-col border-r border-cream-50/[0.06] bg-ink-900 transition-[width] duration-300 ease-out md:flex ${sidebarCollapsed ? 'w-[68px]' : 'w-[248px]'
           }`}
       >
         <div className={`h-full w-full ${sidebarCollapsed ? 'px-2 py-3' : 'px-3 py-4'}`}>

@@ -78,6 +78,8 @@ const buildColorVars = (palette) => {
       ['warningLight', '--semantic-warning-light'],
       ['danger', '--semantic-danger'],
       ['dangerLight', '--semantic-danger-light'],
+      ['dangerOnDark', '--semantic-danger-on-dark'],
+      ['mutedOnDark', '--semantic-muted-on-dark'],
       ['info', '--semantic-info'],
       ['infoLight', '--semantic-info-light'],
     ];

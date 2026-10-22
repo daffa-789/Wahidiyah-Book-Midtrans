@@ -24,7 +24,7 @@ export const AlreadySubscribedNotice = ({ minHeight = '640px', reason, onPro, on
         <button
           type="button"
           onClick={onPro}
-          className="inline-flex items-center justify-center min-h-11 px-5 py-2.5 bg-brand-700 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="inline-flex items-center justify-center min-h-11 px-5 py-2.5 bg-brand-700 hover:bg-brand-700 text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           Kembali ke Menu Pro
         </button>

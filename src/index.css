@@ -81,6 +81,8 @@
   --semantic-warning-light: 250 240 211;
   --semantic-danger: 166 47 38;
   --semantic-danger-light: 247 225 223;
+  --semantic-danger-on-dark: 240 169 162;
+  --semantic-muted-on-dark: 183 174 154;
   --semantic-info: 30 91 140;
   --semantic-info-light: 220 234 245;
 
@@ -155,6 +157,8 @@
   --semantic-warning-light: 44 36 19;
   --semantic-danger: 240 169 162;
   --semantic-danger-light: 46 26 25;
+  --semantic-danger-on-dark: 240 169 162;
+  --semantic-muted-on-dark: 183 174 154;
   --semantic-info: 156 199 236;
   --semantic-info-light: 21 36 52;
 
@@ -189,6 +193,29 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+}
+
+/* Pengguna yang menolak gerak (WCAG 2.3.3) tidak boleh terkena scroll halus,
+   transisi, atau animasi panjang. Pengecualian: spinner — tanpa gerak sama
+   sekali pengguna tidak punya sinyal bahwa aplikasi masih bekerja. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .animate-spin,
+  .animate-spin * {
+    animation-duration: 1s !important;
+  }
 }
 
 html,
@@ -712,6 +739,14 @@ body,
 
 .dark .app-surface .bg-cream-50\/20 {
   background-color: rgb(244 239 227 / 0.12);
+}
+
+/* Garis pemisah tipis di atas panel yang sengaja gelap pada kedua tema
+   (sidebar DeviceFrame, banner instal PWA). Tanpa override ini, nilai
+   --cream-50 mode malam yang justru gelap akan membuatnya hilang. */
+.dark .border-cream-50\/10,
+.dark .border-cream-50\/\[0\.06\] {
+  border-color: rgb(244 239 227 / 0.08);
 }
 
 /* 4. Kartu putih → permukaan gelap */

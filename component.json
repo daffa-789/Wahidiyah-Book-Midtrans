@@ -79,7 +79,9 @@
       "danger": "#A62F26",
       "dangerLight": "#F7E1DF",
       "info": "#1E5B8C",
-      "infoLight": "#DCEAF5"
+      "infoLight": "#DCEAF5",
+      "dangerOnDark": "#F0A9A2",
+      "mutedOnDark": "#B7AE9A"
     },
     "dark": {
       "note": "Palet 'Editorial Elegan' versi malam. Bukan inversi putih-hitam: latar krem hangat diganti charcoal hangat, dan hijau zamrud digeser lebih terang agar tetap terbaca sebagai TEKS di latar gelap (sementara tombol tetap memakai hijau pekat lewat override di index.css).",
@@ -139,7 +141,9 @@
         "danger": "#F0A9A2",
         "dangerLight": "#2E1A19",
         "info": "#9CC7EC",
-        "infoLight": "#152434"
+        "infoLight": "#152434",
+        "dangerOnDark": "#F0A9A2",
+        "mutedOnDark": "#B7AE9A"
       },
       "primary": "#1E7A57",
       "primaryHover": "#26906A",

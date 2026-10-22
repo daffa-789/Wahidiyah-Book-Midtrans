@@ -67,7 +67,7 @@ export const CalendarScreen = () => {
         <div className="relative overflow-hidden rounded-3xl bg-brand-900 p-6 text-cream-50 shadow-md">
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-display text-xl font-bold tracking-tight text-white">
+              <h1 className="font-display text-xl font-bold tracking-tight text-cream-50">
                 Kalender Majelis Wahidiyah
               </h1>
               <p className="mt-1 text-xs text-cream-200/90 leading-relaxed max-w-md">
@@ -76,7 +76,7 @@ export const CalendarScreen = () => {
             </div>
             <div className="flex items-center gap-3 self-start sm:self-auto">
               <NotificationToggle variant="header-compact" />
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cream-50/15 bg-cream-50/10 text-white backdrop-blur-sm shrink-0">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cream-50/15 bg-cream-50/10 text-cream-50 backdrop-blur-sm shrink-0">
                 <CalendarIcon className="h-5 w-5 text-brand-100" strokeWidth={1.8} />
               </div>
             </div>
@@ -154,7 +154,7 @@ export const CalendarScreen = () => {
                       onClick={() => setSelectedDate(dateStr)}
                       className={`h-10 rounded-2xl flex flex-col items-center justify-center relative text-xs font-semibold transition-all duration-150 ${
                         isSelected
-                          ? 'bg-brand-700 hover:bg-brand-700 text-white shadow-md shadow-brand-700/30 scale-105 z-10'
+                          ? 'bg-brand-700 hover:bg-brand-700 text-cream-50 shadow-md shadow-brand-700/30 scale-105 z-10'
                           : isToday
                           ? 'bg-brand-50 text-brand-800 border border-brand-300'
                           : 'hover:bg-brand-50/70 text-ink-700'
@@ -256,7 +256,7 @@ export const CalendarScreen = () => {
                 onClick={() => setActiveFilter(pill)}
                 className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition text-xs ${
                   activeFilter === pill
-                    ? 'bg-brand-700 hover:bg-brand-700 text-white shadow-sm'
+                    ? 'bg-brand-700 hover:bg-brand-700 text-cream-50 shadow-sm'
                     : 'bg-cream-50 text-ink-500 border border-cream-300 hover:bg-brand-50'
                 }`}
               >
@@ -269,7 +269,7 @@ export const CalendarScreen = () => {
             {agendaError ? (
               <div className="rounded-2xl border border-dashed border-semantic-danger/40 bg-semantic-dangerLight p-6 text-center" role="alert">
                 <p className="text-xs font-bold text-semantic-danger">Agenda gagal dimuat: {agendaError}</p>
-                <button type="button" onClick={() => refreshEvents().catch(() => {})} className="mt-3 min-h-6 rounded-xl bg-brand-700 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-brand-700">Coba muat ulang</button>
+                <button type="button" onClick={() => refreshEvents().catch(() => {})} className="mt-3 min-h-6 rounded-xl bg-brand-700 px-3.5 py-1.5 text-xs font-bold text-cream-50 transition hover:bg-brand-700">Coba muat ulang</button>
               </div>
             ) : filteredEvents.length === 0 ? (
               <div className="bg-cream-100 rounded-2xl p-6 text-center border border-dashed border-cream-300">

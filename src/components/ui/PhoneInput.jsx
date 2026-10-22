@@ -194,7 +194,7 @@ export const PhoneInput = ({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 top-full z-50 mt-1.5 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-cream-200 bg-cream-50 p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute left-0 top-full z-50 mt-1.5 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-cream-200 bg-cream-50 p-2 shadow-xl ring-1 ring-ink-900/5 animate-in fade-in zoom-in-95 duration-150"
         >
           {/* Kolom Pencarian */}
           <div className="relative mb-2">

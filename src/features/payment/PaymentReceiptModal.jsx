@@ -128,7 +128,7 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold shadow transition"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-cream-50 text-xs font-bold shadow transition"
           >
             <Printer className="w-4 h-4" />
             <span>Cetak Kwitansi / Simpan PDF</span>

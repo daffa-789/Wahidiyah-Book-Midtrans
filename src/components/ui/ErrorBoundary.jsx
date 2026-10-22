@@ -54,7 +54,7 @@ export class ErrorBoundary extends React.Component {
               <button
                 type="button"
                 onClick={this.handleReset}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-brand-700 hover:bg-brand-700 text-white font-bold text-xs transition shadow-md shadow-brand-700/20"
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-brand-700 hover:bg-brand-700 text-cream-50 font-bold text-xs transition shadow-md shadow-brand-700/20"
               >
                 <LogIn className="w-4 h-4" />
                 Ke Halaman Login

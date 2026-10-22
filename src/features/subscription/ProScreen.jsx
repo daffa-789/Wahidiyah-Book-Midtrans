@@ -64,7 +64,7 @@ export const ProScreen = () => {
                   <div className={surfaces.statBadge}>
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
-                  <span>Bebas iklan & membaca lebih khusyuk</span>
+                  <span>Seluruh kitab bertanda Pro terbuka penuh</span>
                 </div>
                 <div className={layout.rowStartGap}>
                   <div className={surfaces.statBadge}>
@@ -76,7 +76,7 @@ export const ProScreen = () => {
                   <div className={surfaces.statBadge}>
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
-                  <span>Sinkronisasi riwayat pembacaan offline</span>
+                  <span>Aktif otomatis lewat QRIS, atau transfer manual yang diverifikasi admin</span>
                 </div>
               </div>
             </div>

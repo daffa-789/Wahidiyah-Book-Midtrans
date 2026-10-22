@@ -75,6 +75,8 @@ export default {
           warningLight: v('semantic-warning-light'),
           danger: v('semantic-danger'),
           dangerLight: v('semantic-danger-light'),
+          dangerOnDark: v('semantic-danger-on-dark'),
+          mutedOnDark: v('semantic-muted-on-dark'),
           info: v('semantic-info'),
           infoLight: v('semantic-info-light'),
         },
