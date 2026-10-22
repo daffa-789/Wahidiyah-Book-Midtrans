@@ -38,14 +38,24 @@ export const PaymentSuccessScreen = () => {
 
   const hasRef = Boolean(details.refNo) && details.refNo !== '—';
   const hasPeriod = Boolean(details.periodStr) && details.periodStr !== '—';
-  const total = Number(details.totalPaid ?? (Number(details.amount || 25000) + Number(details.adminFee || 3000)));
+
+  /* Struk bisa dipulihkan dari localStorage sesi lama yang menyimpan nominal
+     sebagai TEKS ("Rp 25.000"). Number() atas teks itu NaN dan tercetak apa
+     adanya di layar. Semua angka disaring lewat `angka` di sini. */
+  const angka = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  };
+  const amount = angka(details.amount) ?? fallbackAmount;
+  const adminFee = angka(details.adminFee) ?? fallbackAdminFee;
+  const total = angka(details.totalPaid) ?? (amount + adminFee);
 
   const rows = [
     ['Nomor referensi', hasRef ? details.refNo : 'WB-' + Date.now().toString(36).toUpperCase()],
     ['Waktu', details.dateStr],
     ['Paket', details.planName],
     ['Masa aktif', hasPeriod ? details.periodStr : 'Aktif 30 Hari (Pro)'],
-    ['Biaya layanan', Number(details.adminFee || 0) === 0 ? 'Gratis (Rp 0)' : `Rp ${Number(details.adminFee).toLocaleString('id-ID')}`]
+    ['Biaya layanan', adminFee === 0 ? 'Gratis (Rp 0)' : `Rp ${adminFee.toLocaleString('id-ID')}`]
   ];
 
   return (

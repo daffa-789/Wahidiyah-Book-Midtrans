@@ -67,22 +67,34 @@ export const usePaymentSlice = ({ patchUser }) => {
     return Boolean(targetUser?.isPro);
   }, []);
 
-  const completePayment = useCallback(async () => {
+  const completePayment = useCallback(async (facts = {}) => {
     const now = new Date();
     const expiry = new Date(now);
     expiry.setMonth(expiry.getMonth() + 1);
     const periodStr = `${now.toLocaleDateString('id-ID')} – ${expiry.toLocaleDateString('id-ID')}`;
     const refNo = `0000${Math.floor(10000000 + Math.random() * 90000000)}`;
 
+    /* Angka struk diambil dari server kalau ada. `selectedPlan.price` hanya
+       cadangan — riwayat langganan menyimpan harga sebagai TEKS ("Rp 25.000")
+       untuk tampilan, dan memakai teks itu sebagai angka membuat total di
+       struk menjadi NaN. */
+    const toNumber = (value) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    };
+    const amount = toNumber(facts.amount) ?? toNumber(selectedPlan.price);
+    const adminFee = toNumber(facts.adminFee);
+    const totalPaid = toNumber(facts.totalPaid) ?? (amount ? amount + (adminFee ?? 0) : null);
+
     const result = {
       refNo,
       dateStr: `${now.toLocaleDateString('id-ID')}, ${now.toLocaleTimeString('id-ID')}`,
       periodStr,
-      amount: selectedPlan.price,
-      adminFee: null,
-      totalPaid: null,
+      amount,
+      adminFee,
+      totalPaid,
       methodName: selectedPaymentMethod?.name || 'Bank Transfer',
-      planName: selectedPlan.title
+      planName: facts.planName || selectedPlan.title
     };
     setLastPaymentResult(result);
 
@@ -101,7 +113,6 @@ export const usePaymentSlice = ({ patchUser }) => {
           ...(current || {}),
           refNo: latest?.ref || current?.refNo,
           periodStr: latest?.period || current?.periodStr,
-          amount: latest?.price || current?.amount,
           planName: latest?.planName || current?.planName
         }));
       } catch (error) {
@@ -130,8 +141,16 @@ export const usePaymentSlice = ({ patchUser }) => {
 
         const settledExpiry = payload.user?.subscription_expires_at || expiry.toISOString();
         const settledPeriod = payload.transaction?.periodStr || payload.subscription?.period || periodStr;
-        if (payload.transaction?.refNo) {
-          setLastPaymentResult((current) => ({ ...current, refNo: payload.transaction.refNo }));
+        const tx = payload.transaction;
+
+        if (tx?.refNo || tx?.totalPaid != null) {
+          setLastPaymentResult((current) => ({
+            ...current,
+            refNo: tx.refNo ?? current?.refNo,
+            amount: toNumber(tx.amount) ?? current?.amount,
+            adminFee: toNumber(tx.adminFee) ?? current?.adminFee,
+            totalPaid: toNumber(tx.totalPaid) ?? current?.totalPaid
+          }));
         }
 
         if (payload.alreadyPro) {

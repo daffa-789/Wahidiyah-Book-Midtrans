@@ -106,9 +106,9 @@ export const PaymentConfirmScreen = () => {
 
   const isQrisMethod = isQrisPaymentMethod(selectedPaymentMethod);
 
-  const handlePaymentSuccess = useCallback(async () => {
+  const handlePaymentSuccess = useCallback(async (facts) => {
     try {
-      await completePayment();
+      await completePayment(facts);
     } finally {
       navigateTo('payment-success');
     }

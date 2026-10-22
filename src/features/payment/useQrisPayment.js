@@ -64,6 +64,8 @@ export const useQrisPayment = ({
         qrMidtransUrl: data.qrMidtransUrl || null,
         simulationAvailable: Boolean(data.simulationAvailable),
         totalPaid: data.totalPaid,
+        amount: data.amount ?? null,
+        adminFee: data.adminFee ?? null,
         planName: data.planName,
         expiredAt: data.expiredAt
       });
@@ -116,11 +118,21 @@ export const useQrisPayment = ({
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
 
     if (onPaymentSuccess) {
+      /* Angka struk ikut diserahkan: server charge sudah mengirim nominal,
+         biaya layanan, dan total yang sebenarnya. */
+      const facts = qrTransaction
+        ? {
+          amount: qrTransaction.amount,
+          adminFee: qrTransaction.adminFee,
+          totalPaid: qrTransaction.totalPaid,
+          planName: qrTransaction.planName
+        }
+        : null;
       setTimeout(() => {
-        onPaymentSuccess();
+        onPaymentSuccess(facts);
       }, 1000);
     }
-  }, [onPaymentSuccess]);
+  }, [onPaymentSuccess, qrTransaction]);
 
   
   
