@@ -1,4 +1,11 @@
 -- ══════════════════════════════════════════════════════════════════════════
+-- STATUS: SUDAH DIJALANKAN 22 Oktober 2026 lewat Supabase Studio (SQL Editor)
+-- pada project pdimjmbjutlzjdfjaqgt, dan full_setup.sql sudah disinkronkan.
+-- Hasil: 0 policy pada qris_transactions (rls=true), grant anon/authenticated
+-- tersisa DELETE/INSERT/SELECT/UPDATE, anon INSERT ditolak 42501.
+-- Berkas ini dipertahankan sebagai catatan rollback + jalan pulih untuk
+-- environment lain (mis. kalau nanti bikin project Supabase baru).
+-- ══════════════════════════════════════════════════════════════════════════
 -- HARDENING SQL — VULN-02 (policy publik qris_transactions) & VULN-16 (grant)
 -- ══════════════════════════════════════════════════════════════════════════
 -- Project  : pdimjmbjutlzjdfjaqgt  (Skripsi_Project)

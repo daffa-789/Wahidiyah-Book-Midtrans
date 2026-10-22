@@ -398,9 +398,17 @@ CREATE POLICY "Public Read Active Carousel" ON public.carousel_slides
     );
 CREATE POLICY "Public Read Users" ON public.users FOR SELECT USING (true);
 
-CREATE POLICY "Public Read QRIS Transactions" ON public.qris_transactions FOR SELECT USING (true);
-CREATE POLICY "Public Insert QRIS Transactions" ON public.qris_transactions FOR INSERT TO anon, authenticated WITH CHECK (status = 'WAITING_PAYMENT');
-CREATE POLICY "Public Update QRIS Transactions" ON public.qris_transactions FOR UPDATE TO anon, authenticated USING (status = 'WAITING_PAYMENT') WITH CHECK (status IN ('PAID', 'CANCELLED'));
+-- VULN-02: qris_transactions SENGAJA tidak punya policy = default deny untuk
+-- anon & authenticated. Server memakai service-role key (melewati RLS), dan
+-- tidak ada satu pun kode klien di src/ yang menyentuh tabel ini.
+--
+-- Jangan buat policy di sini: baris transaksi (user_id, customer_name, amount,
+-- plan_name, qr_payload, paid_at) jangan pernah terbuka lewat anon key yang
+-- ikut ter-bundle di klien Vite. Tiga DROP di bawah menjaga basis data lama
+-- yang masih memiliki policy warisan.
+DROP POLICY IF EXISTS "Public Read QRIS Transactions" ON public.qris_transactions;
+DROP POLICY IF EXISTS "Public Insert QRIS Transactions" ON public.qris_transactions;
+DROP POLICY IF EXISTS "Public Update QRIS Transactions" ON public.qris_transactions;
 
 DO $$
 BEGIN
@@ -414,14 +422,29 @@ BEGIN
     END IF;
 END $$;
 
+-- VULN-16: RLS tidak membatasi operasi tingkat tabel, dan bawaan Supabase
+-- memberi anon/authenticated TRUNCATE, REFERENCES, TRIGGER, MAINTAIN. Aplikasi
+-- tidak pernah memerlukannya (server memakai service-role), jadi dicabut.
+-- ALTER DEFAULT PRIVILEGES menjaga tabel yang BARU dibuat (termasuk tabel fitur
+-- nanti) ikut warisan; jalankan sebagai role yang sama dengan yang membuat
+-- tabel di dashboard (postgres).
+REVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN
+  ON ALL TABLES IN SCHEMA public FROM anon, authenticated;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLES FROM anon, authenticated;
+
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-        IF NOT EXISTS (
+        -- VULN-02: pembayaran QRIS dihapus dari siaran realtime. Tidak ada
+        -- klien yang berlangganan channel ini, jadi yang tersisa hanya
+        -- permukaan kebocoran baris transaksi lewat WAL.
+        IF EXISTS (
             SELECT 1 FROM pg_publication_tables
-            WHERE pubname = 'supabase_realtime' AND tablename = 'qris_transactions'
+            WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'qris_transactions'
         ) THEN
-            ALTER PUBLICATION supabase_realtime ADD TABLE public.qris_transactions;
+            ALTER PUBLICATION supabase_realtime DROP TABLE public.qris_transactions;
         END IF;
 
         IF NOT EXISTS (
@@ -460,6 +483,11 @@ END $$;
 -- CATATAN: blok serupa juga tersedia sebagai berkas berdiri sendiri di
 --          `carousel_slides.sql` — pakai itu bila HANYA ingin menambah tabel
 --          carousel tanpa menyentuh apa pun yang lain.
+--
+-- BASIS DATA SUDAH TERISI? Bagian di atas tidak boleh dijalankan (ia DROP
+-- TABLE). Untuk membawa basis data yang sudah ada ke kondisi aman, pakai
+--          `hardening_vuln02_vuln16.sql` — idempoten, berisi snapshot +
+--          DROP policy qris_transactions + pencabutan grant + verifikasi.
 -- ════════════════════════════════════════════════════════════════════════════
 
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS time_start VARCHAR(5) DEFAULT '19:30';
@@ -506,7 +534,7 @@ BEGIN
 END $$;
 
 DROP POLICY IF EXISTS "Public Read Users" ON public.users;
-DROP POLICY IF EXISTS "Public Update QRIS Transactions" ON public.qris_transactions;
+-- Policy warisan qris_transactions sudah dijatuhkan di blok VULN-02 di atas.
 
 DO $$
 DECLARE
