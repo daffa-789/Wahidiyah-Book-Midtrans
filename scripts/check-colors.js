@@ -4,13 +4,18 @@ import { fileURLToPath } from 'url';
 import pc from 'picocolors';
 
 /**
- * Guard warna design system (DESIGN.md v2.6.0 — Seksi 1.5: 3 Color Key & 60-30-10)
+ * Guard warna design system (DESIGN.md di akar repo — Seksi 1.5: 3 Color Key & 60-30-10)
  *
- * Melarang kelas palet Tailwind mentah (slate, gray, indigo, rose, amber, dst.)
- * dan `bg-white`/`bg-black` di seluruh `src/`. Warna struktural wajib memakai
- * token: brand-*, cream-*, ink-*, gold-*, ui-*, semantic-*.
+ * Melarang di seluruh `src/`:
+ *  - kelas palet Tailwind mentah (slate, gray, indigo, rose, amber, dst.)
+ *  - `bg-white` / `bg-black` / `text-black`
+ *  - `text-white` / `ring-black` / `border-white` (D-01, D-02)
+ *  - hex arbitrer `bg-[#…]`, `text-[#…]`, dan variannya
  *
- * Whitelist (pengecualian terdokumentasi di DESIGN.md):
+ * Warna struktural wajib memakai token: brand-*, cream-*, ink-*, gold-*,
+ * ui-*, semantic-* — hanya lewat token nilai mode malam bisa ikut berganti.
+ *
+ * Whitelist (pengecualian terdokumentasi di DESIGN.md, per baris):
  *  - PaymentReceiptModal.jsx : kertas putih kwitansi cetak (print:shown)
  *  - PdfReaderScreen.jsx     : kertas PDF pembaca (tema artikel pembaca)
  */
@@ -21,18 +26,34 @@ const rootDir = path.resolve(__dirname, '..');
 const RAW_PALETTE_RE =
   /\b(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/g;
 
-/* Tanpa `\/` di lookahead: varian opasitas (bg-white/50, bg-black/40) juga
+/* Tanpa `\/` di lookahead: varian opasitas (bg-white/50, border-white/10) juga
    dilanggar — permukaan mono transparan wajib lewat token ink/cream. */
 const PLAIN_MONO_RE = /\b(?:bg-white|bg-black|text-black)\b(?!-|\w)/g;
 
+/* D-01/D-02: teks putih mentah dan cincin hitam mentah tidak membaca token,
+   sehingga ikut rusak saat mode malam membalik nilai CSS variable. */
+const RAW_ON_SURFACE_RE = /\b(?:text-white|ring-black|border-white)\b(?!-|\w)/g;
+
+/* Hex arbitrer melewati sistem token sepenuhnya. */
+const ARBITRARY_COLOR_RE = /\b(?:bg|text|border|ring|fill|from|via|to|stroke)-\[#/g;
+
+/* Whitelist = permukaan yang MEMANG putih/hitam secara desain (kertas cetak,
+   tema artikel pembaca) dan punya paletnya sendiri di luar 3 Color Key.
+   `allow` berisi pola yang diizinkan pada baris itu saja. */
 const WHITELIST = new Map([
   [
     path.join('src', 'features', 'payment', 'PaymentReceiptModal.jsx'),
-    'Kertas putih kwitansi cetak (diperbolehkan — permukaan print)'
+    {
+      reason: 'Kertas putih kwitansi cetak (diperbolehkan — permukaan print)',
+      allow: [/\bbg-white\b/]
+    }
   ],
   [
     path.join('src', 'features', 'reader', 'PdfReaderScreen.jsx'),
-    'Kertas PDF pembaca (diperbolehkan — tema artikel pembaca)'
+    {
+      reason: 'Kertas PDF pembaca (diperbolehkan — tema artikel pembaca punya palet sendiri)',
+      allow: [/\bbg-white\b/, /\btext-white\b/, /\bborder-white\b/, /-\[#/]
+    }
   ]
 ]);
 
@@ -58,13 +79,17 @@ function walk(dir) {
 function scanFile(fullPath, relPath) {
   const content = fs.readFileSync(fullPath, 'utf8');
   const lines = content.split(/\r?\n/);
-  const isWhitelisted = WHITELIST.has(relPath);
+  const allowed = WHITELIST.get(relPath)?.allow || [];
+  const isAllowed = (line) => allowed.some((pattern) => pattern.test(line));
 
   lines.forEach((line, idx) => {
+    /* Palet mentah tetap dilarang di berkas whitelist sekalipun — pengecualian
+       hanya untuk permukaan putih/hitam dan hex yang memang paletnya sendiri. */
     collect(RAW_PALETTE_RE, line, idx, relPath, 'palet mentah');
-    if (!(isWhitelisted && /\bbg-white\b/.test(line))) {
-      collect(PLAIN_MONO_RE, line, idx, relPath, 'mono mentah (putih/hitam)');
-    }
+    if (isAllowed(line)) return;
+    collect(PLAIN_MONO_RE, line, idx, relPath, 'mono mentah (putih/hitam)');
+    collect(RAW_ON_SURFACE_RE, line, idx, relPath, 'teks/cincin/garis mono di atas permukaan');
+    collect(ARBITRARY_COLOR_RE, line, idx, relPath, 'hex arbitrer');
   });
 }
 
@@ -86,7 +111,8 @@ if (violations.length > 0) {
     console.error(pc.yellow(`  - ${v.file}:${v.line} → "${v.token}" (${v.kind})`));
   }
   console.error(pc.cyan('\n  Ganti dengan token: brand-*, cream-*, ink-*, gold-*, ui-*, semantic-*.'));
-  console.error(pc.cyan('  Whitelist: PaymentReceiptModal.jsx (kwitansi), PdfReaderScreen.jsx (kertas PDF).'));
+  console.error(pc.cyan('  teks di permukaan gelap  → text-cream-50   |  garis tipis → border-cream-50/10'));
+  console.error(pc.cyan('  Whitelist per-baris: PaymentReceiptModal.jsx (kwitansi cetak), PdfReaderScreen.jsx (kertas PDF).'));
   process.exit(1);
 } else {
   console.log(pc.green(`✔ ${totalScanned} berkas src/ konsisten dengan 3 Color Key & 60-30-10 (0 palet mentah)`));
