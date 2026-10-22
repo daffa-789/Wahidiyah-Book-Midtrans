@@ -1,3 +1,10 @@
+-- ════════════════════════════════════════════════════════════════════════════
+-- PERINGATAN: skrip ini MENGHAPUS seluruh tabel di bawah lalu membangunnya
+-- ulang dari nol. Jangan dijalankan pada database yang sudah berisi data.
+-- Untuk database yang sudah berjalan, pakai migrasi bertarget seperti
+-- remove_avatar_column.sql.
+-- ════════════════════════════════════════════════════════════════════════════
+
 ALTER DATABASE postgres SET timezone TO 'Asia/Jakarta';
 
 DROP TABLE IF EXISTS public.carousel_slides CASCADE;
@@ -33,6 +40,9 @@ CREATE TYPE public.qris_payment_status AS ENUM ('WAITING_PAYMENT', 'PAID', 'EXPI
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Catatan: kolom `avatar` sengaja tidak ada. Fitur foto profil dicabut
+-- (commit 68aac84) dan kode tidak lagi membaca/menulisnya. Database lama yang
+-- masih punya kolom itu dirapikan lewat remove_avatar_column.sql.
 CREATE TABLE public.users (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -43,7 +53,6 @@ CREATE TABLE public.users (
     is_pro BOOLEAN DEFAULT FALSE,
     subscription_expires_at TIMESTAMPTZ DEFAULT NULL,
     dob DATE DEFAULT NULL,
-    avatar TEXT DEFAULT NULL,
     phone VARCHAR(20) UNIQUE DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
