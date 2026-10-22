@@ -41,6 +41,7 @@ import { canExposeDevOtp } from './lib/otp.js';
 import { isMailerConfigured } from './mailer.js';
 import { getWhatsAppProviderInfo, isWhatsAppConfigured } from './whatsapp.js';
 import { startReminderScheduler } from './lib/eventReminder.js';
+import { startMembershipSweeper } from './lib/membership.js';
 import { logger, banner } from './logger.js';
 import { testConnection } from './db.js';
 
@@ -250,6 +251,7 @@ if (process.env.NODE_ENV !== 'test') {
     }
 
     startReminderScheduler();
+    startMembershipSweeper();
   };
 
   if (devHttpServer) {

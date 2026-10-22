@@ -57,8 +57,30 @@ export const verifyPassword = async (plainPassword, storedHash) => {
   }
 };
 
-export const toPublicUser = (user) => {
-  const isPro = Boolean(user?.is_pro === true || user?.is_pro === 1 || user?.is_pro === '1' || user?.is_pro === 'true' || user?.isPro === true);
+export const effectiveIsPro = (user) => {
+  return Boolean(user?.is_pro === true || user?.is_pro === 1 || user?.is_pro === '1' || user?.is_pro === 'true' || user?.isPro === true);
+};
+
+/**
+ * Kebenaran langganan Pro (VULN-12): flag is_pro saja tidak cukup — kolom
+ * subscription_expires_at harus ada di masa depan. Batas ketat: tepat sama
+ * dengan `now` sudah dianggap berakhir.
+ *
+ * Masa berlaku kosong berarti pemberian manual oleh admin (PUT
+ * /api/users/:id/pro menyetel is_pro tanpa tanggal), jadi tetap aktif;
+ * jalur itu yang menjaga admin tidak terkunci dari kontennya sendiri.
+ */
+export const hasActivePro = (user, now = new Date()) => {
+  if (!effectiveIsPro(user)) return false;
+  const raw = user.subscription_expires_at ?? user.subscriptionExpiresAt ?? null;
+  if (raw === null || raw === undefined || raw === '') return true;
+  const expiresAt = new Date(raw);
+  if (Number.isNaN(expiresAt.getTime())) return false;
+  return expiresAt.getTime() > now.getTime();
+};
+
+export const toPublicUser = (user, now = new Date()) => {
+  const isPro = hasActivePro(user, now);
   return {
     id: user.id,
     name: user.name,
@@ -67,15 +89,11 @@ export const toPublicUser = (user) => {
     login_method: user.login_method || 'email',
     is_pro: isPro,
 
-    subscription_expires_at: isPro ? toIsoOrNull(user.subscription_expires_at) : null,
+    subscription_expires_at: toIsoOrNull(user.subscription_expires_at),
     avatar: user.avatar || null,
     phone: user.phone || null,
     created_at: toIsoOrNull(user.created_at)
   };
-};
-
-export const effectiveIsPro = (user) => {
-  return Boolean(user?.is_pro === true || user?.is_pro === 1 || user?.is_pro === '1' || user?.is_pro === 'true' || user?.isPro === true);
 };
 
 export const loadMembershipUser = async (userId) => {

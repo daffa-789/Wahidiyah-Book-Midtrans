@@ -2,7 +2,8 @@
 
 import crypto from 'crypto';
 import { supabaseServer } from '../db.js';
-import { effectiveIsPro, generateId } from '../auth.js';
+import { generateId, hasActivePro, settleExpiredMembership } from '../auth.js';
+import { logger } from '../logger.js';
 
 
 export const ACTIVE_SUBSCRIPTION_STATUS = 'Aktif';
@@ -88,9 +89,37 @@ export async function activatePaidMembership({
 
 
 export const activeSubscriptionConflict = (user) => {
-  if (!effectiveIsPro(user)) return null;
+  if (!hasActivePro(user)) return null;
   return {
     success: false,
     message: 'Langganan Pro Anda saat ini masih aktif. Anda sudah menikmati seluruh fitur Pro.'
   };
 };
+
+/**
+ * Penyapu harian kedaluwarsa langganan (VULN-12).
+ *
+ * Sebelum ini `settleExpiredMembership` hanya dipanggil di jalur request
+ * pembayaran, sehingga baris `is_pro` pengguna yang tidak pernah bertransaksi
+ * lagi tetap bernyawa selamanya. Sekali sehari cukup: tanggal langganan tidak
+ * berubah dalam hitungan menit, dan jalannya tetap diulang saat boot supaya
+ * baris yang tertunda selama server mati ikut dirapikan.
+ */
+export const MEMBERSHIP_SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+export function startMembershipSweeper(intervalMs = MEMBERSHIP_SWEEP_INTERVAL_MS) {
+  const run = async () => {
+    const before = new Date();
+    await settleExpiredMembership();
+    logger.info('MEMBERSHIP', 'Penyapu kedaluwarsa langganan berjalan', {
+      sejak: before.toISOString()
+    });
+  };
+  run().catch((error) => logger.error('MEMBERSHIP', 'Penyapu kedaluwarsa gagal', { pesan: error?.message }));
+  const timer = setInterval(
+    () => run().catch((error) => logger.error('MEMBERSHIP', 'Penyapu kedaluwarsa gagal', { pesan: error?.message })),
+    intervalMs
+  );
+  timer.unref?.();
+  return timer;
+}

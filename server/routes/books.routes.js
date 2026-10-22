@@ -3,7 +3,7 @@
 import path from 'path';
 import { Router } from 'express';
 import { supabaseServer } from '../db.js';
-import { effectiveIsPro, generateId, requireAdmin, requireAuth } from '../auth.js';
+import { generateId, hasActivePro, requireAdmin, requireAuth } from '../auth.js';
 import {
   badRequest,
   fail,
@@ -164,7 +164,7 @@ booksRouter.get('/books/:id/content', requireAuth, wrap(async (req, res) => {
 
   if (!book?.content_url) return notFound(res, 'Konten buku tidak ditemukan');
 
-  if (book.is_locked && !effectiveIsPro(req.user) && req.user.role !== 'admin') {
+  if (book.is_locked && !hasActivePro(req.authUser || req.user) && req.user.role !== 'admin') {
     return forbidden(res, 'Buku ini khusus pembaca Pro. Aktifkan paket Pro untuk membukanya.');
   }
 
