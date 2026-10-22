@@ -5,6 +5,10 @@
 -- tersisa DELETE/INSERT/SELECT/UPDATE, anon INSERT ditolak 42501.
 -- Berkas ini dipertahankan sebagai catatan rollback + jalan pulih untuk
 -- environment lain (mis. kalau nanti bikin project Supabase baru).
+--
+-- Catatan 23 Okt 2026: full_setup.sql tidak lagi membuat qris_transactions
+-- (tabel legacy, 0 baris, tidak dipakai kode). Karena itu bagian 2 di bawah
+-- hanya berlaku untuk basis data lama yang masih memiliki tabel tersebut.
 -- ══════════════════════════════════════════════════════════════════════════
 -- HARDENING SQL — VULN-02 (policy publik qris_transactions) & VULN-16 (grant)
 -- ══════════════════════════════════════════════════════════════════════════

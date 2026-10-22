@@ -8,7 +8,6 @@
 ALTER DATABASE postgres SET timezone TO 'Asia/Jakarta';
 
 DROP TABLE IF EXISTS public.carousel_slides CASCADE;
-DROP TABLE IF EXISTS public.qris_transactions CASCADE;
 DROP TABLE IF EXISTS public.transactions CASCADE;
 DROP TABLE IF EXISTS public.subscriptions CASCADE;
 DROP TABLE IF EXISTS public.ads CASCADE;
@@ -18,12 +17,6 @@ DROP TABLE IF EXISTS public.password_resets CASCADE;
 DROP TABLE IF EXISTS public.email_verifications CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
-DROP FUNCTION IF EXISTS public.fn_handle_qris_payment() CASCADE;
-DROP FUNCTION IF EXISTS public.pay_qris_simulation(TEXT) CASCADE;
-DROP FUNCTION IF EXISTS public.cancel_qris_simulation(TEXT) CASCADE;
-DROP FUNCTION IF EXISTS public.create_qris_simulation(TEXT, TEXT, NUMERIC, TEXT, TEXT) CASCADE;
-
-DROP TYPE IF EXISTS public.qris_payment_status CASCADE;
 DROP TYPE IF EXISTS public.user_role CASCADE;
 DROP TYPE IF EXISTS public.login_method_type CASCADE;
 DROP TYPE IF EXISTS public.active_plan_type CASCADE;
@@ -36,7 +29,6 @@ CREATE TYPE public.user_role AS ENUM ('user', 'admin');
 CREATE TYPE public.login_method_type AS ENUM ('email', 'google');
 CREATE TYPE public.subscription_status AS ENUM ('Aktif', 'Berakhir');
 CREATE TYPE public.transaction_status AS ENUM ('pending', 'success', 'rejected');
-CREATE TYPE public.qris_payment_status AS ENUM ('WAITING_PAYMENT', 'PAID', 'EXPIRED', 'CANCELLED', 'FAILED');
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -52,7 +44,6 @@ CREATE TABLE public.users (
     login_method public.login_method_type DEFAULT 'email',
     is_pro BOOLEAN DEFAULT FALSE,
     subscription_expires_at TIMESTAMPTZ DEFAULT NULL,
-    dob DATE DEFAULT NULL,
     phone VARCHAR(20) UNIQUE DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -155,25 +146,6 @@ CREATE TABLE public.email_verifications (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE public.qris_transactions (
-    id VARCHAR(100) PRIMARY KEY,
-    transaction_id VARCHAR(100) NOT NULL UNIQUE,
-    qr_id VARCHAR(100) NOT NULL,
-    merchant_name VARCHAR(150) NOT NULL DEFAULT 'Wahidiyah Book Store',
-    amount NUMERIC(12, 2) NOT NULL DEFAULT 25000,
-    currency VARCHAR(10) DEFAULT 'IDR',
-    status public.qris_payment_status DEFAULT 'WAITING_PAYMENT',
-    plan_name VARCHAR(100) DEFAULT 'Paket Bulanan',
-    user_id VARCHAR(50) REFERENCES public.users(id) ON DELETE SET NULL,
-    customer_name VARCHAR(150) DEFAULT 'Pembaca Wahidiyah',
-    source VARCHAR(50) DEFAULT 'wahidiyah_book',
-    qr_payload TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '15 minutes',
-    paid_at TIMESTAMPTZ DEFAULT NULL,
-    cancelled_at TIMESTAMPTZ DEFAULT NULL
-);
-
 CREATE INDEX idx_books_category ON public.books(category);
 CREATE INDEX idx_events_date ON public.events(event_date);
 CREATE INDEX idx_subs_user ON public.subscriptions(user_id);
@@ -187,202 +159,9 @@ CREATE INDEX idx_email_verifications_lookup
 CREATE INDEX idx_email_verifications_expires
     ON public.email_verifications (expires_at);
 
-CREATE INDEX idx_qris_txn_id ON public.qris_transactions(transaction_id);
-CREATE INDEX idx_qris_status ON public.qris_transactions(status);
-CREATE INDEX idx_qris_user ON public.qris_transactions(user_id);
-CREATE INDEX idx_qris_created ON public.qris_transactions(created_at DESC);
-
 CREATE INDEX idx_carousel_order ON public.carousel_slides(sort_order, id);
 CREATE INDEX idx_carousel_active ON public.carousel_slides(is_active, starts_at, ends_at);
 
-CREATE OR REPLACE FUNCTION public.fn_handle_qris_payment()
-RETURNS TRIGGER AS $$
-DECLARE
-    v_user_id VARCHAR(50);
-    v_plan VARCHAR(100);
-    v_amount NUMERIC(12, 2);
-    v_tx_id VARCHAR(100);
-    v_sub_id VARCHAR(50);
-    v_pay_tx_id VARCHAR(50);
-BEGIN
-    IF (TG_OP = 'UPDATE' AND NEW.status = 'PAID' AND (OLD.status IS NULL OR OLD.status <> 'PAID')) OR
-       (TG_OP = 'INSERT' AND NEW.status = 'PAID') THEN
-
-        v_user_id := NEW.user_id;
-        v_plan := COALESCE(NEW.plan_name, 'Paket Bulanan');
-        v_amount := COALESCE(NEW.amount, 25000);
-        v_tx_id := NEW.transaction_id;
-        v_sub_id := 'sub-qris-' || substr(md5(random()::text), 1, 8);
-        v_pay_tx_id := 'tx-qris-' || substr(md5(random()::text), 1, 8);
-
-        IF NEW.paid_at IS NULL THEN
-            NEW.paid_at := NOW();
-        END IF;
-
-        IF v_user_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.users WHERE id = v_user_id) THEN
-            UPDATE public.users
-            SET
-                is_pro = TRUE,
-                subscription_expires_at = NOW() + INTERVAL '30 days'
-            WHERE id = v_user_id;
-
-            INSERT INTO public.subscriptions (
-                id, user_id, plan_name, price, status, period,
-                expires_at, ref_code, created_at
-            ) VALUES (
-                v_sub_id, v_user_id, v_plan, v_amount, 'Aktif', '1 Bulan',
-                NOW() + INTERVAL '30 days', v_tx_id, NOW()
-            );
-
-            IF NOT EXISTS (SELECT 1 FROM public.transactions WHERE ref_no = v_tx_id) THEN
-                INSERT INTO public.transactions (
-                    id, ref_no, user_id, plan_name, amount, admin_fee,
-                    total_paid, payment_method, status, verified_at, created_at
-                ) VALUES (
-                    v_pay_tx_id, v_tx_id, v_user_id, v_plan, v_amount, 0,
-                    v_amount, 'QRIS Simulator', 'success', NOW(), NOW()
-                );
-            END IF;
-        END IF;
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
-
-REVOKE EXECUTE ON FUNCTION public.fn_handle_qris_payment() FROM PUBLIC, anon, authenticated;
-
-DROP TRIGGER IF EXISTS trg_on_qris_payment_paid ON public.qris_transactions;
-CREATE TRIGGER trg_on_qris_payment_paid
-BEFORE INSERT OR UPDATE ON public.qris_transactions
-FOR EACH ROW
-EXECUTE FUNCTION public.fn_handle_qris_payment();
-
-CREATE OR REPLACE FUNCTION public.pay_qris_simulation(p_transaction_id TEXT)
-RETURNS JSON AS $$
-DECLARE
-    v_row public.qris_transactions%ROWTYPE;
-BEGIN
-    SELECT * INTO v_row
-    FROM public.qris_transactions
-    WHERE transaction_id = p_transaction_id;
-
-    IF NOT FOUND THEN
-        RETURN json_build_object(
-            'success', false,
-            'status', 'NOT_FOUND',
-            'message', 'Transaksi QRIS tidak ditemukan di database Supabase.'
-        );
-    END IF;
-
-    IF v_row.status = 'PAID' THEN
-        RETURN json_build_object(
-            'success', false,
-            'status', 'FAILED',
-            'message', 'Transaksi sudah berstatus PAID (lunas) sebelumnya.'
-        );
-    END IF;
-
-    IF v_row.status IN ('EXPIRED', 'CANCELLED') THEN
-        RETURN json_build_object(
-            'success', false,
-            'status', v_row.status,
-            'message', 'Transaksi tidak dapat dibayar karena berstatus ' || v_row.status
-        );
-    END IF;
-
-    UPDATE public.qris_transactions
-    SET status = 'PAID', paid_at = NOW()
-    WHERE transaction_id = p_transaction_id
-    RETURNING * INTO v_row;
-
-    RETURN json_build_object(
-        'success', true,
-        'status', 'PAID',
-        'message', 'Pembayaran QRIS simulasi berhasil! Langganan Wahidiyah Book Anda telah aktif.',
-        'transaction', row_to_json(v_row)
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_temp;
-
-CREATE OR REPLACE FUNCTION public.create_qris_simulation(
-    p_user_id TEXT DEFAULT NULL,
-    p_merchant_name TEXT DEFAULT 'Wahidiyah Book Store',
-    p_amount NUMERIC DEFAULT 25000,
-    p_plan_name TEXT DEFAULT 'Paket Bulanan',
-    p_customer_name TEXT DEFAULT 'Pembaca Wahidiyah'
-)
-RETURNS JSON AS $$
-DECLARE
-    v_id TEXT;
-    v_txn_id TEXT;
-    v_qr_id TEXT;
-    v_payload TEXT;
-    v_row public.qris_transactions%ROWTYPE;
-    v_rand TEXT;
-    v_date TEXT;
-BEGIN
-    v_date := TO_CHAR(NOW(), 'YYYYMMDD');
-    v_rand := LPAD(FLOOR(RANDOM() * 90000 + 10000)::TEXT, 5, '0');
-    v_txn_id := 'TXN-' || v_date || '-' || v_rand;
-    v_qr_id := 'QR-' || LPAD(FLOOR(RANDOM() * 900000 + 100000)::TEXT, 6, '0');
-    v_id := 'qtx-' || substr(md5(random()::text), 1, 10);
-    v_payload := 'QRIS_SIMULATION|' || v_txn_id || '|' || v_qr_id || '|' || p_merchant_name || '|' || ROUND(p_amount)::TEXT;
-
-    INSERT INTO public.qris_transactions (
-        id, transaction_id, qr_id, merchant_name, amount, currency,
-        status, plan_name, user_id, customer_name, source, qr_payload,
-        created_at, expires_at
-    ) VALUES (
-        v_id, v_txn_id, v_qr_id, p_merchant_name, p_amount, 'IDR',
-        'WAITING_PAYMENT', p_plan_name, p_user_id, p_customer_name,
-        'wahidiyah_book', v_payload,
-        NOW(), NOW() + INTERVAL '15 minutes'
-    )
-    RETURNING * INTO v_row;
-
-    RETURN row_to_json(v_row);
-END;
-$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_temp;
-
-CREATE OR REPLACE FUNCTION public.cancel_qris_simulation(p_transaction_id TEXT)
-RETURNS JSON AS $$
-DECLARE
-    v_row public.qris_transactions%ROWTYPE;
-BEGIN
-    SELECT * INTO v_row
-    FROM public.qris_transactions
-    WHERE transaction_id = p_transaction_id;
-
-    IF NOT FOUND THEN
-        RETURN json_build_object(
-            'success', false,
-            'status', 'NOT_FOUND',
-            'message', 'Transaksi QRIS tidak ditemukan.'
-        );
-    END IF;
-
-    IF v_row.status = 'PAID' THEN
-        RETURN json_build_object(
-            'success', false,
-            'status', 'FAILED',
-            'message', 'Transaksi sudah PAID dan tidak dapat dibatalkan.'
-        );
-    END IF;
-
-    UPDATE public.qris_transactions
-    SET status = 'CANCELLED', cancelled_at = NOW()
-    WHERE transaction_id = p_transaction_id
-    RETURNING * INTO v_row;
-
-    RETURN json_build_object(
-        'success', true,
-        'status', 'CANCELLED',
-        'message', 'Transaksi QRIS berhasil dibatalkan.',
-        'transaction', row_to_json(v_row)
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_temp;
 
 ALTER TABLE public.books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
@@ -390,7 +169,6 @@ ALTER TABLE public.carousel_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.qris_transactions ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.email_verifications ENABLE ROW LEVEL SECURITY;
 
@@ -406,18 +184,6 @@ CREATE POLICY "Public Read Active Carousel" ON public.carousel_slides
         AND (ends_at IS NULL OR ends_at >= CURRENT_DATE)
     );
 CREATE POLICY "Public Read Users" ON public.users FOR SELECT USING (true);
-
--- VULN-02: qris_transactions SENGAJA tidak punya policy = default deny untuk
--- anon & authenticated. Server memakai service-role key (melewati RLS), dan
--- tidak ada satu pun kode klien di src/ yang menyentuh tabel ini.
---
--- Jangan buat policy di sini: baris transaksi (user_id, customer_name, amount,
--- plan_name, qr_payload, paid_at) jangan pernah terbuka lewat anon key yang
--- ikut ter-bundle di klien Vite. Tiga DROP di bawah menjaga basis data lama
--- yang masih memiliki policy warisan.
-DROP POLICY IF EXISTS "Public Read QRIS Transactions" ON public.qris_transactions;
-DROP POLICY IF EXISTS "Public Insert QRIS Transactions" ON public.qris_transactions;
-DROP POLICY IF EXISTS "Public Update QRIS Transactions" ON public.qris_transactions;
 
 DO $$
 BEGIN
@@ -446,16 +212,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-        -- VULN-02: pembayaran QRIS dihapus dari siaran realtime. Tidak ada
-        -- klien yang berlangganan channel ini, jadi yang tersisa hanya
-        -- permukaan kebocoran baris transaksi lewat WAL.
-        IF EXISTS (
-            SELECT 1 FROM pg_publication_tables
-            WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'qris_transactions'
-        ) THEN
-            ALTER PUBLICATION supabase_realtime DROP TABLE public.qris_transactions;
-        END IF;
-
         IF NOT EXISTS (
             SELECT 1 FROM pg_publication_tables
             WHERE pubname = 'supabase_realtime' AND tablename = 'users'
@@ -495,8 +251,8 @@ END $$;
 --
 -- BASIS DATA SUDAH TERISI? Bagian di atas tidak boleh dijalankan (ia DROP
 -- TABLE). Untuk membawa basis data yang sudah ada ke kondisi aman, pakai
---          `hardening_vuln02_vuln16.sql` — idempoten, berisi snapshot +
---          DROP policy qris_transactions + pencabutan grant + verifikasi.
+--          `hardening_vuln02_vuln16.sql` — idempoten, berisi pencabutan
+--          grant tingkat tabel + verifikasi.
 -- ════════════════════════════════════════════════════════════════════════════
 
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS time_start VARCHAR(5) DEFAULT '19:30';
@@ -505,6 +261,9 @@ ALTER TABLE public.events ADD COLUMN IF NOT EXISTS description TEXT DEFAULT '';
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS organizer VARCHAR(150) DEFAULT '';
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS show_in_carousel BOOLEAN DEFAULT FALSE;
 
+-- Sengaja mengulang CREATE TABLE dari bagian utama: blok PATCH ini harus bisa
+-- dijalankan SENDIRI pada basis data lama yang belum punya tabel carousel.
+-- IF NOT EXISTS membuatnya tidak berefek saat tabelnya sudah ada.
 CREATE TABLE IF NOT EXISTS public.carousel_slides (
     id VARCHAR(50) PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
@@ -543,26 +302,6 @@ BEGIN
 END $$;
 
 DROP POLICY IF EXISTS "Public Read Users" ON public.users;
--- Policy warisan qris_transactions sudah dijatuhkan di blok VULN-02 di atas.
-
-DO $$
-DECLARE
-    fn regprocedure;
-BEGIN
-    FOR fn IN
-        SELECT p.oid::regprocedure
-        FROM pg_proc p
-        JOIN pg_namespace n ON p.pronamespace = n.oid
-        WHERE n.nspname = 'public'
-          AND p.proname IN (
-              'pay_qris_simulation',
-              'create_qris_simulation',
-              'cancel_qris_simulation'
-          )
-    LOOP
-        EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC, anon, authenticated', fn);
-    END LOOP;
-END $$;
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- PATCH Midtrans — idempoten, aman untuk basis data yang sudah berisi data.
