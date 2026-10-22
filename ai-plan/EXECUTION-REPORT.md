@@ -27,7 +27,7 @@ Cakupan yang disetujui pemilik: **Tahap 0–2 BAB 4**. Klaim D-11 dihapus. M1 di
 | ID | Item | Status | Lokasi | Bukti (`check-contrast`) |
 |---|---|---|---|---|
 | D-01 | Teks sekunder `ink-400` gagal AA | fixed | `src/lib/styles.js:32-38`, `surfaces.dropzone:47` | 4.29:1 → **7.06:1** (terang) / 7.11:1 (malam) |
-| D-02 | Item Keluar sidebar 1.89–2.72:1 | fixed | `src/components/ui/DeviceFrame.jsx:42-48, 60-79, 195`; token baru `semantic.dangerOnDark`, `semantic.mutedOnDark` | **9.70:1** terang / **10.09:1** malam; label nav non-aktif 8.48/8.82:1 |
+| D-02 | Item Keluar sidebar 1.89–2.72:1 | fixed | `src/components/ui/DeviceFrame.jsx:42-48, 60-79, 195`; token baru `semantic.dangerOnDark`, `semantic.mutedOnDark` | **9.70:1** terang / **10.09:1** malam; label nav non-aktif 8.48/8.82:1. **Pernah gagal di layar nyata** — nama kelas ditulis kebab-case sehingga utilitasnya tidak pernah ada dan teks jatuh ke warna warisan gelap; diperbaiki di `c9aed29`, pagar anti-regresi di `1ddd285` (lihat butir 11) |
 | D-06 | Ring fokus `brand-400` 2.84:1 | fixed | `src/lib/styles.js:53-60` | `brand-600` **6.06:1**, ring 2px + offset 2px |
 | D-04 | Guard warna berlubang | fixed (sisa) | `scripts/check-colors.js:21-52` | Kini juga melarang `text-white`, `ring-black`, `border-white`, hex arbitrer; whitelist per-baris. Migrasi **55 `text-white`** + `ring-black` + `border-white` di 21 berkas. Gate: 66 berkas, 0 pelanggaran |
 | D-05 | `DESIGN.md` tidak resolve | fixed | `DESIGN.md` (dipindah dari `Research Design/`) | Rujukan `check-colors.js:7,13` & `tailwind.config.js:60` kini menunjuk berkas yang ada |
@@ -108,6 +108,8 @@ Semua deferred — tidak termasuk pass ini. Catatan: jalur yang membuka plumbing
 8. **Ikon `Bookmark` di dialog resume (`PdfReaderScreen.jsx:380`)** masih ornamen tanpa fitur. Bukan teks klaim, jadi tidak saya ubah; masuk daftar bareng Tahap 2 fitur.
 9. **Dua kata Inggris nyasar** di pesan commit `5c44ad3` ("Sekarang needed", "amount: 1 Enough"). Kosmetik saja, commit tidak saya amend.
 10. **Belum ada PoC exploit & `npm audit`** (dibatasi MASTER-PLAN §4.8), dan area dependensi belum terverifikasi ulang.
+11. **Pelajaran dari bug label sidebar (`c9aed29`)**: `check-contrast.js` membuktikan **angka token**, bukan bahwa kelasnya benar-benar tergenerate — selama nama kelas tidak cocok dengan kunci `tailwind.config.js`, utilitasnya tidak ada dan warna diam-diam jatuh ke warisan. Satu-satunya penangkap saat itu adalah mata manusia di mode terang. Sekarang guard nama token menutup lubang itu (`1ddd285`), dan cara cek manual tercepat: `grep -o "text-semantic-<nama>" dist/assets/*.css` — kalau 0, kelas itu tidak pernah ada.
+12. **Uji visual §2.7 masih PRIBADI belum kulakukan** (tab browser Qoder terkunci dialog `beforeunload` Supabase, dan viewport-nya tersembunyi sehingga screenshot gagal). Yang sudah: build + guard + pembacaan gaya di berkas CSS. Yang belum: tangkapan layar 360/414/desktop × terang/gelap tiap layar yang kusentuh.
 
 ## 6. Konfirmasi
 
