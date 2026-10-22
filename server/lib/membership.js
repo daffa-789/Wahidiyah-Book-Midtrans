@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import { supabaseServer } from '../db.js';
 import { generateId, hasActivePro, settleExpiredMembership } from '../auth.js';
 import { logger } from '../logger.js';
+import { QRIS_ADMIN_FEE, SUBSCRIPTION_PLANS } from './constants.js';
+import { toPositiveNumber } from './validate.js';
 
 
 export const ACTIVE_SUBSCRIPTION_STATUS = 'Aktif';
@@ -123,3 +125,57 @@ export function startMembershipSweeper(intervalMs = MEMBERSHIP_SWEEP_INTERVAL_MS
   timer.unref?.();
   return timer;
 }
+
+/**
+ * Pencocok paket pada katalog server. Sengaja KETAT: paket tak dikenal harus
+ * ditolak, bukan jatuh ke paket default seperti findPlan (yang dipakai jalur
+ * QRIS karena order id sudah dipilihkan aplikasi).
+ */
+export const matchCatalogPlan = ({ planId, planName } = {}) => {
+  const id = String(planId ?? '').trim();
+  if (id) return SUBSCRIPTION_PLANS.find((plan) => plan.id === id) || null;
+  const name = String(planName ?? '').trim().toLowerCase();
+  if (!name) return null;
+  return SUBSCRIPTION_PLANS.find((plan) => String(plan.name).trim().toLowerCase() === name) || null;
+};
+
+/**
+ * Harga transfer manual — server pemegang kebenaran (VULN-06).
+ *
+ * Sebelumnya rute ini menerima `amount` dan `total_paid` dari body, sehingga
+ * `amount: 1` cukup untuk membuat transaksi pending Rp 1 yang tampak sah di
+ * panel admin. kini nominal, nama paket, dan biaya layanan dibaca dari
+ * `SUBSCRIPTION_PLANS`; nominal kiriman klien hanya dipakai sebagai klaim yang
+ * harus cocok, dan `admin_fee`/`total_paid` dari body tidak dibaca sama sekali.
+ */
+export const resolveManualTransferPricing = (body = {}) => {
+  const plan = matchCatalogPlan({ planId: body.plan_id, planName: body.plan_name });
+  if (!plan) {
+    return { ok: false, message: 'Paket langganan tidak dikenali. Muat ulang halaman lalu pilih paket lagi.' };
+  }
+
+  const claimedRaw = body.amount;
+  const hasClaim = claimedRaw !== undefined && claimedRaw !== null && String(claimedRaw).trim() !== '';
+  if (hasClaim) {
+    const claimed = toPositiveNumber(claimedRaw);
+    if (claimed === null) {
+      return { ok: false, message: 'Nominal pembayaran tidak valid.' };
+    }
+    if (claimed !== plan.price) {
+      return {
+        ok: false,
+        conflict: true,
+        message: `Harga ${plan.name} adalah Rp ${plan.price}. Muat ulang halaman untuk harga terbaru.`
+      };
+    }
+  }
+
+  return {
+    ok: true,
+    plan,
+    planName: plan.name,
+    amount: plan.price,
+    adminFee: QRIS_ADMIN_FEE,
+    totalPaid: plan.price + QRIS_ADMIN_FEE
+  };
+};

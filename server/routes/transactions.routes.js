@@ -23,10 +23,10 @@ import {
   activatePaidMembership,
   activeSubscriptionConflict,
   insertTransaction,
+  resolveManualTransferPricing,
   toRefCode
 } from '../lib/membership.js';
-import { QRIS_ADMIN_FEE } from '../lib/constants.js';
-import { isOneOf, toBoundedInt, toPositiveNumber } from '../lib/validate.js';
+import { isOneOf, toBoundedInt } from '../lib/validate.js';
 
 export const transactionsRouter = Router();
 
@@ -122,16 +122,14 @@ transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wr
 
 
 transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
-  const { plan_name, amount, admin_fee, total_paid, payment_method } = req.body;
-  if (!plan_name || !amount) {
-    return badRequest(res, 'Nama paket dan nominal wajib diisi.');
-  }
+  const body = req.body || {};
 
-  
-  
-  const numAmount = toPositiveNumber(amount);
-  if (numAmount === null) {
-    return badRequest(res, 'Nominal pembayaran tidak valid.');
+  /* VULN-06: nominal, nama paket, dan biaya layanan dibaca dari katalog
+     server. Nilai `amount` dari klien hanya sebuah klaim yang harus cocok;
+     `admin_fee` dan `total_paid` tidak lagi dipercaya sama sekali. */
+  const pricing = resolveManualTransferPricing(body);
+  if (!pricing.ok) {
+    return badRequest(res, pricing.message);
   }
 
   try {
@@ -151,17 +149,15 @@ transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
     }
 
     const txId = generateId('tx');
-    const numAdminFee = Number(admin_fee) || QRIS_ADMIN_FEE;
-    const numTotal = Number(total_paid) || (numAmount + numAdminFee);
-    const method = payment_method || 'Bank Transfer';
+    const method = body.payment_method || 'Bank Transfer';
 
     const refNo = await insertTransaction({
       txId,
       userId: req.user.id,
-      planName: plan_name,
-      amount: numAmount,
-      adminFee: numAdminFee,
-      totalPaid: numTotal,
+      planName: pricing.planName,
+      amount: pricing.amount,
+      adminFee: pricing.adminFee,
+      totalPaid: pricing.totalPaid,
       method,
       status: TRANSACTION_PENDING_STATUS
     });
@@ -175,9 +171,9 @@ transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
       transaction: {
         id: txId,
         refNo,
-        amount: numAmount,
-        adminFee: numAdminFee,
-        totalPaid: numTotal,
+        amount: pricing.amount,
+        adminFee: pricing.adminFee,
+        totalPaid: pricing.totalPaid,
         planName: 'Wahidiyah Pro',
         paymentMethod: method,
         status: TRANSACTION_PENDING_STATUS

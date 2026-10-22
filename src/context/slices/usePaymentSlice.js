@@ -120,10 +120,9 @@ export const usePaymentSlice = ({ patchUser }) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
+            plan_id: selectedPlan.id,
             plan_name: selectedPlan.title,
             amount: selectedPlan.price,
-            admin_fee: 0,
-            total_paid: selectedPlan.price,
             payment_method: selectedPaymentMethod?.name || 'Bank Transfer',
             period: periodStr
           })

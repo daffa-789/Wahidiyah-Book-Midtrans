@@ -23,7 +23,7 @@ import {
   toRefCode
 } from '../lib/membership.js';
 import { QRIS_ADMIN_FEE, findPlan } from '../lib/constants.js';
-import { MIDTRANS_IS_PRODUCTION, MIDTRANS_PAYMENT_METHOD_LABEL, MIDTRANS_QRIS_EXPIRY_MINUTES } from '../config.js';
+import { MIDTRANS_IS_PRODUCTION, MIDTRANS_PAYMENT_METHOD_LABEL, MIDTRANS_QRIS_EXPIRY_MINUTES, isPaymentSimulationAllowed } from '../config.js';
 import rateLimit from 'express-rate-limit';
 import {
   createQrisCharge,
@@ -368,16 +368,22 @@ paymentsRouter.get('/qris/:orderId/status', requireAuth, wrap(async (req, res) =
 }));
 
 
-paymentsRouter.post('/qris/:orderId/simulate-paid', paymentRateLimiter, requireAuth, wrap(async (req, res) => {
-  // ── HANYA UNTUK SANDBOX ──────────────────────────────────────────────
-  // Mengaktifkan langganan seolah-olah Midtrans sudah mengirim notifikasi
-  // settlement. Dipakai untuk demo/tes dari HP tanpa membuka simulator
-  // Midtrans. Di PRODUCTION rute ini mati total (404) — tidak mungkin
-  // diaktifkan lewat konfigurasi.
-  if (MIDTRANS_IS_PRODUCTION) {
-    return notFound(res, 'Rute tidak tersedia.');
-  }
+/* Gerbang dievaluate SEBELUM requireAuth supaya rute ini benar-benar tidak
+ * ada (404) saat flag opt-in mati — termasuk bagi pengunjung yang belum
+ * masuk, dan supaya `curl` verifikasi tidak perlu membawa token sesi.
+ */
+const requirePaymentSimulation = (req, res, next) => {
+  if (isPaymentSimulationAllowed(process.env)) return next();
+  return notFound(res, 'Rute tidak tersedia.');
+};
 
+paymentsRouter.post('/qris/:orderId/simulate-paid', paymentRateLimiter, requirePaymentSimulation, requireAuth, wrap(async (req, res) => {
+  // ── SIMULASI BAYAR (khusus demo) ──────────────────────────────────────
+  // Mengaktifkan langganan seolah-olah Midtrans sudah mengirim notifikasi
+  // settlement, untuk demo/tes dari HP tanpa membuka simulator Midtrans.
+  // Rutenya 404 kecuali ALLOW_PAYMENT_SIMULATION="1" diset pada lingkungan
+  // non-produksi dengan Midtrans masih mode sandbox — gerbang lama hanya
+  // memeriksa "bukan produksi" dan itu mudah hidup diam-diam (VULN-01).
   const { transaction, forbidden } = await loadOwnTransaction(req.params.orderId, req.user);
 
   if (!transaction) {

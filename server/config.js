@@ -69,7 +69,20 @@ export const MIDTRANS_SERVER_KEY = (process.env.MIDTRANS_SERVER_KEY || '').trim(
 
 export const MIDTRANS_CLIENT_KEY = (process.env.MIDTRANS_CLIENT_KEY || '').trim();
 
-export const MIDTRANS_IS_PRODUCTION = String(process.env.MIDTRANS_IS_PRODUCTION ?? 'false').trim().toLowerCase() === 'true';
+const isTrueFlag = (value) => String(value ?? 'false').trim().toLowerCase() === 'true';
+
+export const MIDTRANS_IS_PRODUCTION = isTrueFlag(process.env.MIDTRANS_IS_PRODUCTION);
+
+/* Rute simulasi bayar (dipakai demo sidang) hidup hanya atas opt-in
+ * EKSPLISIT. Gerbang lama sekadar "bukan produksi", padahal
+ * MIDTRANS_IS_PRODUCTION dibaca dengan toLowerCase()==='true' sehingga nilai
+ * '1', 'yes', atau kosong dianggap non-produksi — simulasi ikut hidup diam
+ * -diam dan bisa mengaktifkan Pro tanpa uang (VULN-01).
+ */
+export const isPaymentSimulationAllowed = (env = process.env) =>
+  String(env.ALLOW_PAYMENT_SIMULATION ?? '') === '1' &&
+  env.NODE_ENV !== 'production' &&
+  !isTrueFlag(env.MIDTRANS_IS_PRODUCTION);
 
 export const MIDTRANS_QRIS_ACQUIRER = (process.env.MIDTRANS_QRIS_ACQUIRER || 'gopay').trim();
 
