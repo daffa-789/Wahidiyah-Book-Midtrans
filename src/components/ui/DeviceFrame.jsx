@@ -40,11 +40,11 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         aria-label={item.label}
         aria-current={item.isActive ? 'page' : undefined}
         className={`relative h-11 w-11 rounded-xl flex items-center justify-center transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
-          ? 'focus-visible:ring-semantic-danger-on-dark'
+          ? 'focus-visible:ring-semantic-dangerOnDark'
           : 'focus-visible:ring-brand-500'
           } ${item.isActive
             ? 'bg-brand-700 text-cream-50 shadow-sm'
-            : 'text-semantic-muted-on-dark hover:text-cream-50 hover:bg-cream-50/5'
+            : 'text-semantic-mutedOnDark hover:text-cream-50 hover:bg-cream-50/5'
           }`}
       >
         <Icon className="w-[18px] h-[18px]" strokeWidth={1.9} />
@@ -58,11 +58,11 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
       onClick={() => onNavClick(item.target)}
       aria-current={item.isActive ? 'page' : undefined}
       className={`group relative w-full h-11 flex items-center gap-3 pl-3 pr-3 rounded-xl transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
-        ? 'focus-visible:ring-semantic-danger-on-dark'
+        ? 'focus-visible:ring-semantic-dangerOnDark'
         : 'focus-visible:ring-brand-500'
         } ${item.isActive
           ? 'bg-brand-700 text-cream-50 shadow-sm'
-          : 'text-semantic-muted-on-dark hover:text-cream-50 hover:bg-cream-50/5'
+          : 'text-semantic-mutedOnDark hover:text-cream-50 hover:bg-cream-50/5'
         }`}
     >
       <span
@@ -74,8 +74,8 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${item.isActive
           ? 'text-cream-50'
           : isDanger
-            ? 'text-semantic-danger-on-dark'
-            : 'text-semantic-muted-on-dark group-hover:text-cream-100'
+            ? 'text-semantic-dangerOnDark'
+            : 'text-semantic-mutedOnDark group-hover:text-cream-100'
           }`}
         strokeWidth={1.9}
       />
@@ -192,7 +192,7 @@ const SidebarContent = React.memo(({
       onClick={handleToggleCollapse}
       title={isMobile ? 'Tutup menu' : isCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
       aria-label={isMobile ? 'Tutup menu' : isCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-semantic-muted-on-dark transition-colors duration-200 hover:bg-cream-50/5 hover:text-cream-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-semantic-mutedOnDark transition-colors duration-200 hover:bg-cream-50/5 hover:text-cream-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
     >
       <PanelLeft className="h-[17px] w-[17px]" strokeWidth={1.9} />
     </button>
