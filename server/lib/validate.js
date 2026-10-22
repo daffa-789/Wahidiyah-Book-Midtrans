@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { isValidPhone } from '../whatsapp.js';
 
-export const booleanFlagSchema = z.preprocess((val) => {
+const booleanFlagSchema = z.preprocess((val) => {
   if (typeof val === 'boolean') return val;
   if (typeof val === 'number') return val === 1;
   if (typeof val === 'string') {
@@ -71,13 +71,6 @@ export function toDateYmd(value) {
   if (Number.isNaN(parsed.getTime())) return null;
   if (parsed.toISOString().slice(0, 10) !== trimmed) return null;
   return trimmed;
-}
-
-export function toPastDateYmd(value) {
-  const valid = toDateYmd(value);
-  if (!valid) return null;
-  if (new Date(`${valid}T00:00:00Z`).getTime() > Date.now()) return null;
-  return valid;
 }
 
 export function clippedText(value, max) {

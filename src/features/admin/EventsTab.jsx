@@ -39,7 +39,7 @@ import { Field } from '@ui/Field';
 
 // Keempat kategori sengaja memakai gaya yang sama; disimpan sebagai satu konstanta
 // agar tidak ada objek duplikat yang bisa berbeda diam-diam.
-export const EVENT_CATEGORIES = ['Mujahadah', 'Pengajian', 'Kubro', 'Peringatan'];
+const EVENT_CATEGORIES = ['Mujahadah', 'Pengajian', 'Kubro', 'Peringatan'];
 
 const CATEGORY_STYLE = {
   badge: 'bg-brand-50 text-brand-800 border-brand-200',

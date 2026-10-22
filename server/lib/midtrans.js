@@ -11,7 +11,7 @@ import {
 
 
 
-export const DEFAULT_QRIS_EXPIRY_MINUTES = 15;
+const DEFAULT_QRIS_EXPIRY_MINUTES = 15;
 
 export const isMidtransConfigured = Boolean(MIDTRANS_SERVER_KEY && MIDTRANS_CLIENT_KEY);
 
@@ -76,7 +76,7 @@ export const extractQrString = (charge) => {
 };
 
 
-export const pickQrAction = (actions) => {
+const pickQrAction = (actions) => {
   const list = Array.isArray(actions) ? actions : [];
   const preferred = list.find((item) => item?.name === 'generate-qr-code-v2' && item?.url);
   if (preferred) return preferred;
@@ -202,7 +202,7 @@ export const isTransactionSettled = (transactionStatus, fraudStatus = '') => {
   return false;
 };
 
-export const QR_IMAGE_TIMEOUT_MS = 10_000;
+const QR_IMAGE_TIMEOUT_MS = 10_000;
 
 
 export const isAllowedQrUrl = (rawUrl) => {

@@ -85,9 +85,7 @@ export const AdminDashboard = () => {
     books,
     refreshBooks,
     refreshEvents,
-    navigateTo,
     updateUserRole,
-    logout,
     carouselSlides,
     refreshCarousel
   } = useApp();

@@ -1,9 +1,9 @@
 /* Helper tema murni (tanpa React) — dipakai ThemeProvider dan skrip anti-kedip
    di index.html. Dipisah agar mudah diuji dan tidak menyeret dependensi. */
 
-export const THEME_STORAGE_KEY = 'wb_theme';
+const THEME_STORAGE_KEY = 'wb_theme';
 
-export const THEME_MODES = ['light', 'dark', 'system'];
+const THEME_MODES = ['light', 'dark', 'system'];
 
 export const getSystemTheme = () => {
   if (typeof window === 'undefined' || !window.matchMedia) return 'light';

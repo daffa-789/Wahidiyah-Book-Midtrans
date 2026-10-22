@@ -79,7 +79,7 @@ Service worker sengaja tidak pernah menyimpan berkas PDF berbayar. Roadmap §15.
 - Notifikasi hanya berupa push satu arah (`server/routes/notifications.routes.js` menyediakan `public-key`, `subscribe`, `unsubscribe`, `status`) — tidak ada riwayat notifikasi yang dapat dibaca ulang.
 - Kolom `subscriptions.ref_code` sudah ada tetapi belum dipakai untuk program referral.
 - `SUBSCRIPTION_PLANS` (`server/lib/constants.js:39-48`) memang sudah berbentuk array, tetapi baru berisi satu paket.
-- Input nomor HP sudah mendukung 245 negara (`src/components/ui/PhoneInput.jsx` + `flag-icons`), namun seluruh antarmuka berbahasa Indonesia dengan string hardcoded dan `dayjs.locale('id')`.
+- Input nomor HP sudah mendukung 245 negara (`src/components/ui/PhoneInput.jsx` + `public/flags/`), namun seluruh antarmuka berbahasa Indonesia dengan string hardcoded dan `dayjs.locale('id')`.
 
 ### 2.7 Media disimpan sebagai base64 di dalam tabel (utang teknis terbesar)
 

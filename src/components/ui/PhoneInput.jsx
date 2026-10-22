@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, Search } from 'lucide-react';
-import { COUNTRY_CODES, DEFAULT_COUNTRY, findCountry, parsePhoneNumber } from '@lib/countryCodes';
+import { COUNTRY_CODES, DEFAULT_COUNTRY, parsePhoneNumber } from '@lib/countryCodes';
 import { FlagIcon } from './FlagIcon';
 import { cn } from '@lib/utils';
 

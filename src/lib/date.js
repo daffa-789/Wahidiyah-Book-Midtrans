@@ -20,7 +20,7 @@ export const formatYMD = (year, monthIndex, day) => {
   return dayjs(new Date(year, monthIndex, day)).format('YYYY-MM-DD');
 };
 
-export const todayWib = () => dayjs().tz(WIB_TIME_ZONE).format('YYYY-MM-DD');
+const todayWib = () => dayjs().tz(WIB_TIME_ZONE).format('YYYY-MM-DD');
 export const getTodayStr = todayWib;
 
 export const formatWIB = (dateInput, { withTime = true, withSeconds = false } = {}) => {

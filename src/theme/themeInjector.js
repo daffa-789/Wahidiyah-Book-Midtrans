@@ -196,7 +196,7 @@ const toBlock = (selector, rows) => {
   return `${selector} {\n${body}\n}\n`;
 };
 
-export function applyThemeTokens(tokens = themeConfig) {
+function applyThemeTokens(tokens = themeConfig) {
   if (typeof document === 'undefined') return;
 
   const lightRows = [...buildColorVars(tokens.colors), ...buildStructuralVars(tokens)];

@@ -11,7 +11,6 @@ import express from 'express';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 import {
   SERVE_STATIC,
@@ -44,9 +43,6 @@ import { startReminderScheduler } from './lib/eventReminder.js';
 import { startMembershipSweeper } from './lib/membership.js';
 import { logger, banner } from './logger.js';
 import { testConnection } from './db.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 
 const handleFatal = (label, error) => {
   logger.error('FATAL', `${label} — proses dihentikan`, {

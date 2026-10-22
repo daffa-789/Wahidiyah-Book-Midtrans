@@ -49,6 +49,8 @@ Yang **bukan** pustaka: error tracking (Sentry dkk.) — untuk skala ini cukup e
 
 `midtrans-client` (dipakai `server/lib/midtrans.js:3`; walau pemanggilan Core API sebagian sudah `fetch` langsung, pustaka ini tipis dan berfungsi — pembersihan opsional), `google-auth-library` (3 pemakaian nyata: OAuth callback, XOAUTH2 SMTP di `mailer.js`, skrip gmail), `helmet`, `express-rate-limit`, `multer`, `sharp`, `exceljs`, `web-push`*, `zod`, `supabase-js`, `libphonenumber-js`, `flag-icons`, `qrcode.react`, `sonner`, `canvas-confetti`, `lucide-react`, `recharts` (2 grafik di admin — berat, tapi masih layak; kandidat pengganti SVG murni bila nanti ingin mengecilkan bundle).
 
+> **Koreksi 2026-10-23:** `flag-icons` dicabut dari `package.json`. Seluruh 271 SVG sudah di-vendor di `public/flags/` dan dimuat lewat `FlagIcon.jsx` (`/flags/${flagKey}.svg`); tidak ada satu pun `import` yang memakai paketnya. Keputusan "pertahankan" di atas tidak lagi berlaku untuk paket ini.
+
 \* `web-push` tercantum pada pembaruan fitur (commit `bfd7483`); kehadirannya di `package.json` perlu dicek saat eksekusi — kebutuhan VAPID di server sudah ada `server/lib/webpush.js`.
 
 ---

@@ -17,7 +17,6 @@ const secondsUntil = (isoDate) => {
 
 export const useQrisPayment = ({
   selectedPlan,
-  user,
   onPaymentSuccess,
   isQrisActive = true,
   phone = ''
@@ -226,7 +225,6 @@ export const useQrisPayment = ({
     isExpired,
     isSimulating,
     isCancelling,
-    countdown,
     formattedCountdown,
     regenerateQr: generateTransaction,
     simulatePaid,

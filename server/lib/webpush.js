@@ -16,11 +16,10 @@
 
 import crypto from 'crypto';
 
-const { createECDH, createHmac, randomBytes, createCipheriv } = crypto;
+const { createECDH, randomBytes, createCipheriv } = crypto;
 
 /* Ukuran tetap sesuai RFC 8291 §4 — jangan diubah. */
 const RECORD_SIZE = 4096;
-const TAG_LENGTH = 16;
 const KEY_LENGTH = 16;
 const CURVE = 'prime256v1';
 
@@ -111,7 +110,7 @@ const hkdf = (salt, ikm, info, length) =>
  *   salt(16) | record size(4, big-endian) | key id length(1) | key id(65) | ciphertext
  * Ciphertext = konten || padding(0x02) , di-AES-128-GCM (termasuk tag 16 byte).
  */
-export const encryptPayload = ({ payload, p256dh, auth }) => {
+const encryptPayload = ({ payload, p256dh, auth }) => {
   const clientPublicKey = Buffer.isBuffer(p256dh) ? p256dh : b64urlDecode(p256dh);
   const authSecret = Buffer.isBuffer(auth) ? auth : b64urlDecode(auth);
 

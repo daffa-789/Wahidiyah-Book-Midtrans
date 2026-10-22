@@ -12,8 +12,6 @@ import {
 } from '@lib/api';
 import {
   EMPTY_USER,
-  normalizeEvent,
-  normalizeTransaction,
   normalizeUser,
   userSignature
 } from '@lib/normalizers';
@@ -250,7 +248,6 @@ export const AppProvider = ({ children, initialScreen }) => {
     currentPath: nav.currentPath,
     navigateTo: nav.navigateTo,
     user,
-    setUser,
     patchUser,
     isLoggedIn,
     authReady,
@@ -311,5 +308,3 @@ export const AppProvider = ({ children, initialScreen }) => {
 };
 
 export const useApp = () => useContext(AppContext);
-
-export { EMPTY_USER, normalizeUser, normalizeEvent, normalizeTransaction };

@@ -62,8 +62,6 @@ export const TRUST_PROXY = (() => {
   return Number.isInteger(hops) && hops > 0 ? hops : false;
 })();
 
-export const QRIS_WEBHOOK_SECRET = (process.env.QRIS_WEBHOOK_SECRET || '').trim();
-
 
 export const MIDTRANS_SERVER_KEY = (process.env.MIDTRANS_SERVER_KEY || '').trim();
 

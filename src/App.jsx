@@ -200,7 +200,7 @@ const RouterBridge = () => {
   return null;
 };
 
-export function App() {
+function App() {
   return (
     <>
       <RouterBridge />

@@ -129,7 +129,6 @@ export const PaymentConfirmScreen = () => {
     cancelQris
   } = useQrisPayment({
     selectedPlan,
-    user,
     onPaymentSuccess: handlePaymentSuccess,
     isQrisActive: isQrisMethod && !isSubscribed,
     phone: paymentPhone

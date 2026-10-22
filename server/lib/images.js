@@ -45,5 +45,3 @@ export async function compressAvatarDataUrl(dataUrl) {
   if (!result.converted && !isSafeRawImageFallback(originalMime)) return { rejected: true };
   return { dataUrl: toDataUrl(result.buffer, result.mime) };
 }
-
-export { isSafeRawImageFallback };

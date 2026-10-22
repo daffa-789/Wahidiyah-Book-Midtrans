@@ -128,7 +128,7 @@ export const countActiveSubscriptions = async () => {
 
 const EVENT_ICON = '/icon-192.png';
 
-export const buildEventPayload = (event, { type = 'auto' } = {}) => {
+const buildEventPayload = (event, { type = 'auto' } = {}) => {
   const tomorrow = addDaysYmd(todayWib(), 1);
   const eventYmd = String(event.event_date || '').slice(0, 10);
   const isTomorrow = eventYmd === tomorrow;
@@ -184,7 +184,7 @@ export const buildEventPayload = (event, { type = 'auto' } = {}) => {
 
 /* ── Kirim ke seluruh langganan ────────────────────────────────────────── */
 
-export const broadcastPush = async ({ payload, ttl = 24 * 60 * 60, urgency = 'normal' }) => {
+const broadcastPush = async ({ payload, ttl = 24 * 60 * 60, urgency = 'normal' }) => {
   if (!isPushConfigured()) {
     return { sent: 0, failed: 0, skipped: true, reason: 'vapid-not-configured' };
   }
@@ -335,7 +335,7 @@ export const sendEventReminderNow = async (eventId, { force = false, type = 'aut
  * Penyapu berkala: cari semua agenda H-1 yang belum dikirim pengingatnya.
  * Dipanggil saat boot dan setiap 15 menit setelahnya.
  */
-export const sweepDueReminders = async () => {
+const sweepDueReminders = async () => {
   if (!isPushConfigured()) return { checked: 0, sent: 0, skipped: true };
 
   const tomorrow = addDaysYmd(todayWib(), 1);

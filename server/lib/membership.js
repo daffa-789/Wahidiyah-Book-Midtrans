@@ -13,10 +13,10 @@ export const ACTIVE_SUBSCRIPTION_STATUS = 'Aktif';
 export const ENDED_SUBSCRIPTION_STATUS = 'Berakhir';
 
 
-export const DEFAULT_PLAN_DAYS = 30;
+const DEFAULT_PLAN_DAYS = 30;
 
 
-export const planDaysFromPeriod = (period) => {
+const planDaysFromPeriod = (period) => {
   if (typeof period === 'number' && Number.isFinite(period) && period > 0) {
     return Math.floor(period);
   }
@@ -31,7 +31,7 @@ export const planDaysFromPeriod = (period) => {
 };
 
 
-export const expiresAtFromNow = (days = DEFAULT_PLAN_DAYS, from = new Date()) =>
+const expiresAtFromNow = (days = DEFAULT_PLAN_DAYS, from = new Date()) =>
   new Date(from.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 
 
@@ -107,7 +107,7 @@ export const activeSubscriptionConflict = (user) => {
  * berubah dalam hitungan menit, dan jalannya tetap diulang saat boot supaya
  * baris yang tertunda selama server mati ikut dirapikan.
  */
-export const MEMBERSHIP_SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const MEMBERSHIP_SWEEP_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 export function startMembershipSweeper(intervalMs = MEMBERSHIP_SWEEP_INTERVAL_MS) {
   const run = async () => {

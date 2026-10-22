@@ -2235,7 +2235,7 @@ export const DEFAULT_COUNTRY = COUNTRY_CODES[0]; // Indonesia (+62)
  * @param {string} codeOrDial - Kode ISO, dial number, atau teks query
  * @returns {CountryInfo} Objek data negara atau DEFAULT_COUNTRY jika tidak ditemukan
  */
-export function findCountry(codeOrDial) {
+function findCountry(codeOrDial) {
   if (!codeOrDial) return DEFAULT_COUNTRY;
   const cleaned = String(codeOrDial).trim().toUpperCase();
   return (
@@ -2320,18 +2320,4 @@ export function parsePhoneNumber(rawPhone, fallbackCountry = DEFAULT_COUNTRY) {
     fullPhone: (fallbackCountry?.dialNum || '62') + nat,
     isValid: nat.length >= 6 && nat.length <= 15
   };
-}
-
-/**
- * Memformat nomor telepon ke format internasional standar E.164 (tanpa tanda plus, siap untuk gateway WhatsApp).
- * Contoh: '0812-3456-7890' -> '6281234567890'
- * 
- * @param {string} phone - Nomor telepon input
- * @param {string} [defaultRegion='ID'] - Region default jika tidak memiliki dial code
- * @returns {string} Nomor telepon dalam digit E.164
- */
-export function formatToWhatsAppE164(phone, defaultRegion = 'ID') {
-  if (!phone) return '';
-  const parsed = parsePhoneNumber(phone, findCountry(defaultRegion));
-  return parsed.fullPhone;
 }

@@ -88,5 +88,3 @@ export const banner = (title, lines = []) => {
   }
   console.log('');
 };
-
-export default logger;

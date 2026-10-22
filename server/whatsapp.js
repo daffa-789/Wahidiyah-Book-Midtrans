@@ -94,5 +94,3 @@ export async function sendOtpWhatsApp({ phone, code, purpose = 'register' }) {
   const demoResult = await getProviderByName('demo').sendOtp({ phone: normalized, code, purpose });
   return demoResult;
 }
-
-export { getActiveWhatsAppProvider, listSupportedProviders, getProviderByName };

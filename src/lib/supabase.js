@@ -1,8 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL as supabaseUrl, SUPABASE_ANON_KEY as supabaseAnonKey, isSupabaseConfigured } from './supabaseConfig';
 
-export { isSupabaseConfigured };
-
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {

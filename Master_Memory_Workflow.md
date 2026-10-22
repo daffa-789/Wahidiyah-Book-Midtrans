@@ -66,7 +66,7 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Client-Server Mand
 ### 2.2. Autentikasi Pengguna & WhatsApp Multi-Provider (R61)
 - **Registrasi & Verifikasi Dual-Channel:** Pengguna dapat mendaftar dengan email dan nomor WhatsApp internasional. Kode OTP 6 digit dapat dikirim via **Gmail API OAuth2** maupun **WhatsApp resmi**.
 - **Pemilih Kode Negara Sedunia (245 Negara):**
-  - Menggunakan bendera vektor SVG resmi dari `flag-icons` di `public/flags/[iso].svg` (resolusi tajam di Windows, Linux, Android, iOS tanpa glitch rendering teks emoji).
+  - Menggunakan bendera vektor SVG resmi (disalin sekali dari set `flag-icons`) di `public/flags/[iso].svg` — tanpa dependensi npm saat runtime, sehingga tidak ada paket bendera yang ikut ke bundel (resolusi tajam di Windows, Linux, Android, iOS tanpa glitch rendering teks emoji).
   - Integrasi pustaka standar Google `libphonenumber-js` untuk parsing nomor E.164 internasional dan deteksi validitas.
   - Pencarian dwibahasa (dapat dicari dengan nama Indonesia *"Jepang"* atau Inggris *"Japan"*, dial code `+81`, atau ISO code `JP`).
   - Pembuangan otomatis angka nol di awal nomor lokal (`0812...` ➔ `812...` dengan dial `+62`).
