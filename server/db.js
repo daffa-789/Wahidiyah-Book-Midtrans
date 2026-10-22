@@ -12,16 +12,21 @@ dotenv.config({ override: true });
 
 
 
-const supaUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://pdimjmbjutlzjdfjaqgt.supabase.co';
+const SUPABASE_PROJECT_URL = 'https://pdimjmbjutlzjdfjaqgt.supabase.co';
 
-const supaKey =
-  process.env.SUPABASE_SECRET_KEY ||
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_PUBLISHABLE_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
-  'sb_publishable_-6KjklXt9Oti0_ikobXiVw_aWdjxQ0Q';
+export const resolveSupabaseCredentials = (env = process.env) => {
+  const url = env.VITE_SUPABASE_URL || env.SUPABASE_URL || SUPABASE_PROJECT_URL;
+  const secretKey = String(env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  const anonKey = String(env.SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-const hasServiceRoleKey = Boolean(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (env.NODE_ENV === 'production' && !secretKey) {
+    throw new Error('[DB] SUPABASE_SECRET_KEY (atau SUPABASE_SERVICE_ROLE_KEY) wajib diset di produksi. Boot dihentikan: tanpa kunci server, seluruh INSERT/UPDATE diblokir RLS dan aplikasi hidup setengah-konfigurasi.');
+  }
+
+  return { url, key: secretKey || anonKey, hasServiceRoleKey: Boolean(secretKey) };
+};
+
+const { url: supaUrl, key: supaKey, hasServiceRoleKey } = resolveSupabaseCredentials(process.env);
 
 export const supabaseServer = (supaUrl && supaKey) ? createClient(supaUrl, supaKey) : null;
 

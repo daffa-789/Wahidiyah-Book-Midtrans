@@ -7,7 +7,7 @@ import pc from 'picocolors';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
-const scanDirs = ['server', 'scripts'];
+const scanDirs = ['server', 'scripts', 'tests'];
 let totalChecked = 0;
 let failedFiles = [];
 

@@ -4,10 +4,20 @@ import jwt from 'jsonwebtoken';
 import { supabaseServer } from './db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || '';
-const JWT_FALLBACK_SECRET = 'wahidiyah-local-development-secret-change-me';
-const activeJwtSecret = JWT_SECRET || JWT_FALLBACK_SECRET;
+
+export const resolveJwtSecret = (env = process.env) => {
+  const configured = String(env.JWT_SECRET ?? '').trim();
+  if (configured) return configured;
+  if (env.NODE_ENV === 'production') {
+    throw new Error('[AUTH] JWT_SECRET wajib diset di produksi dengan nilai acak minimal 32 karakter. Boot dihentikan agar token sesi tidak dapat dipalsukan.');
+  }
+  return crypto.randomBytes(32).toString('hex');
+};
+
+const activeJwtSecret = resolveJwtSecret(process.env);
+
 if (!JWT_SECRET) {
-  console.warn('\x1b[33m[AUTH] ⚠️  JWT_SECRET belum diset di server/.env — memakai secret fallback development. Set JWT_SECRET agar token tidak dapat dipalsukan bila source terbaca orang lain.\x1b[0m');
+  console.warn('\x1b[33m[AUTH] ⚠️  JWT_SECRET belum diset — memakai secret acak yang berganti tiap proses, sehingga semua sesi development hangus saat server restart. Set JWT_SECRET di server/.env.\x1b[0m');
 }
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '12h';
 const BCRYPT_ROUNDS = 12;

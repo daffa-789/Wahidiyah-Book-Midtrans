@@ -19,7 +19,24 @@ const OTP_MAX_ATTEMPTS = 5;
 const hashOtp = (identifier, purpose, code) =>
   crypto.createHash('sha256').update(`${purpose}:${identifier}:${code}`).digest('hex');
 
-export const canExposeDevOtp = () => process.env.NODE_ENV === 'development';
+const IPV4_MAPPED_PREFIX = '::ffff:';
+
+export const isLoopbackAddress = (ip) => {
+  const value = String(ip ?? '').trim().toLowerCase();
+  if (!value) return false;
+  const normalized = value.startsWith(IPV4_MAPPED_PREFIX)
+    ? value.slice(IPV4_MAPPED_PREFIX.length)
+    : value;
+  return normalized === '::1' || normalized.startsWith('127.');
+};
+
+// Bocor tidaknya OTP ke respons HTTP: butuh flag eksplisit, bukan sekadar
+// NODE_ENV=development, dan hanya untuk permintaan dari mesin yang sama.
+export const canExposeDevOtp = (env = process.env, ip = null) => {
+  if (String(env.EXPOSE_DEV_OTP ?? '') !== '1') return false;
+  if (env.NODE_ENV === 'production') return false;
+  return ip === null ? true : isLoopbackAddress(ip);
+};
 
 export function resendCooldownRemaining(row) {
   if (!row?.created_at) return 0;

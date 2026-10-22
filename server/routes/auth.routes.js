@@ -154,7 +154,7 @@ authRouter.post('/register', async (req, res) => {
       phone: normalizedPhone,
       identifier: targetIdentifier,
       deliveryMethod: chosenMethod,
-      devOtp: deliveredBy === 'demo' && canExposeDevOtp() ? code : undefined
+      devOtp: deliveredBy === 'demo' && canExposeDevOtp(process.env, req.ip) ? code : undefined
     });
   } catch (error) {
     return replyAuthFailure(res, error, { dbMessage: 'Gagal terhubung ke database.' });
@@ -267,7 +267,7 @@ authRouter.post('/request-password-reset', wrap(async (req, res) => {
       purpose: 'reset',
       deliveryMethod: 'whatsapp'
     });
-    const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp();
+    const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp(process.env, req.ip);
 
     logger.info('OTP', 'Permintaan reset password via WhatsApp', {
       phone: normalizedPhone,
@@ -320,7 +320,7 @@ authRouter.post('/request-password-reset', wrap(async (req, res) => {
     purpose: 'reset',
     deliveryMethod: 'email'
   });
-  const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp();
+  const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp(process.env, req.ip);
 
   logger.info('OTP', 'Permintaan reset password', { email, deliveredBy, devOtpExposed: exposeDevOtp });
 
@@ -416,7 +416,7 @@ authRouter.post('/resend-verification', wrap(async (req, res) => {
     purpose,
     payload: existing.payload ?? null
   });
-  const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp();
+  const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp(process.env, req.ip);
 
   logger.info('OTP', 'Kode dikirim ulang', { identifier: target, method, purpose, deliveredBy });
 
