@@ -34,3 +34,8 @@ where table_schema = 'public'
 
 -- 5. Berapa baris yang tercadangkan (opsional, untuk laporan skripsi).
 select count(*) as baris_tercadangkan from public.users_avatar_backup;
+
+-- 6. Opsional — hapus tabel cadangan setelah yakin tidak diperlukan.
+--    Isinya hanya URL foto Google, bukan kredensial. Setelah ini dijalankan,
+--    tidak ada lagi salinan nilai avatar.
+-- drop table if exists public.users_avatar_backup;
