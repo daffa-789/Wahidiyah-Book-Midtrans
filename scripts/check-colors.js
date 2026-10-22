@@ -37,6 +37,46 @@ const RAW_ON_SURFACE_RE = /\b(?:text-white|ring-black|border-white)\b(?!-|\w)/g;
 /* Hex arbitrer melewati sistem token sepenuhnya. */
 const ARBITRARY_COLOR_RE = /\b(?:bg|text|border|ring|fill|from|via|to|stroke)-\[#/g;
 
+/* ── Nama token harus persis sama dengan kunci warna di tailwind.config.js ──
+ * Kelas dengan nama token yang salah TIDAK menghasilkan utilitas apa pun,
+ * sehingga warna jatuh ke nilai warisan: teks jadi tak terlihat tanpa satu pun
+ * error. Ini bukan teori — `text-semantic-muted-on-dark` pernah lolos karena
+ * kunci aslinya camelCase (`mutedOnDark`), dan label sidebar jadi hitam di
+ * atas panel hitam pada mode terang.
+ *
+ * Hanya grup berkunci camelCase yang diperiksa (semantic, ui). Grup bernomor
+ * (brand/cream/ink/gold/qris) tidak rawan salah tulis bentuk ini.
+ */
+const twConfig = await import(new URL('../tailwind.config.js', import.meta.url));
+const TOKEN_GROUPS = {
+  semantic: Object.keys(twConfig.default.theme.extend.colors.semantic),
+  ui: Object.keys(twConfig.default.theme.extend.colors.ui)
+};
+const TOKEN_CLASS_RE =
+  /(?:[A-Za-z0-9_-]+:)*(?:text|bg|border|ring|fill|divide|shadow|outline|decoration|stroke)-(semantic|ui)-([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)(?![\w-])/g;
+
+const kebab = (value) => value.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+
+function checkTokenNames(relPath, content) {
+  TOKEN_CLASS_RE.lastIndex = 0;
+  let match;
+  while ((match = TOKEN_CLASS_RE.exec(content)) !== null) {
+    const [, group, name] = match;
+    const known = TOKEN_GROUPS[group];
+    if (known.includes(name)) continue;
+    const line = content.slice(0, match.index).split(/\r?\n/).length;
+    const saran = known.find((key) => kebab(key) === name);
+    violations.push({
+      file: relPath,
+      line,
+      token: `${group}-${name}`,
+      kind: saran
+        ? `token tak dikenal — utilitas tidak pernah dibuat (mungkin maksudmu "${saran}")`
+        : 'token tak dikenal — utilitas tidak pernah dibuat'
+    });
+  }
+}
+
 /* Whitelist = permukaan yang MEMANG putih/hitam secara desain (kertas cetak,
    tema artikel pembaca) dan punya paletnya sendiri di luar 3 Color Key.
    `allow` berisi pola yang diizinkan pada baris itu saja. */
@@ -91,6 +131,8 @@ function scanFile(fullPath, relPath) {
     collect(RAW_ON_SURFACE_RE, line, idx, relPath, 'teks/cincin/garis mono di atas permukaan');
     collect(ARBITRARY_COLOR_RE, line, idx, relPath, 'hex arbitrer');
   });
+
+  checkTokenNames(relPath, content);
 }
 
 function collect(regex, line, idx, relPath, kind) {
