@@ -28,6 +28,9 @@ import { sendGoogleAccountEmail, isMailerConfigured } from '../mailer.js';
 import { logger } from '../logger.js';
 import { loginSchema, registerSchema } from '../lib/validate.js';
 import { normalizePhone, isValidPhone } from '../whatsapp.js';
+import { resolveFrontendOrigin } from '../lib/origin.js';
+import { createOneTimeCode, redeemOneTimeCode } from '../lib/oneTimeCode.js';
+import { ALLOWED_ORIGINS, FRONTEND_ORIGIN } from '../config.js';
 
 export const authRouter = Router();
 
@@ -510,22 +513,34 @@ const parseCookies = (header) => {
 };
 
 authRouter.get('/google/callback', async (req, res) => {
-  const host = req.get('host') || `localhost:${process.env.PORT || 5000}`;
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  const currentOrigin = `${protocol}://${host}`;
-  const frontendOrigin = process.env.FRONTEND_ORIGIN || currentOrigin;
+  /* Tujuan redirect hanya boleh berasal dari konfigurasi atau allowlist —
+   * tidak pernah dari `Host`/`X-Forwarded-Proto` mentah (VULN-04).
+   */
+  const frontendOrigin = resolveFrontendOrigin({ FRONTEND_ORIGIN }, req, ALLOWED_ORIGINS);
+
+  if (!frontendOrigin) {
+    logger.error('GOOGLE_OAUTH', 'Origin frontend tidak dapat ditentukan; redirect dibatalkan', {
+      host: req.get('host') || null,
+      forwardedProto: req.headers['x-forwarded-proto'] || null
+    });
+    return res
+      .status(500)
+      .type('html')
+      .send(
+        '<!doctype html><html lang="id"><meta charset="utf-8">'
+        + '<title>Login Google gagal</title>'
+        + '<p>Origin frontend tidak dapat ditentukan. '
+        + 'Set FRONTEND_ORIGIN di server, atau daftarkan origin aplikasi pada CORS_ORIGINS.</p>'
+        + '</html>'
+      );
+  }
 
   const failRedirect = (message, code = 'google_oauth') => {
-    try {
-      const url = new URL('/login', frontendOrigin);
-      url.searchParams.set('error', code);
-      url.searchParams.set('message', message);
-      logger.warn('GOOGLE_OAUTH', message);
-      return res.redirect(url.toString());
-    } catch (redirectError) {
-      logger.error('GOOGLE_OAUTH', 'Gagal menyusun URL redirect', { pesan: redirectError.message });
-      return res.status(302).send(`<script>window.location.href='${frontendOrigin}/login';</script>`);
-    }
+    const url = new URL('/login', frontendOrigin);
+    url.searchParams.set('error', code);
+    url.searchParams.set('message', message);
+    logger.warn('GOOGLE_OAUTH', message);
+    return res.redirect(url.toString());
   };
 
   try {
@@ -624,16 +639,33 @@ authRouter.get('/google/callback', async (req, res) => {
 
     const token = createSessionToken(existingUser);
     const user = toPublicUser(existingUser);
-    const userJson = Buffer.from(JSON.stringify(user), 'utf8').toString('base64url');
+    const sessionCode = createOneTimeCode({ token, user });
 
     const successUrl = new URL('/auth/success', frontendOrigin);
-    successUrl.searchParams.set('token', token);
-    successUrl.searchParams.set('user', userJson);
+    successUrl.searchParams.set('code', sessionCode);
 
     return res.redirect(successUrl.toString());
   } catch (error) {
     return replyAuthFailure(res, error);
   }
+});
+
+/* Menukar kode sekali-pakai dari redirect Google menjadi sesi (VULN-03).
+ * Kode berumur 60 detik dan hangus pada percobaan pertama, berhasil atau tidak.
+ */
+authRouter.post('/exchange', (req, res) => {
+  const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
+  const session = redeemOneTimeCode(code);
+
+  if (!session) {
+    return res.status(401).json({
+      success: false,
+      message: 'Kode sesi tidak valid atau sudah kedaluwarsa. Silakan masuk ulang.'
+    });
+  }
+
+  logger.ok('AUTH', 'Kode sesi sekali-pakai ditukar', { userId: session.user?.id });
+  return res.json({ success: true, token: session.token, user: session.user });
 });
 
 authRouter.get('/me', requireAuth, async (req, res) => {

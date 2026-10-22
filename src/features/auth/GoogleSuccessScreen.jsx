@@ -1,56 +1,53 @@
-
-
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApp } from '@context/AppContext';
+import { apiJson } from '@lib/api';
 import { AuthStatus } from '@ui/AuthStatus';
-
-const decodeBase64Url = (value) => {
-
-  const padded = value.replace(/-/g, '+').replace(/_/g, '/')
-    + '='.repeat((4 - (value.length % 4)) % 4);
-  try {
-    return JSON.parse(atob(padded));
-  } catch {
-    return null;
-  }
-};
 
 export const GoogleSuccessScreen = () => {
   const { login, navigateTo } = useApp();
   const [error, setError] = useState('');
+  const exchangeStarted = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
-    const params = new URLSearchParams(window.location.search);
+    /* StrictMode menjalankan efek dua kali di pengembangan. Kode sekali-pakai
+     * sudah hangus pada penukaran pertama, jadi penukaran dijaga ref.
+     */
+    if (exchangeStarted.current) return undefined;
+    exchangeStarted.current = true;
 
+    const params = new URLSearchParams(window.location.search);
     const oauthError = params.get('error');
+    const code = params.get('code');
+
+    /* Buang kode dari address bar sebelum ditukar: jangan sampai tersisa di
+     * riwayat peramban atau ikut terkirim sebagai Referer.
+     */
+    window.history.replaceState({}, '', '/auth/success');
+
     if (oauthError) {
       setError(params.get('message') || 'Login Google dibatalkan.');
-
-      window.history.replaceState({}, '', '/auth/success');
       return undefined;
     }
 
-    const token = params.get('token');
-    const userEncoded = params.get('user');
-    if (!token || !userEncoded) {
-      setError('Data sesi Google tidak lengkap. Silakan coba lagi.');
+    if (!code) {
+      setError('Kode sesi Google tidak ditemukan. Silakan coba masuk lagi.');
       return undefined;
     }
 
-    const user = decodeBase64Url(userEncoded);
-    if (!user) {
-      setError('Data pengguna tidak dapat dibaca.');
-      return undefined;
-    }
+    (async () => {
+      try {
+        const payload = await apiJson('/api/auth/exchange', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        login(payload.user, payload.token);
+      } catch (exchangeError) {
+        setError(exchangeError?.message || 'Gagal menukar kode sesi Google.');
+      }
+    })();
 
-    try {
-      login(user, token);
-    } catch (loginError) {
-      if (!cancelled) setError(loginError.message || 'Gagal menyimpan sesi.');
-    }
-
-    return () => { cancelled = true; };
+    return undefined;
   }, [login]);
 
   if (error) {

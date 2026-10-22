@@ -21,6 +21,12 @@ export const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS ||
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+/* Satu-satunya sumber tujuan redirect OAuth (VULN-04). Bila kosong, server
+ * hanya menerima origin yang sudah ada di ALLOWED_ORIGINS — Host dari request
+ * tidak pernah dipercaya. Wajib diisi di produksi.
+ */
+export const FRONTEND_ORIGIN = (process.env.FRONTEND_ORIGIN || '').trim();
+
 export const SERVE_STATIC = String(process.env.SERVE_STATIC ?? 'true').trim().toLowerCase() !== 'false';
 
 export const STATIC_DIR = path.resolve(ROOT_DIR, 'dist');
@@ -39,6 +45,7 @@ export const AUTH_RATE_LIMITED_PATHS = [
   '/api/auth/request-password-reset',
   '/api/auth/reset-password',
   '/api/auth/resend-verification',
+  '/api/auth/exchange',
 ];
 
 /* Batas percobaan per akun/identifier, bukan per alamat socket. Tanpa ini satu

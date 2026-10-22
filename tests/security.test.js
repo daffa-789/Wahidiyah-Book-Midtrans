@@ -8,6 +8,14 @@ import { canExposeDevOtp, isLoopbackAddress, resendCooldownRemaining } from '../
 import { isAllowedQrUrl, isTransactionSettled, verifySignatureKey } from '../server/lib/midtrans.js';
 import { findPlan, DEFAULT_PLAN_ID, SUBSCRIPTION_PLANS } from '../server/lib/constants.js';
 import { MIDTRANS_SERVER_KEY } from '../server/config.js';
+import { normalizeOrigin, resolveFrontendOrigin, sanitizeForwardedProto } from '../server/lib/origin.js';
+import { createOneTimeCode, redeemOneTimeCode } from '../server/lib/oneTimeCode.js';
+
+const fakeReq = ({ host = 'localhost:3000', protocol = 'http', forwardedProto } = {}) => ({
+  get: (name) => (String(name).toLowerCase() === 'host' ? host : undefined),
+  protocol,
+  headers: forwardedProto === undefined ? {} : { 'x-forwarded-proto': forwardedProto }
+});
 
 test('resolveJwtSecret: produksi tanpa secret menolak boot', () => {
   assert.throws(
@@ -130,4 +138,80 @@ test('resendCooldownRemaining: memakai created_at baris', () => {
   assert.equal(resendCooldownRemaining({ created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString() }), 0);
   const baru = resendCooldownRemaining({ created_at: new Date().toISOString() });
   assert.ok(baru > 0 && baru <= 60, `sisa cooldown ${baru} detik harus di rentang 1..60`);
+});
+
+test('resolveFrontendOrigin: FRONTEND_ORIGIN mengalahkan Host penyerang', () => {
+  const origin = resolveFrontendOrigin(
+    { FRONTEND_ORIGIN: 'https://app.wahidiyah.id' },
+    fakeReq({ host: 'evil.com' }),
+    ['http://localhost:3000']
+  );
+  assert.equal(origin, 'https://app.wahidiyah.id');
+});
+
+test('resolveFrontendOrigin: Host tak dikenal tanpa FRONTEND_ORIGIN ditolak', () => {
+  assert.equal(resolveFrontendOrigin({}, fakeReq({ host: 'evil.com' }), ['http://localhost:3000']), null);
+  assert.equal(resolveFrontendOrigin({ FRONTEND_ORIGIN: '' }, fakeReq({ host: 'evil.com' }), []), null);
+});
+
+test('resolveFrontendOrigin: Host yang ada di allowlist diizinkan', () => {
+  assert.equal(
+    resolveFrontendOrigin({}, fakeReq({ host: 'localhost:3000' }), ['http://localhost:3000']),
+    'http://localhost:3000'
+  );
+});
+
+test('resolveFrontendOrigin: x-forwarded-proto tidak sah diabaikan', () => {
+  assert.equal(sanitizeForwardedProto('javascript'), null);
+  assert.equal(sanitizeForwardedProto('https, http'), 'https');
+  const origin = resolveFrontendOrigin(
+    {},
+    fakeReq({ host: 'localhost:3000', forwardedProto: 'javascript:alert(1)' }),
+    ['http://localhost:3000']
+  );
+  assert.equal(origin, 'http://localhost:3000');
+});
+
+test('resolveFrontendOrigin: FRONTEND_ORIGIN cacat gagal tertutup', () => {
+  assert.equal(normalizeOrigin('javascript:alert(1)'), null);
+  assert.equal(
+    resolveFrontendOrigin(
+      { FRONTEND_ORIGIN: 'javascript:alert(1)' },
+      fakeReq({ host: 'localhost:3000' }),
+      ['http://localhost:3000']
+    ),
+    null
+  );
+});
+
+test('resolveFrontendOrigin: x-forwarded-host dipakai bila proxy menulis ulang Host', () => {
+  const proxied = {
+    ...fakeReq({ host: 'localhost:5000' }),
+    headers: { 'x-forwarded-host': 'localhost:3000', 'x-forwarded-proto': 'http' }
+  };
+  assert.equal(resolveFrontendOrigin({}, proxied, ['http://localhost:3000']), 'http://localhost:3000');
+
+  const hostile = { ...proxied, headers: { 'x-forwarded-host': 'evil.com' } };
+  assert.equal(resolveFrontendOrigin({}, hostile, ['http://localhost:3000']), null);
+});
+
+test('oneTimeCode: hanya bisa ditukar sekali', () => {
+  const code = createOneTimeCode({ token: 'tok', user: { id: 'u1' } });
+  assert.deepEqual(redeemOneTimeCode(code), { token: 'tok', user: { id: 'u1' } });
+  assert.equal(redeemOneTimeCode(code), null);
+});
+
+test('oneTimeCode: kedaluwarsa tepat pada batas TTL', () => {
+  const now = 1_700_000_000_000;
+  const fresh = createOneTimeCode({ token: 'a' }, { ttlMs: 60_000, now });
+  assert.equal(redeemOneTimeCode(fresh, { now: now + 59_999 })?.token, 'a');
+
+  const stale = createOneTimeCode({ token: 'b' }, { ttlMs: 60_000, now });
+  assert.equal(redeemOneTimeCode(stale, { now: now + 60_000 }), null);
+});
+
+test('oneTimeCode: kode acak atau kosong ditolak', () => {
+  assert.equal(redeemOneTimeCode('tidak-pernah-dibuat'), null);
+  assert.equal(redeemOneTimeCode(''), null);
+  assert.equal(redeemOneTimeCode(null), null);
 });
