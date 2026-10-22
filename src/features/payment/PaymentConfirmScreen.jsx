@@ -307,29 +307,40 @@ export const PaymentConfirmScreen = () => {
                   <span>Simpan QRIS ke Galeri (Buka di DANA/BCA)</span>
                 </button>
 
-                <button
-                  type="button"
-                  data-testid="qris-simulate-paid"
-                  onClick={simulatePaid}
-                  disabled={isSimulating}
-                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gold-600 hover:bg-gold-700 active:bg-gold-700 dark:bg-gold-700 dark:hover:bg-gold-700/80 dark:active:bg-gold-700/80 disabled:opacity-60 disabled:cursor-not-allowed text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
-                >
-                  {isSimulating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Memproses...</span>
-                    </>
-                  ) : (
-                    <>
-                      <PlayCircle className="w-4 h-4" />
-                      <span>Bayar Sekarang (Mode Simulasi)</span>
-                    </>
-                  )}
-                </button>
-                <p className="text-micro text-ink-400 leading-relaxed">
-                  Hanya untuk <span className="font-semibold text-semantic-warning">sandbox</span>. Di production
-                  tombol ini hilang dan pembayaran diverifikasi lewat webhook Midtrans sungguhan.
-                </p>
+                {qrTransaction.simulationAvailable ? (
+                  <>
+                    <button
+                      type="button"
+                      data-testid="qris-simulate-paid"
+                      onClick={simulatePaid}
+                      disabled={isSimulating}
+                      className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gold-600 hover:bg-gold-700 active:bg-gold-700 dark:bg-gold-700 dark:hover:bg-gold-700/80 dark:active:bg-gold-700/80 disabled:opacity-60 disabled:cursor-not-allowed text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+                    >
+                      {isSimulating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Memproses...</span>
+                        </>
+                      ) : (
+                        <>
+                          <PlayCircle className="w-4 h-4" />
+                          <span>Bayar Sekarang (Mode Simulasi)</span>
+                        </>
+                      )}
+                    </button>
+                    <p className="text-micro text-ink-500 leading-relaxed">
+                      Hanya untuk <span className="font-semibold text-semantic-warning">sandbox</span>. Di production
+                      tombol ini hilang dan pembayaran diverifikasi lewat webhook Midtrans sungguhan.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-micro text-ink-500 leading-relaxed">
+                    Mode simulasi sedang <span className="font-semibold text-semantic-warning">mati</span>, jadi
+                    pembayaran hanya bisa diselesaikan lewat simulator QRIS Midtrans. Untuk demo, set
+                    {' '}<code className="font-mono">ALLOW_PAYMENT_SIMULATION=1</code> di <code className="font-mono">.env</code> lalu
+                    nyalakan ulang server.
+                  </p>
+                )}
               </div>
             )}
 

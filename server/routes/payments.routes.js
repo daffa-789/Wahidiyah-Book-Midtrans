@@ -199,6 +199,7 @@ paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(async 
         qrString: pendingTx.midtrans_qr_string || null,
         qrImageUrl: pendingTx.midtrans_qr_url ? `/api/payments/qris/${pendingTx.id}/qr.png` : null,
         qrMidtransUrl: pendingTx.midtrans_qr_url || null,
+        ...(MIDTRANS_IS_PRODUCTION ? {} : { simulationAvailable: isPaymentSimulationAllowed(process.env) }),
         planName: pendingTx.plan_name,
         amount: pendingTx.amount,
         adminFee: pendingTx.admin_fee,
@@ -289,7 +290,10 @@ paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(async 
       qrString,
       // Cadangan: endpoint gambar kita sendiri (proxy PNG dari Midtrans).
       qrImageUrl: qrAction ? `/api/payments/qris/${orderId}/qr.png` : null,
-      ...(MIDTRANS_IS_PRODUCTION ? {} : { qrMidtransUrl: qrAction?.url || null }),
+      ...(MIDTRANS_IS_PRODUCTION ? {} : {
+        qrMidtransUrl: qrAction?.url || null,
+        simulationAvailable: isPaymentSimulationAllowed(process.env)
+      }),
       planName: plan.name,
       amount,
       adminFee,

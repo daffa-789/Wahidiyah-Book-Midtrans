@@ -59,6 +59,7 @@ export const useQrisPayment = ({
         qrString: data.qrString || null,
         qrImageUrl: data.qrImageUrl || null,
         qrMidtransUrl: data.qrMidtransUrl || null,
+        simulationAvailable: Boolean(data.simulationAvailable),
         totalPaid: data.totalPaid,
         planName: data.planName,
         expiredAt: data.expiredAt
