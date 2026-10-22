@@ -25,6 +25,7 @@ export const useQrisPayment = ({
   const [qrTransaction, setQrTransaction] = useState(null);
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
   const [qrError, setQrError] = useState('');
+  const [qrNotice, setQrNotice] = useState('');
   const [isQrisPaid, setIsQrisPaid] = useState(false);
   const [countdown, setCountdown] = useState(DEFAULT_COUNTDOWN_SECONDS);
   const [isExpired, setIsExpired] = useState(false);
@@ -38,6 +39,7 @@ export const useQrisPayment = ({
   const generateTransaction = useCallback(async () => {
     setIsGeneratingQr(true);
     setQrError('');
+    setQrNotice('');
 
     try {
       const data = await apiJson('/api/payments/qris/charge', {
@@ -184,11 +186,14 @@ export const useQrisPayment = ({
     setIsCancelling(true);
     setQrError('');
     try {
-      await apiJson(`/api/payments/qris/${qrTransaction.orderId}/cancel`, {
+      const data = await apiJson(`/api/payments/qris/${qrTransaction.orderId}/cancel`, {
         method: 'POST',
         headers: { ...authHeaders(), 'Content-Type': 'application/json' }
       });
       await generateTransaction();
+      // Diisi setelah order baru jadi, karena generateTransaction membersihkan
+      // catatan lebih dulu.
+      setQrNotice(data?.warning || '');
     } catch (err) {
       setQrError(err?.message || 'Gagal membatalkan kode QR.');
     } finally {
@@ -204,6 +209,7 @@ export const useQrisPayment = ({
     qrTransaction,
     isGeneratingQr,
     qrError,
+    qrNotice,
     isQrisPaid,
     isExpired,
     isSimulating,

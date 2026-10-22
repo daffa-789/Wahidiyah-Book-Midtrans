@@ -378,11 +378,19 @@ paymentsRouter.get('/qris/:orderId/status', requireAuth, wrap(async (req, res) =
 /**
  * Batalkan kode QRIS milik sendiri lalu biarkan klien membuat order baru.
  *
- * Urutannya sengaja "Midtrans dulu, database kemudian": baris lokal hanya
- * dimatikan kalau Midtrans sudah mengakui order-nya tidak bisa dibayar lagi
- * (expire -> cancel). Kalau tidak, QR lama tetap bisa discan orang dan uangnya
- * masuk ke order yang sudah berstatus rejected, sehingga tidak pernah lagi
- * diaktifkan lewat jalur settle.
+ * Kenyataan terukur (22 Okt 2026, sandbox): Midtrans MENOLAK pembatalan QRIS —
+ * /v2/{order_id}/expire dan /cancel membalas HTTP 412 "Transaction status
+ * cannot be updated". Satu-satunya cara QRIS mati adalah kedaluwarsa. Karena
+ * itu pembatalan di sini bersifat lokal:
+ *  - masa berlaku ditarik ke sekarang, sehingga query reuse di /qris/charge
+ *    melewati order ini dan order baru dibuat dengan timer penuh;
+ *  - status SENGAJA tetap `pending` selama Midtrans tidak mengakui pembatalan.
+ *    Kalau pemilik terlanjur membayar QR lama, jalur settle yang ada masih
+ *    mengaktifkan Pro dan uangnya tidak hilang; memindahkannya ke `rejected`
+ *    akan membuat pembayaran itu tertelan tanpa aktivasi;
+ *  - baru ditutup ke `rejected` kalau Midtrans benar-benar mematikan order
+ *    (2xx, atau 404 karena order memang tidak pernah ada) — saat itu
+ *    pembayaran sudah mustahil.
  */
 paymentsRouter.post('/qris/:orderId/cancel', paymentRateLimiter, requireAuth, wrap(async (req, res) => {
   const { transaction, forbidden } = await loadOwnTransaction(req.params.orderId, req.user);
@@ -410,38 +418,50 @@ paymentsRouter.post('/qris/:orderId/cancel', paymentRateLimiter, requireAuth, wr
     });
   }
 
-  let alasanDitolak = null;
+  let voidedByMidtrans = false;
   for (const upaya of [expireQrisTransaction, cancelQrisTransaction]) {
     try {
-      const hasil = await upaya(transaction.id);
-      if (isVoidAcknowledged(hasil)) {
-        alasanDitolak = null;
+      if (isVoidAcknowledged(await upaya(transaction.id))) {
+        voidedByMidtrans = true;
         break;
       }
-      alasanDitolak = hasil?.status_message || 'Midtrans menolak pembatalan.';
-    } catch (error) {
-      alasanDitolak = error?.message || 'Midtrans menolak pembatalan.';
+    } catch {
+      // Ditolak Midtrans (412 untuk QRIS): lanjut ke pembatalan lokal.
     }
   }
 
-  if (alasanDitolak) {
-    const kedaluwarsa = transaction.expires_at ? new Date(transaction.expires_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) : null;
-    return res.status(409).json({
-      success: false,
-      message: kedaluwarsa
-        ? `Pembatalan tidak diterima Midtrans (${alasanDitolak}). Kode QR akan kedaluwarsa otomatis pada ${kedaluwarsa} WIB.`
-        : `Pembatalan tidak diterima Midtrans (${alasanDitolak}).`
-    });
-  }
+  const nowIso = new Date().toISOString();
+  const { error: cancelError } = await supabaseServer
+    .from('transactions')
+    .update(voidedByMidtrans
+      ? { expires_at: nowIso, status: 'rejected', verified_at: nowIso }
+      : { expires_at: nowIso })
+    .eq('id', transaction.id)
+    .eq('status', TRANSACTION_PENDING_STATUS);
 
-  await rejectTransaction(transaction, 'dibatalkan pengguna');
-  logger.info('MIDTRANS', 'Kode QRIS dibatalkan pengguna', { orderId: transaction.id });
+  if (cancelError) throw cancelError;
+
+  logger.info('MIDTRANS', 'Kode QRIS dibatalkan pengguna', {
+    orderId: transaction.id,
+    voidedByMidtrans
+  });
+
+  const kedaluwarsaLama = transaction.expires_at
+    ? new Date(transaction.expires_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })
+    : null;
 
   return res.json({
     success: true,
     cancelled: true,
+    voidedByMidtrans,
     orderId: transaction.id,
-    message: 'Kode QR dibatalkan. Silakan buat kode baru.'
+    message: voidedByMidtrans
+      ? 'Kode QR dibatalkan di Midtrans. Silakan buat kode baru.'
+      : 'Kode QR dihentikan di sisi kami, kode baru bisa dibuat sekarang. Midtrans tidak mendukung pembatalan QRIS, jadi QR lama masih berlaku sampai ' +
+        (kedaluwarsaLama ? `${kedaluwarsaLama} WIB` : 'waktu kedaluwarsanya'),
+    warning: voidedByMidtrans
+      ? null
+      : 'Jangan membayar kode QR lama. Kalau terlanjur dibayar, langganan tetap aktif tetapi kamu membayar dua kali.'
   });
 }));
 

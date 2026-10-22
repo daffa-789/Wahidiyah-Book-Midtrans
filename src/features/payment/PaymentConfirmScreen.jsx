@@ -118,6 +118,7 @@ export const PaymentConfirmScreen = () => {
     qrTransaction,
     isGeneratingQr,
     qrError,
+    qrNotice,
     isQrisPaid,
     isExpired,
     isSimulating,
@@ -297,6 +298,15 @@ export const PaymentConfirmScreen = () => {
                 />
               ) : null}
             </div>
+
+            {qrNotice && !isQrisPaid && (
+              <p
+                role="status"
+                className="mt-3 rounded-xl border border-semantic-warning/40 bg-semantic-warningLight px-3 py-2 text-caption leading-relaxed text-semantic-warning"
+              >
+                {qrNotice}
+              </p>
+            )}
 
             {!isQrisPaid && !isExpired && !isGeneratingQr && qrTransaction && (
               <div className="pt-1 space-y-2">
