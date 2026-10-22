@@ -1,5 +1,9 @@
 # Mobile & Content Protection
 
+> **Status 23 Okt 2026** — berkas ini **arsip penjelasan**, bukan status terkini.
+> Status eksekusi terbaru: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
+> BAGIAN 5 (mobile native) masih **ditunda**; M1 tetap satu-satunya pengecualian web.
+
 Rencana untuk tiga kebutuhan yang melampaui dokumen lain di folder ini: **(1)** audit pustaka — mana yang layak ditambah, mana yang sebenarnya sudah disediakan bawaan Node/platform, **(2)** proteksi konten premium dari tangkapan layar dan salin teks, **(3)** keputusan React Native vs Flutter + arsitektur pemisahan landing, aplikasi mobile, dan admin.
 
 - Tanggal penyusunan: 22 Oktober 2026

@@ -1,5 +1,9 @@
 # Security & Fixing
 
+> **Status 23 Okt 2026** — berkas ini **arsip penjelasan**, bukan status terkini.
+> Status eksekusi terbaru: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
+> VULN-03 dan VULN-04 sudah diperbaiki; rinciannya ada di laporan itu.
+
 Hasil audit keamanan white-box untuk **Aplikasi Buku Wahidiyah** (`daffa-789/Wahidiyah-Book-Midtrans`), beserta rencana perbaikan dan prompt eksekusi siap-pakai.
 
 - Tanggal audit: 21 Oktober 2026

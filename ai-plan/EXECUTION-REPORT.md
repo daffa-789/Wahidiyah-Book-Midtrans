@@ -117,3 +117,48 @@ Semua deferred — tidak termasuk pass ini. Catatan: jalur yang membuka plumbing
 ## 6. Konfirmasi
 
 Cabang `improve/all-plans` masih lokal (9 commit di atas `2f2b769`), tidak ada `git push`, tidak ada kredensial yang dirotasi, `.env` tidak disentuh. Database live sudah dihardening untuk VULN-02/16 — `npm run health` tetap 6/6 dan service-role masih membaca `users` (2 baris), jadi tidak ada regresi akses. Tahap 3–10 menunggu persetujuan untuk dilanjutkan.
+
+---
+
+## 7. Pass 2 — 23 Oktober 2026 (di `main`, sudah di-push)
+
+Rentang commit: `0df9068` → `b9e96f0`. Berbeda dari Pass 1, seluruh pekerjaan ini sudah ada di `origin/main`.
+
+### 7.1 Keamanan
+
+| ID | Perubahan | Bukti |
+|---|---|---|
+| VULN-04 | `server/lib/origin.js`: `resolveFrontendOrigin` — `FRONTEND_ORIGIN` menang; tanpa itu hanya origin di `ALLOWED_ORIGINS`; `X-Forwarded-Proto` disanitasi; fallback inline `<script>` dihapus | Uji: `Host: evil.com` → 500 tanpa `Location`; proto `javascript` diabaikan; 5 kasus di `tests/security.test.js` |
+| VULN-03 | `server/lib/oneTimeCode.js`: kode 256-bit, TTL 60 detik, hangus sekali pakai; `POST /api/auth/exchange`; klien menukar saat mount dan membuang kode dari address bar | Uji: kode sah → 200, tukar ulang → 401; 4 kasus unit |
+
+**Regresi yang tertangkap uji manual (bukan uji otomatis):** `942538a` menghapus `const currentOrigin` tetapi menyisakan rujukannya di `REDIRECT_URI`, sehingga callback Google membalas JSON 500. Diperbaiki di `b8c04d6`. Pelajarannya: `node --check` hanya memeriksa sintaks — identifier yang hilang baru ketahuan saat runtime.
+
+### 7.2 Kebersihan kode dan skema
+
+- **Dead code** (`bb697b1`): 34 berkas, −222/+28. `debounce`, `copyToClipboard`, `formatToWhatsAppE164`, `QRIS_WEBHOOK_SECRET`, `toPastDateYmd`, `TAG_LENGTH`, `createHmac`, `__dirname`, re-export yatim, 19 `export` yang diturunkan, 4 logo tanpa rujukan, dan dependensi `flag-icons`.
+- **Foto profil dicabut** (`68aac84`): UI, `/users/profile`, `toPublicUser`, normalizer, `compressAvatarDataUrl`, `avatar-default.svg`. SQL migrasi `remove_avatar_column.sql` — **sudah dijalankan** pemilik; `users.avatar` terverifikasi hilang, 4 baris tercadangkan.
+- **`full_setup.sql` 630 → 367 baris** (`08f6852`): `qris_transactions` (tabel, enum, 4 fungsi simulasi, trigger, policy, indeks, realtime) dan `users.dob` dibuang. Definisi `carousel_slides` yang berulang **dipertahankan** dengan komentar: blok PATCH harus bisa berdiri sendiri pada DB lama.
+
+### 7.3 Email transaksional (`3ee1fc2`)
+
+Template baru di `server/mailer.js`: tabel + inline style, palet aplikasi, preheader tersembunyi, logo `public/icon-192.png` ditanam sebagai CID dalam `multipart/related`, header `Auto-Submitted`/`X-Auto-Response-Suppress`. Satu kerangka dipakai OTP dan email "akun Google".
+
+Dua temuan operasional yang menyertainya: refresh token Gmail mati karena OAuth app masih *Testing* (token berumur 7 hari) — sudah diperbarui lewat `npm run gmail:token`, dan akun pengirim wajib ada di **Test users**. `/register` dan `/resend-verification` kini mengembalikan `deliveredBy`; layar verifikasi berhenti mengaku "sudah dikirim" saat pengiriman gagal (`e96ab8f`).
+
+### 7.4 UI (`b9e96f0`)
+
+Nama sidebar dua baris; kartu "Tema Tampilan" dan `ThemeModeSelector` dihapus; garis pemisah sidebar ringkas dihapus; banner pasang aplikasi kini mensyaratkan `(pointer: coarse)` sehingga tidak muncul di Chrome desktop Windows.
+
+### 7.5 Gerbang verifikasi
+
+`check-syntax` 57 berkas · `check-colors` 0 pelanggaran · kontras lulus · **34/34 uji** · `vite build` hijau.
+
+**Catatan lingkungan:** `npm test` / `npm run check` gagal di Node 22.22.2 Windows karena `node --test tests/` tidak me-resolve direktori. Yang bekerja: `node --test "tests/*.test.js"`. Belum diubah di `package.json`.
+
+### 7.6 Masih terbuka
+
+- VULN-09 (CSP), VULN-11/13 (magic byte + MIME), VULN-20/21 — Tahap 3–5.
+- D-03/07/09/10/12/13/14/16 — Tahap 7.
+- Performa: chunk `excel` 939 kB (271 kB gzip) dan `charts` 350 kB belum dimuat malas.
+- `ALLOW_PAYMENT_SIMULATION=1` hanya untuk demo sidang.
+- Token Gmail akan mati lagi 7 hari selama OAuth app berstatus *Testing*.

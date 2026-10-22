@@ -41,3 +41,24 @@ Jika MASTER-PLAN dan arsip bertentangan, **ikuti MASTER-PLAN** — ia memuat atu
 Stack: React 19 + Vite + Tailwind v4 (`src/`), Express 4 ESM Node >= 22 (`server/`), Supabase Postgres project `pdimjmbjutlzjdfjaqgt`, Midtrans Core API QRIS + jalur transfer manual skripsi, PWA. Detail penuh dan 6 invarian repo ada di MASTER-PLAN BAGIAN 0.
 
 Yang harus dibaca di luar folder ini sebelum mulai: `Master_Memory_Workflow.md` di akar repo (arsitektur, konvensi, 6 checklist integrasi via `npm run health`).
+
+## 4. Status eksekusi — 23 Oktober 2026
+
+Sumber kebenaran status ada di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md) (Pass 1 untuk Tahap 0–2, Pass 2 untuk pekerjaan 23 Oktober). Ringkasnya:
+
+**Selesai**
+
+| Area | Item |
+|---|---|
+| Keamanan | VULN-01, 02, 03, 04, 05, 06, 07, 08, 10, 12, 16 |
+| Desain | D-01, 02, 04, 05, 06, 08, 11, 15 |
+| Skema | `users.avatar` dan `users.dob` dibuang; `qris_transactions` legacy dibuang; `full_setup.sql` 630 → 367 baris |
+| Email | template transaksional baru (logo CID, `multipart/related`) + status pengiriman jujur |
+| PWA | banner pasang hanya di perangkat sentuh |
+
+**Berikutnya**
+
+- VULN-09 (CSP), VULN-11/13 (magic byte + MIME), VULN-20/21 — Tahap 3–5.
+- D-03/07/09/10/12/13/14/16 — Tahap 7.
+- Performa: chunk `excel` 939 kB dan `charts` 350 kB belum dimuat malas.
+- `ALLOW_PAYMENT_SIMULATION=1` hanya saat demo sidang.

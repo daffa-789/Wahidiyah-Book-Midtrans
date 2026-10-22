@@ -1,5 +1,9 @@
 # Design Plan & Improve
 
+> **Status 23 Okt 2026** — berkas ini **arsip penjelasan**, bukan status terkini.
+> Status eksekusi terbaru: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
+> D-01/02/04/05/06/08/11/15 sudah dikerjakan; D-03/07/09/10/12/13/14/16 masih terbuka.
+
 Audit desain dan rencana perombakan antarmuka **Aplikasi Buku Wahidiyah** agar lebih ramah pengguna, khususnya jamaah lanjut usia.
 
 - Tanggal audit: 21 Oktober 2026

@@ -1,5 +1,10 @@
 # Next Feature
 
+> **Status 23 Okt 2026** — berkas ini **arsip analisis**, bukan status terkini.
+> Status eksekusi terbaru: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
+> Dua butir sudah berubah: `flag-icons` dicabut (bendera di-vendor di `public/flags/`)
+> dan foto profil dicabut seluruhnya.
+
 Analisis fitur lanjutan untuk **Aplikasi Buku Wahidiyah**: apa yang sudah ada, celah yang terverifikasi, kandidat pengembangan, dan urutan pengerjaan yang disarankan.
 
 - Tanggal analisis: 21 Oktober 2026

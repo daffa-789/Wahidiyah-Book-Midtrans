@@ -2,6 +2,10 @@
 
 Dokumen gabungan tunggal untuk seluruh rencana perbaikan dan pengembangan. Gabungan dari lima dokumen: `Security-and-Fixing.md`, `design-plan-improve.md`, `Next-Feature.md`, `mobile-and-content-protection.md`, dan indeks `README.md` (kelima berkas itu tetap ada di folder ini sebagai **arsip detail** — jika butuh penjelasan panjang per temuan, buka arsipnya).
 
+> **Status 23 Okt 2026** — **VULN-03 dan VULN-04 sudah diperbaiki dan terverifikasi**
+> (kode sekali-pakai + `resolveFrontendOrigin`; rincian di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md)).
+> Dua baris terkait di §1.2 diberi tanda ✅. Temuan lain di BAB 1 masih berlaku sebagai antrean.
+
 > **ATURAN EKSEKUSI UTAMA — WEB DULU.**
 > Kerjakan **BAGIAN 0 + BAB 1 → BAB 4** (semuanya web) mengikuti urutan pada BAB 4.
 > **BAB 5 (mobile native & distribusi APK) DITUNDA** — jangan eksekusi sampai BAB 1–4 selesai tuntas. Satu-satunya pengecualian adalah M1 (proteksi konten web, tanpa dependensi baru) yang memang bagian web — lihat penanda di BAB 5 §5.0.
@@ -180,28 +184,28 @@ Hasil tiga putaran audit white-box. **5 High** (VULN-01, 02, 03, 04, 12), 1 Med-
 
 | ID | Temuan | Severity | Lokasi utama |
 |---|---|---|---|
-| VULN-01 | Rute `simulate-paid` aktif karena gerbangnya hanya satu flag env | High | `server/routes/payments.routes.js:371`, `server/config.js:51`, `.env` |
-| VULN-02 | Anon dapat membaca seluruh transaksi QRIS dan menyisipkan baris | High | policy `qris_transactions`, `supabase_database/full_setup.sql:401-402` |
-| VULN-03 | JWT sesi dikirim melalui query string pada redirect sukses | High | `server/routes/auth.routes.js:625-633` |
-| VULN-04 | Host header dipercaya: open redirect, pencurian token, dan XSS | High | `server/routes/auth.routes.js:513-516`, `:527`, `:629` |
-| VULN-05 | Secret JWT cadangan hardcoded + gagal-terbuka saat env kosong | Med-High | `server/auth.js:6-11` |
-| VULN-06 | `POST /api/transactions` menerima nominal dari klien | Medium | `server/routes/transactions.routes.js:124-135`, `:154-155` |
-| VULN-07 | Rate limit OTP berbasis alamat socket, `trust proxy` nonaktif | Medium | `server/middleware/security.js:35-43`, `server/config.js:29-42` |
-| VULN-08 | Kode OTP dapat bocor di respons bila `NODE_ENV=development` | Medium | `server/lib/otp.js:22`, `server/routes/auth.routes.js:157`, `:270-282`, `:323-331` |
+| VULN-01 | ✅ **fixed** — Rute `simulate-paid` aktif karena gerbangnya hanya satu flag env | High | `server/routes/payments.routes.js:371`, `server/config.js:51`, `.env` |
+| VULN-02 | ✅ **fixed** — Anon dapat membaca seluruh transaksi QRIS dan menyisipkan baris | High | tabel legacy `qris_transactions` dibuang 23 Okt 2026 (`full_setup.sql`) |
+| VULN-03 | ✅ **fixed 23 Okt 2026** — JWT sesi dikirim melalui query string pada redirect sukses | High | `server/lib/oneTimeCode.js`, `server/routes/auth.routes.js` |
+| VULN-04 | ✅ **fixed 23 Okt 2026** — Host header dipercaya: open redirect, pencurian token, dan XSS | High | `server/lib/origin.js`, `server/routes/auth.routes.js` |
+| VULN-05 | ✅ **fixed** — Secret JWT cadangan hardcoded + gagal-terbuka saat env kosong | Med-High | `server/auth.js:6-11` |
+| VULN-06 | ✅ **fixed** — `POST /api/transactions` menerima nominal dari klien | Medium | `server/routes/transactions.routes.js:124-135`, `:154-155` |
+| VULN-07 | ✅ **fixed** — Rate limit OTP berbasis alamat socket, `trust proxy` nonaktif | Medium | `server/middleware/security.js:35-43`, `server/config.js:29-42` |
+| VULN-08 | ✅ **fixed** — Kode OTP dapat bocor di respons bila `NODE_ENV=development` | Medium | `server/lib/otp.js:22`, `server/routes/auth.routes.js:157`, `:270-282`, `:323-331` |
 | VULN-09 | CSP dimatikan dan `CORS_ORIGINS` tidak diset | Low-Med | `server/middleware/security.js:15-25`, `server/config.js:18-22` |
-| VULN-10 | Klien database turun ke anon key hanya dengan peringatan | Low | `server/db.js:18-24`, `:31-39` |
+| VULN-10 | ✅ **fixed** — Klien database turun ke anon key hanya dengan peringatan | Low | `server/db.js:18-24`, `:31-39` |
 | VULN-11 | Unggahan tanpa allowlist jenis berkas | Low | `server/middleware/uploads.js:7-19` |
-| VULN-12 | Masa berlaku langganan Pro tidak pernah ditegakkan pada gate konten | High | `server/routes/books.routes.js:167`, `server/auth.js:67-107` |
+| VULN-12 | ✅ **fixed** — Masa berlaku langganan Pro tidak pernah ditegakkan pada gate konten | High | `server/routes/books.routes.js:167`, `server/auth.js:67-107` |
 | VULN-13 | MIME dari klien tersimpan di data URI lalu dipercaya saat konten disajikan (XSS tersimpan) | Medium | `server/routes/books.routes.js:129`, `:174`, `server/lib/http.js:86-96` |
 | VULN-14 | Langganan push tanpa autentikasi/limiter: SSRF ke host https mana pun + siaran berhenti | Medium | `server/routes/notifications.routes.js:30-39`, `:55`, `server/lib/webpush.js:184` |
 | VULN-15 | Endpoint publik tanpa pembatas; katalog membawa seluruh cover/thumbnail base64 | Low-Med | `server/routes/books.routes.js:37-49`, `:143` |
-| VULN-16 | `anon`/`authenticated` memegang TRUNCATE/REFERENCES/TRIGGER (bawaan Supabase) | Low | grant tabel `public` (terverifikasi live) |
+| VULN-16 | ✅ **fixed** — `anon`/`authenticated` memegang TRUNCATE/REFERENCES/TRIGGER (bawaan Supabase) | Low | grant tabel `public` (terverifikasi live) |
 | VULN-17 | Admin terakhir dapat diturunkan; Pro pemberian admin permanen tanpa kedaluwarsa | Low | `server/routes/users.routes.js:96-108`, `:111-127` |
 | VULN-18 | Kata sandi sementara dikembalikan dalam respons pembuatan pengguna | Low | `server/routes/users.routes.js:172` |
 | VULN-19 | Dev server terbuka ke seluruh antarmuka + divergensi pembacaan flag | Low | `vite.config.js:87`, `scripts/health-check.js:34`, `server/config.js:51` |
 | VULN-20 | OAuth dan endpoint status pembayaran tanpa rate limit | Low | `server/config.js:35-42`, `server/server.js:77`, `server/routes/payments.routes.js:315` |
 | VULN-21 | Service worker menyimpan PNG QR pembayaran (cache-first, melewati `requireAuth`) | Medium | `public/sw.js:52-59`, `:84-105`, `server/routes/payments.routes.js:412` |
-| VULN-22 | `avatar` menerima string bebas (bukan wajib data URL) → URL pelacakan & pembengkakan data | Low-Med | `server/routes/users.routes.js:40-52`, `server/lib/images.js:25-28` |
+| VULN-22 | ✅ **tidak berlaku** — `avatar` menerima string bebas; fitur foto profil dicabut 23 Okt 2026 (kolom `users.avatar` dihapus) | Low-Med | — |
 | VULN-23 | `cover_url` bebas → open redirect pada endpoint thumbnail publik | Low | `server/routes/books.routes.js:143-155`, `:181`, `server/lib/validate.js:42` |
 | VULN-24 | Tidak ada pencabutan sesi: reset kata sandi tidak membatalkan token lama | Medium | `server/auth.js:127-158`, `server/routes/auth.routes.js:335` |
 | VULN-25 | Log mencatat URL lengkap termasuk query string (membocorkan token sesi) | Low | `server/middleware/requestLog.js:22-28` |
