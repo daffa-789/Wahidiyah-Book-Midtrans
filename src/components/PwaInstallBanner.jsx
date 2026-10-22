@@ -7,8 +7,17 @@ export const PwaInstallBanner = () => {
   const [isIos, setIsIos] = useState(false);
 
   useEffect(() => {
-    // Jangan tampilkan di Desktop (hanya untuk perangkat mobile / tablet)
-    const isMobileOrTablet = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    /* Jangan tampilkan di desktop. Dulu syaratnya memakai window.innerWidth
+       <= 768, sehingga jendela desktop yang sempit — atau DevTools yang
+       menempel di kanan — dianggap HP, dan banner "pasang di layar HP" muncul
+       di Windows. Yang dipakai sekarang penanda perangkat sungguhan. */
+    const ua = navigator.userAgent;
+    /* iPadOS 13+ mengirim UA "Macintosh", jadi perlu jumlah titik sentuh. */
+    const isIpadOs = /macintosh/i.test(ua) && (navigator.maxTouchPoints ?? 0) > 1;
+    const isMobileOrTablet = typeof navigator.userAgentData?.mobile === 'boolean'
+      ? navigator.userAgentData.mobile || isIpadOs
+      : /android|iphone|ipad|ipod/i.test(ua) || isIpadOs;
+
     if (!isMobileOrTablet) {
       return;
     }
@@ -33,9 +42,9 @@ export const PwaInstallBanner = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // Deteksi iOS Safari
+    // Deteksi iOS Safari (termasuk iPad yang menyamar sebagai Mac)
     const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent) || isIpadOs;
     if (isIosDevice && !isStandalone) {
       setIsIos(true);
       // Tampilkan setelah jeda 3 detik agar tidak mengejutkan user
