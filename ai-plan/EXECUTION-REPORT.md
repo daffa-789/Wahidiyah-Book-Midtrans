@@ -2,7 +2,7 @@
 
 Cabang `improve/all-plans` (lokal, **belum di-push**) · basis awal `2f2b769` · dieksekusi 22 Oktober 2026.
 
-Cakupan yang disetujui pemilik: **Tahap 0–2 BAB 4**. SQL live dijalankan sendiri lewat Supabase Studio (file sudah disiapkan). Klaim D-11 dihapus. M1 ditunda.
+Cakupan yang disetujui pemilik: **Tahap 0–2 BAB 4**. Klaim D-11 dihapus. M1 ditunda. **VULN-02 + VULN-16 sudah dijalankan ke DB live** lewat Supabase Studio dengan sesi login pemilik (bukan kredensial yang lewat ke chat), lalu `full_setup.sql` disinkronkan.
 
 ## 1. Tabel status
 
@@ -111,4 +111,4 @@ Semua deferred — tidak termasuk pass ini. Catatan: jalur yang membuka plumbing
 
 ## 6. Konfirmasi
 
-Cabang `improve/all-plans` masih lokal (7 commit di atas `2f2b769`), tidak ada `git push`, tidak ada kredensial yang dirotasi, `.env` tidak disentuh. Tahap 3–10 menunggu persetujuan untuk dilanjutkan.
+Cabang `improve/all-plans` masih lokal (9 commit di atas `2f2b769`), tidak ada `git push`, tidak ada kredensial yang dirotasi, `.env` tidak disentuh. Database live sudah dihardening untuk VULN-02/16 — `npm run health` tetap 6/6 dan service-role masih membaca `users` (2 baris), jadi tidak ada regresi akses. Tahap 3–10 menunggu persetujuan untuk dilanjutkan.
