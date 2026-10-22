@@ -59,6 +59,26 @@ test('resolveManualTransferPricing: paket tidak dikenal ditolak, bukan digratisk
   }
 });
 
+test('isVoidAcknowledged: hanya akui Midtrans benar-benar mematikan order', async () => {
+  const { isVoidAcknowledged } = await import('../server/lib/midtrans.js');
+
+  assert.equal(isVoidAcknowledged({ status_code: '204' }), true, 'berhasil di-expire/dibatalkan');
+  assert.equal(isVoidAcknowledged({ status_code: '200', transaction_status: 'expired' }), true);
+  assert.equal(
+    isVoidAcknowledged({ status_code: '404', status_message: "Transaction doesn't exist." }),
+    true,
+    'order tidak ada di Midtrans = tidak ada yang bisa dibayar'
+  );
+  assert.equal(isVoidAcknowledged({ status_code: '404', status_message: 'Jaringan bermasalah' }), false);
+  assert.equal(
+    isVoidAcknowledged({ status_code: '407', status_message: 'Transaction is already settled' }),
+    false,
+    'sudah lunas: baris lokal tidak boleh dimatikan'
+  );
+  assert.equal(isVoidAcknowledged({}), false);
+  assert.equal(isVoidAcknowledged(), false);
+});
+
 test('resolveManualTransferPricing: biaya layanan dan total dari klien diabaikan', () => {
   const result = resolveManualTransferPricing({
     plan_id: 'monthly',

@@ -29,6 +29,7 @@ export const useQrisPayment = ({
   const [countdown, setCountdown] = useState(DEFAULT_COUNTDOWN_SECONDS);
   const [isExpired, setIsExpired] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const pollIntervalRef = useRef(null);
   const countdownIntervalRef = useRef(null);
@@ -173,6 +174,28 @@ export const useQrisPayment = ({
     }
   }, [qrTransaction, triggerSuccess]);
 
+  /**
+   * Batalkan kode QR aktif di Midtrans, lalu minta order baru supaya hitung
+   * mundur mulai lagi dari awal. Server menolak mematikan baris lokal kalau
+   * Midtrans belum mengakui pembatalan, jadi pesan galatnya diteruskan apa ada.
+   */
+  const cancelQris = useCallback(async () => {
+    if (!qrTransaction?.orderId || isCancelling) return;
+    setIsCancelling(true);
+    setQrError('');
+    try {
+      await apiJson(`/api/payments/qris/${qrTransaction.orderId}/cancel`, {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' }
+      });
+      await generateTransaction();
+    } catch (err) {
+      setQrError(err?.message || 'Gagal membatalkan kode QR.');
+    } finally {
+      setIsCancelling(false);
+    }
+  }, [generateTransaction, isCancelling, qrTransaction?.orderId]);
+
   const minutes = Math.floor(countdown / 60);
   const seconds = countdown % 60;
   const formattedCountdown = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -184,9 +207,11 @@ export const useQrisPayment = ({
     isQrisPaid,
     isExpired,
     isSimulating,
+    isCancelling,
     countdown,
     formattedCountdown,
     regenerateQr: generateTransaction,
-    simulatePaid
+    simulatePaid,
+    cancelQris
   };
 };

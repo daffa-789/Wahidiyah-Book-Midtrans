@@ -26,13 +26,16 @@ import { QRIS_ADMIN_FEE, findPlan } from '../lib/constants.js';
 import { MIDTRANS_IS_PRODUCTION, MIDTRANS_PAYMENT_METHOD_LABEL, MIDTRANS_QRIS_EXPIRY_MINUTES, isPaymentSimulationAllowed } from '../config.js';
 import rateLimit from 'express-rate-limit';
 import {
+  cancelQrisTransaction,
   createQrisCharge,
+  expireQrisTransaction,
   extractQrAction,
   extractQrString,
   fetchQrImage,
   getTransactionStatus,
   isMidtransConfigured,
   isTransactionSettled,
+  isVoidAcknowledged,
   verifySignatureKey
 } from '../lib/midtrans.js';
 import { logger } from '../logger.js';
@@ -371,6 +374,76 @@ paymentsRouter.get('/qris/:orderId/status', requireAuth, wrap(async (req, res) =
   }
 }));
 
+
+/**
+ * Batalkan kode QRIS milik sendiri lalu biarkan klien membuat order baru.
+ *
+ * Urutannya sengaja "Midtrans dulu, database kemudian": baris lokal hanya
+ * dimatikan kalau Midtrans sudah mengakui order-nya tidak bisa dibayar lagi
+ * (expire -> cancel). Kalau tidak, QR lama tetap bisa discan orang dan uangnya
+ * masuk ke order yang sudah berstatus rejected, sehingga tidak pernah lagi
+ * diaktifkan lewat jalur settle.
+ */
+paymentsRouter.post('/qris/:orderId/cancel', paymentRateLimiter, requireAuth, wrap(async (req, res) => {
+  const { transaction, forbidden } = await loadOwnTransaction(req.params.orderId, req.user);
+
+  if (!transaction) {
+    return res.status(forbidden ? 403 : 404).json({
+      success: false,
+      message: forbidden ? 'Transaksi ini bukan milik Anda.' : 'Transaksi tidak ditemukan.'
+    });
+  }
+
+  if (transaction.status === 'success') {
+    return res.status(409).json({
+      success: false,
+      message: 'Pembayaran sudah selesai dan langganan aktif, jadi tidak bisa dibatalkan.'
+    });
+  }
+
+  if (transaction.status !== TRANSACTION_PENDING_STATUS) {
+    return res.json({
+      success: true,
+      alreadyCancelled: true,
+      orderId: transaction.id,
+      message: 'Kode QR ini sudah tidak aktif.'
+    });
+  }
+
+  let alasanDitolak = null;
+  for (const upaya of [expireQrisTransaction, cancelQrisTransaction]) {
+    try {
+      const hasil = await upaya(transaction.id);
+      if (isVoidAcknowledged(hasil)) {
+        alasanDitolak = null;
+        break;
+      }
+      alasanDitolak = hasil?.status_message || 'Midtrans menolak pembatalan.';
+    } catch (error) {
+      alasanDitolak = error?.message || 'Midtrans menolak pembatalan.';
+    }
+  }
+
+  if (alasanDitolak) {
+    const kedaluwarsa = transaction.expires_at ? new Date(transaction.expires_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) : null;
+    return res.status(409).json({
+      success: false,
+      message: kedaluwarsa
+        ? `Pembatalan tidak diterima Midtrans (${alasanDitolak}). Kode QR akan kedaluwarsa otomatis pada ${kedaluwarsa} WIB.`
+        : `Pembatalan tidak diterima Midtrans (${alasanDitolak}).`
+    });
+  }
+
+  await rejectTransaction(transaction, 'dibatalkan pengguna');
+  logger.info('MIDTRANS', 'Kode QRIS dibatalkan pengguna', { orderId: transaction.id });
+
+  return res.json({
+    success: true,
+    cancelled: true,
+    orderId: transaction.id,
+    message: 'Kode QR dibatalkan. Silakan buat kode baru.'
+  });
+}));
 
 /* Gerbang dievaluate SEBELUM requireAuth supaya rute ini benar-benar tidak
  * ada (404) saat flag opt-in mati — termasuk bagi pengunjung yang belum

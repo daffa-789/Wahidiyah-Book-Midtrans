@@ -121,9 +121,11 @@ export const PaymentConfirmScreen = () => {
     isQrisPaid,
     isExpired,
     isSimulating,
+    isCancelling,
     formattedCountdown,
     regenerateQr,
-    simulatePaid
+    simulatePaid,
+    cancelQris
   } = useQrisPayment({
     selectedPlan,
     user,
@@ -305,6 +307,26 @@ export const PaymentConfirmScreen = () => {
                 >
                   <Download className="w-4 h-4" />
                   <span>Simpan QRIS ke Galeri (Buka di DANA/BCA)</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="qris-cancel"
+                  onClick={cancelQris}
+                  disabled={isCancelling}
+                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 border border-cream-300 bg-cream-50 hover:bg-cream-100 active:bg-cream-200 text-ink-700 text-xs font-bold rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isCancelling ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Membatalkan…</span>
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      <span>Batalkan & Buat Kode Baru</span>
+                    </>
+                  )}
                 </button>
 
                 {qrTransaction.simulationAvailable ? (
