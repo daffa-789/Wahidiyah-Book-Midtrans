@@ -564,7 +564,7 @@ authRouter.get('/google/callback', async (req, res) => {
       return failRedirect('Konfigurasi Google OAuth di server belum lengkap.');
     }
     const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI
-      || `${currentOrigin}/api/auth/google/callback`;
+      || `${frontendOrigin}/api/auth/google/callback`;
 
     const oauthClient = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
     let tokens;
