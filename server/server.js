@@ -22,6 +22,8 @@ import {
   USE_VITE_MIDDLEWARE
 } from './config.js';
 import {
+  authIdentifierRateLimiter,
+  AUTH_IDENTIFIER_LIMITED_PATHS,
   authRateLimitedPaths,
   authRateLimiter,
   corsPolicy,
@@ -75,6 +77,7 @@ app.use(jsonBody);
 
 trustProxy(app);
 app.use(authRateLimitedPaths, authRateLimiter);
+app.use(AUTH_IDENTIFIER_LIMITED_PATHS, authIdentifierRateLimiter);
 
 
 mountRoutes(app);
@@ -221,19 +224,19 @@ if (process.env.NODE_ENV !== 'test') {
     
     
     const mailerOn = isMailerConfigured();
-    const devOtpOn = canExposeDevOtp();
+    const devOtpOn = canExposeDevOtp(process.env);
 
     if (mailerOn) {
       logger.ok('BOOT', 'Pengiriman email AKTIF — kode OTP dikirim lewat Gmail API');
     } else if (devOtpOn) {
-      logger.warn('BOOT', 'Email BELUM dikonfigurasi — kode OTP ditampilkan di layar verifikasi (devOtp)', {
+      logger.warn('BOOT', 'Email BELUM dikonfigurasi — kode OTP ditampilkan di layar verifikasi untuk permintaan dari localhost (devOtp)', {
         cara_mengaktifkan: 'jalankan `node scripts/get-gmail-token.js`, isi GMAIL_REFRESH_TOKEN + GMAIL_SENDER di .env, lalu restart'
       });
     } else {
       logger.error('BOOT', 'JALAN BUNTU OTP: email belum dikonfigurasi DAN kode tidak boleh ditampilkan', {
-        sebab: 'GMAIL_REFRESH_TOKEN/GMAIL_SENDER kosong, sementara NODE_ENV bukan "development"',
+        sebab: 'GMAIL_REFRESH_TOKEN/GMAIL_SENDER kosong, sementara EXPOSE_DEV_OTP tidak diset "1" (atau NODE_ENV=production)',
         akibat: 'tidak ada email terkirim dan tidak ada kode di layar — pendaftaran tidak mungkin diselesaikan',
-        perbaikan_1: 'jalankan `npm run dev` (menyetel NODE_ENV=development) untuk sementara waktu',
+        perbaikan_1: 'set EXPOSE_DEV_OTP=1 di .env pada lingkungan non-produksi agar kode tampil di layar verifikasi dari localhost',
         perbaikan_2: 'atau isi kredensial Gmail di .env supaya email benar-benar terkirim'
       });
     }

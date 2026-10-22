@@ -41,6 +41,27 @@ export const AUTH_RATE_LIMITED_PATHS = [
   '/api/auth/resend-verification',
 ];
 
+/* Batas percobaan per akun/identifier, bukan per alamat socket. Tanpa ini satu
+ * penyerang bisa mengunci seluruh pengguna lewat limiter berbasis IP.
+ */
+export const AUTH_IDENTIFIER_RATE_LIMIT = {
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, message: 'Terlalu banyak percobaan untuk akun tersebut. Coba lagi dalam 15 menit.' }
+};
+
+/* Kosong = perilaku lama (1 hanya saat middleware Vite). Nilai produksi:
+ * jumlah hop proxy di depan server, atau `true` bila proxy tunggal.
+ */
+export const TRUST_PROXY = (() => {
+  const raw = String(process.env.TRUST_PROXY ?? '').trim().toLowerCase();
+  if (!raw) return USE_VITE_MIDDLEWARE ? 1 : false;
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  const hops = Number(raw);
+  return Number.isInteger(hops) && hops > 0 ? hops : false;
+})();
+
 export const QRIS_WEBHOOK_SECRET = (process.env.QRIS_WEBHOOK_SECRET || '').trim();
 
 

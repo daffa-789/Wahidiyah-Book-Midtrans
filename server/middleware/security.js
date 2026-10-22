@@ -7,9 +7,10 @@ import express from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import {
   ALLOWED_ORIGINS,
+  AUTH_IDENTIFIER_RATE_LIMIT,
   AUTH_RATE_LIMIT,
   AUTH_RATE_LIMITED_PATHS,
-  USE_VITE_MIDDLEWARE
+  TRUST_PROXY
 } from '../config.js';
 
 export const securityHeaders = helmet({
@@ -29,7 +30,7 @@ export const responseCompression = compression({ threshold: 1024 });
 export const jsonBody = express.json({ limit: '1mb' });
 
 export const trustProxy = (app) => {
-  app.set('trust proxy', USE_VITE_MIDDLEWARE ? 1 : false);
+  app.set('trust proxy', TRUST_PROXY);
 };
 
 export const authRateLimiter = rateLimit({
@@ -39,7 +40,29 @@ export const authRateLimiter = rateLimit({
   legacyHeaders: false,
   message: AUTH_RATE_LIMIT.message,
 
-  keyGenerator: (req) => ipKeyGenerator(req.socket?.remoteAddress || req.ip || 'unknown')
+  keyGenerator: (req) => ipKeyGenerator(req.ip || 'unknown')
 });
 
 export const authRateLimitedPaths = AUTH_RATE_LIMITED_PATHS;
+
+const normalizeAuthIdentifier = (req) => {
+  const raw = req.body?.identifier || req.body?.email || req.body?.phone || '';
+  return String(raw).trim().toLowerCase() || 'tanpa-identifier';
+};
+
+// Penghitung percobaan ikut identifier akun, bukan hanya alamat IP. Tanpa ini,
+// satu penyerang bisa mengunci seluruh jamaah lewat limiter berbasis alamat.
+export const authIdentifierRateLimiter = rateLimit({
+  windowMs: AUTH_IDENTIFIER_RATE_LIMIT.windowMs,
+  max: AUTH_IDENTIFIER_RATE_LIMIT.max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: AUTH_IDENTIFIER_RATE_LIMIT.message,
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip || 'unknown')}|${normalizeAuthIdentifier(req)}`
+});
+
+export const AUTH_IDENTIFIER_LIMITED_PATHS = [
+  '/api/auth/verify-registration',
+  '/api/auth/request-password-reset',
+  '/api/auth/reset-password'
+];
