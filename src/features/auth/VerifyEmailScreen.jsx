@@ -21,6 +21,7 @@ export const VerifyEmailScreen = () => {
 
   const [completedTarget, setCompletedTarget] = useState('');
   const [devOtp, setDevOtp] = useState(verification?.devOtp || '');
+  const [deliveredBy, setDeliveredBy] = useState(verification?.deliveredBy || '');
   const codeInputRef = useRef(null);
 
   const method = verification?.method || (verification?.phone && !verification?.email ? 'whatsapp' : 'email');
@@ -32,6 +33,10 @@ export const VerifyEmailScreen = () => {
   const phone = verification?.phone || '';
   const purpose = verification?.purpose === 'reset' ? 'reset' : 'register';
   const isReset = purpose === 'reset';
+  /* 'demo' berarti server gagal menyerahkan kode ke WhatsApp/email dan jatuh ke
+   * mode pengembangan. Layar tidak boleh mengaku sudah mengirim.
+   */
+  const deliveryFailed = deliveredBy === 'demo';
 
   const startedRef = useRef(false);
   useEffect(() => {
@@ -127,6 +132,7 @@ export const VerifyEmailScreen = () => {
         })
       });
       setResendNotice(result.message || 'Kode baru telah dikirim.');
+      if (result.deliveredBy) setDeliveredBy(result.deliveredBy);
       if (result.devOtp) setDevOtp(result.devOtp);
       setCode('');
       codeInputRef.current?.focus();
@@ -160,12 +166,14 @@ export const VerifyEmailScreen = () => {
         <button type="button" onClick={() => { clearVerification(); navigateTo(isReset ? 'forgot-password' : 'register', { replace: true }); }} className="mb-6 inline-flex min-h-6 items-center gap-1 px-1 text-xs font-bold text-ink-400 transition hover:text-brand-700"><ArrowLeft className="h-4 w-4" /> Kembali</button>
 
         <h1 className="font-display text-2xl font-bold tracking-tight text-ink-900">
-          {isWhatsApp ? 'Cek WhatsApp Anda' : 'Cek email Anda'}
+          {deliveryFailed
+            ? (isWhatsApp ? 'WhatsApp belum terkirim' : 'Email belum terkirim')
+            : (isWhatsApp ? 'Cek WhatsApp Anda' : 'Cek email Anda')}
         </h1>
         <p className={typography.helperRelaxed}>
-          {isReset
-            ? 'Kami mengirim kode pemulihan ke '
-            : 'Kami mengirim kode verifikasi ke '}
+          {deliveryFailed
+            ? (isReset ? 'Kode pemulihan gagal dikirim ke ' : 'Kode verifikasi gagal dikirim ke ')
+            : (isReset ? 'Kami mengirim kode pemulihan ke ' : 'Kami mengirim kode verifikasi ke ')}
           {isWhatsApp && target ? (
             (() => {
               const p = parsePhoneNumber(target);
@@ -184,9 +192,11 @@ export const VerifyEmailScreen = () => {
             <strong className="text-ink-700">{target}</strong>
           )}{' '}
           via {isWhatsApp ? 'WhatsApp' : 'email'}.{' '}
-          {isWhatsApp
-            ? 'Buka aplikasi WhatsApp Anda, lalu masukkan kodenya di bawah. '
-            : 'Buka kotak masuk (dan folder spam), lalu masukkan kodenya di bawah. '}
+          {deliveryFailed
+            ? 'Server gagal menyerahkan kode. Coba "Kirim ulang kode" di bawah, atau kembali dan pilih metode lain. '
+            : isWhatsApp
+              ? 'Buka aplikasi WhatsApp Anda, lalu masukkan kodenya di bawah. '
+              : 'Buka kotak masuk (dan folder spam), lalu masukkan kodenya di bawah. '}
           Kode berlaku 10 menit.
         </p>
 

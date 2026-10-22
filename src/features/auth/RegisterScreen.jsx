@@ -99,6 +99,7 @@ export const RegisterScreen = () => {
         method: deliveryMethod,
         identifier: result.identifier,
         purpose: 'register',
+        deliveredBy: result.deliveredBy,
         devOtp: result.devOtp
       });
       navigateTo('verify-email');

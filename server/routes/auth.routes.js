@@ -149,15 +149,19 @@ authRouter.post('/register', async (req, res) => {
     });
 
     const targetLabel = chosenMethod === 'whatsapp' ? `nomor WhatsApp ${normalizedPhone}` : `email ${normalizedEmail}`;
+    const deliveryFailed = deliveredBy === 'demo';
 
     return res.status(202).json({
       success: true,
-      message: `Kode verifikasi telah dikirim ke ${targetLabel} dan berlaku 10 menit.`,
+      message: deliveryFailed
+        ? `Kode verifikasi dibuat, tetapi pengiriman ke ${targetLabel} gagal. Coba kirim ulang atau gunakan metode lain.`
+        : `Kode verifikasi telah dikirim ke ${targetLabel} dan berlaku 10 menit.`,
       email: normalizedEmail,
       phone: normalizedPhone,
       identifier: targetIdentifier,
       deliveryMethod: chosenMethod,
-      devOtp: deliveredBy === 'demo' && canExposeDevOtp(process.env, req.ip) ? code : undefined
+      deliveredBy,
+      devOtp: deliveryFailed && canExposeDevOtp(process.env, req.ip) ? code : undefined
     });
   } catch (error) {
     return replyAuthFailure(res, error, { dbMessage: 'Gagal terhubung ke database.' });
@@ -424,11 +428,15 @@ authRouter.post('/resend-verification', wrap(async (req, res) => {
   logger.info('OTP', 'Kode dikirim ulang', { identifier: target, method, purpose, deliveredBy });
 
   const destinationLabel = method === 'whatsapp' ? 'WhatsApp' : 'email';
+  const deliveryFailed = deliveredBy === 'demo';
   return res.json({
     success: true,
-    message: `Kode baru telah dikirim ke ${destinationLabel} dan berlaku 10 menit.`,
+    message: deliveryFailed
+      ? `Kode baru dibuat, tetapi pengiriman ke ${destinationLabel} gagal. Coba lagi atau gunakan metode lain.`
+      : `Kode baru telah dikirim ke ${destinationLabel} dan berlaku 10 menit.`,
     identifier: target,
     method,
+    deliveredBy,
     devOtp: exposeDevOtp ? code : undefined
   });
 }));
