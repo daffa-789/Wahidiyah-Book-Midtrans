@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertCircle, Type } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
 import { apiJson, authHeaders } from '@lib/api';
@@ -7,6 +7,7 @@ import { NotificationToggle } from '@ui/NotificationToggle';
 import { typography, controls } from '@lib/styles';
 import { parsePhoneNumber } from '@lib/countryCodes';
 import { FlagIcon } from '@ui/FlagIcon';
+import { getTextScale, setTextScale, TEXT_SCALE_OPTIONS } from '@lib/textSize';
 
 export const EditProfileScreen = () => {
 
@@ -18,7 +19,14 @@ export const EditProfileScreen = () => {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [textScale, setTextScaleState] = useState(getTextScale());
   const timeoutRef = useRef(null);
+
+  const handleTextScaleChange = (scale) => {
+    setTextScale(scale);
+    setTextScaleState(scale);
+    toast.success(`Ukuran teks diubah ke ${scale === 'large' ? 'Besar' : scale === 'xlarge' ? 'Sangat Besar' : 'Normal'}.`);
+  };
 
   useEffect(() => {
     if (user.name) setName(user.name);
@@ -78,6 +86,52 @@ export const EditProfileScreen = () => {
       <div className="mx-auto w-full max-w-content-narrow">
 
         <NotificationToggle />
+
+        {/* Mode Teks Besar (Ramah Jamaah Lansia) */}
+        <div className="mb-6 rounded-2xl border border-cream-300 bg-cream-100/60 p-4 sm:p-5 shadow-xs">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-800">
+              <Type className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-body font-bold text-ink-900">
+                Ukuran Teks Tampilan (Mode Ramah Lansia)
+              </h3>
+              <p className="mt-1 text-caption text-ink-500 leading-relaxed">
+                Pilih ukuran teks yang nyaman dibaca di seluruh aplikasi. Pengaturan ini sangat membantu bagi jamaah lanjut usia.
+              </p>
+
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {TEXT_SCALE_OPTIONS.map((opt) => {
+                  const isSelected = textScale === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => handleTextScaleChange(opt.id)}
+                      className={`flex flex-col p-3 rounded-xl border text-left transition cursor-pointer ${
+                        isSelected
+                          ? 'border-brand-600 bg-brand-50 text-brand-900 shadow-sm ring-1 ring-brand-600'
+                          : 'border-cream-300 bg-cream-50 hover:bg-cream-100/80 text-ink-700'
+                      }`}
+                    >
+                      <span className="text-small font-bold">{opt.label}</span>
+                      <span className="text-caption text-ink-400 mt-0.5">{opt.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Contoh pratinjau teks */}
+              <div className="mt-3.5 rounded-xl border border-cream-300 bg-cream-50 p-3">
+                <p className="text-caption font-semibold text-ink-400">Contoh keterbacaan teks:</p>
+                <p className="text-body text-ink-900 font-medium mt-1">
+                  YAA SAYYIDII YAA ROSUULALLOOH — Wahai Pemimpin Kami, Wahai Utusan Allah.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <form onSubmit={handleSave} className="space-y-5">
 
