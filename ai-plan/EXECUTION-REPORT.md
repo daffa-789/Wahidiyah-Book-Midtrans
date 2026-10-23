@@ -173,11 +173,24 @@ Nama sidebar dua baris; kartu "Tema Tampilan" dan `ThemeModeSelector` dihapus; g
 | D-09 | Skeleton loader terintegrasi di `src/components/ui/Skeleton.jsx` (`BookGridSkeleton`, `CalendarSkeleton`, `AdminSkeleton`, `ScreenLoading`) dengan status pemuatan di `useCatalogSlice` dan `AppContext` | Transisi halaman mulus tanpa layout shift |
 | D-03 | Skala tipografi dinaikkan di `component.json` dan 100% kelas ukuran teks mentah (`text-xs/sm/base/lg/xl`) dimigrasikan ke token skala (`text-caption`, `text-small`, `text-body`, `text-title`, `text-h3`) di seluruh layar utama | `check-colors` 0 pelanggaran, sintaks aman, build sukses |
 
-### 7.7 Masih terbuka
+### 7.7 Tahap 8 Fitur (`65c9c67`)
+
+| Fitur / Modul | Perubahan | Bukti |
+|---|---|---|
+| Pencarian & Filter Katalog | `server/routes/books.routes.js`: parameter `search` (sanitasi kata kunci PostgREST `or` pada judul, penyusun, keterangan), `category` (filter kategori), `sort` (`newest`, `oldest`, `title_asc`, `title_desc`), dan `GET /api/books/:id` | Uji unit `tests/reading.test.js`: 4 kasus; pencarian instan di `HomeScreen` |
+| UI Pencarian & Filter | `src/features/home/HomeScreen.jsx`: bilah pencarian responsif dengan tombol bersihkan, pill filter kategori horizontal (`Semua`, `Tasawuf`, `Bimbingan`, dst.), pengurutan, dan empty state ramah pengguna | Sesuai token tipografi dan 3 Color Key |
+| Lanjutkan Membaca | `src/features/home/HomeScreen.jsx`: rak kartu "Lanjutkan Membaca" yang menampilkan buku terakhir dibaca beserta indikator halaman terakhir | Mengambil data dari server `GET /api/reading-progress` dengan fallback `localStorage` |
+| Progres Membaca di Server | `server/routes/reading.routes.js`: `GET /api/reading-progress`, `GET /api/reading-progress/:bookId`, `PUT /api/reading-progress/:bookId` | Tersinkron otomatis saat membaca di `PdfReaderScreen`; tahan terhadap degradasi skema |
+| Pembatas Buku (Bookmarks) | `server/routes/reading.routes.js`: `GET /api/books/:id/bookmarks`, `POST /api/books/:id/bookmarks`, `DELETE /api/books/:id/bookmarks/:bookmarkId`. Dialog pembatas buku di `PdfReaderScreen.jsx` | Indikator visual halaman tertandai, lompat halaman langsung, hapus penanda |
+| Proteksi Konten M1 | `src/features/reader/PdfReaderScreen.jsx`: tanda air diagonal nama/email pembaca dengan opasitas sangat rendah (0.04), penonaktifan menu klik kanan (`onContextMenu`), dan pencegahan seleksi teks kanvas | Hak cipta naskah terjaga tanpa mengganggu kenyamanan baca |
+| Skema Database | `supabase_database/add_bookmarks_and_progress.sql` & pembaruan `supabase_database/full_setup.sql`: tabel `user_bookmarks` dan `reading_progress` dengan RLS eksplisit dan policy "own rows" | Invarian RLS §0.2 terpenuhi |
+| Koreksi Teks Bantuan | `src/data/mockData.js`: teks FAQ diperbarui menghapus rujukan foto profil yang sudah dicabut | Informasi akurat |
+
+### 7.8 Masih terbuka
 
 - `ALLOW_PAYMENT_SIMULATION=1` hanya untuk demo sidang.
 - Token Gmail akan mati lagi 7 hari selama OAuth app berstatus *Testing*.
-- Tahap 8 (BAB 3 Fitur): Pustaka/Katalog, Riwayat/Penanda Baca, dan Proteksi Konten.
+- Tahap 9 (Desain Tahap 4-5): Layar kunci & Mode Teks Besar untuk lansia.
 
 **Koreksi catatan performa:** chunk `excel` (939 kB) dan `charts` (350 kB) ternyata **sudah** di luar
 jalur kritis — `exceljs` masuk lewat `import()` di handler ekspor (`AdminDashboard.jsx:327-345`,
