@@ -209,6 +209,11 @@ export const AppProvider = ({ children, initialScreen }) => {
     setSessionToken(null);
     setUser(EMPTY_USER);
     setIsLoggedIn(false);
+    // Minta service worker membuang cache app shell: sesi ini berakhir, dan
+    // perangkatnya bisa dipakai orang lain (VULN-21).
+    if (typeof navigator !== 'undefined' && navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_APP_SHELL' });
+    }
     nav.navigateTo('login', { replace: true });
   }, [clearVerification, nav]);
 

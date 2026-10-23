@@ -7,7 +7,7 @@ import { resolveSupabaseCredentials } from '../server/db.js';
 import { canExposeDevOtp, isLoopbackAddress, resendCooldownRemaining } from '../server/lib/otp.js';
 import { isAllowedQrUrl, isTransactionSettled, verifySignatureKey } from '../server/lib/midtrans.js';
 import { findPlan, DEFAULT_PLAN_ID, SUBSCRIPTION_PLANS } from '../server/lib/constants.js';
-import { MIDTRANS_SERVER_KEY } from '../server/config.js';
+import { AUTH_RATE_LIMITED_PATHS, MIDTRANS_SERVER_KEY, QRIS_STATUS_RATE_LIMIT } from '../server/config.js';
 import { normalizeOrigin, resolveFrontendOrigin, sanitizeForwardedProto } from '../server/lib/origin.js';
 import { createOneTimeCode, redeemOneTimeCode } from '../server/lib/oneTimeCode.js';
 import { matchesContentExtension, sniffDataUrlImage, sniffImageMime } from '../server/lib/sniff.js';
@@ -300,4 +300,18 @@ test('sendDataUrl: tanpa contentType jatuh ke octet-stream, bukan text/html', ()
 test('sendDataUrl: URL non-data tidak ditangani', () => {
   assert.equal(sendDataUrl(fakeResponse(), 'https://contoh.id/x.pdf'), false);
   assert.equal(sendDataUrl(fakeResponse(), ''), false);
+});
+
+test('plafon status QRIS memberi ruang bagi polling 3 detik', () => {
+  const perMenit = QRIS_STATUS_RATE_LIMIT.max / (QRIS_STATUS_RATE_LIMIT.windowMs / 60000);
+  assert.ok(
+    perMenit >= 20,
+    `plafon ${perMenit}/menit harus di atas ritme polling 20 permintaan/menit`
+  );
+  assert.equal(QRIS_STATUS_RATE_LIMIT.windowMs, 5 * 60 * 1000);
+});
+
+test('callback Google ikut dibatasi limiter auth', () => {
+  assert.equal(AUTH_RATE_LIMITED_PATHS.includes('/api/auth/google/callback'), true);
+  assert.equal(AUTH_RATE_LIMITED_PATHS.includes('/api/auth/exchange'), true);
 });

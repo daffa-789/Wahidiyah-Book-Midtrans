@@ -203,8 +203,8 @@ Hasil tiga putaran audit white-box. **5 High** (VULN-01, 02, 03, 04, 12), 1 Med-
 | VULN-17 | Admin terakhir dapat diturunkan; Pro pemberian admin permanen tanpa kedaluwarsa | Low | `server/routes/users.routes.js:96-108`, `:111-127` |
 | VULN-18 | Kata sandi sementara dikembalikan dalam respons pembuatan pengguna | Low | `server/routes/users.routes.js:172` |
 | VULN-19 | Dev server terbuka ke seluruh antarmuka + divergensi pembacaan flag | Low | `vite.config.js:87`, `scripts/health-check.js:34`, `server/config.js:51` |
-| VULN-20 | OAuth dan endpoint status pembayaran tanpa rate limit | Low | `server/config.js:35-42`, `server/server.js:77`, `server/routes/payments.routes.js:315` |
-| VULN-21 | Service worker menyimpan PNG QR pembayaran (cache-first, melewati `requireAuth`) | Medium | `public/sw.js:52-59`, `:84-105`, `server/routes/payments.routes.js:412` |
+| VULN-20 | ✅ **fixed 23 Okt 2026** — OAuth dan endpoint status pembayaran tanpa rate limit | Low | `server/config.js`, `server/middleware/security.js` (`qrisStatusRateLimiter`) |
+| VULN-21 | ✅ **fixed 23 Okt 2026** — Service worker menyimpan PNG QR pembayaran | Medium | `public/sw.js` (deny-list, isCacheable, CACHE_NAME v11), `src/context/AppContext.jsx` |
 | VULN-22 | ✅ **tidak berlaku** — `avatar` menerima string bebas; fitur foto profil dicabut 23 Okt 2026 (kolom `users.avatar` dihapus) | Low-Med | — |
 | VULN-23 | `cover_url` bebas → open redirect pada endpoint thumbnail publik | Low | `server/routes/books.routes.js:143-155`, `:181`, `server/lib/validate.js:42` |
 | VULN-24 | Tidak ada pencabutan sesi: reset kata sandi tidak membatalkan token lama | Medium | `server/auth.js:127-158`, `server/routes/auth.routes.js:335` |

@@ -10,6 +10,7 @@ import {
   AUTH_IDENTIFIER_RATE_LIMIT,
   AUTH_RATE_LIMIT,
   AUTH_RATE_LIMITED_PATHS,
+  QRIS_STATUS_RATE_LIMIT,
   TRUST_PROXY
 } from '../config.js';
 
@@ -66,3 +67,16 @@ export const AUTH_IDENTIFIER_LIMITED_PATHS = [
   '/api/auth/request-password-reset',
   '/api/auth/reset-password'
 ];
+
+/* Status pembayaran dibatasi per akun, bukan per alamat: pengguna sah
+ * memakainya setiap 3 detik, dan limiter berbasis IP bisa mengunci seluruh
+ * pengguna yang berbagi jaringan kampus.
+ */
+export const qrisStatusRateLimiter = rateLimit({
+  windowMs: QRIS_STATUS_RATE_LIMIT.windowMs,
+  max: QRIS_STATUS_RATE_LIMIT.max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: QRIS_STATUS_RATE_LIMIT.message,
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip || 'unknown')
+});

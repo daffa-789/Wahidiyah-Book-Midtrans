@@ -46,6 +46,10 @@ export const AUTH_RATE_LIMITED_PATHS = [
   '/api/auth/reset-password',
   '/api/auth/resend-verification',
   '/api/auth/exchange',
+  /* Callback Google menukar kode dengan Google, jadi tiap permintaan memakai
+   * sumber daya eksternal — perlu plafon seperti rute auth lain.
+   */
+  '/api/auth/google/callback'
 ];
 
 /* Batas percobaan per akun/identifier, bukan per alamat socket. Tanpa ini satu
@@ -55,6 +59,17 @@ export const AUTH_IDENTIFIER_RATE_LIMIT = {
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { success: false, message: 'Terlalu banyak percobaan untuk akun tersebut. Coba lagi dalam 15 menit.' }
+};
+
+/* Polling status QRIS berjalan tiap 3 detik (≈20 permintaan/menit) sampai
+ * transaksi lunas atau kedaluwarsa. Plafon ini sengaja berada di atas ritme
+ * itu — pengguna sah tidak boleh terpotong di tengah pembayaran — tetapi
+ * pemanggil yang membanjiri tetap dibatasi per akun.
+ */
+export const QRIS_STATUS_RATE_LIMIT = {
+  windowMs: 5 * 60 * 1000,
+  max: 150,
+  message: { success: false, message: 'Terlalu banyak pengecekan status pembayaran. Tunggu beberapa saat.' }
 };
 
 /* Kosong = perilaku lama (1 hanya saat middleware Vite). Nilai produksi:

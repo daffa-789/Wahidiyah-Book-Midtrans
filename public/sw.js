@@ -6,7 +6,10 @@
 // v8 (R20): referensi `/api/categories` yang sudah mati dibuang dari rute cache.
 // v9 (R55): handler Web Push (pengingat agenda H-1) + aksi notificationclick.
 // v10: pengumuman agenda mujahadah baru + pengingat H-1.
-const CACHE_NAME = 'wahidiyah-app-shell-v10';
+// v11 (VULN-21): /api/payments/ masuk deny-list, respons Cache-Control
+//      private/no-store tidak pernah disimpan, blok cache-first dibatasi
+//      aset internal, dan cache dibuang saat pengguna keluar akun.
+const CACHE_NAME = 'wahidiyah-app-shell-v11';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -48,12 +51,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  /* Respons yang tidak boleh masuk CacheStorage: sudah dipakai peramban
+   * (private), atau ditandai jangan disimpan. Rute ber-`requireAuth` dan
+   * gambar QR pembayaran berada di kelompok ini (VULN-21).
+   */
+  const isCacheable = (response) => {
+    if (!response || response.status !== 200) return false;
+    const cacheControl = response.headers.get('cache-control') || '';
+    return !cacheControl.includes('private') && !cacheControl.includes('no-store');
+  };
+
   // JANGAN cache endpoint buku berbayar/privat & autentikasi (Invarian Keamanan Konten)
   if (
     url.pathname.includes('/api/books/') && url.pathname.endsWith('/content') ||
     url.pathname.startsWith('/api/auth/') ||
     url.pathname.startsWith('/api/subscriptions/') ||
-    url.pathname.startsWith('/api/transactions')
+    url.pathname.startsWith('/api/transactions') ||
+    /* Pembayaran: QR, status polling, dan bukti. Semuanya privat, jadi tak
+     * pernah masuk cache — termasuk PNG QR yang bisa bocor lewat CacheStorage.
+     */
+    url.pathname.startsWith('/api/payments/')
   ) {
     return;
   }
@@ -69,7 +86,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response && response.status === 200) {
+          if (isCacheable(response)) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
@@ -82,10 +99,12 @@ self.addEventListener('fetch', (event) => {
 
   // B. Aset Statis Ber-hash Vite (/assets/*, fonts, images) -> Cache-First
   if (
-    url.pathname.startsWith('/assets/') ||
-    url.pathname.endsWith('.woff2') ||
-    url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.png')
+    url.origin === self.location.origin && (
+      url.pathname.startsWith('/assets/') ||
+      url.pathname.endsWith('.woff2') ||
+      url.pathname.endsWith('.svg') ||
+      url.pathname.endsWith('.png')
+    )
   ) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
@@ -93,7 +112,7 @@ self.addEventListener('fetch', (event) => {
           return cachedResponse;
         }
         return fetch(request).then((response) => {
-          if (response && response.status === 200) {
+          if (isCacheable(response)) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
@@ -118,6 +137,15 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(request).then((cached) => cached || fetch(request))
   );
+});
+
+// 3b. Bersihkan cache saat pengguna keluar akun. Sesi login sudah disimpan di
+// storage, tapi cache app shell adalah sisa terakhir di perangkat yang mungkin
+// dipakai bergantian — lebih baik dibuang daripada dibiarkan.
+self.addEventListener('message', (event) => {
+  if (event?.data?.type === 'CLEAR_APP_SHELL') {
+    event.waitUntil(caches.delete(CACHE_NAME));
+  }
 });
 
 // 4. Web Push — Pengingat Agenda

@@ -39,6 +39,7 @@ import {
   verifySignatureKey
 } from '../lib/midtrans.js';
 import { logger } from '../logger.js';
+import { qrisStatusRateLimiter } from '../middleware/security.js';
 
 export const paymentsRouter = Router();
 
@@ -319,7 +320,7 @@ paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(async 
 }));
 
 
-paymentsRouter.get('/qris/:orderId/status', requireAuth, wrap(async (req, res) => {
+paymentsRouter.get('/qris/:orderId/status', requireAuth, qrisStatusRateLimiter, wrap(async (req, res) => {
   const { transaction, forbidden } = await loadOwnTransaction(req.params.orderId, req.user);
 
   if (!transaction) {
