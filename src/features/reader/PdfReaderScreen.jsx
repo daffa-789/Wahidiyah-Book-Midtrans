@@ -360,18 +360,6 @@ export const PdfReaderScreen = () => {
           className="relative mx-auto h-[calc(100vh-7.5rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-cream-300 bg-cream-50 shadow-2xl select-none"
           onContextMenu={(e) => e.preventDefault()}
         >
-          {/* M1: Tanda air transparan hak cipta & keamanan konten */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none select-none absolute inset-0 z-10 flex flex-col justify-around items-center overflow-hidden opacity-[0.04]"
-          >
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="whitespace-nowrap font-sans font-bold text-h3 tracking-widest -rotate-25 text-ink-900">
-                {user?.name || 'Aplikasi Buku Wahidiyah'} • {user?.email || 'Pembaca Resmi'}
-              </div>
-            ))}
-          </div>
-
           <iframe
             key={`${pdfUrl}-${currentPage}`}
             title={`Konten ${activeBook.title}`}
@@ -388,17 +376,6 @@ export const PdfReaderScreen = () => {
       if (contentStatus === 'error') return errorCard;
       return (
         <article className={`relative mx-auto w-full max-w-3xl whitespace-pre-wrap rounded-2xl p-7 leading-8 shadow-2xl sm:p-12 ${fontClass} ${currentTheme.bgArticle} border select-none`}>
-          {/* M1: Tanda air transparan teks */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none select-none absolute inset-0 z-0 flex flex-col justify-around items-center overflow-hidden opacity-[0.03]"
-          >
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="whitespace-nowrap font-sans font-bold text-body tracking-wider -rotate-20 text-ink-900">
-                {user?.name || user?.email || 'Aplikasi Buku Wahidiyah'}
-              </div>
-            ))}
-          </div>
           <div className="relative z-10">
             {textContent || 'Dokumen tidak berisi teks.'}
           </div>
