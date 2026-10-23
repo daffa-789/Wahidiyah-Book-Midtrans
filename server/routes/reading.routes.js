@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { supabaseServer } from '../db.js';
 import { requireAuth } from '../auth.js';
-import { badRequest, fail, notFound } from '../lib/http.js';
+import { badRequest, fail } from '../lib/http.js';
 
 export const readingRouter = Router();
 

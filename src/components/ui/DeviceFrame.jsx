@@ -1,420 +1,14 @@
-import React, { useState, Fragment } from 'react';
-import {
-  Calendar,
-  Home,
-  Menu,
-  LogOut,
-  ShieldCheck,
-  BookOpen,
-  PanelLeft,
-  Sparkles,
-  ReceiptText,
-  HelpCircle,
-  Info,
-  UserRound,
-
-  LayoutDashboard,
-  Users,
-  CalendarDays,
-  Activity,
-  GalleryHorizontalEnd
-} from 'lucide-react';
+import React, { useState, useMemo, useCallback, Fragment } from 'react';
+import { Menu, ShieldCheck } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 import { useApp } from '@context/AppContext';
 import { ThemeToggle } from '@ui/ThemeToggle';
 import { BrandMark } from '@ui/BrandMark';
-
 import { tabIdFromPath } from '@lib/navigation';
-
-const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
-  const Icon = item.icon;
-  const isDanger = Boolean(item.danger);
-
-  if (isCollapsed) {
-    return (
-      <button
-        type="button"
-        onClick={() => onNavClick(item.target)}
-        title={item.label}
-        aria-label={item.label}
-        aria-current={item.isActive ? 'page' : undefined}
-        className={`relative h-11 w-11 rounded-md flex items-center justify-center transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
-          ? 'focus-visible:ring-semantic-dangerOnDark'
-          : 'focus-visible:ring-brand-500'
-          } ${item.isActive
-            ? 'bg-brand-700 text-cream-50 shadow-sm'
-            : 'text-semantic-mutedOnDark hover:text-cream-50 hover:bg-cream-50/5'
-          }`}
-      >
-        <Icon className="w-[18px] h-[18px]" strokeWidth={1.9} />
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => onNavClick(item.target)}
-      aria-current={item.isActive ? 'page' : undefined}
-      className={`group relative w-full h-11 flex items-center gap-3 pl-3 pr-3 rounded-md transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
-        ? 'focus-visible:ring-semantic-dangerOnDark'
-        : 'focus-visible:ring-brand-500'
-        } ${item.isActive
-          ? 'bg-brand-700 text-cream-50 shadow-sm'
-          : 'text-semantic-mutedOnDark hover:text-cream-50 hover:bg-cream-50/5'
-        }`}
-    >
-      <span
-        aria-hidden="true"
-        className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-full transition-all duration-200 ${item.isActive ? 'h-5 bg-brand-400' : 'h-0 bg-transparent'
-          }`}
-      />
-      <Icon
-        className={`w-[18px] h-[18px] shrink-0 transition-colors duration-200 ${item.isActive
-          ? 'text-cream-50'
-          : isDanger
-            ? 'text-semantic-dangerOnDark'
-            : 'text-semantic-mutedOnDark group-hover:text-cream-100'
-          }`}
-        strokeWidth={1.9}
-      />
-      <span className="truncate text-buttonMd font-semibold tracking-tight">{item.label}</span>
-    </button>
-  );
-};
-
-const SidebarNavSection = ({ items, isCollapsed, onNavClick }) => {
-  if (!items.length) return null;
-  return (
-    <div className={isCollapsed ? 'flex flex-col items-center gap-1' : 'space-y-0.5'}>
-      {items.map((item) => (
-        <SidebarNavButton key={item.id} item={item} isCollapsed={isCollapsed} onNavClick={onNavClick} />
-      ))}
-    </div>
-  );
-};
-
-const SIDEBAR_SECTIONS = [
-  {
-    id: 'utama',
-    title: 'Utama',
-    keys: ['home', 'calendar', 'subscription-history', 'pro', 'help-center', 'about']
-  },
-  { id: 'akun', title: 'Akun', keys: ['profile', 'logout'] }
-
-];
-
-const ADMIN_SECTION_KEYS = [
-  'admin-overview',
-  'admin-books',
-  'admin-users',
-  'admin-events',
-  'admin-carousel',
-  'admin-logs'
-];
-
-const ADMIN_SECTION = {
-  id: 'administrasi',
-  title: 'Administrasi',
-  keys: [...ADMIN_SECTION_KEYS, 'logout']
-};
-
-const SIDEBAR_ITEM_DEFS = {
-  home: { label: 'Beranda', icon: Home, target: 'home' },
-  calendar: { label: 'Kalender', icon: Calendar, target: 'calendar' },
-  'subscription-history': { label: 'Riwayat Langganan', icon: ReceiptText, target: 'subscription-history' },
-  pro: { label: 'Pro', icon: Sparkles, target: 'pro' },
-  'help-center': { label: 'Pusat Bantuan', icon: HelpCircle, target: 'help-center' },
-  about: { label: 'Tentang', icon: Info, target: 'about' },
-  profile: { label: 'Profil', icon: UserRound, target: 'profile-edit' },
-  logout: { label: 'Log Out', icon: LogOut, target: 'logout', danger: true },
-
-  'admin-overview': { label: 'Beranda', icon: LayoutDashboard, target: 'admin:overview' },
-  'admin-books': { label: 'Koleksi', icon: BookOpen, target: 'admin:books' },
-  'admin-users': { label: 'Pengguna', icon: Users, target: 'admin:users' },
-  'admin-events': { label: 'Agenda', icon: CalendarDays, target: 'admin:events' },
-  'admin-carousel': { label: 'Carousel', icon: GalleryHorizontalEnd, target: 'admin:carousel' },
-  'admin-logs': { label: 'Log Aktivitas', icon: Activity, target: 'admin:logs' }
-};
-
-const ACTIVE_KEYS_BY_SCREEN = {
-  home: ['home'],
-  calendar: ['calendar'],
-  pro: ['pro'],
-  'subscription-history': ['subscription-history'],
-  'help-center': ['help-center'],
-  about: ['about'],
-  'profile-edit': ['profile']
-};
-
-const buildSidebarSections = (isAdmin, activeKeys) => {
-  const showAdminNav = isAdmin;
-  const source = showAdminNav ? [ADMIN_SECTION] : SIDEBAR_SECTIONS;
-
-  return source
-    .map((section) => ({
-      id: section.id,
-      title: section.title,
-      items: section.keys.map((key) => ({
-        id: key,
-        ...SIDEBAR_ITEM_DEFS[key],
-
-        accent: showAdminNav ? 'admin' : 'user',
-        isActive: activeKeys.includes(key)
-      }))
-    }))
-    .filter((section) => section.items.length > 0);
-};
-
-const SidebarContent = React.memo(({
-  onNavClick,
-  isCollapsed = false,
-  isMobile = false,
-
-  isAdminNav = false,
-  sections,
-  setSidebarCollapsed,
-  setMobileMenuOpen
-}) => {
-
-  const handleToggleCollapse = React.useCallback(() => {
-    if (isMobile) {
-      setMobileMenuOpen(false);
-      return;
-    }
-    setSidebarCollapsed((prev) => !prev);
-  }, [isMobile, setMobileMenuOpen, setSidebarCollapsed]);
-
-  const collapseToggle = (
-    <button
-      type="button"
-      onClick={handleToggleCollapse}
-      title={isMobile ? 'Tutup menu' : isCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
-      aria-label={isMobile ? 'Tutup menu' : isCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-semantic-mutedOnDark transition-colors duration-200 hover:bg-cream-50/5 hover:text-cream-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-    >
-      <PanelLeft className="h-[17px] w-[17px]" strokeWidth={1.9} />
-    </button>
-  );
-
-  if (isCollapsed) {
-    return (
-      <div className="flex h-full w-full flex-col items-center">
-
-        <div className="flex flex-col items-center gap-1 pb-2">
-          <button
-            type="button"
-            onClick={() => onNavClick(isAdminNav ? 'admin-dashboard' : 'home')}
-            title={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
-            aria-label={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
-            className="flex h-10 w-10 items-center justify-center rounded-md text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500"
-          >
-            {isAdminNav
-              ? <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.9} />
-              : <BrandMark className="h-10 w-10 rounded-md" />}
-          </button>
-          {collapseToggle}
-          <ThemeToggle variant="onDark" />
-        </div>
-
-        <nav className="flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto thin-scrollbar">
-          {sections.map((section) => (
-            <SidebarNavSection
-              key={section.id}
-              items={section.items}
-              isCollapsed
-              onNavClick={onNavClick}
-            />
-          ))}
-        </nav>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-full w-full flex-col">
-
-      <div className="flex items-center justify-between gap-2 pb-4">
-        <button
-          type="button"
-          onClick={() => onNavClick(isAdminNav ? 'admin-dashboard' : 'home')}
-          className="flex min-h-9 min-w-0 select-none items-center gap-2 text-left transition-colors duration-200 hover:opacity-80 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
-        >
-          <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-cream-50 bg-brand-700"
-          >
-            {isAdminNav
-              ? <ShieldCheck className="h-[15px] w-[15px]" strokeWidth={2} />
-              : <BrandMark className="h-7 w-7 rounded-lg" />}
-          </span>
-          {isAdminNav ? (
-            <span className="flex min-w-0 flex-col">
-              <span className="truncate font-display text-body font-bold leading-tight tracking-tight text-cream-50">
-                Wahidiyah Book
-              </span>
-              <span className="mt-0.5 self-start rounded border border-brand-400/30 bg-brand-400/15 px-1.5 py-px text-overline font-bold uppercase tracking-[0.14em] text-brand-200">
-                Panel Admin
-              </span>
-            </span>
-          ) : (
-            <span className="min-w-0 font-display text-lead font-bold leading-[1.15] tracking-tight text-cream-50">
-              Wahidiyah<br />Book
-            </span>
-          )}
-        </button>
-        <div className="flex items-center gap-1">
-          <ThemeToggle variant="onDark" />
-          {collapseToggle}
-        </div>
-      </div>
-
-      <nav className="flex-1 space-y-1 overflow-y-auto thin-scrollbar">
-        {sections.map((section) => (
-          <SidebarNavSection
-            key={section.id}
-            items={section.items}
-            isCollapsed={false}
-            onNavClick={onNavClick}
-          />
-        ))}
-      </nav>
-    </div>
-  );
-});
-
-const LogoutConfirmDialog = ({ isOpen, userName, onCancel, onConfirm }) => (
-  <Transition show={isOpen} as={Fragment}>
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-      <Transition.Child
-        as={Fragment}
-        enter="transition-opacity ease-out duration-200"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="transition-opacity ease-in duration-150"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
-        <div
-          className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
-          onClick={onCancel}
-          aria-hidden="true"
-        />
-      </Transition.Child>
-
-      <Transition.Child
-        as={Fragment}
-        enter="transition ease-out duration-200"
-        enterFrom="opacity-0 scale-95"
-        enterTo="opacity-100 scale-100"
-        leave="transition ease-in duration-150"
-        leaveFrom="opacity-100 scale-100"
-        leaveTo="opacity-0 scale-95"
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="logout-dialog-title"
-          className="relative w-full max-w-sm rounded-3xl border border-cream-300 bg-cream-50 p-6 text-center shadow-2xl shadow-ink-900/25"
-        >
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-semantic-dangerLight text-semantic-danger">
-            <LogOut className="h-5 w-5" strokeWidth={2} />
-          </div>
-          <h2 id="logout-dialog-title" className="mt-4 font-display text-h3 font-bold text-ink-900">
-            Log Out dari akun?
-          </h2>
-          <div className="mt-6 grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="h-11 rounded-2xl border border-cream-300 bg-cream-50 text-xs font-bold text-ink-600 transition-colors duration-200 hover:bg-cream-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400"
-            >
-              Batal
-            </button>
-            <button
-              type="button"
-              data-testid="confirm-logout-btn"
-              onClick={onConfirm}
-              className="h-11 rounded-2xl bg-semantic-danger text-semantic-dangerLight text-xs font-bold shadow-sm transition-colors duration-200 hover:bg-semantic-danger/85 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-semantic-danger/50"
-            >
-              Ya, Log Out
-            </button>
-          </div>
-        </div>
-      </Transition.Child>
-    </div>
-  </Transition>
-);
-
-const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, onOpenMenu }) => {
-  const userItems = [
-    { id: 'home', label: 'Beranda', icon: Home, target: 'home', isActive: activeKeys.includes('home') },
-    { id: 'calendar', label: 'Kalender', icon: Calendar, target: 'calendar', isActive: activeKeys.includes('calendar') },
-    { id: 'pro', label: 'Pro', icon: Sparkles, target: 'pro', isActive: activeKeys.includes('pro') },
-    { id: 'profile', label: 'Profil', icon: UserRound, target: 'profile-edit', isActive: activeKeys.includes('profile') },
-  ];
-
-  const adminItems = [
-    { id: 'admin-overview', label: 'Ringkasan', icon: LayoutDashboard, target: 'admin:overview', isActive: activeKeys.includes('admin-overview') },
-    { id: 'admin-books', label: 'Koleksi', icon: BookOpen, target: 'admin:books', isActive: activeKeys.includes('admin-books') },
-    { id: 'admin-users', label: 'Pengguna', icon: Users, target: 'admin:users', isActive: activeKeys.includes('admin-users') },
-    { id: 'admin-events', label: 'Agenda', icon: CalendarDays, target: 'admin:events', isActive: activeKeys.includes('admin-events') },
-    { id: 'admin-menu', label: 'Menu', icon: Menu, isMenu: true, isActive: false },
-  ];
-
-  const items = isAdmin ? adminItems : userItems;
-
-  return (
-    <nav
-      aria-label="Navigasi bawah mobile"
-      className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-around border-t border-cream-300/80 bg-cream-50/95 px-2 py-1 shadow-[0_-4px_24px_rgba(20,82,58,0.06)] backdrop-blur-md md:hidden pb-safe"
-    >
-      {items.map((item) => {
-        const Icon = item.icon;
-        const isActive = item.isActive;
-
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => {
-              if (item.isMenu) {
-                onOpenMenu();
-              } else {
-                onNavClick(item.target);
-              }
-            }}
-            aria-current={isActive ? 'page' : undefined}
-            className={`group relative flex flex-1 flex-col items-center justify-center min-h-[50px] py-1 px-1 rounded-2xl transition-all duration-200 cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
-              isActive
-                ? 'text-brand-900 bg-brand-100/70 font-bold'
-                : 'text-ink-400 hover:text-ink-700 font-medium'
-            }`}
-          >
-            <div className="relative">
-              <Icon
-                className={`h-5 w-5 transition-transform duration-200 ${
-                  isActive ? 'scale-110' : 'group-hover:scale-105'
-                } ${
-                  isActive ? 'text-brand-700' : 'text-ink-400'
-                }`}
-                strokeWidth={isActive ? 2.3 : 1.8}
-              />
-              {isActive && (
-                <span
-                  aria-hidden="true"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand-700"
-                />
-              )}
-            </div>
-            <span className="mt-0.5 text-caption leading-tight tracking-tight truncate max-w-full">
-              {item.label}
-            </span>
-          </button>
-        );
-      })}
-    </nav>
-  );
-});
+import { SidebarContent } from '../layout/SidebarContent';
+import { LogoutConfirmDialog } from '../layout/LogoutConfirmDialog';
+import { MobileBottomNav } from '../layout/MobileBottomNav';
+import { buildSidebarSections, ACTIVE_KEYS_BY_SCREEN } from '../layout/navigationConfig';
 
 const DeviceFrameBase = ({ children }) => {
   const { currentScreen, currentPath, navigateTo, user, logout } = useApp();
@@ -423,19 +17,19 @@ const DeviceFrameBase = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
-  const isAdmin = user.role === 'admin';
+  const isAdmin = user?.role === 'admin';
 
-  const activeKeys = React.useMemo(() => {
+  const activeKeys = useMemo(() => {
     if (isAdmin) return [`admin-${tabIdFromPath(currentPath)}`];
     return ACTIVE_KEYS_BY_SCREEN[currentScreen] || [];
   }, [isAdmin, currentScreen, currentPath]);
 
-  const sections = React.useMemo(
+  const sections = useMemo(
     () => buildSidebarSections(isAdmin, activeKeys),
     [isAdmin, activeKeys]
   );
 
-  const handleNavClick = React.useCallback((target) => {
+  const handleNavClick = useCallback((target) => {
     if (target === 'logout') {
       setMobileMenuOpen(false);
       setLogoutConfirmOpen(true);
@@ -450,7 +44,7 @@ const DeviceFrameBase = ({ children }) => {
     setMobileMenuOpen(false);
   }, [navigateTo]);
 
-  const handleConfirmLogout = React.useCallback(() => {
+  const handleConfirmLogout = useCallback(() => {
     setLogoutConfirmOpen(false);
     setMobileMenuOpen(false);
     logout();
@@ -458,10 +52,11 @@ const DeviceFrameBase = ({ children }) => {
 
   return (
     <div className="app-surface relative flex min-h-screen w-full flex-col bg-cream-50 font-sans text-ink-800 md:flex-row">
-
+      {/* Sidebar Desktop */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 hidden shrink-0 select-none flex-col border-r border-cream-50/[0.06] bg-ink-900 transition-[width] duration-300 ease-out md:flex ${sidebarCollapsed ? 'w-[68px]' : 'w-[248px]'
-          }`}
+        className={`fixed inset-y-0 left-0 z-50 hidden shrink-0 select-none flex-col border-r border-cream-50/[0.06] bg-ink-900 transition-[width] duration-300 ease-out md:flex ${
+          sidebarCollapsed ? 'w-[68px]' : 'w-[248px]'
+        }`}
       >
         <div className={`h-full w-full ${sidebarCollapsed ? 'px-2 py-3' : 'px-3 py-4'}`}>
           <SidebarContent
@@ -476,6 +71,7 @@ const DeviceFrameBase = ({ children }) => {
         </div>
       </aside>
 
+      {/* Header Mobile */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 py-2.5 backdrop-blur-md md:hidden">
         <div className="flex items-center gap-2">
           <button
@@ -492,12 +88,12 @@ const DeviceFrameBase = ({ children }) => {
             onClick={() => navigateTo(isAdmin ? 'admin-dashboard' : 'home')}
             className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
           >
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-md text-cream-50 bg-brand-700"
-            >
-              {isAdmin
-                ? <ShieldCheck className="h-4 w-4" strokeWidth={2} />
-                : <BrandMark className="h-8 w-8 rounded-md" />}
+            <span className="flex h-8 w-8 items-center justify-center rounded-md text-cream-50 bg-brand-700">
+              {isAdmin ? (
+                <ShieldCheck className="h-4 w-4" strokeWidth={2} />
+              ) : (
+                <BrandMark className="h-8 w-8 rounded-md" />
+              )}
             </span>
             <span className="font-display text-lead font-bold tracking-tight text-ink-900">
               {isAdmin ? 'Panel Admin' : 'Wahidiyah Book'}
@@ -507,7 +103,6 @@ const DeviceFrameBase = ({ children }) => {
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-
           {!isAdmin && (
             <button
               type="button"
@@ -516,13 +111,14 @@ const DeviceFrameBase = ({ children }) => {
               className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-caption font-bold text-brand-800 ring-1 ring-brand-200">
-                {(user.name || 'U').split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U'}
+                {(user?.name || 'U').split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U'}
               </span>
             </button>
           )}
         </div>
       </header>
 
+      {/* Drawer Menu Mobile */}
       <Transition show={mobileMenuOpen} as={Fragment}>
         <div className="fixed inset-0 z-50 md:hidden">
           <Transition.Child
@@ -565,22 +161,25 @@ const DeviceFrameBase = ({ children }) => {
         </div>
       </Transition>
 
+      {/* Dialog Konfirmasi Logout */}
       <LogoutConfirmDialog
         isOpen={logoutConfirmOpen}
-        userName={user.name}
         onCancel={() => setLogoutConfirmOpen(false)}
         onConfirm={handleConfirmLogout}
       />
 
+      {/* Konten Halaman Utama */}
       <div
-        className={`flex min-h-screen min-w-0 flex-1 flex-col bg-cream-50 transition-[margin] duration-300 ease-out ${sidebarCollapsed ? 'md:ml-[68px]' : 'md:ml-[248px]'
-          }`}
+        className={`flex min-h-screen min-w-0 flex-1 flex-col bg-cream-50 transition-[margin] duration-300 ease-out ${
+          sidebarCollapsed ? 'md:ml-[68px]' : 'md:ml-[248px]'
+        }`}
       >
         <main className="flex w-full flex-1 flex-col">
           <div className="relative flex w-full flex-1 flex-col bg-cream-50 pb-20 md:pb-0">{children}</div>
         </main>
       </div>
 
+      {/* Navigasi Bawah Mobile */}
       <MobileBottomNav
         isAdmin={isAdmin}
         activeKeys={activeKeys}
