@@ -38,7 +38,7 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         title={item.label}
         aria-label={item.label}
         aria-current={item.isActive ? 'page' : undefined}
-        className={`relative h-11 w-11 rounded-xl flex items-center justify-center transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
+        className={`relative h-11 w-11 rounded-md flex items-center justify-center transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
           ? 'focus-visible:ring-semantic-dangerOnDark'
           : 'focus-visible:ring-brand-500'
           } ${item.isActive
@@ -56,7 +56,7 @@ const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
       type="button"
       onClick={() => onNavClick(item.target)}
       aria-current={item.isActive ? 'page' : undefined}
-      className={`group relative w-full h-11 flex items-center gap-3 pl-3 pr-3 rounded-xl transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
+      className={`group relative w-full h-11 flex items-center gap-3 pl-3 pr-3 rounded-md transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${isDanger
         ? 'focus-visible:ring-semantic-dangerOnDark'
         : 'focus-visible:ring-brand-500'
         } ${item.isActive
@@ -191,7 +191,7 @@ const SidebarContent = React.memo(({
       onClick={handleToggleCollapse}
       title={isMobile ? 'Tutup menu' : isCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
       aria-label={isMobile ? 'Tutup menu' : isCollapsed ? 'Perluas sidebar' : 'Ciutkan sidebar'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-semantic-mutedOnDark transition-colors duration-200 hover:bg-cream-50/5 hover:text-cream-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-semantic-mutedOnDark transition-colors duration-200 hover:bg-cream-50/5 hover:text-cream-50 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
     >
       <PanelLeft className="h-[17px] w-[17px]" strokeWidth={1.9} />
     </button>
@@ -207,11 +207,11 @@ const SidebarContent = React.memo(({
             onClick={() => onNavClick(isAdminNav ? 'admin-dashboard' : 'home')}
             title={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
             aria-label={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500"
           >
             {isAdminNav
               ? <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.9} />
-              : <BrandMark className="h-10 w-10 rounded-xl" />}
+              : <BrandMark className="h-10 w-10 rounded-md" />}
           </button>
           {collapseToggle}
           <ThemeToggle variant="onDark" />
@@ -406,7 +406,7 @@ const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, onOpenMen
                 />
               )}
             </div>
-            <span className="mt-0.5 text-[11px] leading-tight tracking-tight truncate max-w-full">
+            <span className="mt-0.5 text-caption leading-tight tracking-tight truncate max-w-full">
               {item.label}
             </span>
           </button>
@@ -481,7 +481,7 @@ const DeviceFrameBase = ({ children }) => {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
-            className="flex h-11 w-11 items-center justify-center rounded-xl text-ink-700 transition-colors duration-200 hover:bg-cream-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="flex h-11 w-11 items-center justify-center rounded-md text-ink-700 transition-colors duration-200 hover:bg-cream-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             aria-label="Buka menu navigasi"
           >
             <Menu className="h-5 w-5" strokeWidth={2} />
@@ -493,11 +493,11 @@ const DeviceFrameBase = ({ children }) => {
             className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
           >
             <span
-              className="flex h-8 w-8 items-center justify-center rounded-xl text-cream-50 bg-brand-700"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-cream-50 bg-brand-700"
             >
               {isAdmin
                 ? <ShieldCheck className="h-4 w-4" strokeWidth={2} />
-                : <BrandMark className="h-8 w-8 rounded-xl" />}
+                : <BrandMark className="h-8 w-8 rounded-md" />}
             </span>
             <span className="font-display text-lead font-bold tracking-tight text-ink-900">
               {isAdmin ? 'Panel Admin' : 'Wahidiyah Book'}

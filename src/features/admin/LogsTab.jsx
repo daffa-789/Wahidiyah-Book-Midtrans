@@ -59,7 +59,7 @@ export const LogsTab = ({ sessionToken }) => {
         <button
           type="button"
           onClick={() => { setLoading(true); loadLogs(); }}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-50 px-3.5 py-2 text-xs font-bold text-ink-700 hover:bg-cream-100 transition shadow-xs self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-50 px-3.5 py-2 text-small font-bold text-ink-700 hover:bg-cream-100 transition shadow-xs self-start sm:self-auto"
         >
           <RefreshCw className={`h-3.5 w-3.5 text-ink-400 ${loading ? 'animate-spin' : ''}`} />
           Segarkan Log
@@ -73,7 +73,7 @@ export const LogsTab = ({ sessionToken }) => {
             <button
               type="button"
               onClick={() => setFilterType('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition ${
                 filterType === 'all'
                   ? 'bg-ink-800 text-cream-50 shadow-xs'
                   : 'bg-cream-200 text-ink-500 hover:bg-cream-300'
@@ -84,7 +84,7 @@ export const LogsTab = ({ sessionToken }) => {
             <button
               type="button"
               onClick={() => setFilterType('subscription')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition ${
                 filterType === 'subscription'
                   ? 'bg-brand-700 text-cream-50 shadow-xs'
                   : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
@@ -95,7 +95,7 @@ export const LogsTab = ({ sessionToken }) => {
             <button
               type="button"
               onClick={() => setFilterType('user')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition ${
                 filterType === 'user'
                   ? 'bg-ink-700 text-cream-50 shadow-xs'
                   : 'bg-cream-100 text-ink-700 hover:bg-cream-200'
@@ -113,7 +113,7 @@ export const LogsTab = ({ sessionToken }) => {
             placeholder="Cari aktivitas atau nama..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full sm:w-64 pl-8 pr-3 py-1.5 text-xs rounded-xl border border-cream-300 focus:outline-none focus:ring-2 focus:ring-cream-300"
+            className="w-full sm:w-64 pl-8 pr-3 py-1.5 text-caption rounded-xl border border-cream-300 focus:outline-none focus:ring-2 focus:ring-cream-300"
           />
         </div>
       </div>
@@ -122,15 +122,15 @@ export const LogsTab = ({ sessionToken }) => {
         <div className="flex items-start gap-2.5 rounded-2xl border border-semantic-danger/30 bg-semantic-dangerLight px-4 py-3">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-semantic-danger" />
           <div className="min-w-0">
-            <p className="text-xs font-bold text-semantic-danger">Gagal memuat log aktivitas</p>
-            <p className="mt-0.5 text-xs text-semantic-danger/85">{error}</p>
+            <p className="text-caption font-bold text-semantic-danger">Gagal memuat log aktivitas</p>
+            <p className="mt-0.5 text-caption text-semantic-danger/85">{error}</p>
           </div>
         </div>
       )}
 
       <div className="rounded-3xl border border-cream-300 bg-cream-50 shadow-sm overflow-hidden">
         <div className="px-5 py-3.5 border-b border-cream-200 bg-cream-100 flex items-center justify-between">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider text-ink-500 flex items-center gap-2">
+          <h3 className="text-caption font-extrabold uppercase tracking-wider text-ink-500 flex items-center gap-2">
             <Activity className="h-4 w-4 text-ink-400" />
             Aktivitas Terkini (Menampilkan {filteredLogs.length})
           </h3>
@@ -140,8 +140,8 @@ export const LogsTab = ({ sessionToken }) => {
         {filteredLogs.length === 0 ? (
           <div className="p-12 text-center">
             <Clock className={controls.emptyIcon} />
-            <p className="mt-3 font-bold text-ink-700 text-sm">Tidak ada aktivitas yang sesuai</p>
-            <p className="mt-1 text-xs text-ink-300">Coba ubah filter atau kata kunci pencarian Anda.</p>
+            <p className="mt-3 font-bold text-ink-700 text-body">Tidak ada aktivitas yang sesuai</p>
+            <p className="mt-1 text-caption text-ink-400">Coba ubah filter atau kata kunci pencarian Anda.</p>
           </div>
         ) : (
           <div className="divide-y divide-cream-200 max-h-[550px] overflow-y-auto">
@@ -156,14 +156,14 @@ export const LogsTab = ({ sessionToken }) => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-ink-800">{log.action}</p>
+                    <p className="text-body font-bold text-ink-800">{log.action}</p>
                     <span className={`text-micro font-bold px-1.5 py-0.2 rounded ${
                       log.type === 'subscription' ? 'bg-brand-100 text-brand-800' : 'bg-cream-200 text-ink-700'
                     }`}>
                       {log.type === 'subscription' ? 'Keuangan' : 'Akun'}
                     </span>
                   </div>
-                  <p className="text-xs text-ink-400 mt-0.5 font-medium">{log.detail}</p>
+                  <p className="text-caption text-ink-500 mt-0.5 font-medium">{log.detail}</p>
                 </div>
                 <span className="shrink-0 text-caption font-medium text-ink-300 whitespace-nowrap bg-cream-200 px-2 py-0.5 rounded-lg">
                   {formatWIB(log.timestamp)}

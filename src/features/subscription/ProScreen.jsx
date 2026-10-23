@@ -40,7 +40,7 @@ export const ProScreen = () => {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg font-black text-ink-900 mt-2">Paket Bulanan</h3>
+                  <h3 className="text-title font-black text-ink-900 mt-2">Paket Bulanan</h3>
                   <p className={typography.metaTight}>Fleksibel, bayar per bulan tanpa komitmen panjang</p>
                 </div>
               </div>
@@ -48,12 +48,12 @@ export const ProScreen = () => {
               <div className="mt-5 pb-5 border-b border-cream-200">
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl sm:text-3xl font-black text-ink-900 tracking-tight">Rp 25.000</span>
-                  <span className="text-xs font-semibold text-ink-400">/bulan</span>
+                  <span className="text-caption font-semibold text-ink-500">/bulan</span>
                 </div>
                 <p className="text-caption text-ink-500 mt-1">Dapat dibatalkan sewaktu-waktu</p>
               </div>
 
-              <div className="mt-5 space-y-3 text-xs text-ink-700">
+              <div className="mt-5 space-y-3 text-caption text-ink-700">
                 <div className={layout.rowStartGap}>
                   <div className={surfaces.statBadge}>
                     <Check className="w-3 h-3 stroke-[3]" />
@@ -85,7 +85,7 @@ export const ProScreen = () => {
               <button
                 type="button"
                 disabled
-                className="w-full mt-6 py-3.5 bg-cream-200 text-ink-300 text-xs font-bold rounded-2xl cursor-not-allowed border border-cream-300 flex items-center justify-center gap-1.5"
+                className="w-full mt-6 py-3.5 bg-cream-200 text-ink-300 text-small font-bold rounded-2xl cursor-not-allowed border border-cream-300 flex items-center justify-center gap-1.5"
                 title="Anda telah memiliki langganan aktif"
               >
                 {isMonthlyActive && <Check className="w-4 h-4 text-brand-600" />}
@@ -95,7 +95,7 @@ export const ProScreen = () => {
               <button
                 type="button"
                 onClick={() => handleSelectPlan('monthly', 'Paket Bulanan', 25000, '/bulan', 'Rp 25.000')}
-                className="w-full mt-6 py-3.5 bg-brand-700 hover:bg-brand-600 active:bg-brand-800 text-cream-50 text-xs font-extrabold rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full mt-6 py-3.5 bg-brand-700 hover:bg-brand-600 active:bg-brand-800 text-cream-50 text-small font-extrabold rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <span>Berlangganan Sekarang</span>
                 <ArrowRight className="w-3.5 h-3.5" />

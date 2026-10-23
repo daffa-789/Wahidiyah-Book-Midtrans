@@ -35,7 +35,7 @@ export const BookModal = ({
       >
         <div className={layout.rowEnd}>
           <div>
-            <h2 id="book-modal-title" className="text-lg font-black text-ink-900">
+            <h2 id="book-modal-title" className="text-title font-black text-ink-900">
               Tambah buku
             </h2>
           </div>
@@ -58,17 +58,17 @@ export const BookModal = ({
               value={bookForm.title}
               onChange={(e) => setBookForm((form) => ({ ...form, title: e.target.value }))}
               placeholder="Judul buku"
-              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600 transition"
+              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 focus:border-brand-600 transition"
             />
           </label>
 
-          <label className="block rounded-2xl border border-dashed border-cream-300 p-3 text-xs text-ink-500">
+          <label className="block rounded-2xl border border-dashed border-cream-300 p-3 text-caption text-ink-500">
             <span className="font-bold text-ink-800">Thumbnail</span>
             <input
               required
               type="file"
               accept="image/*"
-              className="mt-2 block w-full text-xs text-ink-400 file:mr-3 file:rounded-xl file:border-0 file:bg-cream-200 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700 hover:file:bg-cream-300 cursor-pointer"
+              className="mt-2 block w-full text-caption text-ink-500 file:mr-3 file:rounded-xl file:border-0 file:bg-cream-200 file:px-3 file:py-1.5 file:text-caption file:font-semibold file:text-ink-700 hover:file:bg-cream-300 cursor-pointer"
               onChange={(e) =>
                 setBookForm((form) => ({ ...form, thumbnail: e.target.files?.[0] || null }))
               }
@@ -83,7 +83,7 @@ export const BookModal = ({
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-ink-800 text-xs truncate">{bookForm.thumbnail.name}</p>
+                  <p className="font-bold text-ink-800 text-caption truncate">{bookForm.thumbnail.name}</p>
                   <p className={typography.metaTight}>{(bookForm.thumbnail.size / 1024).toFixed(1)} KB</p>
                   <span className="inline-flex items-center gap-1 text-micro font-bold text-brand-600 mt-1">
                     <CheckCircle2 className="w-3 h-3" /> Siap diunggah
@@ -93,13 +93,13 @@ export const BookModal = ({
             )}
           </label>
 
-          <label className="block rounded-2xl border border-dashed border-brand-300 bg-brand-50/40 p-3 text-xs text-ink-500">
+          <label className="block rounded-2xl border border-dashed border-brand-300 bg-brand-50/40 p-3 text-caption text-ink-500">
             <span className="font-bold text-ink-800">Konten buku</span>
             <input
               required
               type="file"
               accept=".pdf,.txt,.doc,.docx,.rtf,.odt,.epub,.md,.csv"
-              className="mt-2 block w-full text-xs text-ink-400 file:mr-3 file:rounded-xl file:border-0 file:bg-brand-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-800 hover:file:bg-brand-200 cursor-pointer"
+              className="mt-2 block w-full text-caption text-ink-500 file:mr-3 file:rounded-xl file:border-0 file:bg-brand-100 file:px-3 file:py-1.5 file:text-caption file:font-semibold file:text-brand-800 hover:file:bg-brand-200 cursor-pointer"
               onChange={(e) =>
                 setBookForm((form) => ({ ...form, content: e.target.files?.[0] || null }))
               }
@@ -110,7 +110,7 @@ export const BookModal = ({
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-ink-800 text-xs truncate">{bookForm.content.name}</p>
+                  <p className="font-bold text-ink-800 text-caption truncate">{bookForm.content.name}</p>
                   <p className={typography.metaTight}>
                     {(bookForm.content.size / 1024 / 1024).toFixed(2)} MB • {bookForm.content.name.split('.').pop()?.toUpperCase() || 'DOKUMEN'}
                   </p>
@@ -122,7 +122,7 @@ export const BookModal = ({
             )}
           </label>
 
-          <label className="flex min-h-6 items-center gap-2 text-xs font-medium text-ink-500 cursor-pointer pt-1">
+          <label className="flex min-h-6 items-center gap-2 text-caption font-medium text-ink-500 cursor-pointer pt-1">
             <input
               type="checkbox"
               checked={bookForm.is_locked}
@@ -136,7 +136,7 @@ export const BookModal = ({
             <button
               type="submit"
               disabled={isSavingBook}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3.5 text-sm font-bold text-cream-50 transition hover:bg-brand-700 disabled:opacity-60 cursor-pointer shadow-sm"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3.5 text-body font-bold text-cream-50 transition hover:bg-brand-800 disabled:opacity-60 cursor-pointer shadow-sm"
             >
               {isSavingBook ? (
                 <>

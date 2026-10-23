@@ -202,14 +202,14 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
             otomatis muncul di sini.
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 self-start rounded-2xl border border-brand-200 bg-brand-50 px-3.5 py-2 text-xs font-bold text-brand-800 sm:self-auto">
+        <span className="inline-flex items-center gap-1.5 self-start rounded-2xl border border-brand-200 bg-brand-50 px-3.5 py-2 text-small font-bold text-brand-800 sm:self-auto">
           <Images className={controls.iconBrand} />
           {orderedSlides.length} banner · {orderedSlides.filter(isCurrentlyShowing).length} tayang
         </span>
       </div>
 
       {carouselReady === false && (
-        <div role="alert" className="rounded-2xl border border-cream-300 bg-cream-100 px-4 py-3 text-sm text-ink-800">
+        <div role="alert" className="rounded-2xl border border-cream-300 bg-cream-100 px-4 py-3 text-body text-ink-800">
           Tabel <code className="font-mono">carousel_slides</code> belum ada di basis data. Jalankan
           <code className="font-mono"> supabase_database/full_setup.sql </code>
           di SQL Editor Supabase, lalu muat ulang halaman ini.
@@ -265,7 +265,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                     )}
                   </div>
                   {slide.description && (
-                    <p className="mt-1 line-clamp-2 text-xs text-ink-500">{slide.description}</p>
+                    <p className="mt-1 line-clamp-2 text-caption text-ink-500">{slide.description}</p>
                   )}
                   {(slide.eventDate || periodLabel(slide)) && (
                     <p className="mt-1 text-caption text-ink-400">
@@ -297,7 +297,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                     type="button"
                     onClick={() => toggleActive(slide)}
                     disabled={busyId === slide.id}
-                    className={`rounded-xl border px-2.5 py-1.5 text-xs font-bold transition disabled:opacity-50 ${
+                    className={`rounded-xl border px-2.5 py-1.5 text-caption font-bold transition disabled:opacity-50 ${
                       slide.isActive
                         ? 'border-cream-300 text-ink-600 hover:bg-cream-100'
                         : 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100'
@@ -334,7 +334,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                       type="file"
                       accept="image/png,image/jpeg,image/webp,image/avif"
                       onChange={(e) => uploadImage(slide.id, e.target.files?.[0])}
-                      className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-xs file:font-bold file:text-brand-700"
+                      className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-caption file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-caption file:font-bold file:text-brand-700"
                     />
                     <p className="mt-1 text-caption text-ink-400">PNG/JPEG/WebP, maksimal 8 MB. Otomatis dikompres ke WebP 1600 px.</p>
                   </div>
@@ -346,7 +346,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
 
         <form onSubmit={submitSlide} className="space-y-4 rounded-3xl border border-cream-300 bg-cream-50 p-5 shadow-sm">
           <div className="flex items-center justify-between border-b border-cream-200 pb-3">
-            <h3 className="flex items-center gap-2 text-base font-bold text-ink-900">
+            <h3 className="flex items-center gap-2 text-h3 font-bold text-ink-900">
               {editingId ? <Pencil className={controls.iconBrand} /> : <Plus className={controls.iconBrand} />}
               {editingId ? 'Ubah banner' : 'Tambah banner'}
             </h3>
@@ -354,7 +354,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
               <button
                 type="button"
                 onClick={resetForm}
-                className="inline-flex items-center gap-1 text-xs font-bold text-ink-400 transition hover:text-ink-700"
+                className="inline-flex items-center gap-1 text-caption font-bold text-ink-400 transition hover:text-ink-700"
               >
                 <X className="h-3.5 w-3.5" /> Batal
               </button>
@@ -370,7 +370,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
               value={form.title}
               onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
               placeholder="Contoh: Mujahadah Kubro Rojabiyah"
-              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
             />
           </div>
 
@@ -383,7 +383,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Keterangan singkat yang tampil di bawah judul..."
-              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+              className="w-full rounded-xl border border-cream-300 px-3 py-2.5 text-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
             />
           </div>
 
@@ -397,10 +397,10 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                 max="9999"
                 value={form.sort_order}
                 onChange={(e) => setForm((prev) => ({ ...prev, sort_order: e.target.value }))}
-                className="w-full rounded-xl border border-cream-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+                className="w-full rounded-xl border border-cream-300 px-3 py-2 text-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
               />
             </div>
-            <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-cream-300 px-3 text-xs font-bold text-ink-700">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-cream-300 px-3 text-small font-bold text-ink-700">
               <input
                 type="checkbox"
                 checked={form.is_active}
@@ -421,7 +421,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                 ref={imageInputRef}
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/avif"
-                className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-xs file:font-bold file:text-brand-700"
+                className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-caption file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-caption file:font-bold file:text-brand-700"
               />
             </div>
           )}
@@ -429,7 +429,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
           <button
             type="submit"
             disabled={isSaving}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 disabled:opacity-60"
           >
             {isSaving ? <Loader2 className={controls.spinner} /> : (editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
             {editingId ? 'Simpan perubahan' : 'Tambah banner'}

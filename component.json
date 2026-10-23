@@ -146,7 +146,7 @@
         "mutedOnDark": "#B7AE9A"
       },
       "primary": "#1E7A57",
-      "primaryHover": "#26906A",
+      "primaryHover": "#17694A",
       "primaryLight": "#143024"
     }
   },
@@ -273,15 +273,15 @@
       "h1": "clamp(1.375rem, 1.1rem + 1.1vw, 1.75rem)",
       "title": "1.375rem",
       "subtitle": "1.3125rem",
-      "h2": "1.125rem",
-      "h3": "1rem",
-      "lead": "0.9375rem",
-      "body": "0.875rem",
-      "buttonMd": "0.84375rem",
-      "small": "0.75rem",
-      "caption": "0.6875rem",
-      "micro": "0.625rem",
-      "overline": "0.5625rem"
+      "h2": "1.25rem",
+      "h3": "1.125rem",
+      "lead": "1.0625rem",
+      "body": "1rem",
+      "buttonMd": "0.875rem",
+      "small": "0.875rem",
+      "caption": "0.8125rem",
+      "micro": "0.75rem",
+      "overline": "0.6875rem"
     },
     "tracking": {
       "display": "-0.02em",

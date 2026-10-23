@@ -34,6 +34,7 @@ import { CarouselTab } from './CarouselTab';
 import { LogsTab } from './LogsTab';
 import { BookModal } from './BookModal';
 import { TxStatusBadge } from './TxStatusBadge';
+import { AdminSkeleton } from '@ui/Skeleton';
 import { layout, typography, surfaces, controls } from '@lib/styles';
 
 const isValidTabSlug = (slug) => slug === undefined || ADMIN_TAB_SLUGS.has(slug);
@@ -96,6 +97,7 @@ export const AdminDashboard = () => {
     ? ADMIN_DEFAULT_TAB
     : tabIdFromPath(`/admin/${tabParam}`);
   const [stats, setStats] = useState(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
   const [users, setUsers] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [events, setEvents] = useState([]);
@@ -119,6 +121,7 @@ export const AdminDashboard = () => {
   const loadDashboard = useCallback(async () => {
     if (!sessionToken) return;
     setError('');
+    setLoadingDashboard(true);
     try {
       const [statsPayload, userPayload, transactionPayload, eventPayload, carouselPayload] = await Promise.all([
         apiJson('/api/stats', { headers }),
@@ -137,6 +140,8 @@ export const AdminDashboard = () => {
       await Promise.all([refreshBooks(), refreshEvents(), refreshCarousel()]);
     } catch (loadError) {
       setError(loadError.message || 'Dashboard tidak dapat dimuat.');
+    } finally {
+      setLoadingDashboard(false);
     }
   }, [headers, refreshBooks, refreshEvents, refreshCarousel, sessionToken]);
 
@@ -358,15 +363,25 @@ export const AdminDashboard = () => {
     return <Navigate to="/admin/beranda" replace />;
   }
 
+  if (loadingDashboard && !stats) {
+    return (
+      <div className="min-h-screen bg-cream-50 text-ink-900">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
+          <AdminSkeleton />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-cream-50 text-ink-900">
 
       <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
 
           {error && (
-            <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-semantic-danger/30 bg-semantic-dangerLight px-4 py-3 text-sm font-medium text-semantic-danger">
+            <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-semantic-danger/30 bg-semantic-dangerLight px-4 py-3 text-body font-medium text-semantic-danger">
               <span>{error}</span>
-              <button type="button" onClick={loadDashboard} className="min-h-6 rounded-xl border border-semantic-danger/40 bg-cream-50 px-3 py-1.5 text-xs font-bold text-semantic-danger transition hover:bg-semantic-dangerLight">
+              <button type="button" onClick={loadDashboard} className="min-h-6 rounded-xl border border-semantic-danger/40 bg-cream-50 px-3 py-1.5 text-small font-bold text-semantic-danger transition hover:bg-semantic-dangerLight">
                 Coba muat ulang
               </button>
             </div>
@@ -383,7 +398,7 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleExportTransactions}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-small font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                     title="Ekspor seluruh riwayat transaksi & keuangan ke Excel"
                   >
                     <FileDown className="h-4 w-4 text-brand-700" />
@@ -392,7 +407,7 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleExportFull}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-2.5 text-xs font-bold text-cream-50 shadow-sm transition hover:bg-brand-800"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-2.5 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800"
                     title="Ekspor buku kerja lengkap (Semua sheet: KPI, Transaksi, Pengguna, Buku, Agenda)"
                   >
                     <FileSpreadsheet className="h-4 w-4 text-brand-100" />
@@ -407,7 +422,7 @@ export const AdminDashboard = () => {
                   return <div key={kpi.label} className="rounded-3xl border border-cream-300 bg-cream-50 p-4 shadow-sm">
                     <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-2xl border ${kpi.tone}`}><Icon className="h-5 w-5" /></div>
                     <p className="text-2xl font-black tracking-tight">{kpi.value}</p>
-                    <p className="mt-1 text-xs font-medium text-ink-400">{kpi.label}</p>
+                    <p className="mt-1 text-caption font-medium text-ink-500">{kpi.label}</p>
                   </div>;
                 })}
               </div>
@@ -416,15 +431,15 @@ export const AdminDashboard = () => {
                 <div className={surfaces.panel}>
                   <h3 className="font-bold">Tren pendapatan tervalidasi</h3>
                   <div className="mt-4 h-64">
-                    {monthlyRevenue.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={monthlyRevenue}><defs><linearGradient id="revenue" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#14523A" stopOpacity={0.35}/><stop offset="100%" stopColor="#14523A" stopOpacity={0}/></linearGradient></defs><Tooltip formatter={(value) => formatCurrency(value)} /><Area type="monotone" dataKey="revenue" stroke="#14523A" fill="url(#revenue)" strokeWidth={3} /></AreaChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-sm text-ink-300">Belum ada transaksi tervalidasi.</div>}
+                    {monthlyRevenue.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={monthlyRevenue}><defs><linearGradient id="revenue" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#14523A" stopOpacity={0.35}/><stop offset="100%" stopColor="#14523A" stopOpacity={0}/></linearGradient></defs><Tooltip formatter={(value) => formatCurrency(value)} /><Area type="monotone" dataKey="revenue" stroke="#14523A" fill="url(#revenue)" strokeWidth={3} /></AreaChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-caption text-ink-500">Belum ada transaksi tervalidasi.</div>}
                   </div>
                 </div>
                 <div className={surfaces.panel}>
                   <h3 className="font-bold">Status langganan</h3>
                   <div className="mt-4 h-48">
-                    {subscriptionShare.length ? <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={subscriptionShare} dataKey="value" innerRadius={48} outerRadius={72} paddingAngle={3}>{subscriptionShare.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-sm text-ink-300">Belum ada pengguna.</div>}
+                    {subscriptionShare.length ? <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={subscriptionShare} dataKey="value" innerRadius={48} outerRadius={72} paddingAngle={3}>{subscriptionShare.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-caption text-ink-500">Belum ada pengguna.</div>}
                   </div>
-                  <div className="space-y-2">{subscriptionShare.map((entry) => <div key={entry.name} className="flex items-center justify-between text-xs"><span className="flex items-center gap-2 text-ink-500"><span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.color }} />{entry.name}</span><strong>{entry.value}</strong></div>)}</div>
+                  <div className="space-y-2">{subscriptionShare.map((entry) => <div key={entry.name} className="flex items-center justify-between text-caption"><span className="flex items-center gap-2 text-ink-500"><span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.color }} />{entry.name}</span><strong>{entry.value}</strong></div>)}</div>
                 </div>
               </div>
 
@@ -437,7 +452,7 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleExportTransactions}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-50 px-3 py-1.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-50 px-3 py-1.5 text-small font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                   >
                     <FileSpreadsheet className="h-3.5 w-3.5 text-brand-700" />
                     Unduh Excel
@@ -448,10 +463,10 @@ export const AdminDashboard = () => {
                   {transactions.slice(0, 10).map((tx) => (
                     <div key={tx.id || tx.refNo} className="rounded-2xl border border-cream-200 bg-cream-50 p-3.5 shadow-sm space-y-2">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-bold text-ink-700">{tx.refNo}</span>
+                        <span className="font-mono text-caption font-bold text-ink-700">{tx.refNo}</span>
                         <TxStatusBadge status={tx.status} />
                       </div>
-                      <div className="flex items-start justify-between text-xs">
+                      <div className="flex items-start justify-between text-caption">
                         <div>
                           <p className="font-bold text-ink-900">{tx.userName || '-'}</p>
                           <p className={typography.helperInline}>{tx.userEmail || ''}</p>
@@ -467,7 +482,7 @@ export const AdminDashboard = () => {
                     </div>
                   ))}
                   {transactions.length === 0 && (
-                    <div className="p-6 text-center text-xs text-ink-400">
+                    <div className="p-6 text-center text-caption text-ink-500">
                       Belum ada riwayat transaksi pembayaran.
                     </div>
                   )}
@@ -475,7 +490,7 @@ export const AdminDashboard = () => {
 
                 {/* Desktop Table (sm and up) */}
                 <div className="hidden sm:block overflow-x-auto rounded-2xl border border-cream-200">
-                  <table className="min-w-full text-left text-xs">
+                  <table className="min-w-full text-left text-caption">
                     <thead className="bg-cream-100 uppercase tracking-wider text-ink-400">
                       <tr>
                         <th className="px-3.5 py-2.5">No. Referensi</th>
@@ -527,13 +542,13 @@ export const AdminDashboard = () => {
                   <button
                     type="button"
                     onClick={handleExportBooks}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-3 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-3 text-small font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                     title="Ekspor daftar koleksi buku ke Excel"
                   >
                     <FileSpreadsheet className="h-4 w-4 text-brand-700" />
                     Export Excel
                   </button>
-                  <button type="button" onClick={() => setIsBookModalOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-cream-50 shadow-sm transition hover:bg-brand-800">
+                  <button type="button" onClick={() => setIsBookModalOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800">
                     <Plus className="h-4 w-4" /> Tambah buku
                   </button>
                 </div>
@@ -550,7 +565,7 @@ export const AdminDashboard = () => {
                 <button
                   type="button"
                   onClick={handleExportUsers}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-small font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                   title="Ekspor seluruh pengguna ke Excel"
                 >
                   <FileSpreadsheet className="h-4 w-4 text-brand-700" />
@@ -563,21 +578,21 @@ export const AdminDashboard = () => {
                   <div key={item.id} className="rounded-2xl border border-cream-300 bg-cream-50 p-4 shadow-sm space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-10 w-10 rounded-full bg-brand-100 border border-brand-200 text-brand-800 flex items-center justify-center font-bold text-sm shrink-0">
+                        <div className="h-10 w-10 rounded-full bg-brand-100 border border-brand-200 text-brand-800 flex items-center justify-center font-bold text-caption shrink-0">
                           {(item.name || 'U').slice(0, 2).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-bold text-ink-900 truncate text-sm">{item.name}</p>
-                          <p className="text-xs text-ink-400 truncate">{item.email}</p>
+                          <p className="font-bold text-ink-900 truncate text-body">{item.name}</p>
+                          <p className="text-caption text-ink-500 truncate">{item.email}</p>
                         </div>
                       </div>
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-caption font-bold ${
                         item.role === 'admin' ? 'bg-brand-50 text-brand-800 border border-brand-200' : 'bg-cream-200 text-ink-600'
                       }`}>
                         {item.role}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-xs pt-2.5 border-t border-cream-200/80">
+                    <div className="flex items-center justify-between text-caption pt-2.5 border-t border-cream-200/80">
                       <div className="flex items-center gap-2">
                         {item.loginMethod === 'google' ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-semantic-infoLight px-2 py-0.5 text-micro font-bold text-semantic-info border border-semantic-info/30">
@@ -588,14 +603,14 @@ export const AdminDashboard = () => {
                             <span className="h-1.5 w-1.5 rounded-full bg-ink-400" /> Email
                           </span>
                         )}
-                        <span className={`text-xs font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-400'}`}>
+                        <span className={`text-caption font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-500'}`}>
                           {item.isPro ? '⭐ Pro aktif' : 'Reguler'}
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => updateUser(item.id, { role: item.role === 'admin' ? 'user' : 'admin' }, 'Role pengguna diperbarui.')}
-                        className="inline-flex items-center gap-1 rounded-xl border border-cream-300 bg-cream-50 px-2.5 py-1.5 text-xs font-bold text-ink-700 hover:bg-cream-100 active:scale-95 transition"
+                        className="inline-flex items-center gap-1 rounded-xl border border-cream-300 bg-cream-50 px-2.5 py-1.5 text-caption font-bold text-ink-700 hover:bg-cream-100 active:scale-95 transition"
                       >
                         <UserCog className="h-3.5 w-3.5 text-brand-700" />
                         {item.role === 'admin' ? 'Jadikan user' : 'Jadikan admin'}
@@ -613,8 +628,8 @@ export const AdminDashboard = () => {
 
               {/* Desktop Table (sm and up) */}
               <div className="hidden sm:block overflow-x-auto rounded-3xl border border-cream-300 bg-cream-50 shadow-sm">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-cream-100 text-xs uppercase tracking-wider text-ink-400">
+                <table className="min-w-full text-left text-body">
+                  <thead className="bg-cream-100 text-caption uppercase tracking-wider text-ink-500">
                     <tr>
                       <th className="px-4 py-3">Pengguna</th>
                       <th className="px-4 py-3">Metode</th>
@@ -628,28 +643,28 @@ export const AdminDashboard = () => {
                       <tr key={item.id}>
                         <td className="px-4 py-3">
                           <p className="font-bold">{item.name}</p>
-                          <p className="text-xs text-ink-400">{item.email}</p>
+                          <p className="text-caption text-ink-500">{item.email}</p>
                         </td>
                         <td className="px-4 py-3">
                           {item.loginMethod === 'google' ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-semantic-infoLight px-2.5 py-1 text-xs font-bold text-semantic-info border border-semantic-info/30">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-semantic-infoLight px-2.5 py-1 text-caption font-bold text-semantic-info border border-semantic-info/30">
                               <span className="h-1.5 w-1.5 rounded-full bg-semantic-info" />
                               Google
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-cream-200 px-2.5 py-1 text-xs font-bold text-ink-500 border border-cream-300/60">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-cream-200 px-2.5 py-1 text-caption font-bold text-ink-500 border border-cream-300/60">
                               <span className="h-1.5 w-1.5 rounded-full bg-ink-300" />
                               Email
                             </span>
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.role === 'admin' ? 'bg-brand-50 text-brand-800 border border-brand-200' : 'bg-cream-200 text-ink-500'}`}>
+                          <span className={`rounded-full px-2.5 py-1 text-caption font-bold ${item.role === 'admin' ? 'bg-brand-50 text-brand-800 border border-brand-200' : 'bg-cream-200 text-ink-500'}`}>
                             {item.role}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`text-xs font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-400'}`}>
+                          <span className={`text-caption font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-500'}`}>
                             {item.isPro ? 'Pro aktif' : 'Reguler'}
                           </span>
                         </td>
@@ -657,7 +672,7 @@ export const AdminDashboard = () => {
                           <button
                             type="button"
                             onClick={() => updateUser(item.id, { role: item.role === 'admin' ? 'user' : 'admin' }, 'Role pengguna diperbarui.')}
-                            className="rounded-xl border border-cream-300 px-2.5 py-1.5 text-xs font-bold text-ink-500 hover:bg-cream-100"
+                            className="rounded-xl border border-cream-300 px-2.5 py-1.5 text-small font-bold text-ink-700 hover:bg-cream-100"
                           >
                             <UserCog className="mr-1 inline h-3.5 w-3.5" />
                             {item.role === 'admin' ? 'Jadikan user' : 'Jadikan admin'}

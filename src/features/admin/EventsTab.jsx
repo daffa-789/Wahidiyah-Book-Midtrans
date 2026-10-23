@@ -179,17 +179,17 @@ export const EventsTab = ({
                   <button
                     type="button"
                     onClick={handleExportEvents}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2 text-xs font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2 text-caption font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
                     title="Ekspor seluruh daftar agenda ke Excel"
                   >
                     <FileSpreadsheet className="h-4 w-4 text-brand-700" />
                     Export Excel
                   </button>
-                  <span className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-50 border border-brand-200 px-3.5 py-2 text-xs font-bold text-brand-800">
+                  <span className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-50 border border-brand-200 px-3.5 py-2 text-caption font-bold text-brand-800">
                     <CalendarCheck className={controls.iconBrand} />
                     {events.length} Agenda Terdaftar
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-50 border border-brand-200 px-3.5 py-2 text-xs font-bold text-brand-800">
+                  <span className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-50 border border-brand-200 px-3.5 py-2 text-caption font-bold text-brand-800">
                     <Images className="h-4 w-4 text-brand-700" />
                     {events.filter((evt) => evt.showInCarousel).length} di Carousel
                   </span>
@@ -212,7 +212,7 @@ export const EventsTab = ({
                       <BellRing
                         className={`mt-0.5 h-4 w-4 shrink-0 ${pushStatus.enabled ? 'text-brand-700' : 'text-semantic-warning'}`}
                       />
-                      <div className="min-w-0 text-xs leading-relaxed">
+                      <div className="min-w-0 text-caption leading-relaxed">
                         {pushStatus.enabled ? (
                           <>
                             <p className="font-bold text-brand-900">
@@ -238,7 +238,7 @@ export const EventsTab = ({
 
                     <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-cream-200">
                       <div>
-                        <h3 className="text-lg font-black text-ink-900 tracking-tight flex items-center gap-2">
+                        <h3 className="text-h3 font-black text-ink-900 tracking-tight flex items-center gap-2">
                           <Calendar className="h-5 w-5 text-brand-600" />
                           <span>{MONTH_NAMES[calMonth]} {calYear}</span>
                         </h3>
@@ -248,7 +248,7 @@ export const EventsTab = ({
                         <button
                           type="button"
                           onClick={goToTodayCal}
-                          className="px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 hover:bg-brand-100 text-xs font-bold transition cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-brand-50 text-brand-700 hover:bg-brand-100 text-caption font-bold transition cursor-pointer"
                         >
                           Hari Ini
                         </button>
@@ -275,7 +275,7 @@ export const EventsTab = ({
                       {DAY_NAMES.map((day, idx) => (
                         <div
                           key={day}
-                          className={`text-xs font-bold py-1 ${idx === 4 ? 'text-brand-700' : 'text-ink-500'}`}
+                          className={`text-caption font-bold py-1 ${idx === 4 ? 'text-brand-700' : 'text-ink-500'}`}
                         >
                           {day}
                         </div>
@@ -288,7 +288,7 @@ export const EventsTab = ({
                         <div
                           key={`blank-${idx}`}
                           aria-hidden="true"
-                          className="h-14 sm:h-16 p-1 rounded-2xl border border-transparent text-ink-400 text-xs flex flex-col justify-start items-center select-none"
+                          className="h-14 sm:h-16 p-1 rounded-2xl border border-transparent text-ink-400 text-caption flex flex-col justify-start items-center select-none"
                         >
                           <span>{item.day}</span>
                         </div>
@@ -314,7 +314,7 @@ export const EventsTab = ({
                                 : 'border-cream-200 hover:bg-cream-100 text-ink-700'
                             }`}
                           >
-                            <span className={`text-xs font-extrabold mt-0.5 ${
+                            <span className={`text-caption font-extrabold mt-0.5 ${
                               isSelected ? 'text-cream-50' : item.isToday ? 'text-brand-700' : ''
                             }`}>
                               {item.day}
@@ -361,10 +361,10 @@ export const EventsTab = ({
                   <div className={surfaces.panel}>
                     <div className="flex items-center justify-between gap-3 pb-3 border-b border-cream-200">
                       <div>
-                        <h4 className="font-bold text-ink-900 text-sm">
+                        <h4 className="font-bold text-ink-900 text-small">
                           Agenda pada {fullDateLabel(selectedCalDate)}
                         </h4>
-                        <p className="text-xs text-ink-500">
+                        <p className="text-caption text-ink-500">
                           {selectedDateEvents.length} agenda terjadwal
                         </p>
                       </div>
@@ -373,7 +373,7 @@ export const EventsTab = ({
                         onClick={() => {
                           setEventForm(prev => ({ ...prev, event_date: selectedCalDate }));
                         }}
-                        className="inline-flex min-h-6 items-center text-xs font-bold text-brand-700 hover:text-brand-800 cursor-pointer"
+                        className="inline-flex min-h-6 items-center text-caption font-bold text-brand-700 hover:text-brand-800 cursor-pointer"
                       >
                         + Tambah di tanggal ini
                       </button>
@@ -392,9 +392,9 @@ export const EventsTab = ({
                                   <span className={`px-2.5 py-0.5 rounded-full text-micro font-extrabold border ${CATEGORY_STYLE.badge}`}>
                                     {evt.category}
                                   </span>
-                                  <h5 className="font-bold text-ink-900 text-sm">{evt.title}</h5>
+                                  <h5 className="font-bold text-ink-900 text-small">{evt.title}</h5>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-3 text-xs text-ink-400 pt-0.5">
+                                <div className="flex flex-wrap items-center gap-3 text-caption text-ink-400 pt-0.5">
                                   <span className="flex items-center gap-1">
                                     <Clock className="h-3.5 w-3.5 text-ink-300" />
                                     {evt.time}
@@ -405,7 +405,7 @@ export const EventsTab = ({
                                   </span>
                                 </div>
                                 {evt.description && (
-                                  <p className="text-xs text-ink-500 pt-1 italic">{evt.description}</p>
+                                  <p className="text-caption text-ink-500 pt-1 italic">{evt.description}</p>
                                 )}
                               </div>
                               <div className={layout.rowShrink}>
@@ -458,7 +458,7 @@ export const EventsTab = ({
                           );
                         })
                       ) : (
-                        <div className="text-center py-6 text-ink-500 text-xs">
+                        <div className="text-center py-6 text-ink-500 text-caption">
                           Belum ada agenda pada tanggal {dateLabel(selectedCalDate)}.
                           <p className="mt-1 text-ink-400">
                             Isi formulir di samping untuk menambahkan kegiatan pada tanggal ini.
@@ -474,7 +474,7 @@ export const EventsTab = ({
                   <form onSubmit={submitEvent} className={surfaces.panelSpaced}>
                     <div className="border-b border-cream-200 pb-3">
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-bold text-ink-900 text-base flex items-center gap-2">
+                        <h3 className="font-bold text-ink-900 text-body flex items-center gap-2">
                           {editingEventId
                             ? <><Pencil className={controls.iconBrand} /> Ubah agenda</>
                             : <><Plus className={controls.iconBrand} /> Tambah agenda baru</>}
@@ -483,7 +483,7 @@ export const EventsTab = ({
                           <button
                             type="button"
                             onClick={cancelEditEvent}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-ink-400 hover:text-ink-700 transition cursor-pointer"
+                            className="inline-flex items-center gap-1 text-caption font-bold text-ink-400 hover:text-ink-700 transition cursor-pointer"
                           >
                             <X className="h-3.5 w-3.5" /> Batal
                           </button>
@@ -574,7 +574,7 @@ export const EventsTab = ({
                           className="mt-0.5 h-4 w-4 rounded border-cream-300 text-brand-700 focus:ring-brand-300"
                         />
                         <span>
-                          <span className="flex items-center gap-1.5 text-xs font-bold text-ink-800">
+                          <span className="flex items-center gap-1.5 text-caption font-bold text-ink-800">
                             <Images className="h-3.5 w-3.5 text-brand-700" />
                             Tampilkan di Carousel
                           </span>
@@ -592,7 +592,7 @@ export const EventsTab = ({
                           className="mt-0.5 h-4 w-4 rounded border-cream-300 text-brand-700 focus:ring-brand-300"
                         />
                         <span>
-                          <span className="flex items-center gap-1.5 text-xs font-bold text-ink-800">
+                          <span className="flex items-center gap-1.5 text-caption font-bold text-ink-800">
                             <BellRing className="h-3.5 w-3.5 text-brand-700" />
                             Kirim Notifikasi Pengumuman ke Jemaah
                           </span>
@@ -605,7 +605,7 @@ export const EventsTab = ({
 
                     <button
                       disabled={isSavingEvent}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-xs font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 disabled:opacity-60 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-caption font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 disabled:opacity-60 cursor-pointer"
                     >
                       {isSavingEvent
                         ? <Loader2 className={controls.spinner} />
@@ -616,12 +616,12 @@ export const EventsTab = ({
 
                   <div className="rounded-3xl border border-cream-300 bg-cream-50 p-5 shadow-sm space-y-3">
                     <div className="flex items-center justify-between border-b border-cream-200 pb-3">
-                      <h4 className="font-bold text-ink-900 text-sm">Semua Agenda ({filteredAllEvents.length})</h4>
+                      <h4 className="font-bold text-ink-900 text-small">Semua Agenda ({filteredAllEvents.length})</h4>
                       <select
                         aria-label="Saring agenda berdasarkan kategori"
                         value={agendaFilter}
                         onChange={(e) => setAgendaFilter(e.target.value)}
-                        className="text-xs rounded-xl border border-cream-300 px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 text-ink-500 font-semibold cursor-pointer"
+                        className="text-caption rounded-xl border border-cream-300 px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200 text-ink-500 font-semibold cursor-pointer"
                       >
                         <option value="Semua">Semua Kategori</option>
                         {EVENT_CATEGORIES.map((cat) => (
@@ -635,7 +635,7 @@ export const EventsTab = ({
                         filteredAllEvents.map((evt) => (
                           <div
                             key={evt.id}
-                            className="pt-2 flex items-center justify-between gap-3 text-xs"
+                            className="pt-2 flex items-center justify-between gap-3 text-caption"
                           >
                             <button
                               type="button"
@@ -657,7 +657,7 @@ export const EventsTab = ({
                           </div>
                         ))
                       ) : (
-                        <p className="text-xs text-ink-500 py-4 text-center">Tidak ada agenda.</p>
+                        <p className="text-caption text-ink-500 py-4 text-center">Tidak ada agenda.</p>
                       )}
                     </div>
                   </div>

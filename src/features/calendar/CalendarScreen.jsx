@@ -15,9 +15,10 @@ import {
 } from '@lib/date';
 import { layout, controls } from '@lib/styles';
 import { NotificationToggle } from '@ui/NotificationToggle';
+import { CalendarSkeleton } from '@ui/Skeleton';
 
 export const CalendarScreen = () => {
-  const { events, agendaError, refreshEvents } = useApp();
+  const { events, loadingAgenda, agendaError, refreshEvents } = useApp();
 
   const todayStr = useMemo(() => getTodayStr(), []);
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -60,6 +61,14 @@ export const CalendarScreen = () => {
     });
   }, [events, activeFilter]);
 
+  if (loadingAgenda) {
+    return (
+      <div className="min-h-[640px] flex flex-col justify-between bg-cream-50 page-transition pb-6 font-sans">
+        <CalendarSkeleton />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[640px] flex flex-col justify-between bg-cream-50 page-transition pb-6 font-sans">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
@@ -67,10 +76,10 @@ export const CalendarScreen = () => {
         <div className="relative overflow-hidden rounded-3xl bg-brand-900 p-6 text-cream-50 shadow-md">
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-display text-xl font-bold tracking-tight text-cream-50">
+              <h1 className="font-display text-title font-bold tracking-tight text-cream-50">
                 Kalender Majelis Wahidiyah
               </h1>
-              <p className="mt-1 text-xs text-cream-200/90 leading-relaxed max-w-md">
+              <p className="mt-1 text-caption text-cream-200/90 leading-relaxed max-w-md">
                 Jadwal resmi Mujahadah Kubro, pengajian selapanan, dan agenda bimbingan ruhani.
               </p>
             </div>
@@ -90,7 +99,7 @@ export const CalendarScreen = () => {
 
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-base font-extrabold text-ink-800 flex items-center gap-1.5">
+                  <h2 className="text-h3 font-extrabold text-ink-800 flex items-center gap-1.5">
                     <span>{MONTH_NAMES[month]} {year}</span>
                   </h2>
                 </div>
@@ -136,7 +145,7 @@ export const CalendarScreen = () => {
               <div className="grid grid-cols-7 gap-1 text-center" data-testid="calendar-grid">
 
                 {Array.from({ length: firstDayIndex }).map((_, idx) => (
-                  <div key={`empty-${idx}`} className="h-10 text-xs text-ink-300 p-1" />
+                  <div key={`empty-${idx}`} className="h-10 text-caption text-ink-300 p-1" />
                 ))}
 
                 {Array.from({ length: daysInMonth }).map((_, idx) => {
@@ -152,7 +161,7 @@ export const CalendarScreen = () => {
                       type="button"
                       data-testid={`calendar-day-${dayNum}`}
                       onClick={() => setSelectedDate(dateStr)}
-                      className={`h-10 rounded-2xl flex flex-col items-center justify-center relative text-xs font-semibold transition-all duration-150 ${
+                      className={`h-10 rounded-2xl flex flex-col items-center justify-center relative text-caption font-semibold transition-all duration-150 ${
                         isSelected
                           ? 'bg-brand-700 hover:bg-brand-700 text-cream-50 shadow-md shadow-brand-700/30 scale-105 z-10'
                           : isToday
@@ -192,7 +201,7 @@ export const CalendarScreen = () => {
               <span className="text-micro font-bold uppercase tracking-wider text-ink-500">
                 Tanggal Terpilih
               </span>
-              <h3 className="font-extrabold text-sm text-ink-800">
+              <h3 className="font-extrabold text-body text-ink-800">
                 {new Date(selectedDate).toLocaleDateString('id-ID', {
                   weekday: 'long',
                   day: 'numeric',
@@ -223,7 +232,7 @@ export const CalendarScreen = () => {
                         {evt.time}
                       </span>
                     </div>
-                    <h4 className="font-bold text-xs text-ink-800">{evt.title}</h4>
+                    <h4 className="font-bold text-caption text-ink-800">{evt.title}</h4>
                     <p className="text-caption text-ink-400 leading-relaxed">{evt.description}</p>
                     <div className="flex items-center justify-between pt-1 text-micro text-ink-500 border-t border-brand-100/50">
                       <span className="flex items-center gap-1">
@@ -237,24 +246,24 @@ export const CalendarScreen = () => {
               </div>
             ) : (
               <div className="bg-cream-100 rounded-2xl p-3 text-center border border-dashed border-cream-300">
-                <p className="text-xs text-ink-500">Tidak ada agenda majelis khusus pada tanggal ini</p>
+                <p className="text-caption text-ink-500">Tidak ada agenda majelis khusus pada tanggal ini</p>
               </div>
             )}
           </div>
 
         <div className="space-y-2 pt-1">
           <div className={layout.rowBetween}>
-            <h3 className="font-extrabold text-sm text-ink-800">Agenda Besar Wahidiyah</h3>
+            <h3 className="font-extrabold text-body text-ink-800">Agenda Besar Wahidiyah</h3>
             <span className="text-micro text-ink-500 font-medium">Semua Jadwal Resmi</span>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-caption">
             {['Semua', 'Kubro', 'Mujahadah', 'Pengajian'].map((pill) => (
               <button
                 key={pill}
                 type="button"
                 onClick={() => setActiveFilter(pill)}
-                className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition text-xs ${
+                className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition text-caption ${
                   activeFilter === pill
                     ? 'bg-brand-700 hover:bg-brand-700 text-cream-50 shadow-sm'
                     : 'bg-cream-50 text-ink-500 border border-cream-300 hover:bg-brand-50'
@@ -268,12 +277,12 @@ export const CalendarScreen = () => {
           <div className="space-y-2">
             {agendaError ? (
               <div className="rounded-2xl border border-dashed border-semantic-danger/40 bg-semantic-dangerLight p-6 text-center" role="alert">
-                <p className="text-xs font-bold text-semantic-danger">Agenda gagal dimuat: {agendaError}</p>
-                <button type="button" onClick={() => refreshEvents().catch(() => {})} className="mt-3 min-h-6 rounded-xl bg-brand-700 px-3.5 py-1.5 text-xs font-bold text-cream-50 transition hover:bg-brand-700">Coba muat ulang</button>
+                <p className="text-caption font-bold text-semantic-danger">Agenda gagal dimuat: {agendaError}</p>
+                <button type="button" onClick={() => refreshEvents().catch(() => {})} className="mt-3 min-h-6 rounded-xl bg-brand-700 px-3.5 py-1.5 text-small font-bold text-cream-50 transition hover:bg-brand-800">Coba muat ulang</button>
               </div>
             ) : filteredEvents.length === 0 ? (
               <div className="bg-cream-100 rounded-2xl p-6 text-center border border-dashed border-cream-300">
-                <p className="text-xs text-ink-500 font-medium">Belum ada agenda atau jadwal majelis yang terdaftar</p>
+                <p className="text-caption text-ink-500 font-medium">Belum ada agenda atau jadwal majelis yang terdaftar</p>
               </div>
             ) : (
               filteredEvents.map((evt) => (
@@ -290,7 +299,7 @@ export const CalendarScreen = () => {
                       {new Date(evt.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
-                  <h4 className="font-bold text-xs text-ink-800 leading-snug">{evt.title}</h4>
+                  <h4 className="font-bold text-caption text-ink-800 leading-snug">{evt.title}</h4>
                   <div className="flex items-center justify-between text-micro text-ink-400">
                     <span className="flex items-center gap-1">
                       <MapPin className={controls.iconXs} />

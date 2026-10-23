@@ -92,7 +92,7 @@ export const EditProfileScreen = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nama Lengkap"
-              className="h-12 w-full rounded-xl border border-cream-300 bg-cream-50 px-3.5 text-sm font-medium text-ink-800 transition-colors duration-200 placeholder:text-ink-300 focus:border-brand-600 focus:bg-cream-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-100"
+              className="h-12 w-full rounded-xl border border-cream-300 bg-cream-50 px-3.5 text-body font-medium text-ink-800 transition-colors duration-200 placeholder:text-ink-300 focus:border-brand-600 focus:bg-cream-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-100"
             />
           </div>
 
@@ -106,7 +106,7 @@ export const EditProfileScreen = () => {
               data-testid="edit-email"
               value={email}
               readOnly
-              className="h-12 w-full cursor-not-allowed rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-sm font-medium text-ink-500 focus-visible:outline-none"
+              className="h-12 w-full cursor-not-allowed rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-body font-medium text-ink-500 focus-visible:outline-none"
             />
             <p className="mt-1.5 text-caption text-ink-400">
               Email tidak dapat diubah.
@@ -120,7 +120,7 @@ export const EditProfileScreen = () => {
             <div
               id="edit-phone-input"
               data-testid="edit-phone"
-              className="flex h-12 w-full items-center gap-2.5 rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-sm font-medium text-ink-700"
+              className="flex h-12 w-full items-center gap-2.5 rounded-xl border border-cream-300 bg-cream-200/60 px-3.5 text-body font-medium text-ink-700"
             >
               {user.phone ? (
                 (() => {
@@ -133,7 +133,7 @@ export const EditProfileScreen = () => {
                         className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] shrink-0"
                       />
                       <span className="font-semibold text-ink-800">{p.country.dial}</span>
-                      <span className="text-ink-600 font-mono text-xs">{p.nationalNumber}</span>
+                      <span className="text-ink-600 font-mono text-caption">{p.nationalNumber}</span>
                     </>
                   );
                 })()
@@ -148,14 +148,14 @@ export const EditProfileScreen = () => {
 
 
           {errorMessage && (
-            <div role="alert" className="flex items-center gap-2.5 rounded-xl border border-semantic-danger/30 bg-semantic-dangerLight p-3 text-xs font-semibold text-semantic-danger page-transition">
+            <div role="alert" className="flex items-center gap-2.5 rounded-xl border border-semantic-danger/30 bg-semantic-dangerLight p-3 text-caption font-semibold text-semantic-danger page-transition">
               <AlertCircle className="h-4 w-4 shrink-0 text-semantic-danger" strokeWidth={2} />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {savedSuccess && (
-            <div className="flex items-center gap-2.5 rounded-xl border border-brand-200 bg-brand-50 p-3 text-xs font-semibold text-brand-800 page-transition">
+            <div className="flex items-center gap-2.5 rounded-xl border border-brand-200 bg-brand-50 p-3 text-caption font-semibold text-brand-800 page-transition">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-brand-700" strokeWidth={2} />
               <span>Perubahan profil berhasil disimpan.</span>
             </div>
@@ -165,7 +165,7 @@ export const EditProfileScreen = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 text-sm font-bold text-cream-50 shadow-sm transition-colors duration-200 hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 disabled:opacity-60 cursor-pointer"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 text-body font-bold text-cream-50 shadow-sm transition-colors duration-200 hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 disabled:opacity-60 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

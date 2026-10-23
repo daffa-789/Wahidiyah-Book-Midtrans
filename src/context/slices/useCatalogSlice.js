@@ -9,9 +9,12 @@ export const useCatalogSlice = ({ navigateTo }) => {
   const [carouselSlides, setCarouselSlides] = useState([]);
   const [catalogError, setCatalogError] = useState(null);
   const [agendaError, setAgendaError] = useState(null);
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [loadingAgenda, setLoadingAgenda] = useState(true);
 
   const refreshBooks = useCallback(async () => {
     try {
+      setLoadingCatalog(true);
       const payload = await apiJson('/api/books');
       const nextBooks = (payload.books || []).map(normalizeBook);
       setBooks(nextBooks);
@@ -21,11 +24,14 @@ export const useCatalogSlice = ({ navigateTo }) => {
     } catch (loadError) {
       setCatalogError(readableError(loadError));
       throw loadError;
+    } finally {
+      setLoadingCatalog(false);
     }
   }, []);
 
   const refreshEvents = useCallback(async () => {
     try {
+      setLoadingAgenda(true);
       const payload = await apiJson('/api/events');
       const nextEvents = (payload.events || []).map(normalizeEvent);
       setEvents(nextEvents);
@@ -34,6 +40,8 @@ export const useCatalogSlice = ({ navigateTo }) => {
     } catch (loadError) {
       setAgendaError(readableError(loadError));
       throw loadError;
+    } finally {
+      setLoadingAgenda(false);
     }
   }, []);
 
@@ -62,11 +70,13 @@ export const useCatalogSlice = ({ navigateTo }) => {
     setBooks,
     activeBook,
     setActiveBook,
+    loadingCatalog,
     catalogError,
     refreshBooks,
     openReader,
     events,
     setEvents,
+    loadingAgenda,
     agendaError,
     refreshEvents,
     carouselSlides,
