@@ -49,7 +49,7 @@ export async function insertTransaction({
     id: txId,
     ref_no: refNo,
     user_id: userId,
-    plan_name: planName || 'Wahidiyah Pro',
+    plan_name: planName || 'Pro',
     amount: Number(amount) || 0,
     admin_fee: Number(adminFee) || 0,
     total_paid: Number(totalPaid) || 0,
@@ -77,7 +77,7 @@ export async function activatePaidMembership({
   await supabaseServer.from('subscriptions').insert({
     id: subId,
     user_id: userId,
-    plan_name: 'Wahidiyah Pro',
+    plan_name: planName || 'Pro',
     price: Number(price) || 0,
     status: ACTIVE_SUBSCRIPTION_STATUS,
     period,

@@ -174,7 +174,7 @@ transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
         amount: pricing.amount,
         adminFee: pricing.adminFee,
         totalPaid: pricing.totalPaid,
-        planName: 'Wahidiyah Pro',
+        planName: 'Pro',
         paymentMethod: method,
         status: TRANSACTION_PENDING_STATUS
       },
