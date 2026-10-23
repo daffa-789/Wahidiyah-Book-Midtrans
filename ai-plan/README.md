@@ -60,5 +60,8 @@ Sumber kebenaran status ada di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md) (P
 
 - VULN-09 (CSP), VULN-11/13 (magic byte + MIME), VULN-20/21 — Tahap 3–5.
 - D-03/07/09/10/12/13/14/16 — Tahap 7.
-- Performa: chunk `excel` 939 kB dan `charts` 350 kB belum dimuat malas.
 - `ALLOW_PAYMENT_SIMULATION=1` hanya saat demo sidang.
+
+Catatan performa: chunk `excel` (939 kB) dan `charts` (350 kB) **sudah** di luar jalur kritis —
+`exceljs` diimpor dinamis saat admin menekan ekspor, dan `AdminDashboard` (pemakai recharts)
+dimuat malas.

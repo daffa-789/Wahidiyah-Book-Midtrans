@@ -159,6 +159,10 @@ Nama sidebar dua baris; kartu "Tema Tampilan" dan `ThemeModeSelector` dihapus; g
 
 - VULN-09 (CSP), VULN-11/13 (magic byte + MIME), VULN-20/21 — Tahap 3–5.
 - D-03/07/09/10/12/13/14/16 — Tahap 7.
-- Performa: chunk `excel` 939 kB (271 kB gzip) dan `charts` 350 kB belum dimuat malas.
 - `ALLOW_PAYMENT_SIMULATION=1` hanya untuk demo sidang.
 - Token Gmail akan mati lagi 7 hari selama OAuth app berstatus *Testing*.
+
+**Koreksi catatan performa:** chunk `excel` (939 kB) dan `charts` (350 kB) ternyata **sudah** di luar
+jalur kritis — `exceljs` masuk lewat `import()` di handler ekspor (`AdminDashboard.jsx:327-345`,
+`EventsTab.jsx:163`) dan `AdminDashboard` sendiri dimuat malas (`App.jsx:31`). Tidak ada pekerjaan
+performa yang tersisa di sini.
