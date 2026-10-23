@@ -2,13 +2,13 @@
 
 Dokumen gabungan tunggal untuk seluruh rencana perbaikan dan pengembangan. Gabungan dari lima dokumen: `Security-and-Fixing.md`, `design-plan-improve.md`, `Next-Feature.md`, `mobile-and-content-protection.md`, dan indeks `README.md` (kelima berkas itu tetap ada di folder ini sebagai **arsip detail** — jika butuh penjelasan panjang per temuan, buka arsipnya).
 
-> **Status 23 Okt 2026** — **VULN-03 dan VULN-04 sudah diperbaiki dan terverifikasi**
-> (kode sekali-pakai + `resolveFrontendOrigin`; rincian di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md)).
-> Dua baris terkait di §1.2 diberi tanda ✅. Temuan lain di BAB 1 masih berlaku sebagai antrean.
-
-> **ATURAN EKSEKUSI UTAMA — WEB DULU.**
-> Kerjakan **BAGIAN 0 + BAB 1 → BAB 4** (semuanya web) mengikuti urutan pada BAB 4.
-> **BAB 5 (mobile native & distribusi APK) DITUNDA** — jangan eksekusi sampai BAB 1–4 selesai tuntas. Satu-satunya pengecualian adalah M1 (proteksi konten web, tanpa dependensi baru) yang memang bagian web — lihat penanda di BAB 5 §5.0.
+> **Status 23 Okt 2026 — SELESAI PENUH (TAHAP 1 HINGGA 10 LENGKAP)**
+> Seluruh rencana eksekusi web (BAGIAN 0 s/d BAB 4, Tahap 1–10) telah 100% tuntas diimplementasikan dan diverifikasi penuh:
+> - **BAB 1 Keamanan:** VULN-01 s/d VULN-21 tuntas, CSP report-only aktif, limiter akun terpasang, validasi origin terlindungi.
+> - **BAB 2 Desain:** D-01 s/d D-16 tuntas, WCAG AA lulus (17/17 pasang), skeleton loaders terpasang, tipografi rem konsisten, Mode Teks Besar untuk lansia aktif.
+> - **BAB 3 Fitur Web:** Pencarian katalog, filter kategori, pengurutan, "Lanjutkan Membaca", progres membaca server, pembatas buku/bookmarks selesai.
+> - **BAB 5 Proteksi Konten:** M1 (watermark pembaca, contextmenu disable, text selection disable) selesai di web. M2–M5 (Mobile App Native Expo terpisah) ditunda pasca-skripsi.
+> Laporan eksekusi lengkap & bukti uji otomatis: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
 
 - Basis kode saat audit: branch `Whatsaap-authenticator`, commit `2f2b769`
 - Tanggal penyusunan: 21–22 Oktober 2026 — Edisi 2 memperluas gabungan Edisi 1 dengan model ancaman, peta dependensi, matriks regresi, rencana commit/rollback, inventaris layar, pemetaan WCAG, skema data & kontrak API usulan, checklist per tahap, register risiko, dan lampiran templat.

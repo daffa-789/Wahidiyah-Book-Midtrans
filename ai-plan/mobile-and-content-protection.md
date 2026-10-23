@@ -1,8 +1,9 @@
 # Mobile & Content Protection
 
-> **Status 23 Okt 2026** — berkas ini **arsip penjelasan**, bukan status terkini.
-> Status eksekusi terbaru: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
-> BAGIAN 5 (mobile native) masih **ditunda**; M1 tetap satu-satunya pengecualian web.
+> **Status 23 Okt 2026 — STATUS: M1 SELESAI, M2–M5 DITUNDA PASCA-SKRIPSI**
+> - M1 (Proteksi Konten Web: tanda air transparan identitas pembaca, proteksi seleksi teks, pencegahan menu klik kanan) telah 100% selesai dan terverifikasi di `PdfReaderScreen`.
+> - M2–M5 (Aplikasi Mobile Native React Native/Expo terpisah) secara resmi ditunda pasca-skripsi sesuai kesepakatan MASTER-PLAN §5.0.
+> Laporan eksekusi dan rincian arsitektur: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
 
 Rencana untuk tiga kebutuhan yang melampaui dokumen lain di folder ini: **(1)** audit pustaka — mana yang layak ditambah, mana yang sebenarnya sudah disediakan bawaan Node/platform, **(2)** proteksi konten premium dari tangkapan layar dan salin teks, **(3)** keputusan React Native vs Flutter + arsitektur pemisahan landing, aplikasi mobile, dan admin.
 

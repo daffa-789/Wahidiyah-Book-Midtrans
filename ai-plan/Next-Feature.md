@@ -1,9 +1,9 @@
 # Next Feature
 
-> **Status 23 Okt 2026** — berkas ini **arsip analisis**, bukan status terkini.
-> Status eksekusi terbaru: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
-> Dua butir sudah berubah: `flag-icons` dicabut (bendera di-vendor di `public/flags/`)
-> dan foto profil dicabut seluruhnya.
+> **Status 23 Okt 2026 — SELESAI UNTUK TARGET WEB SKRIPSI (ARSIP ROADMAP MASA DEPAN)**
+> - Fitur prioritas web skripsi (Pencarian katalog, filter kategori, pengurutan, "Lanjutkan Membaca", progres membaca tersinkron di server, dan pembatas buku/bookmarks) telah 100% selesai dan terverifikasi penuh.
+> - Sisa kandidat fitur (EPUB, Text-to-Speech, multi-plan tahunan, voucher diskon, sistem kuis, dll.) adalah roadmap masa depan pasca-skripsi yang dicadangkan untuk rekomendasi Bab V.
+> Status eksekusi lengkap: [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md).
 
 Analisis fitur lanjutan untuk **Aplikasi Buku Wahidiyah**: apa yang sudah ada, celah yang terverifikasi, kandidat pengembangan, dan urutan pengerjaan yang disarankan.
 

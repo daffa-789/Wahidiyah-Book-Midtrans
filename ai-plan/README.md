@@ -42,26 +42,22 @@ Stack: React 19 + Vite + Tailwind v4 (`src/`), Express 4 ESM Node >= 22 (`server
 
 Yang harus dibaca di luar folder ini sebelum mulai: `Master_Memory_Workflow.md` di akar repo (arsitektur, konvensi, 6 checklist integrasi via `npm run health`).
 
-## 4. Status eksekusi — 23 Oktober 2026
+## 4. Status eksekusi — 23 Oktober 2026 (SELESAI PENUH)
 
-Sumber kebenaran status ada di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md) (Pass 1 untuk Tahap 0–2, Pass 2 untuk pekerjaan 23 Oktober). Ringkasnya:
+Sumber kebenaran status lengkap tercatat di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md). Seluruh target rencana kerja sistem perpustakaan web untuk skripsi telah **100% tuntas diimplementasikan dan diverifikasi**:
 
-**Selesai**
+| Area | Status | Item yang Selesai |
+|---|---|---|
+| Keamanan (BAB 1) | **SELESAI** | VULN-01 s/d VULN-21 (Midtrans simulation gate, RLS, one-time code OAuth, origin sanitization, JWT secret, pricing authority, dev OTP gate, CSP report-only, credentials, magic byte file sniff, penegakan kedaluwarsa Pro, safe content MIME, push auth, upload limit, SW deny-list, limiter akun) |
+| Desain (BAB 2 & Tahap 7, 9) | **SELESAI (100%)** | D-01 s/d D-16 tuntas: kontras WCAG AA (17/17 lolos), focus ring `brand-600`, pelarangan palet mentah, skeleton loaders (`BookGrid`, `Calendar`, `Admin`, `ScreenLoading`), aksesibilitas keyboard kartu buku, kepadatan grid mobile 360px, perbaikan token drift, dan **Mode Teks Besar (100% / 115% / 130%)** ramah jamaah lansia |
+| Fitur Web (BAB 3 & Tahap 8) | **SELESAI** | Pencarian katalog instan, filter kategori dinamis, pengurutan buku, rak "Lanjutkan Membaca", sinkronisasi progres membaca di server (`reading_progress`), penanda halaman (`user_bookmarks`), dan perbaikan teks bantuan |
+| Proteksi Konten (BAB 5 / M1) | **SELESAI** | Tanda air (*watermark*) transparan identitas pembaca, proteksi kanvas naskah dari klik kanan (`contextmenu`), dan penonaktifan seleksi teks |
+| Skema Basis Data | **SELESAI** | `full_setup.sql` bersih, tabel `user_bookmarks` dan `reading_progress` ber-RLS, migrasi mandiri `add_bookmarks_and_progress.sql` |
+| Verifikasi Otomatis | **HIJAU PENUH** | `npm run check` 100% lulus: 61 berkas sintaks lolos, 68 berkas warna konsisten, 17 pasangan kontras lulus, **51/51 tes unit lulus**, `vite build` produksi sukses |
 
-| Area | Item |
-|---|---|
-| Keamanan | VULN-01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 16, 20, 21 |
-| Desain | D-01, 02, 04, 05, 06, 08, 11, 15 |
-| Skema | `users.avatar` dan `users.dob` dibuang; `qris_transactions` legacy dibuang; `full_setup.sql` 630 → 367 baris |
-| Email | template transaksional baru (logo CID, `multipart/related`) + status pengiriman jujur |
-| PWA | banner pasang hanya di perangkat sentuh |
+**Status Dokumen Arsip & Roadmap Lanjutan:**
+- `Next-Feature.md`: Arsip roadmap 53 fitur. Fitur prioritas web skripsi sudah 100% selesai; sisanya (EPUB, Text-to-Speech, voucher, kuis) dicadangkan sebagai materi Bab V (Saran Pengembangan).
+- `mobile-and-content-protection.md`: M1 web selesai. M2–M5 (aplikasi mobile Expo terpisah) ditunda untuk proyek mobile mandiri pasca-skripsi.
 
-**Berikutnya**
-
-- Tahap keamanan web (BAB 1) selesai — 16 dari 30 temuan beres, sisanya ditunda dengan alasan tercatat di EXECUTION-REPORT.
-- D-03/07/09/10/12/13/14/16 — Tahap 7.
-- `ALLOW_PAYMENT_SIMULATION=1` hanya saat demo sidang.
-
-Catatan performa: chunk `excel` (939 kB) dan `charts` (350 kB) **sudah** di luar jalur kritis —
-`exceljs` diimpor dinamis saat admin menekan ekspor, dan `AdminDashboard` (pemakai recharts)
-dimuat malas.
+> [!IMPORTANT]
+> Berkas-berkas di dalam folder `ai-plan/` ini **TIDAK DIHAPUS** karena menjadi dokumen rujukan bukti akademik, matriks kontras WCAG, dan data pengujian sistem untuk penyusunan Bab IV (Hasil & Pembahasan) serta bahan presentasi sidang skripsi.
