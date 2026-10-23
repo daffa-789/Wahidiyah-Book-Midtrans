@@ -1,6 +1,6 @@
 
 
-import { CONTENT_MIME_BY_EXTENSION, RAW_IMAGE_FALLBACK_MIMES } from './constants.js';
+import { CONTENT_MIME_BY_EXTENSION } from './constants.js';
 
 
 export const DB_DOWN_MESSAGE =
@@ -77,20 +77,21 @@ export const safeContentMime = (book) =>
   'application/octet-stream';
 
 
-export const isSafeRawImageFallback = (mime) =>
-  RAW_IMAGE_FALLBACK_MIMES.has(String(mime || '').toLowerCase());
-
 const DATA_URL_PATTERN = /^data:([^;]+);base64,(.+)$/;
 
 
-export const sendDataUrl = (res, url, { fallbackMime, cacheControl }) => {
+export const sendDataUrl = (res, url, { contentType, cacheControl } = {}) => {
   if (!url || !url.startsWith('data:')) return false;
   const matches = url.match(DATA_URL_PATTERN);
   if (!matches) return false;
 
   if (cacheControl) res.setHeader('Cache-Control', cacheControl);
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.type(matches[1] || fallbackMime || 'application/octet-stream');
+  /* Label MIME di dalam data URL berasal dari klien dan tidak pernah dipercaya
+   * (VULN-13). Pemanggil wajib menyebut jenis yang benar; tanpa itu berkas
+   * dikirim sebagai octet-stream supaya tidak dirender sebagai HTML.
+   */
+  res.type(contentType || 'application/octet-stream');
   res.send(Buffer.from(matches[2], 'base64'));
   return true;
 };

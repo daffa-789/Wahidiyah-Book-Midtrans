@@ -50,7 +50,7 @@ Sumber kebenaran status ada di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md) (P
 
 | Area | Item |
 |---|---|
-| Keamanan | VULN-01, 02, 03, 04, 05, 06, 07, 08, 10, 12, 16 |
+| Keamanan | VULN-01, 02, 03, 04, 05, 06, 07, 08, 10, 11, 12, 13, 16 |
 | Desain | D-01, 02, 04, 05, 06, 08, 11, 15 |
 | Skema | `users.avatar` dan `users.dob` dibuang; `qris_transactions` legacy dibuang; `full_setup.sql` 630 → 367 baris |
 | Email | template transaksional baru (logo CID, `multipart/related`) + status pengiriman jujur |

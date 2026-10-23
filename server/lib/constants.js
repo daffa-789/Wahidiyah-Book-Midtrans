@@ -19,12 +19,6 @@ export const CONTENT_MIME_BY_EXTENSION = {
 };
 
 
-export const RAW_IMAGE_FALLBACK_MIMES = new Set([
-  'image/png', 'image/jpeg', 'image/jpg', 'image/webp',
-  'image/gif', 'image/bmp', 'image/avif', 'image/tiff'
-]);
-
-
 export const BOOK_FIELDS = [
   'id', 'title', 'subtitle', 'author', 'category', 'pages', 'total_pages',
   'is_locked', 'cover_url', 'thumbnail_url', 'content_name',

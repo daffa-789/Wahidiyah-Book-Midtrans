@@ -130,6 +130,8 @@ Rentang commit: `0df9068` → `b9e96f0`. Berbeda dari Pass 1, seluruh pekerjaan 
 |---|---|---|
 | VULN-04 | `server/lib/origin.js`: `resolveFrontendOrigin` — `FRONTEND_ORIGIN` menang; tanpa itu hanya origin di `ALLOWED_ORIGINS`; `X-Forwarded-Proto` disanitasi; fallback inline `<script>` dihapus | Uji: `Host: evil.com` → 500 tanpa `Location`; proto `javascript` diabaikan; 5 kasus di `tests/security.test.js` |
 | VULN-03 | `server/lib/oneTimeCode.js`: kode 256-bit, TTL 60 detik, hangus sekali pakai; `POST /api/auth/exchange`; klien menukar saat mount dan membuang kode dari address bar | Uji: kode sah → 200, tukar ulang → 401; 4 kasus unit |
+| VULN-11 | `server/lib/sniff.js`: `sniffImageMime` dan `matchesContentExtension` membaca magic byte (PNG/JPEG/WebP/GIF, `%PDF`, ZIP untuk docx/odt/epub, OLE untuk doc, `{\rtf`, teks untuk txt/md/csv). Dipakai di unggah buku dan gambar carousel; 415 bila isi tidak cocok | Uji: HTML berekstensi `.pdf` ditolak; PDF berekstensi `.docx` ditolak; teks biner (`NUL`) ditolak |
+| VULN-13 | `sendDataUrl` tidak lagi memakai MIME dari data URL; pemanggil wajib menyebut `contentType`. Konten buku disajikan dengan `safeContentMime`, `inline` hanya untuk PDF, sisanya `attachment`. `content_mime` disimpan dari ekstensi kanonis, bukan kiriman klien | Uji: data URL berlabel `text/html` disajikan sebagai `application/pdf`; tanpa `contentType` jatuh ke `octet-stream` |
 
 **Regresi yang tertangkap uji manual (bukan uji otomatis):** `942538a` menghapus `const currentOrigin` tetapi menyisakan rujukannya di `REDIRECT_URI`, sehingga callback Google membalas JSON 500. Diperbaiki di `b8c04d6`. Pelajarannya: `node --check` hanya memeriksa sintaks — identifier yang hilang baru ketahuan saat runtime.
 
@@ -157,7 +159,7 @@ Nama sidebar dua baris; kartu "Tema Tampilan" dan `ThemeModeSelector` dihapus; g
 
 ### 7.6 Masih terbuka
 
-- VULN-09 (CSP), VULN-11/13 (magic byte + MIME), VULN-20/21 — Tahap 3–5.
+- VULN-09 (CSP), VULN-20/21 — Tahap 3–5.
 - D-03/07/09/10/12/13/14/16 — Tahap 7.
 - `ALLOW_PAYMENT_SIMULATION=1` hanya untuk demo sidang.
 - Token Gmail akan mati lagi 7 hari selama OAuth app berstatus *Testing*.

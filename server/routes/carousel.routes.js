@@ -5,11 +5,11 @@ import { supabaseServer } from '../db.js';
 import { generateId, requireAdmin, requireAuth } from '../auth.js';
 import {
   badRequest,
-  isSafeRawImageFallback,
   notFound,
   wrap
 } from '../lib/http.js';
 import { toDataUrl, toWebp } from '../lib/images.js';
+import { sniffImageMime } from '../lib/sniff.js';
 import {
   CAROUSEL_DESCRIPTION_MAX,
   CAROUSEL_FIELDS,
@@ -211,16 +211,20 @@ carouselRouter.post('/carousel/:id/image', requireAuth, requireAdmin, uploadCaro
     return badRequest(res, 'Tidak ada berkas gambar yang diterima');
   }
 
-  const originalMime = req.file.mimetype || 'application/octet-stream';
+  /* Jenis gambar dari isi berkas, bukan `mimetype` kiriman klien (VULN-11). */
+  const detectedMime = sniffImageMime(req.file.buffer);
+  if (!detectedMime) {
+    return res.status(415).json({
+      success: false,
+      message: 'Berkas bukan gambar PNG, JPG, WebP, atau GIF.'
+    });
+  }
+
   const result = await toWebp(req.file.buffer, {
     width: CAROUSEL_IMAGE_WIDTH,
     quality: CAROUSEL_IMAGE_QUALITY,
-    fallbackMime: originalMime
+    fallbackMime: detectedMime
   });
-
-  if (!result.converted && !isSafeRawImageFallback(originalMime)) {
-    return res.status(415).json({ success: false, message: 'Format gambar tidak didukung. Gunakan PNG, JPEG, atau WebP.' });
-  }
 
   const { data, error } = await supabaseServer
     .from('carousel_slides')

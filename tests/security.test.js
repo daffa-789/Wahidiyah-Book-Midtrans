@@ -10,6 +10,8 @@ import { findPlan, DEFAULT_PLAN_ID, SUBSCRIPTION_PLANS } from '../server/lib/con
 import { MIDTRANS_SERVER_KEY } from '../server/config.js';
 import { normalizeOrigin, resolveFrontendOrigin, sanitizeForwardedProto } from '../server/lib/origin.js';
 import { createOneTimeCode, redeemOneTimeCode } from '../server/lib/oneTimeCode.js';
+import { matchesContentExtension, sniffDataUrlImage, sniffImageMime } from '../server/lib/sniff.js';
+import { safeContentMime, sendDataUrl } from '../server/lib/http.js';
 
 const fakeReq = ({ host = 'localhost:3000', protocol = 'http', forwardedProto } = {}) => ({
   get: (name) => (String(name).toLowerCase() === 'host' ? host : undefined),
@@ -214,4 +216,88 @@ test('oneTimeCode: kode acak atau kosong ditolak', () => {
   assert.equal(redeemOneTimeCode('tidak-pernah-dibuat'), null);
   assert.equal(redeemOneTimeCode(''), null);
   assert.equal(redeemOneTimeCode(null), null);
+});
+
+test('sniffImageMime: jenis gambar ditentukan dari magic byte', () => {
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0]);
+  const gif = Buffer.from('GIF89a......', 'latin1');
+  const webp = Buffer.concat([Buffer.from('RIFF'), Buffer.from([0, 0, 0, 0]), Buffer.from('WEBP')]);
+
+  assert.equal(sniffImageMime(png), 'image/png');
+  assert.equal(sniffImageMime(jpeg), 'image/jpeg');
+  assert.equal(sniffImageMime(gif), 'image/gif');
+  assert.equal(sniffImageMime(webp), 'image/webp');
+  assert.equal(sniffImageMime(Buffer.from('<html>halo</html>')), null);
+  assert.equal(sniffImageMime(Buffer.alloc(0)), null);
+  assert.equal(sniffImageMime(null), null);
+});
+
+test('matchesContentExtension: isi berkas harus cocok dengan ekstensinya', () => {
+  const pdf = Buffer.from('%PDF-1.7\nisi');
+  const html = Buffer.from('<html><script>alert(1)</script></html>');
+  const zip = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from('docx')]);
+  const ole = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0, 0]);
+
+  assert.equal(matchesContentExtension(pdf, '.pdf'), true);
+  assert.equal(matchesContentExtension(html, '.pdf'), false);
+  assert.equal(matchesContentExtension(zip, '.docx'), true);
+  assert.equal(matchesContentExtension(pdf, '.docx'), false);
+  assert.equal(matchesContentExtension(ole, '.doc'), true);
+  assert.equal(matchesContentExtension(Buffer.from('{\\rtf1\\ansi'), '.rtf'), true);
+  assert.equal(matchesContentExtension(Buffer.from('judul,isi\n1,2'), '.csv'), true);
+  assert.equal(matchesContentExtension(Buffer.from([0, 1, 2, 3]), '.csv'), false);
+  assert.equal(matchesContentExtension(pdf, '.exe'), false);
+});
+
+test('sniffDataUrlImage: label di dalam data URL tidak dipercaya', () => {
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+  const asPng = `data:image/png;base64,${png.toString('base64')}`;
+  const disguised = `data:image/png;base64,${Buffer.from('<html>x</html>').toString('base64')}`;
+
+  assert.equal(sniffDataUrlImage(asPng), 'image/png');
+  assert.equal(sniffDataUrlImage(disguised), null);
+  assert.equal(sniffDataUrlImage('https://contoh.id/x.png'), null);
+});
+
+test('safeContentMime: memakai ekstensi, bukan MIME tersimpan', () => {
+  assert.equal(safeContentMime({ content_extension: 'pdf' }), 'application/pdf');
+  assert.equal(safeContentMime({ content_extension: '.PDF' }), 'application/pdf');
+  assert.equal(safeContentMime({ content_extension: 'html' }), 'application/octet-stream');
+  assert.equal(safeContentMime({}), 'application/octet-stream');
+});
+
+const fakeResponse = () => {
+  const headers = {};
+  let body = null;
+  return {
+    setHeader: (key, value) => { headers[key.toLowerCase()] = value; },
+    type: (value) => { headers['content-type'] = value; },
+    send: (value) => { body = value; },
+    headers,
+    body: () => body
+  };
+};
+
+test('sendDataUrl: MIME di dalam data URL tidak pernah dipercaya', () => {
+  const payload = Buffer.from('<script>alert(1)</script>').toString('base64');
+  const res = fakeResponse();
+
+  assert.equal(sendDataUrl(res, `data:text/html;base64,${payload}`, { contentType: 'application/pdf' }), true);
+  assert.equal(res.headers['content-type'], 'application/pdf');
+  assert.equal(res.headers['x-content-type-options'], 'nosniff');
+  assert.equal(res.body().toString('utf8'), '<script>alert(1)</script>');
+});
+
+test('sendDataUrl: tanpa contentType jatuh ke octet-stream, bukan text/html', () => {
+  const payload = Buffer.from('<html>x</html>').toString('base64');
+  const res = fakeResponse();
+
+  sendDataUrl(res, `data:text/html;base64,${payload}`);
+  assert.equal(res.headers['content-type'], 'application/octet-stream');
+});
+
+test('sendDataUrl: URL non-data tidak ditangani', () => {
+  assert.equal(sendDataUrl(fakeResponse(), 'https://contoh.id/x.pdf'), false);
+  assert.equal(sendDataUrl(fakeResponse(), ''), false);
 });

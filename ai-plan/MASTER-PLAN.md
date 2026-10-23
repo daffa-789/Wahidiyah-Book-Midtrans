@@ -194,9 +194,9 @@ Hasil tiga putaran audit white-box. **5 High** (VULN-01, 02, 03, 04, 12), 1 Med-
 | VULN-08 | ✅ **fixed** — Kode OTP dapat bocor di respons bila `NODE_ENV=development` | Medium | `server/lib/otp.js:22`, `server/routes/auth.routes.js:157`, `:270-282`, `:323-331` |
 | VULN-09 | CSP dimatikan dan `CORS_ORIGINS` tidak diset | Low-Med | `server/middleware/security.js:15-25`, `server/config.js:18-22` |
 | VULN-10 | ✅ **fixed** — Klien database turun ke anon key hanya dengan peringatan | Low | `server/db.js:18-24`, `:31-39` |
-| VULN-11 | Unggahan tanpa allowlist jenis berkas | Low | `server/middleware/uploads.js:7-19` |
+| VULN-11 | ✅ **fixed 23 Okt 2026** — Unggahan tanpa allowlist jenis berkas; kini diperiksa dari magic byte | Low | `server/lib/sniff.js`, `server/routes/books.routes.js`, `server/routes/carousel.routes.js` |
 | VULN-12 | ✅ **fixed** — Masa berlaku langganan Pro tidak pernah ditegakkan pada gate konten | High | `server/routes/books.routes.js:167`, `server/auth.js:67-107` |
-| VULN-13 | MIME dari klien tersimpan di data URI lalu dipercaya saat konten disajikan (XSS tersimpan) | Medium | `server/routes/books.routes.js:129`, `:174`, `server/lib/http.js:86-96` |
+| VULN-13 | ✅ **fixed 23 Okt 2026** — MIME dari klien tersimpan di data URI lalu dipercaya saat konten disajikan | Medium | `server/lib/http.js` (`sendDataUrl`), `server/routes/books.routes.js` |
 | VULN-14 | Langganan push tanpa autentikasi/limiter: SSRF ke host https mana pun + siaran berhenti | Medium | `server/routes/notifications.routes.js:30-39`, `:55`, `server/lib/webpush.js:184` |
 | VULN-15 | Endpoint publik tanpa pembatas; katalog membawa seluruh cover/thumbnail base64 | Low-Med | `server/routes/books.routes.js:37-49`, `:143` |
 | VULN-16 | ✅ **fixed** — `anon`/`authenticated` memegang TRUNCATE/REFERENCES/TRIGGER (bawaan Supabase) | Low | grant tabel `public` (terverifikasi live) |
