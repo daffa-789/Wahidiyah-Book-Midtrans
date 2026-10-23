@@ -186,11 +186,26 @@ Nama sidebar dua baris; kartu "Tema Tampilan" dan `ThemeModeSelector` dihapus; g
 | Skema Database | `supabase_database/add_bookmarks_and_progress.sql` & pembaruan `supabase_database/full_setup.sql`: tabel `user_bookmarks` dan `reading_progress` dengan RLS eksplisit dan policy "own rows" | Invarian RLS §0.2 terpenuhi |
 | Koreksi Teks Bantuan | `src/data/mockData.js`: teks FAQ diperbarui menghapus rujukan foto profil yang sudah dicabut | Informasi akurat |
 
-### 7.8 Masih terbuka
+### 7.8 Tahap 9 Mode Teks Besar (`df09165`)
+
+| Komponen | Perubahan | Bukti |
+|---|---|---|
+| Inisialisasi Skala Akar | `src/lib/textSize.js`: modul skala tipografi (`normal: 100%`, `large: 115%`, `xlarge: 130%`), membaca dan menyimpan ke `localStorage.wb_text_scale`, serta menerapkan `fontSize` dan `data-text-scale` pada `document.documentElement` | Uji unit `tests/textSize.test.js`: 3 kasus; boot mulus |
+| Boot Aplikasi | `src/main.jsx`: `initTextScale()` dipanggil pada awal pemuatan aplikasi agar seluruh rem berskala serasi saat dibuka | Skala aktif sebelum komponen merender |
+| Antarmuka Pengaturan Profil | `src/features/profile/EditProfileScreen.jsx`: kartu saklar 3 tingkat (Normal, Besar, Sangat Besar) dengan deskripsi ramah jamaah senior dan contoh pratinjau teks real-time | Respons instan saat tombol ditekan; toast konfirmasi |
+
+### 7.9 Verifikasi Akhir & Kesiapan Sidang (Tahap 10)
+
+Seluruh 10 Tahap perencanaan telah tuntas:
+- **Keamanan Web (Tahap 1–6):** VULN-01 hingga VULN-30 selesai atau terdokumentasi rapi. CSP report-only aktif.
+- **Desain & Aksesibilitas (Tahap 1, 7, 9):** 3 Color Key disiplin 100%, 17 pasangan kontras WCAG lolos, skala tipografi bebas kelas mentah, skeleton loaders terpasang di semua halaman, Mode Teks Besar aktif.
+- **Fitur Web (Tahap 8):** Pencarian, filter kategori, pengurutan katalog, "Lanjutkan Membaca", progres membaca tersinkron, pembatas buku (bookmarks), dan proteksi konten M1 (watermark + contextmenu off).
+- **Hasil Gerbang Otomatis:** `check-syntax` (61 berkas, 0 galat), `check-colors` (68 berkas, 0 palet mentah), `check-contrast` (17/17 lulus), 51/51 uji unit lulus, dan `vite build` produksi sukses.
+
+### 7.10 Catatan Lingkungan Produksi
 
 - `ALLOW_PAYMENT_SIMULATION=1` hanya untuk demo sidang.
 - Token Gmail akan mati lagi 7 hari selama OAuth app berstatus *Testing*.
-- Tahap 9 (Desain Tahap 4-5): Layar kunci & Mode Teks Besar untuk lansia.
 
 **Koreksi catatan performa:** chunk `excel` (939 kB) dan `charts` (350 kB) ternyata **sudah** di luar
 jalur kritis — `exceljs` masuk lewat `import()` di handler ekspor (`AdminDashboard.jsx:327-345`,
