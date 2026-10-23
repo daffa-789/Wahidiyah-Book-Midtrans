@@ -7,7 +7,6 @@ import {
   Sun,
   Moon,
   BookOpen,
-  Bookmark,
   ChevronLeft,
   ChevronRight,
   Trash2,
@@ -17,7 +16,6 @@ import {
 import { useApp } from '@context/AppContext';
 import { apiJson, apiRequest, authHeaders, readableError } from '@lib/api';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
-import { BookmarkModal } from './BookmarkModal';
 
 const TEXT_TYPES = new Set(['txt', 'md', 'csv', 'rtf']);
 const PDF_TYPES = new Set(['pdf']);
@@ -72,16 +70,7 @@ export const PdfReaderScreen = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [resumePrompt, setResumePrompt] = useState(null);
 
-  // Pembatas Buku (Bookmarks)
-  const [bookmarks, setBookmarks] = useState([]);
-  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
-  const [bookmarkFeedback, setBookmarkFeedback] = useState(null);
-  const bookmarkModalRef = useRef(null);
 
-  useDialogFocusTrap(bookmarkModalRef, {
-    isOpen: isBookmarkModalOpen,
-    onClose: () => setIsBookmarkModalOpen(false)
-  });
 
   const extension = getExtension(activeBook);
   const samplePages = activeBook?.samplePages || [];
@@ -117,36 +106,7 @@ export const PdfReaderScreen = () => {
     return () => { active = false; };
   }, [activeBook?.id]);
 
-  // Muat pembatas buku milik pengguna untuk buku ini
-  useEffect(() => {
-    if (!activeBook?.id) return;
-    let active = true;
 
-    const fetchBookmarks = async () => {
-      try {
-        const res = await apiJson(`/api/books/${activeBook.id}/bookmarks`);
-        if (active && res?.bookmarks) {
-          setBookmarks(res.bookmarks);
-          return;
-        }
-      } catch {
-        // Fallback ke penyimpanan lokal bila offline
-      }
-
-      try {
-        const localKey = `bookmarks_${activeBook.id}`;
-        const raw = localStorage.getItem(localKey);
-        if (raw && active) {
-          setBookmarks(JSON.parse(raw));
-        }
-      } catch {
-        // Abaikan
-      }
-    };
-
-    fetchBookmarks();
-    return () => { active = false; };
-  }, [activeBook?.id]);
 
   // Simpan halaman saat ini ke lokal & server
   const saveCurrentPage = useCallback((page) => {
@@ -180,70 +140,6 @@ export const PdfReaderScreen = () => {
   };
 
   // Tambah pembatas pada halaman saat ini
-  const handleToggleCurrentBookmark = async () => {
-    if (!activeBook?.id) return;
-    const existing = bookmarks.find((b) => b.page === currentPage);
-
-    if (existing) {
-      // Hapus jika sudah ada
-      try {
-        await apiJson(`/api/books/${activeBook.id}/bookmarks/${existing.id}`, { method: 'DELETE' });
-        const next = bookmarks.filter((b) => b.id !== existing.id);
-        setBookmarks(next);
-        try {
-          localStorage.setItem(`bookmarks_${activeBook.id}`, JSON.stringify(next));
-        } catch {}
-        setBookmarkFeedback('Pembatas dihapus');
-        setTimeout(() => setBookmarkFeedback(null), 2000);
-      } catch (err) {
-        setBookmarkFeedback(readableError(err));
-        setTimeout(() => setBookmarkFeedback(null), 3000);
-      }
-    } else {
-      // Tambah baru
-      try {
-        const res = await apiJson(`/api/books/${activeBook.id}/bookmarks`, {
-          method: 'POST',
-          body: { page: currentPage, note: `Halaman ${currentPage}` }
-        });
-        const created = res?.bookmark || {
-          id: `local-${Date.now()}`,
-          book_id: activeBook.id,
-          page: currentPage,
-          note: `Halaman ${currentPage}`,
-          created_at: new Date().toISOString()
-        };
-        const next = [...bookmarks, created].sort((a, b) => a.page - b.page);
-        setBookmarks(next);
-        try {
-          localStorage.setItem(`bookmarks_${activeBook.id}`, JSON.stringify(next));
-        } catch {}
-        setBookmarkFeedback(`Halaman ${currentPage} ditandai`);
-        setTimeout(() => setBookmarkFeedback(null), 2000);
-      } catch (err) {
-        setBookmarkFeedback(readableError(err));
-        setTimeout(() => setBookmarkFeedback(null), 3000);
-      }
-    }
-  };
-
-  const handleDeleteBookmark = async (bmId) => {
-    if (!activeBook?.id) return;
-    try {
-      await apiJson(`/api/books/${activeBook.id}/bookmarks/${bmId}`, { method: 'DELETE' });
-      const next = bookmarks.filter((b) => b.id !== bmId);
-      setBookmarks(next);
-      try {
-        localStorage.setItem(`bookmarks_${activeBook.id}`, JSON.stringify(next));
-      } catch {}
-    } catch {
-      // Abaikan bila offline
-      const next = bookmarks.filter((b) => b.id !== bmId);
-      setBookmarks(next);
-    }
-  };
-
-  const isCurrentPageBookmarked = Boolean(bookmarks.some((b) => b.page === currentPage));
 
   // Muat konten PDF / Teks
   useEffect(() => {
@@ -444,7 +340,7 @@ export const PdfReaderScreen = () => {
             </div>
           </div>
 
-          {/* Controls: Page Navigation + Bookmark + Themes + Font Size */}
+          {/* Controls: Page Navigation + Themes + Font Size */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Page Tracker & Navigator */}
             <div className="flex items-center gap-1 bg-cream-50/10 px-2 py-1 rounded-xl text-caption font-semibold">
@@ -470,21 +366,6 @@ export const PdfReaderScreen = () => {
                 aria-label="Halaman Berikutnya"
               >
                 <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {/* Tombol Pembatas Buku */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsBookmarkModalOpen(true)}
-                className={`rounded-xl p-2 min-h-9 min-w-9 flex items-center justify-center transition hover:bg-cream-50/10 cursor-pointer ${
-                  isCurrentPageBookmarked ? 'text-gold-400' : 'opacity-80 hover:opacity-100'
-                }`}
-                title="Buka daftar pembatas buku"
-                aria-label="Pembatas buku"
-              >
-                <Bookmark className={`h-4 w-4 ${isCurrentPageBookmarked ? 'fill-current text-gold-400' : ''}`} />
               </button>
             </div>
 
@@ -529,20 +410,12 @@ export const PdfReaderScreen = () => {
         </div>
       </header>
 
-      {/* Floating Feedback Penanda */}
-      {bookmarkFeedback && (
-        <div className="fixed top-16 right-4 z-40 rounded-xl bg-brand-800 text-cream-50 px-3.5 py-2 text-caption font-bold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-          <Check className="h-4 w-4 text-gold-300" />
-          <span>{bookmarkFeedback}</span>
-        </div>
-      )}
-
       {/* Floating Prompt: Lanjut Membaca */}
       {resumePrompt && (
         <div className="sticky top-16 z-20 mx-auto my-2 max-w-md w-full px-4 animate-in fade-in slide-in-from-top-3">
           <div className="flex items-center justify-between gap-3 bg-brand-800 text-cream-50 px-4 py-2.5 rounded-2xl shadow-xl border border-brand-600">
             <div className="flex items-center gap-2 text-caption">
-              <Bookmark className="h-4 w-4 text-gold-300" />
+              <BookOpen className="h-4 w-4 text-gold-300" />
               <span>Terakhir Anda membaca di <strong>Halaman {resumePrompt.page}</strong></span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -570,18 +443,6 @@ export const PdfReaderScreen = () => {
         {renderContent()}
       </section>
 
-      {/* Modal / Dialog Pembatas Buku (Bookmarks) */}
-      <BookmarkModal
-        isOpen={isBookmarkModalOpen}
-        onClose={() => setIsBookmarkModalOpen(false)}
-        modalRef={bookmarkModalRef}
-        currentPage={currentPage}
-        isCurrentPageBookmarked={isCurrentPageBookmarked}
-        onToggleCurrentBookmark={handleToggleCurrentBookmark}
-        bookmarks={bookmarks}
-        onSelectBookmark={(page) => saveCurrentPage(page)}
-        onDeleteBookmark={handleDeleteBookmark}
-      />
-    </main>
+      </main>
   );
 };
