@@ -15,7 +15,7 @@ export const BookCard = React.memo(({ book, isLocked, onBookClick, onPaywallClic
       data-testid={`book-card-${book.id}`}
       role="button"
       tabIndex={0}
-      aria-label={`Buka buku ${book.title}${book.author ? ` karya ${book.author}` : ''}${isLocked ? ' (Terkunci Pro)' : ''}`}
+      aria-label={`Buka buku ${book.title}${isLocked ? ' (Terkunci Pro)' : ''}`}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -59,16 +59,11 @@ export const BookCard = React.memo(({ book, isLocked, onBookClick, onPaywallClic
         )}
       </div>
 
-      {/* Teks Judul & Penulis di Bawah Sampul */}
-      <div className="mt-2.5 space-y-0.5">
+      {/* Teks Judul di Bawah Sampul */}
+      <div className="mt-2.5">
         <h3 className="font-bold text-body text-ink-900 leading-snug line-clamp-2 group-hover:text-brand-700 transition-colors">
           {book.title}
         </h3>
-        {book.author && (
-          <p className="text-caption text-ink-500 line-clamp-1 font-normal">
-            {book.author}
-          </p>
-        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import path from 'path';
 import { Router } from 'express';
+import mammoth from 'mammoth';
 import { supabaseServer } from '../db.js';
 import { generateId, hasActivePro, requireAdmin, requireAuth } from '../auth.js';
 import {
@@ -24,12 +25,9 @@ export const booksRouter = Router();
 
 const toBookResponse = (book) => ({
   ...book,
-  category: book.category || 'Umum',
+  pages: Number(book.pages || 1),
   is_locked: Boolean(book.is_locked),
-  has_thumbnail: Boolean(book.thumbnail_url || book.cover_url),
-  
-  
-  
+  has_thumbnail: Boolean(book.cover_url || book.thumbnail_url),
   has_content: Number(book.content_size) > 0
 });
 
@@ -98,8 +96,16 @@ booksRouter.post('/books', requireAuth, requireAdmin, wrap(async (req, res) => {
   const id = generateId('buku');
   const { error } = await supabaseServer.from('books').insert({
     id,
-    ...parsed.data,
-    total_pages: parsed.data.pages
+    title: title.trim(),
+    pages: Number(pages) || 1,
+    is_locked: is_locked === 'true' || is_locked === true || is_locked === 1,
+    cover_url: coverUrl,
+    content_url: `data:${canonicalContentMime};base64,${content.buffer.toString('base64')}`,
+    content_name: content.originalname,
+    content_extension: extension,
+    content_mime: canonicalContentMime,
+    content_size: content.size,
+    content_type: extension
   });
   if (error) throw error;
 
@@ -212,6 +218,53 @@ booksRouter.get('/books/:id/thumbnail', wrap(async (req, res) => {
   return res.redirect(url);
 }));
 
+
+booksRouter.get('/books/:id/html', requireAuth, wrap(async (req, res) => {
+  const { data: book } = await supabaseServer
+    .from('books')
+    .select('content_url, content_name, content_mime, content_extension, is_locked')
+    .eq('id', req.params.id)
+    .maybeSingle();
+
+  if (!book?.content_url) return notFound(res, 'Konten buku tidak ditemukan');
+
+  if (book.is_locked && !hasActivePro(req.authUser || req.user) && req.user.role !== 'admin') {
+    return forbidden(res, 'Buku ini khusus pembaca Pro. Aktifkan paket Pro untuk membukanya.');
+  }
+
+  let buffer;
+  if (book.content_url.startsWith('data:')) {
+    const base64Data = book.content_url.split(',')[1];
+    buffer = Buffer.from(base64Data, 'base64');
+  } else {
+    const fetched = await fetch(book.content_url);
+    if (!fetched.ok) return notFound(res, 'Gagal mengambil isi berkas');
+    const arrayBuf = await fetched.arrayBuffer();
+    buffer = Buffer.from(arrayBuf);
+  }
+
+  const ext = (book.content_extension || path.extname(book.content_name || '')).toLowerCase().replace('.', '');
+
+  if (ext === 'docx' || ext === 'doc') {
+    try {
+      const conversion = await mammoth.convertToHtml({ buffer });
+      return res.json({ success: true, html: conversion.value, type: 'docx' });
+    } catch {
+      return res.status(500).json({ success: false, message: 'Gagal mengonversi dokumen Word' });
+    }
+  }
+
+  if (ext === 'txt' || ext === 'md' || ext === 'csv' || ext === 'rtf') {
+    const text = buffer.toString('utf-8');
+    return res.json({
+      success: true,
+      html: `<div style="white-space: pre-wrap; font-family: inherit;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`,
+      type: ext
+    });
+  }
+
+  return res.status(400).json({ success: false, message: 'Format bukan dokumen naskah/Word' });
+}));
 
 booksRouter.get('/books/:id/content', requireAuth, wrap(async (req, res) => {
   const { data: book } = await supabaseServer

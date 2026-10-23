@@ -15,6 +15,7 @@ import { apiJson, apiRequest, authHeaders } from '@lib/api';
 
 const TEXT_TYPES = new Set(['txt', 'md', 'csv', 'rtf']);
 const PDF_TYPES = new Set(['pdf']);
+const DOCX_TYPES = new Set(['docx', 'doc', 'odt']);
 
 const getExtension = (book) =>
   String(book?.contentExtension || book?.contentType || '').toLowerCase().replace('.', '');
@@ -22,6 +23,7 @@ const getExtension = (book) =>
 export const PdfReaderScreen = () => {
   const { activeBook, navigateTo, user } = useApp();
   const [textContent, setTextContent] = useState('');
+  const [docHtml, setDocHtml] = useState('');
   const [pdfUrl, setPdfUrl] = useState(null);
   const [contentStatus, setContentStatus] = useState('idle');
   const [reloadToken, setReloadToken] = useState(0);
@@ -131,44 +133,79 @@ export const PdfReaderScreen = () => {
     }
   };
 
-  // Muat konten PDF atau teks
+  // Muat konten PDF, Word (docx), atau teks
   useEffect(() => {
     let cancelled = false;
     let objectUrl = null;
     setTextContent('');
+    setDocHtml('');
     setPdfUrl(null);
 
-    if (!activeBook?.contentUrl || (!TEXT_TYPES.has(extension) && !PDF_TYPES.has(extension))) {
+    if (!activeBook?.id) {
+      setContentStatus('idle');
+      return undefined;
+    }
+
+    const isPdf = PDF_TYPES.has(extension);
+    const isDoc = DOCX_TYPES.has(extension);
+    const isText = TEXT_TYPES.has(extension);
+
+    if (!isPdf && !isDoc && !isText && (!activeBook?.samplePages || activeBook.samplePages.length === 0)) {
       setContentStatus('idle');
       return undefined;
     }
 
     setContentStatus('loading');
-    apiRequest(activeBook.contentUrl, { headers: authHeaders() })
-      .then(async (response) => {
-        if (response.status === 403) throw new Error('PRO_LOCKED');
-        if (!response.ok) throw new Error('FETCH_FAILED');
-        return TEXT_TYPES.has(extension) ? response.text() : response.blob();
-      })
-      .then((content) => {
-        if (cancelled) return;
-        if (content instanceof Blob) {
-          objectUrl = URL.createObjectURL(content);
-          setPdfUrl(objectUrl);
-        } else {
-          setTextContent(content);
-        }
-        setContentStatus('ready');
-      })
-      .catch((err) => {
-        if (!cancelled) setContentStatus(err.message === 'PRO_LOCKED' ? 'locked' : 'error');
-      });
+
+    if (isDoc || isText) {
+      apiJson(`/api/books/${encodeURIComponent(activeBook.id)}/html`, { headers: authHeaders() })
+        .then((res) => {
+          if (cancelled) return;
+          if (res?.html) {
+            setDocHtml(res.html);
+            setContentStatus('ready');
+          } else if (res?.text) {
+            setTextContent(res.text);
+            setContentStatus('ready');
+          } else {
+            setContentStatus('error');
+          }
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          if (err?.status === 403 || String(err?.message || '').toLowerCase().includes('pro')) {
+            setContentStatus('locked');
+          } else {
+            setContentStatus('error');
+          }
+        });
+    } else if (isPdf && activeBook?.contentUrl) {
+      apiRequest(activeBook.contentUrl, { headers: authHeaders() })
+        .then(async (response) => {
+          if (response.status === 403) throw new Error('PRO_LOCKED');
+          if (!response.ok) throw new Error('FETCH_FAILED');
+          return response.blob();
+        })
+        .then((content) => {
+          if (cancelled) return;
+          if (content instanceof Blob) {
+            objectUrl = URL.createObjectURL(content);
+            setPdfUrl(objectUrl);
+          }
+          setContentStatus('ready');
+        })
+        .catch((err) => {
+          if (!cancelled) setContentStatus(err.message === 'PRO_LOCKED' ? 'locked' : 'error');
+        });
+    } else if (activeBook?.samplePages && activeBook.samplePages.length > 0) {
+      setContentStatus('ready');
+    }
 
     return () => {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [activeBook?.contentUrl, extension, reloadToken]);
+  }, [activeBook?.id, activeBook?.contentUrl, extension, reloadToken]);
 
   const retryLoadContent = () => setReloadToken((prev) => prev + 1);
 
@@ -212,7 +249,7 @@ export const PdfReaderScreen = () => {
             <h1 className="text-body font-bold text-ink-900 dark:text-cream-50 truncate max-w-xs sm:max-w-md md:max-w-lg">
               {activeBook.title}
             </h1>
-            {activeBook.author && (
+            {activeBook.author && !/^(tidak\s*diketahui|penyusun\s*wahidiyah)$/i.test(activeBook.author.trim()) && (
               <p className="text-caption text-ink-400 dark:text-ink-500 truncate -mt-0.5">
                 {activeBook.author}
               </p>
@@ -267,57 +304,67 @@ export const PdfReaderScreen = () => {
 
       {/* Main Reading Canvas */}
       <main className="flex-1 flex flex-col items-center justify-start py-3 sm:py-5 px-2 sm:px-4 overflow-y-auto">
-        {/* Render PDF */}
-        {PDF_TYPES.has(extension) && activeBook.contentUrl ? (
-          contentStatus === 'locked' ? (
-            <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white dark:bg-ink-900 p-8 text-center shadow-xl">
-              <Lock className="mx-auto h-10 w-10 text-gold-500 mb-3" />
-              <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Konten Khusus Member Pro</h2>
-              <p className="mt-2 text-caption text-ink-500">Aktifkan paket Pro untuk membuka dan membaca naskah lengkap ini.</p>
-              <button
-                type="button"
-                onClick={() => navigateTo('pro')}
-                className="mt-6 rounded-2xl bg-brand-700 px-6 py-2.5 text-caption font-bold text-white hover:bg-brand-800 transition cursor-pointer"
-              >
-                Lihat Paket Pro
-              </button>
-            </div>
-          ) : contentStatus === 'error' ? (
-            <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white dark:bg-ink-900 p-8 text-center shadow-xl">
-              <FileText className="mx-auto h-10 w-10 text-semantic-danger mb-3" />
-              <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Gagal Memuat Dokumen</h2>
-              <p className="mt-2 text-caption text-ink-500">Berkas dokumen PDF tidak dapat dimuat dari basis data.</p>
-              <button
-                type="button"
-                onClick={retryLoadContent}
-                className="mt-6 rounded-2xl bg-brand-700 px-6 py-2.5 text-caption font-bold text-white hover:bg-brand-800 transition cursor-pointer"
-              >
-                Coba Muat Ulang
-              </button>
-            </div>
-          ) : contentStatus === 'loading' || !pdfUrl ? (
-            <div className="my-auto flex flex-col items-center justify-center p-12 text-ink-500">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent mb-3" />
-              <span className="text-caption font-medium">Memuat halaman dokumen...</span>
-            </div>
-          ) : (
-            <div
-              className="relative w-full max-w-4xl bg-white dark:bg-ink-900 shadow-md rounded-lg overflow-hidden border border-ink-200/60 dark:border-ink-800/70"
-              style={{
-                height: 'calc(100vh - 5.5rem)',
-                maxWidth: `${Math.min(1200, Math.max(640, Math.round(896 * (zoom / 100))))}px`
-              }}
-              onContextMenu={(e) => e.preventDefault()}
+        {contentStatus === 'locked' ? (
+          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white dark:bg-ink-900 p-8 text-center shadow-xl">
+            <Lock className="mx-auto h-10 w-10 text-gold-500 mb-3" />
+            <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Konten Khusus Member Pro</h2>
+            <p className="mt-2 text-caption text-ink-500">Aktifkan paket Pro untuk membuka dan membaca naskah lengkap ini.</p>
+            <button
+              type="button"
+              onClick={() => navigateTo('pro')}
+              className="mt-6 rounded-2xl bg-brand-700 px-6 py-2.5 text-caption font-bold text-white hover:bg-brand-800 transition cursor-pointer"
             >
-              <iframe
-                key={`${pdfUrl}-${currentPage}-${zoom}`}
-                title={`Konten ${activeBook.title}`}
-                src={`${pdfUrl}#page=${currentPage}&zoom=${zoom}&toolbar=0&navpanes=0`}
-                className="h-full w-full border-0 select-none"
-              />
-            </div>
-          )
-        ) : TEXT_TYPES.has(extension) && activeBook.contentUrl ? (
+              Lihat Paket Pro
+            </button>
+          </div>
+        ) : contentStatus === 'error' ? (
+          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white dark:bg-ink-900 p-8 text-center shadow-xl">
+            <FileText className="mx-auto h-10 w-10 text-semantic-danger mb-3" />
+            <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Gagal Memuat Dokumen</h2>
+            <p className="mt-2 text-caption text-ink-500">Berkas dokumen naskah tidak dapat dimuat atau diekstrak.</p>
+            <button
+              type="button"
+              onClick={retryLoadContent}
+              className="mt-6 rounded-2xl bg-brand-700 px-6 py-2.5 text-caption font-bold text-white hover:bg-brand-800 transition cursor-pointer"
+            >
+              Coba Muat Ulang
+            </button>
+          </div>
+        ) : contentStatus === 'loading' ? (
+          <div className="my-auto flex flex-col items-center justify-center p-12 text-ink-500">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent mb-3" />
+            <span className="text-caption font-medium">Memuat dan menyiapkan naskah bacaan...</span>
+          </div>
+        ) : (docHtml || DOCX_TYPES.has(extension)) && docHtml ? (
+          <div
+            className="w-full bg-white dark:bg-ink-900 shadow-md rounded-2xl p-6 sm:p-12 md:p-16 my-4 border border-ink-200/60 dark:border-ink-800/80 leading-relaxed text-ink-900 dark:text-cream-50 select-text transition-all"
+            style={{
+              fontSize: `${(zoom / 100) * 1.05}rem`,
+              maxWidth: `${Math.min(1200, Math.max(640, Math.round(860 * (zoom / 100))))}px`
+            }}
+          >
+            <div
+              className="prose dark:prose-invert max-w-none [&>p]:mb-4 [&>p]:leading-relaxed [&>h1]:text-2xl [&>h1]:font-black [&>h1]:mb-4 [&>h2]:text-xl [&>h2]:font-bold [&>h2]:mb-3 [&>table]:w-full [&>table]:border-collapse [&>table_td]:border [&>table_td]:border-cream-300 [&>table_td]:p-2 [&>table_th]:border [&>table_th]:border-cream-300 [&>table_th]:p-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 font-serif sm:font-sans"
+              dangerouslySetInnerHTML={{ __html: docHtml }}
+            />
+          </div>
+        ) : PDF_TYPES.has(extension) && activeBook.contentUrl && pdfUrl ? (
+          <div
+            className="relative w-full max-w-4xl bg-white dark:bg-ink-900 shadow-md rounded-lg overflow-hidden border border-ink-200/60 dark:border-ink-800/70"
+            style={{
+              height: 'calc(100vh - 5.5rem)',
+              maxWidth: `${Math.min(1200, Math.max(640, Math.round(896 * (zoom / 100))))}px`
+            }}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <iframe
+              key={`${pdfUrl}-${currentPage}-${zoom}`}
+              title={`Konten ${activeBook.title}`}
+              src={`${pdfUrl}#page=${currentPage}&zoom=${zoom}&toolbar=0&navpanes=0`}
+              className="h-full w-full border-0 select-none"
+            />
+          </div>
+        ) : TEXT_TYPES.has(extension) && (textContent || docHtml) ? (
           <article className="relative w-full max-w-3xl bg-white dark:bg-ink-900 p-8 sm:p-14 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 whitespace-pre-wrap select-none">
             {textContent || 'Dokumen tidak berisi teks.'}
           </article>

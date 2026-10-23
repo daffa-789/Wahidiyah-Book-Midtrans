@@ -78,24 +78,14 @@ export const userSignature = (target = EMPTY_USER) => JSON.stringify([
 export const normalizeBook = (book = {}) => ({
   id: book.id,
   title: book.title || 'Tanpa judul',
-  subtitle: book.subtitle || '',
-  author: book.author || 'Tidak diketahui',
-  category: book.category || 'Umum',
-  pages: Number(book.total_pages || book.pages || 0),
-  totalPages: Number(book.total_pages || 0),
+  pages: Number(book.pages || book.total_pages || 1),
   isLocked: Boolean(pick(book, 'is_locked', 'isLocked')),
-  coverUrl: book.has_thumbnail
-    ? `/api/books/${encodeURIComponent(book.id)}/thumbnail`
-    : (book.cover_url || book.coverUrl || null),
-  contentUrl: book.has_content
-    ? `/api/books/${encodeURIComponent(book.id)}/content`
-    : (book.contentUrl || null),
+  coverUrl: book.cover_url || book.coverUrl || (book.has_thumbnail ? `/api/books/${encodeURIComponent(book.id)}/thumbnail` : null),
+  contentUrl: book.contentUrl || (book.has_content ? `/api/books/${encodeURIComponent(book.id)}/content` : null),
   contentName: pick(book, 'content_name', 'contentName') || null,
   contentType: pick(book, 'content_type', 'contentType') || (book.content_extension || '').replace('.', ''),
   contentExtension: book.content_extension || '',
   hasContent: Boolean(pick(book, 'has_content', 'hasContent')),
-  description: book.description || '',
-  samplePages: Array.isArray(book.samplePages) ? book.samplePages : [],
   createdAt: pick(book, 'created_at', 'createdAt') || null
 });
 

@@ -20,10 +20,10 @@ export const CONTENT_MIME_BY_EXTENSION = {
 
 
 export const BOOK_FIELDS = [
-  'id', 'title', 'subtitle', 'author', 'category', 'pages', 'total_pages',
-  'is_locked', 'cover_url', 'thumbnail_url', 'content_name',
+  'id', 'title', 'pages',
+  'is_locked', 'cover_url', 'content_name',
   'content_extension', 'content_mime', 'content_size', 'content_type',
-  'description', 'created_at', 'updated_at'
+  'created_at', 'updated_at'
 ].join(', ');
 
 
