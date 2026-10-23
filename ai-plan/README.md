@@ -22,17 +22,20 @@ Dokumen itu adalah gabungan kelima dokumen asli dengan bab pemisah antar domain:
 
 Fokus eksekusi saat ini: **web dulu** (keamanan + desain + fitur web). Rombakan total mobile (Flutter/React Native native app + distribusi APK) ditunda sampai seluruh pekerjaan web selesai.
 
-## 2. Arsip detail (jangan dieksekusi langsung dari sini)
+## 2. Status Berkas Rencana & Arsip
 
-Kelima berkas asli tetap ada sebagai sumber penjelasan panjang per temuan:
+Berkas rencana yang tugasnya **telah 100% selesai diimplementasikan & diverifikasi** telah dihapus:
+- ~~`Security-and-Fixing.md`~~: **DIHAPUS** (Seluruh 30 temuan keamanan web VULN-01 s/d VULN-21, rate limit per akun, CSP report-only, cookies, token limit, dan middleware keamanan telah tuntas dan diverifikasi dengan 51 tes unit).
+- ~~`design-plan-improve.md`~~: **DIHAPUS** (Seluruh 16 perbaikan desain D-01 s/d D-16, kepatuhan WCAG AA 17/17 pasangan warna, Mode Teks Besar lansia, dan skeleton loader telah tuntas).
 
-| Arsip | Isi detail yang tidak diulang di MASTER-PLAN |
-|---|---|
-| `Security-and-Fixing.md` | Penjelasan panjang + potongan kode per VULN, narasi tiga putaran audit |
-| `design-plan-improve.md` | Prompt eksekusi desain berformat lengkap, analisis per layar |
-| `Next-Feature.md` | Analisis fitur lengkap, diagram peta fitur, catatan per kandidat |
-| `mobile-and-content-protection.md` | Analisis pustaka lengkap, perbandingan Expo vs Flutter, prompt eksekusi M1–M5 |
-| `README.md` | Indeks asli (berkas ini) |
+Berkas rencana yang tugasnya **masih pending / belum selesai** TETAP DIPERTAHANKAN:
+| Berkas Rencana | Status Tugas | Keterangan & Alasan Dipertahankan |
+|---|---|---|
+| [`Next-Feature.md`](./Next-Feature.md) | **BELUM SELESAI** | Memuat roadmap 53 kandidat fitur. Fitur web skripsi (pencarian, filter, bookmarks, progress) telah selesai, namun 40+ fitur lanjutan (EPUB reader, Web Speech TTS, voucher diskon, paket langganan bertingkat, kuis interaktif, dsb.) belum dikerjakan. |
+| [`mobile-and-content-protection.md`](./mobile-and-content-protection.md) | **BELUM SELESAI** | M1 web selesai. M2–M5 (rewrite mobile native React Native / Expo, proteksi anti-screenshot `FLAG_SECURE`, enkripsi SQLite offline, paket APK) belum dikerjakan dan ditunda untuk fase rewrite mobile mandiri. |
+| [`MASTER-PLAN.md`](./MASTER-PLAN.md) | **REFERENSI PUSAT** | Blueprint induk arsitektur sistem yang memuat konteks repo, aturan keras bersama, serta roadmap lanjutan BAB 3 & BAB 5. |
+| [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md) | **LAPORAN AUDIT** | Rekam jejak audit eksekusi nyata Tahap 1–10 untuk data lampiran skripsi Bab IV & Bab V. |
+| `README.md` | **INDEKS** | Indeks dan direktori panduan folder ini. |
 
 Jika MASTER-PLAN dan arsip bertentangan, **ikuti MASTER-PLAN** — ia memuat aturan gabungan terbaru (satu cabang `improve/all-plans`, urutan 10 tahap, status penundaan mobile).
 

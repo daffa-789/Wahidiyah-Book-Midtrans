@@ -1,6 +1,6 @@
 # MASTER-PLAN — Aplikasi Buku Wahidiyah (Edisi 2 — Diperluas)
 
-Dokumen gabungan tunggal untuk seluruh rencana perbaikan dan pengembangan. Gabungan dari lima dokumen: `Security-and-Fixing.md`, `design-plan-improve.md`, `Next-Feature.md`, `mobile-and-content-protection.md`, dan indeks `README.md` (kelima berkas itu tetap ada di folder ini sebagai **arsip detail** — jika butuh penjelasan panjang per temuan, buka arsipnya).
+Dokumen gabungan tunggal untuk seluruh rencana perbaikan dan pengembangan (gabungan awal dari `Security-and-Fixing.md`, `design-plan-improve.md`, `Next-Feature.md`, `mobile-and-content-protection.md`, dan indeks `README.md`). Catatan: berkas rencana yang tugasnya telah 100% tuntas (`Security-and-Fixing.md` dan `design-plan-improve.md`) telah dihapus; berkas dengan tugas tertunda (`Next-Feature.md` dan `mobile-and-content-protection.md`) tetap dipertahankan.
 
 > **Status 23 Okt 2026 — SELESAI PENUH (TAHAP 1 HINGGA 10 LENGKAP)**
 > Seluruh rencana eksekusi web (BAGIAN 0 s/d BAB 4, Tahap 1–10) telah 100% tuntas diimplementasikan dan diverifikasi penuh:
@@ -1224,4 +1224,4 @@ WHERE n.nspname='public' AND c.relkind='r' AND a.grantee::regrole::text IN ('ano
 
 ---
 
-*Akhir dokumen. Arsip detail: `Security-and-Fixing.md` (penjelasan panjang per VULN), `design-plan-improve.md` (prompt eksekusi desain), `Next-Feature.md` (analisis fitur lengkap), `mobile-and-content-protection.md` (analisis pustaka & mobile lengkap), `README.md` (indeks folder). Jika arsip bertentangan dengan dokumen ini, ikuti dokumen ini.*
+*Akhir dokumen. Dokumen rujukan: `Next-Feature.md` (roadmap fitur lanjutan), `mobile-and-content-protection.md` (arsip analisis mobile rewrite & proteksi konten), `EXECUTION-REPORT.md` (laporan audit eksekusi), `README.md` (indeks folder). Berkas rencana yang tugasnya telah selesai 100% (`Security-and-Fixing.md` dan `design-plan-improve.md`) telah dihapus.*
