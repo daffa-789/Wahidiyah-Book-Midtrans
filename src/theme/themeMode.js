@@ -30,9 +30,42 @@ export const persistThemeMode = (mode) => {
 /** Ubah preferensi ('light' | 'dark' | 'system') menjadi tema efektif. */
 export const resolveTheme = (mode) => (mode === 'system' ? getSystemTheme() : mode);
 
-/** Pasang tema ke <html>: kelas `dark`, atribut data-theme, dan color-scheme. */
+/**
+ * Matikan transisi CSS sesaat (1 frame) saat berganti tema untuk mencegah
+ * lag/stutter rendering ratusan elemen sekaligus di peramban.
+ */
+const disableTransitions = () => {
+  if (typeof document === 'undefined') return () => {};
+  const css = document.createElement('style');
+  css.setAttribute('type', 'text/css');
+  css.textContent = `
+    *, *::before, *::after {
+      -webkit-transition: none !important;
+      -moz-transition: none !important;
+      -o-transition: none !important;
+      -ms-transition: none !important;
+      transition: none !important;
+    }
+  `;
+  document.head.appendChild(css);
+
+  return () => {
+    // Paksa browser menyelesaikan reflow dengan membaca offsetHeight
+    (() => window.getComputedStyle(document.body).opacity)();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (document.head.contains(css)) {
+          document.head.removeChild(css);
+        }
+      });
+    });
+  };
+};
+
+/** Pasang tema ke <html>: kelas `dark`, atribut data-theme, dan color-scheme secara instan. */
 export const applyTheme = (theme) => {
   if (typeof document === 'undefined') return;
+  const enableTransitions = disableTransitions();
   const isDark = theme === 'dark';
   const root = document.documentElement;
 
@@ -42,4 +75,6 @@ export const applyTheme = (theme) => {
 
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', isDark ? '#14130F' : '#14523A');
+
+  enableTransitions();
 };

@@ -27,7 +27,11 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return undefined;
     const query = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = (event) => setSystemTheme(event.matches ? 'dark' : 'light');
+    const onChange = (event) => {
+      const nextSystem = event.matches ? 'dark' : 'light';
+      setSystemTheme(nextSystem);
+      if (mode === 'system') applyTheme(nextSystem);
+    };
 
     if (typeof query.addEventListener === 'function') {
       query.addEventListener('change', onChange);
@@ -35,15 +39,17 @@ export const ThemeProvider = ({ children }) => {
     }
     query.addListener(onChange);
     return () => query.removeListener(onChange);
-  }, []);
+  }, [mode]);
 
   const updateMode = useCallback((nextMode) => {
     setMode(nextMode);
     persistThemeMode(nextMode);
+    applyTheme(resolveTheme(nextMode));
   }, []);
 
   const toggleTheme = useCallback(() => {
-    updateMode(resolveTheme(mode) === 'dark' ? 'light' : 'dark');
+    const nextTheme = resolveTheme(mode) === 'dark' ? 'light' : 'dark';
+    updateMode(nextTheme);
   }, [mode, updateMode]);
 
   const value = useMemo(() => ({

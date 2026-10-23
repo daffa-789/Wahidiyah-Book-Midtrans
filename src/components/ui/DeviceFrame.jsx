@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, Fragment } from 'react';
-import { Menu, ShieldCheck } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 import { useApp } from '@context/AppContext';
 import { ThemeToggle } from '@ui/ThemeToggle';
@@ -88,13 +88,11 @@ const DeviceFrameBase = ({ children }) => {
             onClick={() => navigateTo(isAdmin ? 'admin-dashboard' : 'home')}
             className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-md text-cream-50 bg-brand-700">
-              {isAdmin ? (
-                <ShieldCheck className="h-4 w-4" strokeWidth={2} />
-              ) : (
+            {!isAdmin && (
+              <span className="flex h-8 w-8 items-center justify-center rounded-md text-cream-50 bg-brand-700">
                 <BrandMark className="h-8 w-8 rounded-md" />
-              )}
-            </span>
+              </span>
+            )}
             <span className="font-display text-lead font-bold tracking-tight text-ink-900">
               {isAdmin ? 'Panel Admin' : 'Wahidiyah Book'}
             </span>

@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import {
-  Area,
-  AreaChart,
   Cell,
   Pie,
   PieChart,
@@ -147,17 +145,7 @@ export const AdminDashboard = () => {
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
-  const monthlyRevenue = useMemo(() => {
-    const groups = new Map();
-    transactions.filter((item) => item.status === 'success').forEach((item) => {
-      const date = new Date(item.createdAt);
-      if (Number.isNaN(date.getTime())) return;
-      const label = date.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' });
-      groups.set(label, (groups.get(label) || 0) + Number(item.totalPaid || 0));
-    });
-    return [...groups.entries()].map(([month, revenue]) => ({ month, revenue }));
-  }, [transactions]);
-
+  
   const subscriptionShare = useMemo(() => {
     const pro = users.filter((item) => Boolean(item.isPro)).length;
     const regular = Math.max(users.length - pro, 0);
@@ -427,19 +415,13 @@ export const AdminDashboard = () => {
                 })}
               </div>
 
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(250px,1fr)]">
+              <div className="max-w-xl">
                 <div className={surfaces.panel}>
-                  <h3 className="font-bold">Tren pendapatan tervalidasi</h3>
-                  <div className="mt-4 h-64">
-                    {monthlyRevenue.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={monthlyRevenue}><defs><linearGradient id="revenue" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#14523A" stopOpacity={0.35}/><stop offset="100%" stopColor="#14523A" stopOpacity={0}/></linearGradient></defs><Tooltip formatter={(value) => formatCurrency(value)} /><Area type="monotone" dataKey="revenue" stroke="#14523A" fill="url(#revenue)" strokeWidth={3} /></AreaChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-caption text-ink-500">Belum ada transaksi tervalidasi.</div>}
+                  <h3 className="font-bold text-body text-ink-900">Status langganan</h3>
+                  <div className="mt-4 h-52">
+                    {subscriptionShare.length ? <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={subscriptionShare} dataKey="value" innerRadius={50} outerRadius={76} paddingAngle={3}>{subscriptionShare.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-caption text-ink-500">Belum ada pengguna.</div>}
                   </div>
-                </div>
-                <div className={surfaces.panel}>
-                  <h3 className="font-bold">Status langganan</h3>
-                  <div className="mt-4 h-48">
-                    {subscriptionShare.length ? <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={subscriptionShare} dataKey="value" innerRadius={48} outerRadius={72} paddingAngle={3}>{subscriptionShare.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-caption text-ink-500">Belum ada pengguna.</div>}
-                  </div>
-                  <div className="space-y-2">{subscriptionShare.map((entry) => <div key={entry.name} className="flex items-center justify-between text-caption"><span className="flex items-center gap-2 text-ink-500"><span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.color }} />{entry.name}</span><strong>{entry.value}</strong></div>)}</div>
+                  <div className="mt-3 flex items-center justify-around border-t border-cream-200/60 pt-3">{subscriptionShare.map((entry) => <div key={entry.name} className="flex items-center gap-2 text-caption"><span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.color }} /><span className="text-ink-500 font-medium">{entry.name}:</span><strong className="text-ink-900">{entry.value}</strong></div>)}</div>
                 </div>
               </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PanelLeft, ShieldCheck } from 'lucide-react';
+import { PanelLeft } from 'lucide-react';
 import { BrandMark } from '@ui/BrandMark';
 import { ThemeToggle } from '@ui/ThemeToggle';
 import { SidebarNavSection } from './SidebarNavButton';
@@ -42,11 +42,9 @@ export const SidebarContent = React.memo(({
             onClick={() => onNavClick(isAdminNav ? 'admin-dashboard' : 'home')}
             title={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
             aria-label={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
-            className="flex h-10 w-10 items-center justify-center rounded-md text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500 font-display font-bold text-caption"
           >
-            {isAdminNav
-              ? <ShieldCheck className="h-[18px] w-[18px]" strokeWidth={1.9} />
-              : <BrandMark className="h-10 w-10 rounded-md" />}
+            {isAdminNav ? 'PA' : <BrandMark className="h-10 w-10 rounded-md" />}
           </button>
           {collapseToggle}
           <ThemeToggle variant="onDark" />
@@ -74,21 +72,14 @@ export const SidebarContent = React.memo(({
           onClick={() => onNavClick(isAdminNav ? 'admin-dashboard' : 'home')}
           className="flex min-h-9 min-w-0 select-none items-center gap-2 text-left transition-colors duration-200 hover:opacity-80 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
         >
-          <span
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-cream-50 bg-brand-700"
-          >
-            {isAdminNav
-              ? <ShieldCheck className="h-[15px] w-[15px]" strokeWidth={2} />
-              : <BrandMark className="h-7 w-7 rounded-lg" />}
-          </span>
+          {!isAdminNav && (
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-cream-50 bg-brand-700">
+              <BrandMark className="h-7 w-7 rounded-lg" />
+            </span>
+          )}
           {isAdminNav ? (
-            <span className="flex min-w-0 flex-col">
-              <span className="truncate font-display text-body font-bold leading-tight tracking-tight text-cream-50">
-                Wahidiyah Book
-              </span>
-              <span className="mt-0.5 self-start rounded border border-brand-400/30 bg-brand-400/15 px-1.5 py-px text-overline font-bold uppercase tracking-[0.14em] text-brand-200">
-                Panel Admin
-              </span>
+            <span className="min-w-0 font-display text-lead font-bold tracking-tight text-cream-50">
+              Panel Admin
             </span>
           ) : (
             <span className="min-w-0 font-display text-lead font-bold leading-[1.15] tracking-tight text-cream-50">
