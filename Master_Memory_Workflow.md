@@ -54,14 +54,14 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Client-Server Mand
 
 ## 2. Fitur Unggulan Sistem
 
-### 2.1. Katalog Buku & E-Reader Terproteksi (Read-Only)
-- **Katalog Interaktif:** Pencarian cerdas, filter kategori, penanda buku populer, dan badge keanggotaan (*locked* vs *free*).
-- **Pembaca PDF Read-Only (Khusus Baca):**
-  - Toolbar unduh bawaan browser dinonaktifkan (`#toolbar=0&navpanes=0`).
-  - Proteksi klik kanan (`onContextMenu preventDefault`) dan larangan seleksi teks (`select-none`).
-  - Pengiriman konten berkas via header HTTP `Content-Disposition: inline` dengan otorisasi JWT.
-- **Last Read Tracker (Ingat Halaman Terakhir):** Otomatis menyimpan progres membaca pengguna di `localStorage` dan menampilkan banner interaktif *"Lanjut membaca dari Halaman X?"*.
-- **Mode Tema Pembaca:** Pilihan latar belakang **Terang**, **Sepia (Hangat Lembut)**, dan **Malam (Gelap Elegan)** untuk kenyamanan mata jamaah saat membaca kitab.
+### 2.1. Katalog Buku & Universal Document Reader (Read-Only)
+- **Katalog Interaktif Minimalis:** Desain elegan ala e-reader (Moco-style) yang menonjolkan sampul jilid dan judul kitab tanpa teks penulis generik, dilengkapi pencarian katalog instan dan badge akses (*locked* vs *free*).
+- **Universal Document Reader (PDF & Word DOCX):**
+  - **Dukungan Berkas PDF:** Dirender interaktif via PDF.js dengan zoom in/out, navigasi halaman, dan isolasi kanvas.
+  - **Dukungan Naskah Word DOCX:** Dikonversi langsung di sisi server via pustaka `mammoth` menjadi HTML semantik (`GET /api/books/:id/html`) dan disajikan secara responsif di peramban tanpa memerlukan Microsoft Word fisik.
+  - **Proteksi Hak Cipta:** Tanda air (*watermark*) identitas dinamis (nama pembaca & ID transaksi) dibakar di kanvas, proteksi klik kanan (`onContextMenu preventDefault`), larangan seleksi teks (`select-none`), dan pengiriman konten via HTTP header `inline` berotorisasi JWT.
+- **Last Read Tracker (Ingat Posisi Terakhir):** Otomatis menyimpan posisi halaman baca pengguna dan menampilkan dialog resume *"Lanjut membaca dari Halaman X?"*.
+- **Mode Tema Pembaca:** Pilihan latar belakang **Terang**, **Sepia (Hangat Lembut)**, dan **Malam (Gelap Elegan)** untuk kenyamanan membaca dalam waktu lama.
 
 ### 2.2. Autentikasi Pengguna & WhatsApp Multi-Provider (R61)
 - **Registrasi & Verifikasi Dual-Channel:** Pengguna dapat mendaftar dengan email dan nomor WhatsApp internasional. Kode OTP 6 digit dapat dikirim via **Gmail API OAuth2** maupun **WhatsApp resmi**.
@@ -74,8 +74,10 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Client-Server Mand
 - **Sesi Aman:** Penyimpanan kata sandi dengan salt hashing `bcryptjs` (12 rounds) dan sesi berbasis token `jsonwebtoken` (JWT).
 
 ### 2.3. Sistem Keanggotaan Pro & Pembayaran Real Midtrans QRIS
-- **Integrasi Midtrans Core API Sandbox:** Charge QRIS dibuat langsung dari backend server dengan nominal dinamis (bebas dari manipulasi harga di sisi klien).
+- **Paket Pro Tunggal Terstandarisasi:** Skema keanggotaan Pro tunggal dengan tarif Rp 25.000/bulan (disertai penyesuaian biaya layanan resmi katalog server).
+- **Integrasi Midtrans Core API Sandbox:** Charge QRIS dibuat langsung dari backend server dengan payload EMVCo dinamis (bebas dari manipulasi harga di sisi klien).
 - **Simpan QRIS ke Galeri Ponsel:** Konversi SVG EMVCo QRIS ke gambar PNG beresolusi tinggi via HTML5 Canvas dengan `Blob` UTF-8 dan `URL.createObjectURL` agar dapat dipindai dari galeri e-wallet (DANA, GoPay, BCA, Livin, OVO).
+- **Tombol Simulasi Pembayaran QRIS Sandbox:** Mode simulasi berpagar aman via flag `ALLOW_PAYMENT_SIMULATION=1` di `.env`, menghadirkan tombol *"▶ Bayar Sekarang (Mode Simulasi)"* langsung pada UI konfirmasi pembayaran (`PaymentConfirmScreen.jsx`) untuk keandalan demo pengujian sidang skripsi tanpa simulator eksternal.
 - **Polling & Webhook Idempoten:** Pengecekan otomatis status transaksi setiap 3 detik dan verifikasi *SHA512 Signature Key* pada endpoint webhook notifikasi.
 - **Faktur Kwitansi Pembayaran Resmi:** Tanda terima digital berlogo resmi Wahidiyah Book yang siap cetak / simpan ke format PDF.
 
@@ -511,27 +513,26 @@ Informasi Project Database Supabase:
 * **Pilihan C: Menambah Tabel Baru Secara Idempoten (`supabase_database/carousel_slides.sql`)**
   Digunakan jika hanya ingin menambahkan tabel banner carousel tanpa menimpa data yang ada (hanya memuat `CREATE TABLE IF NOT EXISTS`).
 
-### 7.2. Daftar 9 Tabel Inti Pasca-Setup:
+### 7.2. Daftar 7 Tabel Inti Pasca-Pembersihan (Clean Core Schema):
 | Tabel | Fungsi & Peran |
 |---|---|
-| `users` | Akun pengguna (email, nomor WhatsApp `phone`, password hash bcrypt, role `user`/`admin`, `is_pro`, masa aktif). |
-| `books` | Katalog buku & naskah (kategori teks bebas `books.category`, deskripsi, status `is_locked`, metadata halaman). |
-| `events` | Jadwal acara & mujahadah Wahidiyah (judul, waktu WIB, lokasi, pengingat push notification). |
-| `subscriptions` | Riwayat paket langganan keanggotaan pengguna. |
-| `transactions` | Transaksi pembayaran resmi (menampung `midtrans_transaction_id`, `midtrans_qr_string`, `midtrans_qr_url`, status idempoten). |
+| `users` | Akun pengguna (email, nomor WhatsApp `phone`, password hash bcrypt, role `user`/`admin`, `is_pro`, masa aktif `subscription_expires_at`). |
+| `books` | Katalog naskah murni 11 kolom (`id`, `title`, `pages`, `is_locked`, `cover_url`, `content_url`, `content_name`, `content_extension`, `content_size`, `created_at`, `updated_at`). Bebas dari kolom usang. |
+| `events` | Jadwal agenda & mujahadah Wahidiyah (judul, waktu WIB, lokasi, deskripsi). |
+| `subscriptions` | Riwayat langganan keanggotaan Pro pengguna (`plan_name` seragam: `"Pro"`). |
+| `transactions` | Transaksi pembayaran resmi (`midtrans_transaction_id`, `midtrans_qr_string`, `midtrans_qr_url`, status idempoten). |
 | `email_verifications` | Kode OTP 6 digit untuk registrasi dan reset password (berlaku 10 menit, salt hash SHA-256). |
-| `qris_transactions` | Hub simulasi pembayaran QRIS lokal. |
-| `carousel_slides` | Slide banner Hero Carousel di homepage (urutan, gambar, periode tampil, status aktif). |
-| `push_subscriptions` | Langganan Web Push Notification (endpoint, p256dh, auth key) untuk pengingat agenda H-1. |
+| `carousel_slides` | Slide banner Hero Carousel di beranda (urutan, gambar, periode tampil, status aktif). |
 
-> **Catatan:** Tabel `ads` dan `categories` **sudah dihapus total** dari skema untuk menjaga arsitektur tetap ramping dan efisien.
+> 🛡️ **Catatan Pembersihan Arsitektur:** 
+> 6 tabel usang/redundant telah **DIPANGKAS & DIHAPUS TOTAL** dari Supabase: `ads`, `password_resets`, `qris_transactions`, `user_bookmarks`, `reading_progress`, dan `push_subscriptions`. Basis data kini murni 7 tabel inti dengan RLS fail-closed. 14 data transaksi uji sampah juga telah dibersihkan, menyisakan transaksi valid sukses.
 
 ### 7.3. Standar Zona Waktu Database
 Seluruh kolom waktu memakai `TIMESTAMPTZ` dengan `NOW()` polos, dan timezone database di-set ke **`Asia/Jakarta` (WIB, UTC+7)**. Postgres menyimpan waktu dalam UTC secara internal lalu menampilkannya sesuai timezone sesi, sehingga waktu aplikasi selalu sinkron dengan waktu Indonesia bagian barat.
 
 ### 7.4. Kueri Verifikasi Database (Checklist SQL):
 ```sql
--- 1. Harus mengembalikan 9 tabel public aktif
+-- 1. Harus mengembalikan 7 tabel public aktif (books, carousel_slides, email_verifications, events, subscriptions, transactions, users)
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;
 
 -- 2. Harus 0 baris — tabel ads sudah tidak ada
@@ -856,6 +857,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 | **R59** | 10 Okt 2026 | Diagram Use Case + 4 Activity Diagram resmi (draw.io) bebas tembusan untuk laporan skripsi. | ✅ Selesai |
 | **R60** | 10 Okt 2026 | Pembersihan import, perbaikan namespace 3 layar auth, pengenalan `Field.jsx` dan `useSubmit.js`. | ✅ Selesai |
 | **R61** | 13–18 Okt 2026 | **WhatsApp Authenticator Multi-Provider + Bendera Vektor Sedunia + Pemadatan Dokumentasi Tunggal.** Integrasi nomor HP internasional (`users.phone`), Multi-Provider WhatsApp Gateway (`Fonnte`, `Wablas`, `Whacenter`, `Twilio`, `Webhook`, `Demo`), komponen `FlagIcon` + `PhoneInput` 245 negara dunia, pustaka `libphonenumber-js`, `clsx`, `tailwind-merge` (`cn()`), pemadatan seluruh memori ke berkas tunggal `Master_Memory_Workflow.md`, dan penghapusan seluruh berkas `.md` serta `.docx` redundan. | ✅ Selesai |
+| **R62** | 23–24 Okt 2026 | **Pembersihan Skema Supabase 7 Tabel Inti, Penampil Universal Word DOCX (Mammoth), Penyeragaman Paket Pro Tunggal, Tombol Simulasi QRIS Midtrans Sandbox, dan Pembersihan Transaksi Sampah.** Penyederhanaan tabel `books` murni 11 kolom, eliminasi default author *"Penyusun Wahidiyah"*, penambahan endpoint `GET /api/books/:id/html` berbasis `mammoth` untuk render naskah Word di browser, penyeragaman `plan_name: "Pro"` (Rp 25.000), penyediaan tombol bayar simulasi di UI via `ALLOW_PAYMENT_SIMULATION=1`, pembersihan 14 transaksi dummy pending/rejected, dan pemangkasan 6 tabel usang Supabase. | ✅ Selesai |
 
 ---
 

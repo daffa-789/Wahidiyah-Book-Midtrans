@@ -13,15 +13,15 @@
 
 ## ✨ Fitur
 
-- 📖 **Katalog Buku** — jelajahi koleksi buku digital Wahidiyah dengan carousel dan pencarian.
-- 📕 **Reader PDF** — baca buku langsung di browser.
-- 💳 **Membership Pro & Pembayaran QRIS** — upgrade membership lewat QRIS menggunakan **Midtrans Core API (Sandbox)**; status transaksi terpantau melalui webhook.
-- 🔐 **Autentikasi Lengkap** — registrasi/login dengan **JWT + bcrypt**, verifikasi **OTP** (email Gmail via Google Auth Library), dan dukungan **WhatsApp gateway multi-provider** untuk notifikasi/authenticator.
-- 🛠️ **Panel Admin** — kelola buku, carousel, event, pengguna, dan transaksi (`/admin`).
-- 📅 **Kalender & Event** — agenda kegiatan dengan **pengingat otomatis** (scheduler) dan **Web Push notification** (VAPID).
-- 🖼️ **Upload Gambar** — unggah & optimasi aset memakai `multer` + `sharp`.
-- 🛡️ **Keamanan** — `helmet`, security headers, CORS policy, rate limiting pada endpoint auth, validasi **Zod**, dan 20+ indikator security hardening.
-- 🧾 **Laporan/Data** — ekspor data dengan **ExcelJS**.
+- 📖 **Katalog Buku Digital Minimalis** — jelajahi koleksi buku dan manuskrip Sholawat Wahidiyah dengan antarmuka elegan ala e-reader (fokus sampul & judul) dan pencarian instan.
+- 📕 **Universal Document Reader (PDF & DOCX)** — baca naskah buku langsung di peramban tanpa software eksternal: mendukung berkas **PDF** (PDF.js) dan dokumen Microsoft Word **DOCX** (dikonversi ke HTML semantik via `mammoth`), dilengkapi 3 tema baca (Terang, Sepia, Malam) dan proteksi konten (tanda air kanvas dinamis, larangan seleksi teks, pemblokiran menu klik kanan).
+- 💳 **Membership Pro & QRIS Real Midtrans** — sistem keanggotaan Pro tunggal (Rp 25.000) terintegrasi gateway **Midtrans Core API Sandbox** (QRIS EMVCo dinamis, unduh QR PNG, polling status 3 detik, webhook idempoten, dan tombol simulasi bayar instan `ALLOW_PAYMENT_SIMULATION=1` untuk kemudahan demo sidang).
+- 🔐 **Autentikasi Dual-Channel Lengkap** — registrasi & login dengan **JWT + bcrypt**, verifikasi **OTP** ganda via Gmail API OAuth2 & WhatsApp Multi-Provider (Fonnte, Wablas, WhaCenter, Twilio, Webhook), serta Google OAuth 2.0.
+- 🛠️ **Panel Administrasi Terpadu** — kelola buku, banner carousel beranda, agenda kegiatan, data anggota, dan transaksi dengan visualisasi analitik grafik (`recharts`) formasi 3+2 yang bersih.
+- 📅 **Kalender & Agenda Majelis** — jadwal kegiatan mujahadah dengan zona waktu terstandarisasi `Asia/Jakarta`.
+- 🖼️ **Optimasi Gambar Otomatis** — kompresi & konversi sampul otomatis ke format WebP via `sharp`.
+- 🛡️ **Arsitektur Basis Data Bersih & Aman** — skema 7 tabel inti Supabase (PostgreSQL) ber-RLS fail-closed, bebas dari kolom usang, dan lolos 30 indikator security hardening.
+- 🧾 **Laporan & Ekspor Data 1-Klik** — unduh laporan transaksi, pengguna, dan katalog langsung ke berkas Microsoft Excel (`.xlsx`) via `exceljs`.
 
 ## 🏗️ Arsitektur
 

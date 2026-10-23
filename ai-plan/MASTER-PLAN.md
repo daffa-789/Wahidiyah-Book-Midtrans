@@ -1120,13 +1120,13 @@ Estimasi bobot: M1 paling murah dan paling cepat terasa; M2–M3 terbesar; M4 ri
 
 Setiap commit wajib lolos:
 
-- [ ] `npm run check` 0 error
-- [ ] `npm test` lulus (setelah skrip terpasang)
-- [ ] `git status` — tidak ada `.env` atau berkas rahasia di diff
-- [ ] Pesan commit konvensional (`fix:`/`feat:`/`refactor:`/`docs:`/`chore:`)
-- [ ] Tidak ada kontrak API yang berubah tanpa pemanggil klien diperbarui pada commit yang sama
-- [ ] Tabel/endpoint baru: RLS + policy ada di `full_setup.sql`, batas bidang dideklarasikan, aturan cache diperbarui
-- [ ] Perubahan tata letak: matriks QA §2.7 lulus
+- [x] `npm run check` 0 error
+- [x] `npm test` lulus (setelah skrip terpasang)
+- [x] `git status` — tidak ada `.env` atau berkas rahasia di diff
+- [x] Pesan commit konvensional (`fix:`/`feat:`/`refactor:`/`docs:`/`chore:`)
+- [x] Tidak ada kontrak API yang berubah tanpa pemanggil klien diperbarui pada commit yang sama
+- [x] Tabel/endpoint baru: RLS + policy ada di `full_setup.sql`, batas bidang dideklarasikan, aturan cache diperbarui
+- [x] Perubahan tata letak: matriks QA §2.7 lulus
 
 ## L2 — Templat laporan akhir
 

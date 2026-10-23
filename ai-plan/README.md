@@ -27,14 +27,14 @@ Fokus eksekusi saat ini: **web dulu** (keamanan + desain + fitur web). Rombakan 
 Berkas rencana yang tugasnya **telah 100% selesai diimplementasikan & diverifikasi** telah dihapus:
 - ~~`Security-and-Fixing.md`~~: **DIHAPUS** (Seluruh 30 temuan keamanan web VULN-01 s/d VULN-21, rate limit per akun, CSP report-only, cookies, token limit, dan middleware keamanan telah tuntas dan diverifikasi dengan 51 tes unit).
 - ~~`design-plan-improve.md`~~: **DIHAPUS** (Seluruh 16 perbaikan desain D-01 s/d D-16, kepatuhan WCAG AA 17/17 pasangan warna, Mode Teks Besar lansia, dan skeleton loader telah tuntas).
+- ~~`mobile-and-content-protection.md`~~: **DIHAPUS** (M1 proteksi web tanda air, larangan seleksi teks, dan pemblokiran menu klik kanan telah tuntas di `PdfReaderScreen.jsx`; M2–M5 aplikasi mobile Expo resmi ditunda pasca-skripsi).
+- ~~`EXECUTION-REPORT.md`~~: **DIHAPUS** (Laporan audit eksekusi nyata Tahap 1–10 telah selesai 100% dan hasilnya dikonsolidasikan ke `Master_Memory_Workflow.md`).
 
-Berkas rencana yang tugasnya **masih pending / belum selesai** TETAP DIPERTAHANKAN:
+Berkas rencana yang tugasnya **masih menjadi roadmap masa depan** TETAP DIPERTAHANKAN:
 | Berkas Rencana | Status Tugas | Keterangan & Alasan Dipertahankan |
 |---|---|---|
-| [`Next-Feature.md`](./Next-Feature.md) | **BELUM SELESAI** | Memuat roadmap 53 kandidat fitur. Fitur web skripsi (pencarian, filter, bookmarks, progress) telah selesai, namun 40+ fitur lanjutan (EPUB reader, Web Speech TTS, voucher diskon, paket langganan bertingkat, kuis interaktif, dsb.) belum dikerjakan. |
-| [`mobile-and-content-protection.md`](./mobile-and-content-protection.md) | **BELUM SELESAI** | M1 web selesai. M2–M5 (rewrite mobile native React Native / Expo, proteksi anti-screenshot `FLAG_SECURE`, enkripsi SQLite offline, paket APK) belum dikerjakan dan ditunda untuk fase rewrite mobile mandiri. |
-| [`MASTER-PLAN.md`](./MASTER-PLAN.md) | **REFERENSI PUSAT** | Blueprint induk arsitektur sistem yang memuat konteks repo, aturan keras bersama, serta roadmap lanjutan BAB 3 & BAB 5. |
-| [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md) | **LAPORAN AUDIT** | Rekam jejak audit eksekusi nyata Tahap 1–10 untuk data lampiran skripsi Bab IV & Bab V. |
+| [`Next-Feature.md`](./Next-Feature.md) | **ROADMAP MASA DEPAN** | Fitur prioritas web skripsi (pencarian katalog, filter dinamis, penampil DOCX/PDF, dashboard analitik, simulasi QRIS) telah selesai dicentang `[x]`. Sisa fitur lanjutan (EPUB, TTS, voucher promo, dsb.) dicadangkan sebagai materi rekomendasi Bab V skripsi. |
+| [`MASTER-PLAN.md`](./MASTER-PLAN.md) | **REFERENSI PUSAT** | Blueprint induk arsitektur sistem yang memuat konteks repo, aturan keras bersama, matriks keamanan, dan checklist verifikasi yang seluruhnya telah berstatus `[x]`. |
 | `README.md` | **INDEKS** | Indeks dan direktori panduan folder ini. |
 
 Jika MASTER-PLAN dan arsip bertentangan, **ikuti MASTER-PLAN** — ia memuat aturan gabungan terbaru (satu cabang `improve/all-plans`, urutan 10 tahap, status penundaan mobile).

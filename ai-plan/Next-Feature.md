@@ -137,61 +137,35 @@ Untuk aplikasi yang menyimpan data pembayaran dan identitas jamaah, ini juga cel
 
 Kolom "Ruang lingkup" menandakan besarnya pekerjaan relatif, bukan durasi.
 
-| Fitur | Ruang lingkup | Lapisan yang disentuh | Catatan |
-|---|---|---|---|
-| Pencarian + filter + sort katalog | Rendah | `books.routes.js` (query param), `useCatalogSlice`, `HomeScreen` | Tanpa tabel baru; gunakan `ILIKE` + index pada `title`, `author`, `category` |
-| Halaman detail buku + "Lanjutkan Membaca" | Rendah–sedang | `GET /api/books/:id`, `HomeScreen` | Memakai progres baca yang sudah ada |
-| Bookmark tersinkron | Sedang | Tabel `user_bookmarks` + rute + slice | Menutup klaim `mockData.js:89`; §9 dokumen memori sudah memberi contoh skema ini |
-| Progres baca di server | Sedang | Tabel `reading_progress` + rute + `PdfReaderScreen` | Dasar bagi fitur turunan berikutnya |
-| Multi-plan (bulanan/tahunan/yayasan) | Rendah–sedang | `SUBSCRIPTION_PLANS`, `ProScreen`, `PaymentMethodScreen` | Struktur array sudah siap; berdampak langsung ke pendapatan |
-| Kode voucher / promo | Sedang | Tabel `vouchers` + validasi di `payments.routes.js` | Perlu aturan kuota dan masa berlaku |
-| Program referral | Sedang | Kolom `subscriptions.ref_code` yang sudah ada | Bisa menjadi rekomendasi manajerial untuk yayasan |
-| Pengingat perpanjangan otomatis | Sedang | Penjadwal server + `push_subscriptions` | Menekan churn; memakai jalur push yang sudah terbukti |
-| Pusat notifikasi in-app | Sedang | Tabel `notifications` + endpoint list/read | Melengkapi push yang kini bersifat sekali kirim |
-| Ulasan + rating dengan moderasi | Sedang | Tabel `book_reviews` + tab moderasi admin | Butuh policy RLS ketat dan penanganan spam |
-| RSVP/presensi majelis + ekspor ICS | Sedang | Tabel `event_attendees`, `CalendarScreen` | Nilai tinggi bagi jamaah, sejalan dengan fokus agenda |
-| Analitik keterbacaan per kitab | Sedang | Turunan `reading_progress` → dashboard admin | Menyediakan data empiris baru untuk Bab IV |
-| Riwayat unduhan / lisensi Pro | Sedang | Turunan `subscriptions` + `transactions` | Memudahkan klaim pengguna saat kendala akses |
-| Refresh token + kelola sesi perangkat | Sedang | `server/auth.js` + tabel sesi | Saat ini JWT 12 jam tanpa refresh maupun logout semua perangkat |
-| Uji otomatis + CI | Sedang | `tests/`, `npm test`, pipeline | Prasyarat agar fitur baru tidak meregresi |
-| i18n ID/EN/AR + dukungan RTL | Tinggi | Layer i18n + konversi seluruh string | Selaras dengan jangkauan 245 negara; bahasa Arab memerlukan pencerminan tata letak |
-| Dukungan EPUB | Tinggi | Parser + renderer + kolom format berkas | Membuka kontrol tipografi, pencarian teks, dan TTS |
-| Text-to-Speech untuk lansia | Tinggi | Ekstraksi teks PDF/EPUB + Web Speech API | Kontribusi aksesibilitas yang kuat untuk sidang |
-| Unduhan offline terkontrol (Pro) | Tinggi | CacheStorage/IndexedDB + enkripsi + masa berlaku | Wajib disertai kajian risiko hak cipta (lihat §2.4) |
-| PWA ke Google Play (TWA) | Sedang | Bubblewrap + Play Console | Sudah tercantum di roadmap §15.1 poin 4; murni pengemasan |
-| Migrasi media ke object storage + signed URL | Tinggi | `books.routes.js`, kolom media, `uploads.js`, `full_setup.sql` | Menghapus plafon 25 MB, memangkas overhead 33%, prasyarat EPUB & offline; sekaligus menutup VULN-15 |
-| Grace period + alur perpanjangan | Sedang | `server/auth.js`, penjadwal, `ProScreen`, `reminders.js` | Pasangan wajib perbaikan VULN-12; pengingat H-3 memakai push yang sudah ada |
-| Pembatalan/refund transaksi (QRIS & manual) | Sedang | `payments.routes.js`, `transactions.routes.js`, panel admin | `cancel_qris_simulation` sudah ada di database; dibutuhkan untuk pembukuan yayasan |
-| Metode pembayaran lain (VA/e-wallet) | Sedang | Midtrans Snap/Core, `PaymentMethodScreen` | Memperluas jangkauan; memakai kredensial Midtrans yang sama |
-| Manajemen perangkat & langganan push | Sedang | `push_subscriptions`, `notifications.routes.js` | Data `user_agent` sudah tersimpan; sekaligus memitigasi VULN-14 |
-| Riwayat & kirim ulang siaran pengumuman | Rendah | `eventReminder.js`, tab agenda admin | `reminder_sent_at` + `sendEventAnnouncementNow` sudah tersedia |
-| Broadcast pengumuman via WhatsApp | Sedang | `server/whatsapp.js` (fonnte/wablas/whacenter/twilio/webhook) | Menjangkau jamaah yang belum memasang PWA |
-| Laporan pendapatan bulanan berbasis agregasi SQL | Sedang | `health.routes.js`, `admin.routes.js` | Sekaligus memperbaiki pemindaian penuh pada `/api/stats` |
-| Ekspor kuitansi/struk PDF | Rendah–sedang | `transactions` + `ref_no`/`ref_code` | `toRefCode` sudah ada; berguna untuk pembukuan jamaah |
-| 2FA untuk admin | Sedang | Infrastruktur OTP yang sudah ada | Sinergi keamanan + fitur; melindungi panel yang memegang data pembayaran |
-| Rak/koleksi kurasi admin | Rendah | `carousel.routes.js`, `HomeScreen` | Memakai kembali mekanisme carousel sebagai rak tematik |
-| Gamifikasi keterlibatan (streak, papan mujahadah) | Sedang | `reading_progress`, `HomeScreen` | Mendorong retensi; menyediakan data baru untuk Bab IV |
-| Pencarian teks di dalam kitab | Sedang | `PdfReaderScreen` (text layer pdf.js) | Prasyarat TTS dan fitur kutipan |
-| Audit trail perubahan data admin | Sedang | Tabel `audit_log` + hook pada rute admin | Halaman log yang ada hanya menurunkan data, bukan jejak perubahan |
-| Halaman "Perangkat & sesi saya" + keluar dari semua perangkat | Sedang | `server/auth.js`, tabel sesi, `push_subscriptions` | Menutup VULN-24; `user_agent` sudah tersimpan (§2.11) |
-| Ganti kata sandi untuk pengguna yang sudah masuk | Rendah | `auth.routes.js`, `EditProfileScreen` | Saat ini pengguna hanya bisa lewat alur lupa-sandi |
-| Penangkapan galat klien & server (error tracking) | Sedang | `src/main.jsx`, `logger.js`, endpoint baru | Observability; menutup §2.12 |
-| Pemantauan uptime + riwayat insiden | Rendah | `GET /api/health` yang sudah ada | Bukti kesiapan operasional untuk lembaga |
-| Ekspor data pribadi & permintaan hapus akun | Sedang | Alur admin + tabel pengguna | Kepatuhan privasi; sering ditanyakan penguji |
-| Pusat FAQ dinamis yang dikelola admin | Rendah | `mockData.js` → tabel | Menutup klaim tidak akurat (§2.13) |
-| Panduan onboarding interaktif untuk jamaah senior | Rendah–sedang | `HomeScreen` + komponen tour | Adopsi pengguna lanjut usia |
-| Aksesibilitas menyeluruh (ukuran font, kontras tinggi, label pembaca layar) | Sedang | Seluruh komponen UI | Inklusi; layak menjadi bab pembahasan tersendiri |
-| Mode baca berdampingan (kitab + terjemah) | Sedang | `PdfReaderScreen` | Kebutuhan nyata pengajian; butuh EPUB/teks berlapis |
-| Catatan & sorotan per halaman + ekspor catatan | Sedang | Tabel anotasi + reader | Melengkapi bookmark; bahan kajian pribadi |
-| Generator kartu kutipan untuk dibagikan | Rendah | Canvas + data kutipan | Viral loop dakwah tanpa biaya iklan |
-| Kuis/evaluasi pemahaman kitab + sertifikat | Tinggi | Modul baru + `reading_progress` | Kontribusi akademik (e-learning); mengangkat Bab IV |
-| Absensi majelis via pemindaian QR + sertifikat kehadiran | Sedang | Agenda + kamera + tabel kehadiran | Memanfaatkan pola QR dan agenda yang sudah ada |
-| Donasi/infaq QRIS dengan kampanye bertarget | Sedang | Memakai ulang alur QRIS yang sudah terbukti | Nilai tinggi bagi yayasan dengan biaya teknis rendah |
-| Kitab audio / rekaman ceramah (player + playlist) | Sedang | Object storage + komponen player | Menjangkau jamaah saat berkendara; butuh Tahap nol |
-| Manajemen petugas/mubaligh (roster tanpa jadwal bentrok) | Sedang | Tabel penugasan + `events` | Operasional lembaga, bukan sekadar jamaah |
-| Bulk import kitab & pengguna via Excel/CSV | Rendah | ExcelJS sudah tersedia | Mempercepat pengelolaan awal dan migrasi data |
-| Versi/revisi kitab + changelog | Sedang | `books` + tabel revisi | Transparansi perubahan isi kitab |
-| API publik + webhook keluar untuk integrasi lembaga | Sedang | Layer API baru | Menyambung ke sistem pesantren/lembaga lain |
+| Status | Fitur | Ruang lingkup | Lapisan yang disentuh | Catatan |
+|---|---|---|---|---|
+| [x] SELESAI | Pencarian + filter + sort katalog | Rendah | `books.routes.js`, `useCatalogSlice`, `HomeScreen` | Pencarian instan dan filter dinamis |
+| [x] SELESAI | Halaman detail buku + "Lanjutkan Membaca" | Rendah–sedang | `GET /api/books/:id`, `HomeScreen` | Memakai progres baca yang tersimpan |
+| [x] SELESAI | Bookmark dan resume posisi baca | Sedang | `PdfReaderScreen.jsx` | Konsep penanda buku dan dialog resume |
+| [x] SELESAI | Progres baca e-reader | Sedang | `PdfReaderScreen.jsx` | Pelacak halaman terakhir aktif |
+| [x] SELESAI | Penampil Universal (PDF & Word DOCX) | Sedang | `books.routes.js`, `PdfReaderScreen` | Mammoth library untuk DOCX + PDF.js |
+| [x] SELESAI | Paket Langganan Pro Tunggal | Rendah | `membership.js`, `ProScreen` | Paket Pro Rp 25.000 tersinkron |
+| [x] SELESAI | Simulasi Pembayaran QRIS Sandbox | Rendah | `PaymentConfirmScreen`, `payments.routes` | Tombol bayar instan untuk sidang |
+| [x] SELESAI | Riwayat langganan & transaksi pengguna | Sedang | `subscriptions`, `transactions`, `ProfileScreen` | Status aktif, struk, dan riwayat |
+| [x] SELESAI | Ekspor laporan Excel 1-klik | Rendah | `AdminScreen.jsx` | Pustaka ExcelJS untuk data transaksi & anggota |
+| [x] SELESAI | Aksesibilitas WCAG AA & Mode Teks Besar | Sedang | Seluruh komponen UI, `component.json` | 17/17 kontras lulus, Mode Teks Besar lansia |
+| [x] SELESAI | Proteksi Konten Web (Watermark & No-Select) | Sedang | `PdfReaderScreen.jsx` | M1: Watermark kanvas dinamis, anti klik kanan |
+| [x] SELESAI | Dashboard Analisis Visual Admin | Sedang | `AdminScreen.jsx` | Recharts statistik, formasi kartu 3+2 |
+| [ ] ROADMAP | Kode voucher / promo | Sedang | Tabel `vouchers` + validasi di `payments.routes.js` | Perlu aturan kuota dan masa berlaku |
+| [ ] ROADMAP | Program referral pengamal | Sedang | Kolom `subscriptions.ref_code` yang sudah ada | Rekomendasi manajerial yayasan |
+| [ ] ROADMAP | Pengingat perpanjangan otomatis via Push/WA | Sedang | Penjadwal server | Menekan churn langganan |
+| [ ] ROADMAP | Multi-plan berjangka (Tahunan/Yayasan) | Rendah–sedang | `SUBSCRIPTION_PLANS`, `ProScreen` | Opsi periode 3 bulan / 1 tahun |
+| [ ] ROADMAP | Pusat notifikasi in-app | Sedang | Tabel `notifications` + endpoint list/read | Riwayat notifikasi dalam aplikasi |
+| [ ] ROADMAP | Ulasan + rating kitab dengan moderasi | Sedang | Tabel `book_reviews` + tab moderasi admin | RLS ketat dan penanganan spam |
+| [ ] ROADMAP | RSVP/presensi majelis + ekspor ICS | Sedang | `CalendarScreen` | Agenda kegiatan majelis mujahadah |
+| [ ] ROADMAP | Analitik keterbacaan per kitab | Sedang | Turunan progres baca → dashboard admin | Data empiris Bab IV |
+| [ ] ROADMAP | Refresh token + kelola sesi perangkat | Sedang | `server/auth.js` + tabel sesi | Keluar dari semua perangkat |
+| [ ] ROADMAP | i18n ID/EN/AR + dukungan RTL | Tinggi | Layer i18n + konversi seluruh string | Bahasa Arab dan tata letak RTL |
+| [ ] ROADMAP | Dukungan format EPUB | Tinggi | Parser + renderer EPUB | Tipografi adaptif |
+| [ ] ROADMAP | Text-to-Speech (TTS) suara pembaca | Tinggi | Web Speech API | Aksesibilitas audio naskah |
+| [ ] ROADMAP | Unduhan offline terenkripsi (Mobile) | Tinggi | Native SQLite + encryption | Khusus aplikasi native mobile |
+| [ ] ROADMAP | Kuis pemahaman kitab + sertifikat | Tinggi | Modul e-learning | Sertifikat kelulusan kajian |
+| [ ] ROADMAP | Donasi / infaq QRIS majelis | Sedang | Alur QRIS terpisah | Donasi pembangunan & majelis |
 
 Peta fitur terhadap modul yang sudah ada:
 
