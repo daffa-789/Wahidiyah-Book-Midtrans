@@ -76,7 +76,8 @@ export const hasActivePro = (user, now = new Date()) => {
   if (raw === null || raw === undefined || raw === '') return true;
   const expiresAt = new Date(raw);
   if (Number.isNaN(expiresAt.getTime())) return false;
-  return expiresAt.getTime() > now.getTime();
+  const nowMs = now instanceof Date ? now.getTime() : typeof now === 'number' ? now : Date.now();
+  return expiresAt.getTime() > nowMs;
 };
 
 export const toPublicUser = (user, now = new Date()) => {

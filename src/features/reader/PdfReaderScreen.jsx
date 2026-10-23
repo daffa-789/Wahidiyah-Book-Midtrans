@@ -3,154 +3,146 @@ import {
   ArrowLeft,
   FileText,
   Lock,
-  Type,
-  Sun,
-  Moon,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
-  Trash2,
-  X,
-  Check
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Minimize
 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
-import { apiJson, apiRequest, authHeaders, readableError } from '@lib/api';
-import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
+import { apiJson, apiRequest, authHeaders } from '@lib/api';
 
 const TEXT_TYPES = new Set(['txt', 'md', 'csv', 'rtf']);
 const PDF_TYPES = new Set(['pdf']);
 
-const getExtension = (book) => String(book?.contentExtension || book?.contentType || '').toLowerCase().replace('.', '');
-
-const THEMES = {
-  light: {
-    id: 'light',
-    name: 'Terang',
-    bgMain: 'bg-cream-50',
-    bgArticle: 'bg-cream-100 text-ink-900 border-cream-300',
-    header: 'bg-ink-900/95 text-cream-50',
-    subText: 'text-ink-500'
-  },
-  sepia: {
-    id: 'sepia',
-    name: 'Sepia',
-    bgMain: 'bg-[#F4ECD8]',
-    bgArticle: 'bg-[#FAF4E6] text-[#433422] border-[#E2D5B8]',
-    header: 'bg-[#2D2419] text-[#E8DFD0]',
-    subText: 'text-[#7D6B53]'
-  },
-  dark: {
-    id: 'dark',
-    name: 'Malam',
-    bgMain: 'bg-[#141210]',
-    bgArticle: 'bg-[#1E1B18] text-[#E4D9C6] border-[#38332B]',
-    header: 'bg-[#0D0B0A] text-[#E4D9C6]',
-    subText: 'text-[#A89F91]'
-  }
-};
+const getExtension = (book) =>
+  String(book?.contentExtension || book?.contentType || '').toLowerCase().replace('.', '');
 
 export const PdfReaderScreen = () => {
   const { activeBook, navigateTo, user } = useApp();
-  const [fontSize, setFontSize] = useState('base');
   const [textContent, setTextContent] = useState('');
   const [pdfUrl, setPdfUrl] = useState(null);
   const [contentStatus, setContentStatus] = useState('idle');
   const [reloadToken, setReloadToken] = useState(0);
 
-  // Theme Reader (Light / Sepia / Dark)
-  const [themeMode, setThemeMode] = useState(() => {
-    const stored = localStorage.getItem('wb_reader_theme');
-    if (stored) return stored;
-    const appIsDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-    return appIsDark ? 'dark' : 'light';
-  });
+  // Status Perbesaran Dokumen (Zoom)
+  const [zoom, setZoom] = useState(100);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Pelacak Halaman Terakhir
   const bookTotalPages = Number(activeBook?.pages || activeBook?.totalPages || (activeBook?.samplePages?.length || 1));
+  const samplePages = activeBook?.samplePages || [];
+  const totalPages = Math.max(1, samplePages.length || bookTotalPages);
   const [currentPage, setCurrentPage] = useState(1);
-  const [resumePrompt, setResumePrompt] = useState(null);
-
-
+  const [pageInput, setPageInput] = useState('1');
 
   const extension = getExtension(activeBook);
-  const samplePages = activeBook?.samplePages || [];
-  const totalPages = samplePages.length || bookTotalPages;
 
-  // Cek Halaman Terakhir yang Tersimpan dari Server & Penyimpanan Lokal
+  // Ambil halaman terakhir yang tersimpan saat pertama kali dibuka (tanpa popup mengganggu)
   useEffect(() => {
     if (!activeBook?.id) return;
     let active = true;
 
-    const checkResume = async () => {
-      // 1. Cek dari penyimpanan lokal
+    const loadLastPage = async () => {
       const storageKey = `last_read_page_${activeBook.id}`;
       const localSaved = Number(localStorage.getItem(storageKey));
-
-      // 2. Coba sinkronisasi dengan server
-      try {
-        const res = await apiJson(`/api/reading-progress/${activeBook.id}`);
-        if (active && res?.progress?.last_page && res.progress.last_page > 1) {
-          setResumePrompt({ page: res.progress.last_page });
-          return;
-        }
-      } catch {
-        // Abaikan galat jaringan
+      if (localSaved && localSaved >= 1 && localSaved <= totalPages) {
+        setCurrentPage(localSaved);
+        setPageInput(String(localSaved));
       }
 
-      if (active && localSaved > 1) {
-        setResumePrompt({ page: localSaved });
+      try {
+        const res = await apiJson(`/api/reading-progress/${activeBook.id}`);
+        if (active && res?.progress?.last_page && res.progress.last_page <= totalPages) {
+          setCurrentPage(res.progress.last_page);
+          setPageInput(String(res.progress.last_page));
+        }
+      } catch {
+        // Abaikan bila offline
       }
     };
 
-    checkResume();
+    loadLastPage();
     return () => { active = false; };
-  }, [activeBook?.id]);
+  }, [activeBook?.id, totalPages]);
 
-
-
-  // Simpan halaman saat ini ke lokal & server
+  // Simpan posisi membaca secara otomatis
   const saveCurrentPage = useCallback((page) => {
-    setCurrentPage(page);
+    const validPage = Math.max(1, Math.min(totalPages, page));
+    setCurrentPage(validPage);
+    setPageInput(String(validPage));
+
     if (activeBook?.id) {
-      localStorage.setItem(`last_read_page_${activeBook.id}`, String(page));
-      // Sinkronkan ke server secara asinkron
+      localStorage.setItem(`last_read_page_${activeBook.id}`, String(validPage));
       apiJson(`/api/reading-progress/${activeBook.id}`, {
         method: 'PUT',
-        body: { last_page: page, total_pages: totalPages || null }
-      }).catch(() => {
-        // Abaikan galat jaringan
-      });
+        body: { last_page: validPage, total_pages: totalPages || null }
+      }).catch(() => {});
     }
   }, [activeBook?.id, totalPages]);
 
-  const handleResumePage = () => {
-    if (resumePrompt?.page) {
-      saveCurrentPage(resumePrompt.page);
+  // Navigasi keyboard (Panah Kiri / Kanan)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        saveCurrentPage(currentPage - 1);
+      } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        saveCurrentPage(currentPage + 1);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentPage, saveCurrentPage]);
+
+  // Toggle Layar Penuh
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
     }
-    setResumePrompt(null);
   };
 
-  const handleDismissResume = () => {
-    setResumePrompt(null);
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
+  // Penyesuaian Zoom
+  const zoomIn = () => setZoom((prev) => Math.min(200, prev + 15));
+  const zoomOut = () => setZoom((prev) => Math.max(60, prev - 15));
+  const resetZoom = () => setZoom(100);
+
+  // Input halaman manual di pill bawah
+  const handlePageInputSubmit = (e) => {
+    e.preventDefault();
+    const val = parseInt(pageInput, 10);
+    if (!isNaN(val)) {
+      saveCurrentPage(val);
+    } else {
+      setPageInput(String(currentPage));
+    }
   };
 
-  const handleThemeChange = (mode) => {
-    setThemeMode(mode);
-    localStorage.setItem('wb_reader_theme', mode);
-  };
-
-  // Tambah pembatas pada halaman saat ini
-
-  // Muat konten PDF / Teks
+  // Muat konten PDF atau teks
   useEffect(() => {
     let cancelled = false;
     let objectUrl = null;
     setTextContent('');
     setPdfUrl(null);
+
     if (!activeBook?.contentUrl || (!TEXT_TYPES.has(extension) && !PDF_TYPES.has(extension))) {
       setContentStatus('idle');
       return undefined;
     }
+
     setContentStatus('loading');
     apiRequest(activeBook.contentUrl, { headers: authHeaders() })
       .then(async (response) => {
@@ -168,34 +160,29 @@ export const PdfReaderScreen = () => {
         }
         setContentStatus('ready');
       })
-      .catch((loadError) => {
-        if (!cancelled) setContentStatus(loadError.message === 'PRO_LOCKED' ? 'locked' : 'error');
+      .catch((err) => {
+        if (!cancelled) setContentStatus(err.message === 'PRO_LOCKED' ? 'locked' : 'error');
       });
+
     return () => {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [activeBook?.contentUrl, extension, reloadToken]);
 
-  const fontClass = useMemo(() => ({ sm: 'text-small', base: 'text-body', lg: 'text-lead' }[fontSize]), [fontSize]);
-  const cycleFontSize = () => setFontSize((current) => current === 'sm' ? 'base' : current === 'base' ? 'lg' : 'sm');
-
-  const retryLoadContent = () => {
-    setContentStatus('loading');
-    setReloadToken((token) => token + 1);
-  };
+  const retryLoadContent = () => setReloadToken((prev) => prev + 1);
 
   if (!activeBook) {
     return (
-      <div className="theme-light-scope flex min-h-screen items-center justify-center bg-ink-900 p-6">
-        <div className="max-w-sm rounded-3xl bg-cream-50 p-7 text-center shadow-2xl">
-          <FileText className="mx-auto h-8 w-8 text-brand-600" />
-          <h1 className="mt-4 font-black text-ink-900 text-h3">Buku belum dipilih</h1>
-          <p className="mt-2 text-caption text-ink-400">Pilih buku dari katalog untuk mulai membaca.</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] px-4 text-center">
+        <div className="max-w-md rounded-3xl border border-cream-300 bg-white p-8 shadow-xl">
+          <BookOpen className="mx-auto h-12 w-12 text-ink-300" />
+          <h2 className="mt-4 text-h2 font-black text-ink-900">Buku tidak ditemukan</h2>
+          <p className="mt-2 text-caption text-ink-500">Pilih buku dari beranda katalog terlebih dahulu.</p>
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="mt-5 rounded-2xl bg-brand-700 px-4 py-3 text-caption font-bold text-cream-50"
+            className="mt-6 rounded-2xl bg-brand-700 px-6 py-3 text-caption font-bold text-white transition hover:bg-brand-800"
           >
             Kembali ke katalog
           </button>
@@ -204,245 +191,214 @@ export const PdfReaderScreen = () => {
     );
   }
 
-  const currentTheme = THEMES[themeMode] || THEMES.light;
-
-  const lockedCard = (
-    <div className="reader-empty-state">
-      <Lock className="mx-auto h-9 w-9 text-gold-400" />
-      <h2 className="mt-4 text-h3 font-black text-cream-50">Konten khusus pembaca Pro</h2>
-      <p className="mt-2 max-w-md text-caption leading-relaxed text-cream-300">
-        Aktifkan paket Pro untuk membuka kitab eksklusif ini.
-      </p>
-      <button
-        type="button"
-        onClick={() => navigateTo('pro')}
-        className="mt-5 rounded-2xl bg-brand-700 px-5 py-3 text-caption font-bold text-cream-50 transition hover:bg-brand-800"
-      >
-        Lihat Paket Pro
-      </button>
-    </div>
-  );
-
-  const errorCard = (
-    <div className="reader-empty-state" role="alert">
-      <FileText className="mx-auto h-9 w-9 text-ink-300" />
-      <h2 className="mt-4 text-h3 font-black text-cream-50">Konten belum dapat dimuat</h2>
-      <p className="mt-2 max-w-md text-caption leading-relaxed text-cream-300">
-        Server atau basis data tidak menjawab permintaan konten ini.
-      </p>
-      <button
-        type="button"
-        onClick={retryLoadContent}
-        className="mt-5 rounded-2xl bg-brand-700 px-5 py-3 text-caption font-bold text-cream-50 transition hover:bg-brand-800"
-      >
-        Coba muat ulang
-      </button>
-    </div>
-  );
-
-  const renderContent = () => {
-    if (PDF_TYPES.has(extension) && activeBook.contentUrl) {
-      if (contentStatus === 'locked') return lockedCard;
-      if (contentStatus === 'error') return errorCard;
-      if (contentStatus === 'loading' || !pdfUrl) {
-        return (
-          <div className="reader-empty-state" role="status" aria-live="polite">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto mb-3"></div>
-            Memuat dokumen PDF…
-          </div>
-        );
-      }
-      return (
-        <div 
-          className="relative mx-auto h-[calc(100vh-7.5rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-cream-300 bg-cream-50 shadow-2xl select-none"
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          <iframe
-            key={`${pdfUrl}-${currentPage}`}
-            title={`Konten ${activeBook.title}`}
-            src={`${pdfUrl}#page=${currentPage}&toolbar=0&navpanes=0`}
-            className="h-full w-full border-0 select-none"
-          />
-        </div>
-      );
-    }
-
-    if (TEXT_TYPES.has(extension) && activeBook.contentUrl) {
-      if (contentStatus === 'loading') return <div className="reader-empty-state">Memuat teks dokumen…</div>;
-      if (contentStatus === 'locked') return lockedCard;
-      if (contentStatus === 'error') return errorCard;
-      return (
-        <article className={`relative mx-auto w-full max-w-3xl whitespace-pre-wrap rounded-2xl p-7 leading-8 shadow-2xl sm:p-12 ${fontClass} ${currentTheme.bgArticle} border select-none`}>
-          <div className="relative z-10">
-            {textContent || 'Dokumen tidak berisi teks.'}
-          </div>
-        </article>
-      );
-    }
-
-    if (totalPages > 0 && samplePages.length > 0) {
-      const activeSample = samplePages[currentPage - 1] || samplePages[0];
-      return (
-        <div className="flex w-full flex-col items-center gap-6 sm:gap-8">
-          <article className={`w-full max-w-3xl rounded-2xl p-7 shadow-2xl sm:p-12 ${fontClass} ${currentTheme.bgArticle} border select-none`}>
-            <header className="flex justify-between border-b border-cream-300/40 pb-4 text-micro font-bold tracking-wider opacity-70">
-              <span>PERPUSTAKAAN DIGITAL WAHIDIYAH</span>
-              <span>HALAMAN {currentPage} DARI {totalPages}</span>
-            </header>
-            {activeSample?.arabicHeading && (
-              <p className="font-arabic my-8 text-center text-2xl text-brand-700">
-                {activeSample.arabicHeading}
-              </p>
-            )}
-            <h2 className="mb-6 text-center text-h2 font-black text-brand-800">
-              {activeSample?.title}
-            </h2>
-            <p className="whitespace-pre-line leading-8">
-              {activeSample?.content}
-            </p>
-          </article>
-        </div>
-      );
-    }
-
-    return (
-      <div className="reader-empty-state">
-        <FileText className="mx-auto h-9 w-9 text-brand-400" />
-        <h2 className="mt-4 text-h3 font-black text-cream-50">Lampiran Dokumen</h2>
-        <p className="mt-2 max-w-md text-caption leading-relaxed text-cream-300">
-          {activeBook.contentName ? `${activeBook.contentName} telah tersimpan.` : 'Konten buku belum ditambahkan.'}
-        </p>
-      </div>
-    );
-  };
+  const percentage = Math.min(100, Math.max(1, Math.round((currentPage / totalPages) * 100)));
 
   return (
-    <main className={`theme-light-scope flex min-h-screen flex-col ${currentTheme.bgMain} transition-colors duration-300 page-transition`}>
-      {/* Top Sticky Header */}
-      <header className={`sticky top-0 z-30 border-b border-cream-300/20 ${currentTheme.header} px-3 py-3 backdrop-blur sm:px-6 shadow-sm`}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-          {/* Back & Title */}
-          <div className="flex min-w-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => navigateTo('home')}
-              className="rounded-xl p-2 -m-1 min-h-11 min-w-11 flex items-center justify-center opacity-80 hover:opacity-100 transition hover:bg-cream-100/10 focus-visible:outline-none"
-              title="Kembali ke katalog"
-              aria-label="Kembali ke katalog"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div className="min-w-0">
-              <h1 className="truncate text-small font-bold">{activeBook.title}</h1>
-              <p className="truncate text-caption opacity-70">
-                {activeBook.author} {activeBook.contentName ? `• ${activeBook.contentName}` : ''}
+    <div className="min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-ink-950 text-ink-900 dark:text-cream-50 select-none">
+      {/* Top Header Minimalis & Bersih */}
+      <header className="sticky top-0 z-30 h-14 bg-white/95 dark:bg-ink-900/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs">
+        {/* Tombol Kembali & Judul Buku */}
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => navigateTo('home')}
+            className="p-2 -ml-2 rounded-xl text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-ink-100 dark:hover:bg-ink-800/80 transition cursor-pointer"
+            title="Kembali ke beranda"
+            aria-label="Kembali ke beranda"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-body font-bold text-ink-900 dark:text-cream-50 truncate max-w-xs sm:max-w-md md:max-w-lg">
+              {activeBook.title}
+            </h1>
+            {activeBook.author && (
+              <p className="text-caption text-ink-400 dark:text-ink-500 truncate -mt-0.5">
+                {activeBook.author}
               </p>
-            </div>
+            )}
           </div>
+        </div>
 
-          {/* Controls: Page Navigation + Themes + Font Size */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Page Tracker & Navigator */}
-            <div className="flex items-center gap-1 bg-cream-50/10 px-2 py-1 rounded-xl text-caption font-semibold">
-              <button
-                type="button"
-                onClick={() => saveCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage <= 1}
-                className="p-1 rounded hover:bg-cream-50/10 disabled:opacity-30 cursor-pointer"
-                title="Halaman Sebelumnya"
-                aria-label="Halaman Sebelumnya"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </button>
-              <span className="px-1 text-micro sm:text-caption">
-                Hal. {currentPage} {totalPages > 1 ? `/ ${totalPages}` : ''}
-              </span>
-              <button
-                type="button"
-                onClick={() => saveCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage >= totalPages}
-                className="p-1 rounded hover:bg-cream-50/10 disabled:opacity-30 cursor-pointer"
-                title="Halaman Berikutnya"
-                aria-label="Halaman Berikutnya"
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {/* Theme Selector (Light, Sepia, Dark) */}
-            <div className="flex items-center bg-cream-50/10 p-0.5 rounded-xl">
-              <button
-                type="button"
-                onClick={() => handleThemeChange('light')}
-                className={`p-1.5 rounded-lg transition cursor-pointer ${themeMode === 'light' ? 'bg-cream-50 text-ink-900 shadow-xs' : 'opacity-70 hover:opacity-100'}`}
-                title="Mode Terang"
-              >
-                <Sun className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleThemeChange('sepia')}
-                className={`p-1.5 rounded-lg transition cursor-pointer ${themeMode === 'sepia' ? 'bg-[#FAF4E6] text-[#433422] shadow-xs' : 'opacity-70 hover:opacity-100'}`}
-                title="Mode Sepia (Hangat)"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleThemeChange('dark')}
-                className={`p-1.5 rounded-lg transition cursor-pointer ${themeMode === 'dark' ? 'bg-[#1E1B18] text-[#E4D9C6] shadow-xs' : 'opacity-70 hover:opacity-100'}`}
-                title="Mode Malam (Gelap)"
-              >
-                <Moon className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {/* Font Size Toggle */}
+        {/* Kontrol Kanan: Zoom & Fullscreen */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Zoom Controls */}
+          <div className="flex items-center bg-ink-100/80 dark:bg-ink-800/80 rounded-xl p-0.5 border border-ink-200/50 dark:border-ink-700/50 text-caption font-semibold">
             <button
               type="button"
-              onClick={cycleFontSize}
-              className="rounded-xl p-2 min-h-9 min-w-9 flex items-center justify-center opacity-80 hover:opacity-100 transition hover:bg-cream-50/10 cursor-pointer"
-              title="Ubah ukuran teks"
+              onClick={zoomOut}
+              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 hover:bg-white dark:hover:bg-ink-700 transition cursor-pointer"
+              title="Perkecil"
+              aria-label="Perkecil"
             >
-              <Type className="h-4 w-4" />
+              <ZoomOut className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={resetZoom}
+              className="px-2 text-micro text-ink-700 dark:text-cream-200 hover:text-brand-700 transition cursor-pointer"
+              title="Reset Zoom"
+            >
+              {zoom}%
+            </button>
+            <button
+              type="button"
+              onClick={zoomIn}
+              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 hover:bg-white dark:hover:bg-ink-700 transition cursor-pointer"
+              title="Perbesar"
+              aria-label="Perbesar"
+            >
+              <ZoomIn className="h-4 w-4" />
             </button>
           </div>
+
+          {/* Fullscreen Toggle */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="p-2 rounded-xl text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-ink-100 dark:hover:bg-ink-800 transition cursor-pointer"
+            title={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
+            aria-label={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
+          >
+            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+          </button>
         </div>
       </header>
 
-      {/* Floating Prompt: Lanjut Membaca */}
-      {resumePrompt && (
-        <div className="sticky top-16 z-20 mx-auto my-2 max-w-md w-full px-4 animate-in fade-in slide-in-from-top-3">
-          <div className="flex items-center justify-between gap-3 bg-brand-800 text-cream-50 px-4 py-2.5 rounded-2xl shadow-xl border border-brand-600">
-            <div className="flex items-center gap-2 text-caption">
-              <BookOpen className="h-4 w-4 text-gold-300" />
-              <span>Terakhir Anda membaca di <strong>Halaman {resumePrompt.page}</strong></span>
-            </div>
-            <div className="flex items-center gap-1.5">
+      {/* Main Reading Canvas */}
+      <main className="flex-1 flex flex-col items-center justify-start py-3 sm:py-5 px-2 sm:px-4 overflow-y-auto">
+        {/* Render PDF */}
+        {PDF_TYPES.has(extension) && activeBook.contentUrl ? (
+          contentStatus === 'locked' ? (
+            <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white dark:bg-ink-900 p-8 text-center shadow-xl">
+              <Lock className="mx-auto h-10 w-10 text-gold-500 mb-3" />
+              <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Konten Khusus Member Pro</h2>
+              <p className="mt-2 text-caption text-ink-500">Aktifkan paket Pro untuk membuka dan membaca naskah lengkap ini.</p>
               <button
                 type="button"
-                onClick={handleResumePage}
-                className="px-2.5 py-1 bg-cream-50 text-brand-900 rounded-lg text-micro font-bold shadow-xs hover:bg-cream-100 transition cursor-pointer"
+                onClick={() => navigateTo('pro')}
+                className="mt-6 rounded-2xl bg-brand-700 px-6 py-2.5 text-caption font-bold text-white hover:bg-brand-800 transition cursor-pointer"
               >
-                Lanjutkan
-              </button>
-              <button
-                type="button"
-                onClick={handleDismissResume}
-                className="px-2 py-1 text-cream-200 hover:text-cream-50 text-micro font-medium cursor-pointer"
-              >
-                Abaikan
+                Lihat Paket Pro
               </button>
             </div>
+          ) : contentStatus === 'error' ? (
+            <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white dark:bg-ink-900 p-8 text-center shadow-xl">
+              <FileText className="mx-auto h-10 w-10 text-semantic-danger mb-3" />
+              <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Gagal Memuat Dokumen</h2>
+              <p className="mt-2 text-caption text-ink-500">Berkas dokumen PDF tidak dapat dimuat dari basis data.</p>
+              <button
+                type="button"
+                onClick={retryLoadContent}
+                className="mt-6 rounded-2xl bg-brand-700 px-6 py-2.5 text-caption font-bold text-white hover:bg-brand-800 transition cursor-pointer"
+              >
+                Coba Muat Ulang
+              </button>
+            </div>
+          ) : contentStatus === 'loading' || !pdfUrl ? (
+            <div className="my-auto flex flex-col items-center justify-center p-12 text-ink-500">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent mb-3" />
+              <span className="text-caption font-medium">Memuat halaman dokumen...</span>
+            </div>
+          ) : (
+            <div
+              className="relative w-full max-w-4xl bg-white dark:bg-ink-900 shadow-md rounded-lg overflow-hidden border border-ink-200/60 dark:border-ink-800/70"
+              style={{
+                height: 'calc(100vh - 5.5rem)',
+                maxWidth: `${Math.min(1200, Math.max(640, Math.round(896 * (zoom / 100))))}px`
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <iframe
+                key={`${pdfUrl}-${currentPage}-${zoom}`}
+                title={`Konten ${activeBook.title}`}
+                src={`${pdfUrl}#page=${currentPage}&zoom=${zoom}&toolbar=0&navpanes=0`}
+                className="h-full w-full border-0 select-none"
+              />
+            </div>
+          )
+        ) : TEXT_TYPES.has(extension) && activeBook.contentUrl ? (
+          <article className="relative w-full max-w-3xl bg-white dark:bg-ink-900 p-8 sm:p-14 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 whitespace-pre-wrap select-none">
+            {textContent || 'Dokumen tidak berisi teks.'}
+          </article>
+        ) : totalPages > 0 && samplePages.length > 0 ? (
+          <article className="relative w-full max-w-3xl bg-white dark:bg-ink-900 p-8 sm:p-12 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 select-none">
+            <header className="flex justify-between border-b border-ink-100 pb-3 text-micro font-bold text-ink-400">
+              <span>PERPUSTAKAAN DIGITAL WAHIDIYAH</span>
+              <span>HALAMAN {currentPage} / {totalPages}</span>
+            </header>
+            {samplePages[currentPage - 1]?.arabicHeading && (
+              <p className="font-arabic my-6 text-center text-2xl text-brand-700">
+                {samplePages[currentPage - 1].arabicHeading}
+              </p>
+            )}
+            <h2 className="mb-4 text-center text-h2 font-black text-brand-900 dark:text-cream-50">
+              {samplePages[currentPage - 1]?.title}
+            </h2>
+            <p className="whitespace-pre-line leading-8">
+              {samplePages[currentPage - 1]?.content}
+            </p>
+          </article>
+        ) : (
+          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white p-8 text-center shadow-xl">
+            <FileText className="mx-auto h-10 w-10 text-ink-300 mb-3" />
+            <h2 className="text-h3 font-bold text-ink-900">Lampiran Dokumen</h2>
+            <p className="mt-2 text-caption text-ink-500">
+              {activeBook.contentName ? `${activeBook.contentName} telah tersimpan.` : 'Konten naskah buku belum diunggah.'}
+            </p>
           </div>
-        </div>
-      )}
-
-      {/* Main Reading Area */}
-      <section className="flex-1 overflow-auto p-3 sm:p-7 select-none">
-        {renderContent()}
-      </section>
-
+        )}
       </main>
+
+      {/* Floating Bottom Navigation Pill (Persis seperti tampilan e-reader Moco / Gramedia) */}
+      <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30">
+        <form
+          onSubmit={handlePageInputSubmit}
+          className="flex items-center gap-2 bg-white/95 dark:bg-ink-900/95 backdrop-blur-md shadow-xl border border-ink-200/90 dark:border-ink-700/80 rounded-full px-3.5 py-1.5 text-caption font-medium text-ink-800 dark:text-cream-100"
+        >
+          {/* Tombol Sebelumnya */}
+          <button
+            type="button"
+            onClick={() => saveCurrentPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className="p-1 rounded-full text-ink-700 dark:text-cream-200 hover:bg-ink-100 dark:hover:bg-ink-800 disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer"
+            title="Halaman Sebelumnya"
+            aria-label="Halaman Sebelumnya"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {/* Kotak Halaman & Persentase */}
+          <div className="flex items-center gap-1.5 px-1 font-mono text-small">
+            <input
+              type="text"
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              onBlur={handlePageInputSubmit}
+              className="w-8 sm:w-10 text-center font-bold text-ink-900 dark:text-cream-50 bg-ink-50 dark:bg-ink-800 rounded py-0.5 border border-ink-200 dark:border-ink-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-600 text-small"
+              title="Ketik nomor halaman lalu tekan Enter"
+            />
+            <span className="text-ink-400">/</span>
+            <span className="text-ink-600 dark:text-ink-300 font-semibold">{totalPages}</span>
+            <span className="text-ink-300 dark:text-ink-600 mx-0.5">•</span>
+            <span className="text-ink-500 dark:text-ink-400 text-caption font-sans">
+              {percentage}%
+            </span>
+          </div>
+
+          {/* Tombol Selanjutnya */}
+          <button
+            type="button"
+            onClick={() => saveCurrentPage(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            className="p-1 rounded-full text-ink-700 dark:text-cream-200 hover:bg-ink-100 dark:hover:bg-ink-800 disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer"
+            title="Halaman Berikutnya"
+            aria-label="Halaman Berikutnya"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </form>
+      </footer>
+    </div>
   );
 };

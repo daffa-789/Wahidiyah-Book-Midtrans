@@ -15,7 +15,6 @@ import {
   getCalendarMonthGrid
 } from '@lib/date';
 import { layout, controls } from '@lib/styles';
-import { NotificationToggle } from '@ui/NotificationToggle';
 import { CalendarSkeleton } from '@ui/Skeleton';
 
 export const CalendarScreen = () => {
@@ -84,8 +83,7 @@ export const CalendarScreen = () => {
               </p>
             </div>
             <div className="flex items-center gap-3 self-start sm:self-auto">
-              <NotificationToggle variant="header-compact" />
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cream-50/15 bg-cream-50/10 text-cream-50 backdrop-blur-sm shrink-0">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cream-50/15 bg-cream-50/10 text-cream-50 backdrop-blur-sm shrink-0">
                 <CalendarIcon className="h-5 w-5 text-brand-100" strokeWidth={1.8} />
               </div>
             </div>

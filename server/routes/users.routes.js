@@ -69,7 +69,7 @@ usersRouter.get('/users', requireAuth, requireAdmin, async (req, res) => {
       .from('users')
       .select('*')
       .order('created_at', { ascending: false });
-    res.json({ success: true, users: (data || []).map(toPublicUser) });
+    res.json({ success: true, users: (data || []).map((u) => toPublicUser(u)) });
   } catch (error) {
     fail(res, error);
   }
