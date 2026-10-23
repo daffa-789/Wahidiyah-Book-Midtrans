@@ -1,9 +1,8 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { BookOpen, Lock, Sparkles, Search, X, Clock, ArrowRight } from 'lucide-react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
+import { BookOpen, Lock, Sparkles, Search, X } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 import { BookGridSkeleton } from '@ui/Skeleton';
-import { apiJson } from '@lib/api';
 import HeroCarousel from './HeroCarousel';
 
 import { BookCard } from './BookCard';
@@ -25,7 +24,6 @@ export const HomeScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [sortBy, setSortBy] = useState('newest');
-  const [recentReading, setRecentReading] = useState([]);
 
   const paywallPanelRef = useRef(null);
 
@@ -43,45 +41,6 @@ export const HomeScreen = () => {
   }, [user.isPro, openReader]);
 
   useDialogFocusTrap(paywallPanelRef, { isOpen: Boolean(paywallBook), onClose: () => setPaywallBook(null) });
-
-  // Muat riwayat membaca terbaru dari server atau penyimpanan lokal
-  useEffect(() => {
-    let active = true;
-    const fetchRecent = async () => {
-      try {
-        if (!user) {
-          setRecentReading([]);
-          return;
-        }
-        const res = await apiJson('/api/reading-progress');
-        if (active && res?.reading_progress?.length > 0) {
-          setRecentReading(res.reading_progress);
-          return;
-        }
-      } catch {
-        // Fallback ke penyimpanan lokal bila offline atau rute belum tersinkron
-      }
-
-      try {
-        if (typeof window !== 'undefined' && window.localStorage && books.length > 0) {
-          const keys = Object.keys(localStorage).filter((k) => k.startsWith('last_read_page_'));
-          if (keys.length > 0) {
-            const items = keys.map((k) => {
-              const bId = k.replace('last_read_page_', '');
-              const b = books.find((x) => x.id === bId);
-              const p = Number(localStorage.getItem(k)) || 1;
-              return b ? { book: b, last_page: p, book_id: b.id } : null;
-            }).filter(Boolean);
-            if (active) setRecentReading(items.slice(0, 3));
-          }
-        }
-      } catch {
-        // Abaikan bila storage tidak dapat diakses
-      }
-    };
-    fetchRecent();
-    return () => { active = false; };
-  }, [user, books]);
 
   // Daftar kategori yang tersedia di koleksi
   const categories = useMemo(() => {
@@ -149,61 +108,6 @@ export const HomeScreen = () => {
               <div className="w-full mb-5 sm:mb-7">
                 <HeroCarousel slides={carouselSlides} />
               </div>
-            )}
-
-            {/* Bagian Lanjutkan Membaca */}
-            {recentReading.length > 0 && !searchQuery && selectedCategory === 'Semua' && (
-              <section className="w-full mb-7" aria-label="Lanjutkan Membaca">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-body font-bold text-ink-900 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-brand-700" />
-                    <span>Lanjutkan Membaca</span>
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {recentReading.slice(0, 3).map((item) => {
-                    const b = item.book || books.find((x) => x.id === item.book_id);
-                    if (!b) return null;
-                    return (
-                      <div
-                        key={item.id || item.book_id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => handleBookClick(b)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleBookClick(b);
-                          }
-                        }}
-                        className="flex items-center gap-3.5 p-3 rounded-2xl border border-cream-300/80 bg-cream-50 hover:bg-cream-100/70 hover:border-brand-300/80 transition cursor-pointer shadow-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
-                      >
-                        <div className="w-12 h-16 rounded-xl bg-ink-800 shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
-                          {b.coverUrl ? (
-                            <img src={b.coverUrl} alt={b.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <BookOpen className="h-5 w-5 text-cream-200" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-small font-bold text-ink-900 truncate group-hover:text-brand-700 transition">
-                            {b.title}
-                          </p>
-                          <p className="text-caption text-ink-500 mt-0.5 truncate">
-                            {b.author || b.category}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <span className="text-micro font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded-md border border-brand-200">
-                              Halaman {item.last_page}{item.total_pages ? ` / ${item.total_pages}` : ''}
-                            </span>
-                          </div>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-ink-400 group-hover:text-brand-700 group-hover:translate-x-0.5 transition shrink-0" />
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
             )}
 
             {/* Bilah Pencarian dan Pengurutan */}
