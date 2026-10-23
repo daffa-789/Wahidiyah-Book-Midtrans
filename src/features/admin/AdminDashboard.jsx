@@ -40,7 +40,7 @@ const isValidTabSlug = (slug) => slug === undefined || ADMIN_TAB_SLUGS.has(slug)
 const EMPTY_BOOK_FORM = {
   title: '',
   subtitle: '',
-  author: 'Penyusun Wahidiyah',
+  author: '',
   category: 'Kitab',
   pages: '',
   description: '',
@@ -343,8 +343,7 @@ export const AdminDashboard = () => {
   const kpis = [
     { label: 'Total pengguna', value: stats?.totalUsers ?? 0, icon: Users, tone: 'text-ink-700 bg-cream-100 border-cream-200' },
     { label: 'Koleksi aktif', value: stats?.totalBooks ?? books.length, icon: BookOpen, tone: 'text-brand-700 bg-brand-50 border-brand-200' },
-    { label: 'Langganan aktif', value: stats?.activeSubscriptions ?? 0, icon: ShieldCheck, tone: 'text-brand-700 bg-brand-50 border-brand-200' },
-    { label: 'Pendapatan tervalidasi', value: formatCurrency(stats?.totalRevenue), icon: CheckCircle2, tone: 'text-brand-800 bg-brand-100/70 border-brand-300' }
+    { label: 'Langganan aktif', value: stats?.activeSubscriptions ?? 0, icon: ShieldCheck, tone: 'text-brand-700 bg-brand-50 border-brand-200' }
   ];
 
   if (!isValidTabSlug(tabParam)) {
@@ -404,24 +403,94 @@ export const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-3">
                 {kpis.map((kpi) => {
                   const Icon = kpi.icon;
-                  return <div key={kpi.label} className="rounded-3xl border border-cream-300 bg-cream-50 p-4 shadow-sm">
-                    <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-2xl border ${kpi.tone}`}><Icon className="h-5 w-5" /></div>
-                    <p className="text-2xl font-black tracking-tight">{kpi.value}</p>
-                    <p className="mt-1 text-caption font-medium text-ink-500">{kpi.label}</p>
-                  </div>;
+                  return (
+                    <div key={kpi.label} className="rounded-3xl border border-cream-300 bg-cream-50 p-4 sm:p-5 shadow-sm">
+                      <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-2xl border ${kpi.tone}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <p className="text-2xl font-black tracking-tight">{kpi.value}</p>
+                      <p className="mt-1 text-caption font-medium text-ink-500">{kpi.label}</p>
+                    </div>
+                  );
                 })}
               </div>
 
-              <div className="max-w-xl">
-                <div className={surfaces.panel}>
-                  <h3 className="font-bold text-body text-ink-900">Status langganan</h3>
-                  <div className="mt-4 h-52">
-                    {subscriptionShare.length ? <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={subscriptionShare} dataKey="value" innerRadius={50} outerRadius={76} paddingAngle={3}>{subscriptionShare.map((entry) => <Cell key={entry.name} fill={entry.color} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-caption text-ink-500">Belum ada pengguna.</div>}
+              <div className="grid gap-5 lg:grid-cols-2 items-stretch">
+                {/* Kolom Kiri: Status Langganan (PieChart) */}
+                <div className={`${surfaces.panel} flex flex-col justify-between`}>
+                  <div>
+                    <h3 className="font-bold text-body text-ink-900">Status langganan</h3>
+                    <div className="mt-4 h-52">
+                      {subscriptionShare.length ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={subscriptionShare}
+                              dataKey="value"
+                              innerRadius={50}
+                              outerRadius={76}
+                              paddingAngle={3}
+                            >
+                              {subscriptionShare.map((entry) => (
+                                <Cell key={entry.name} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-caption text-ink-500">
+                          Belum ada pengguna.
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-around border-t border-cream-200/60 pt-3">{subscriptionShare.map((entry) => <div key={entry.name} className="flex items-center gap-2 text-caption"><span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.color }} /><span className="text-ink-500 font-medium">{entry.name}:</span><strong className="text-ink-900">{entry.value}</strong></div>)}</div>
+                  <div className="mt-3 flex items-center justify-around border-t border-cream-200/60 pt-3">
+                    {subscriptionShare.map((entry) => (
+                      <div key={entry.name} className="flex items-center gap-2 text-caption">
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.color }} />
+                        <span className="text-ink-500 font-medium">{entry.name}:</span>
+                        <strong className="text-ink-900">{entry.value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Kolom Kanan: Pendapatan Tervalidasi */}
+                <div className={`${surfaces.panel} flex flex-col justify-between`}>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold text-body text-ink-900">Pendapatan tervalidasi</h3>
+                        <p className="text-caption text-ink-500 mt-0.5">Pemasukan pembayaran langganan Pro.</p>
+                      </div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border text-brand-800 bg-brand-100/70 border-brand-300">
+                        <CheckCircle2 className="h-5 w-5" />
+                      </div>
+                    </div>
+                    <p className="mt-5 text-3xl font-black tracking-tight text-brand-800">
+                      {formatCurrency(stats?.totalRevenue)}
+                    </p>
+                    <p className="mt-1.5 text-caption font-medium text-ink-500 leading-relaxed">
+                      Total penerimaan dari transaksi membership Pro yang berhasil tervalidasi secara real-time via QRIS Midtrans.
+                    </p>
+                  </div>
+
+                  <div className="mt-6 border-t border-cream-200/60 pt-4 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-micro font-bold uppercase tracking-wider text-ink-400">Transaksi Sukses</p>
+                      <p className="mt-1 text-body font-bold text-ink-900">
+                        {transactions.filter((t) => t.status === 'success').length} transaksi
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-micro font-bold uppercase tracking-wider text-ink-400">Saluran Pembayaran</p>
+                      <p className="mt-1 text-body font-bold text-brand-700">QRIS Midtrans</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 

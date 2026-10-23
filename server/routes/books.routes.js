@@ -161,7 +161,7 @@ booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wr
    * bukan `content.mimetype` kiriman klien (VULN-13).
    */
   const canonicalContentMime = CONTENT_MIME_BY_EXTENSION[extension] || 'application/octet-stream';
-  const safeAuthor = (author && String(author).trim()) || 'Penyusun Wahidiyah';
+  const safeAuthor = (author && String(author).trim()) || '';
   const safeCategory = (category && String(category).trim()) || 'Kitab';
   const safeDescription = (description && String(description).trim()) || '';
 
