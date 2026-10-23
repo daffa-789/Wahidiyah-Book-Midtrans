@@ -160,12 +160,24 @@ Nama sidebar dua baris; kartu "Tema Tampilan" dan `ThemeModeSelector` dihapus; g
 
 **Catatan lingkungan:** `npm test` / `npm run check` gagal di Node 22.22.2 Windows karena `node --test tests/` tidak me-resolve direktori. Yang bekerja: `node --test "tests/*.test.js"`. Belum diubah di `package.json`.
 
-### 7.6 Masih terbuka
+### 7.6 Tahap 7 Desain (`3cf6b95`)
 
-- VULN-09 (CSP), VULN-20/21 — Tahap 3–5.
-- D-03/07/09/10/12/13/14/16 — Tahap 7.
+| ID | Perbaikan | Bukti |
+|---|---|---|
+| D-07 | Kontras hover tombol primary mode malam dinaikkan: `primaryHover` `#26906A` → `#17694A` di `component.json` dan fallback `.dark` di `src/index.css` | `check-contrast.js`: rasio > 6.3:1 (ambang AA 4.5:1) |
+| D-16 | Pengurangan varian dan penegasan font display swap di `index.html` | Hash inline script aman & font dimuat optimal |
+| D-14 | Penghentian token drift di `DeviceFrame.jsx`: `text-[11px]` dihapus diganti `text-caption`, radius 12px dikembalikan ke 6px (`rounded-md`) sesuai token `components.sidebar.itemRadius` | Bebas kelas arbitrer |
+| D-13 | Tombol reload HomeScreen yang sebelumnya no-op `hover:bg-brand-700` diperbaiki ke `hover:bg-brand-800` | Interaksi tombol aktif dan konsisten |
+| D-10 | Aksesibilitas keyboard kartu buku di `HomeScreen.jsx`: ditambahkan `role="button"`, `tabIndex={0}`, `aria-label`, serta penanganan tombol Enter dan Spasi via `onKeyDown`; tombol baca di dalam kartu diisolasi dengan `tabIndex={-1}` dan `aria-hidden="true"` | Navigasi keyboard penuh tanpa fokus ganda |
+| D-12 | Kepadatan grid mobile pada layar 360px: diubah dari grid kaku 2 kolom menjadi responsif `grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5` | Nyaman dibaca jamaah lanjut usia di layar kecil |
+| D-09 | Skeleton loader terintegrasi di `src/components/ui/Skeleton.jsx` (`BookGridSkeleton`, `CalendarSkeleton`, `AdminSkeleton`, `ScreenLoading`) dengan status pemuatan di `useCatalogSlice` dan `AppContext` | Transisi halaman mulus tanpa layout shift |
+| D-03 | Skala tipografi dinaikkan di `component.json` dan 100% kelas ukuran teks mentah (`text-xs/sm/base/lg/xl`) dimigrasikan ke token skala (`text-caption`, `text-small`, `text-body`, `text-title`, `text-h3`) di seluruh layar utama | `check-colors` 0 pelanggaran, sintaks aman, build sukses |
+
+### 7.7 Masih terbuka
+
 - `ALLOW_PAYMENT_SIMULATION=1` hanya untuk demo sidang.
 - Token Gmail akan mati lagi 7 hari selama OAuth app berstatus *Testing*.
+- Tahap 8 (BAB 3 Fitur): Pustaka/Katalog, Riwayat/Penanda Baca, dan Proteksi Konten.
 
 **Koreksi catatan performa:** chunk `excel` (939 kB) dan `charts` (350 kB) ternyata **sudah** di luar
 jalur kritis — `exceljs` masuk lewat `import()` di handler ekspor (`AdminDashboard.jsx:327-345`,
