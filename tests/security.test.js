@@ -1,13 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { resolveJwtSecret, decideTransactionVerification } from '../server/auth.js';
 import { resolveSupabaseCredentials } from '../server/db.js';
 import { canExposeDevOtp, isLoopbackAddress, resendCooldownRemaining } from '../server/lib/otp.js';
 import { isAllowedQrUrl, isTransactionSettled, verifySignatureKey } from '../server/lib/midtrans.js';
 import { findPlan, DEFAULT_PLAN_ID, SUBSCRIPTION_PLANS } from '../server/lib/constants.js';
-import { AUTH_RATE_LIMITED_PATHS, MIDTRANS_SERVER_KEY, QRIS_STATUS_RATE_LIMIT } from '../server/config.js';
+import { AUTH_RATE_LIMITED_PATHS, CSP_DIRECTIVES, MIDTRANS_SERVER_KEY, QRIS_STATUS_RATE_LIMIT } from '../server/config.js';
 import { normalizeOrigin, resolveFrontendOrigin, sanitizeForwardedProto } from '../server/lib/origin.js';
 import { createOneTimeCode, redeemOneTimeCode } from '../server/lib/oneTimeCode.js';
 import { matchesContentExtension, sniffDataUrlImage, sniffImageMime } from '../server/lib/sniff.js';
@@ -314,4 +317,21 @@ test('plafon status QRIS memberi ruang bagi polling 3 detik', () => {
 test('callback Google ikut dibatasi limiter auth', () => {
   assert.equal(AUTH_RATE_LIMITED_PATHS.includes('/api/auth/google/callback'), true);
   assert.equal(AUTH_RATE_LIMITED_PATHS.includes('/api/auth/exchange'), true);
+});
+
+test('hash CSP cocok dengan skrip inline di index.html', () => {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const match = html.match(/<script>([\s\S]*?)<\/script>/);
+
+  assert.ok(match, 'skrip inline tidak ditemukan di index.html');
+  const hash = crypto.createHash('sha256').update(match[1], 'utf8').digest('base64');
+  assert.equal(
+    CSP_DIRECTIVES['script-src'].includes(`'sha256-${hash}'`),
+    true,
+    'THEME_INIT_HASH di config.js tidak cocok dengan index.html — perbarui hash'
+  );
+  assert.equal(CSP_DIRECTIVES['script-src'].includes("'unsafe-inline'"), false);
+  assert.equal(CSP_DIRECTIVES['object-src'][0], "'none'");
+  assert.equal(CSP_DIRECTIVES['frame-ancestors'][0], "'none'");
 });

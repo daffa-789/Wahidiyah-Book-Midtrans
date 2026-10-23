@@ -31,6 +31,11 @@
     terang lebih dulu. Logikanya sengaja diduplikasi minimal dari
     src/theme/themeMode.js (tidak bisa mengimpor modul ES di titik ini) —
     termasuk theme-color, karena bilah status PWA ikut dilukis saat pra-cat.
+
+    PENTING (CSP, VULN-09): skrip inline ini tidak boleh memakai
+    'unsafe-inline', jadi hash SHA-256-nya didaftarkan di server/config.js
+    (THEME_INIT_HASH). Bila isinya diubah, `npm test` GAGAL sampai hash itu
+    diperbarui — itu memang tujuannya, bukan kebetulan.
   -->
   <script>
     (function () {

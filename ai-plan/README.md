@@ -50,7 +50,7 @@ Sumber kebenaran status ada di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md) (P
 
 | Area | Item |
 |---|---|
-| Keamanan | VULN-01, 02, 03, 04, 05, 06, 07, 08, 10, 11, 12, 13, 16, 20, 21 |
+| Keamanan | VULN-01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 16, 20, 21 |
 | Desain | D-01, 02, 04, 05, 06, 08, 11, 15 |
 | Skema | `users.avatar` dan `users.dob` dibuang; `qris_transactions` legacy dibuang; `full_setup.sql` 630 → 367 baris |
 | Email | template transaksional baru (logo CID, `multipart/related`) + status pengiriman jujur |
@@ -58,7 +58,7 @@ Sumber kebenaran status ada di [`EXECUTION-REPORT.md`](./EXECUTION-REPORT.md) (P
 
 **Berikutnya**
 
-- VULN-09 (CSP) — Tahap 3–5.
+- Tahap keamanan web (BAB 1) selesai — 16 dari 30 temuan beres, sisanya ditunda dengan alasan tercatat di EXECUTION-REPORT.
 - D-03/07/09/10/12/13/14/16 — Tahap 7.
 - `ALLOW_PAYMENT_SIMULATION=1` hanya saat demo sidang.
 

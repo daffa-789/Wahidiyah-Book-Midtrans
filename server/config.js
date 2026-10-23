@@ -72,6 +72,47 @@ export const QRIS_STATUS_RATE_LIMIT = {
   message: { success: false, message: 'Terlalu banyak pengecekan status pembayaran. Tunggu beberapa saat.' }
 };
 
+/*
+ * VULN-09 — Content Security Policy.
+ *
+ * Hash skrip inline di index.html (tema pra-cat) dicantumkan eksplisit karena
+ * CSP menolak inline script, dan 'unsafe-inline' akan membatalkan seluruh
+ * tujuan CSP. Skrip itu tidak bisa dipindah ke berkas terpisah: ia harus jalan
+ * sebelum lukisan pertama agar tidak ada kedipan terang.
+ *
+ * `tests/security.test.js` memastikan hash di bawah cocok dengan isi
+ * index.html. Bila skrip itu diubah, uji GAGAL dan hash harus diperbarui —
+ * itu memang tujuannya, bukan kebetulan.
+ */
+const THEME_INIT_HASH = "'sha256-h6WxRX0CwhoUEoC8JE0ISRoQ9984c8tt++I5IUMO0rg='";
+
+export const CSP_DIRECTIVES = {
+  'default-src': ["'self'"],
+  'base-uri': ["'self'"],
+  'object-src': ["'none'"],
+  'frame-ancestors': ["'none'"],
+  'form-action': ["'self'"],
+  /* 'unsafe-inline' di style-src diperlukan untuk atribut style React dan
+   * utilitas Tailwind; tidak ada jalan keluar selain menghapus keduanya.
+   */
+  'script-src': ["'self'", THEME_INIT_HASH],
+  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+  'font-src': ["'self'", 'https://fonts.gstatic.com'],
+  'img-src': ["'self'", 'data:', 'blob:'],
+  /* Supabase hanya dipakai jalur /auth/callback lama; Midtrans dipanggil
+   * server, jadi peramban tidak perlu akses ke sana.
+   */
+  'connect-src': ["'self'", 'https://*.supabase.co'],
+  'worker-src': ["'self'", 'blob:'],
+  'manifest-src': ["'self'"]
+};
+
+/* Report-only secara default: policy yang terlalu ketat bisa mematangkan
+ * aplikasi, dan halaman yang rusak sulit dilacak setelah ditegakkan. Nyalakan
+ * CSP_ENFORCE=1 hanya setelah konsol peramban bersih.
+ */
+export const CSP_REPORT_ONLY = String(process.env.CSP_ENFORCE || '') !== '1';
+
 /* Kosong = perilaku lama (1 hanya saat middleware Vite). Nilai produksi:
  * jumlah hop proxy di depan server, atau `true` bila proxy tunggal.
  */

@@ -192,7 +192,7 @@ Hasil tiga putaran audit white-box. **5 High** (VULN-01, 02, 03, 04, 12), 1 Med-
 | VULN-06 | ✅ **fixed** — `POST /api/transactions` menerima nominal dari klien | Medium | `server/routes/transactions.routes.js:124-135`, `:154-155` |
 | VULN-07 | ✅ **fixed** — Rate limit OTP berbasis alamat socket, `trust proxy` nonaktif | Medium | `server/middleware/security.js:35-43`, `server/config.js:29-42` |
 | VULN-08 | ✅ **fixed** — Kode OTP dapat bocor di respons bila `NODE_ENV=development` | Medium | `server/lib/otp.js:22`, `server/routes/auth.routes.js:157`, `:270-282`, `:323-331` |
-| VULN-09 | CSP dimatikan dan `CORS_ORIGINS` tidak diset | Low-Med | `server/middleware/security.js:15-25`, `server/config.js:18-22` |
+| VULN-09 | ✅ **fixed 23 Okt 2026** — CSP dimatikan dan `CORS_ORIGINS` tidak diset | Low-Med | `server/config.js` (`CSP_DIRECTIVES`), `server/middleware/security.js` |
 | VULN-10 | ✅ **fixed** — Klien database turun ke anon key hanya dengan peringatan | Low | `server/db.js:18-24`, `:31-39` |
 | VULN-11 | ✅ **fixed 23 Okt 2026** — Unggahan tanpa allowlist jenis berkas; kini diperiksa dari magic byte | Low | `server/lib/sniff.js`, `server/routes/books.routes.js`, `server/routes/carousel.routes.js` |
 | VULN-12 | ✅ **fixed** — Masa berlaku langganan Pro tidak pernah ditegakkan pada gate konten | High | `server/routes/books.routes.js:167`, `server/auth.js:67-107` |

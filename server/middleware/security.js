@@ -10,12 +10,21 @@ import {
   AUTH_IDENTIFIER_RATE_LIMIT,
   AUTH_RATE_LIMIT,
   AUTH_RATE_LIMITED_PATHS,
+  CSP_DIRECTIVES,
+  CSP_REPORT_ONLY,
   QRIS_STATUS_RATE_LIMIT,
   TRUST_PROXY
 } from '../config.js';
 
+/* Report-only sampai CSP_ENFORCE=1: aplikasi tetap jalan sementara pelanggaran
+ * dilaporkan di konsol peramban (VULN-09).
+ */
 export const securityHeaders = helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: CSP_DIRECTIVES,
+    reportOnly: CSP_REPORT_ONLY
+  },
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 });
 

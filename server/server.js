@@ -16,6 +16,7 @@ import {
   SERVE_STATIC,
   STATIC_DIR,
   STATIC_INDEX_FILE,
+  CSP_REPORT_ONLY,
   FRONTEND_PORT,
   LISTEN_PORT,
   USE_VITE_MIDDLEWARE
@@ -222,6 +223,23 @@ if (process.env.NODE_ENV !== 'test') {
     
     const mailerOn = isMailerConfigured();
     const devOtpOn = canExposeDevOtp(process.env);
+
+    /* VULN-09 — CORS_ORIGINS wajib eksplisit di produksi. Tanpa itu daftar
+     * bawaan (localhost) yang dipakai, dan pengguna sungguhan diblokir
+     * peramban tanpa pesan galat yang jelas di sisi server.
+     */
+    if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGINS) {
+      logger.warn('BOOT', 'CORS_ORIGINS belum diset di produksi — memakai daftar bawaan localhost', {
+        akibat: 'peramban pengguna sungguhan akan memblokir permintaan lintas origin',
+        perbaikan: 'set CORS_ORIGINS di .env, misalnya https://buku-wahidiyah.example.com'
+      });
+    }
+
+    if (CSP_REPORT_ONLY) {
+      logger.info('BOOT', 'CSP berjalan mode report-only — pelanggaran hanya tercatat di konsol peramban', {
+        menegakkan: 'set CSP_ENFORCE=1 setelah konsol peramban bersih'
+      });
+    }
 
     if (mailerOn) {
       logger.ok('BOOT', 'Pengiriman email AKTIF — kode OTP dikirim lewat Gmail API');
