@@ -63,4 +63,3 @@ export const getCalendarMonthGrid = (year, monthIndex) => {
 
   return { daysInMonth, firstDayIndex, leadingBlanks, days };
 };
-

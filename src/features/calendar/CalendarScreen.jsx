@@ -11,7 +11,8 @@ import {
   MONTH_NAMES,
   DAY_NAMES,
   formatYMD,
-  getTodayStr
+  getTodayStr,
+  getCalendarMonthGrid
 } from '@lib/date';
 import { layout, controls } from '@lib/styles';
 import { NotificationToggle } from '@ui/NotificationToggle';
@@ -42,8 +43,7 @@ export const CalendarScreen = () => {
     setSelectedDate(getTodayStr());
   }, []);
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+  const { daysInMonth, firstDayIndex } = useMemo(() => getCalendarMonthGrid(year, month), [year, month]);
 
   const eventDatesSet = useMemo(() => new Set(events.map(e => e.date)), [events]);
 
