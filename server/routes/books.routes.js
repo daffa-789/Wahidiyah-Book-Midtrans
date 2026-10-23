@@ -36,12 +36,53 @@ const toBookResponse = (book) => ({
 
 booksRouter.get('/books', async (req, res) => {
   try {
+    const { search, category, sort } = req.query;
+    let query = supabaseServer.from('books').select(BOOK_FIELDS);
+
+    if (category && category !== 'Semua') {
+      query = query.eq('category', category);
+    }
+
+    if (search && typeof search === 'string') {
+      const trimmed = search.trim();
+      if (trimmed) {
+        // Hilangkan karakter pengendali PostgREST sebelum dimasukkan ke pola pencarian
+        const safe = trimmed.replace(/[%_,()]/g, '');
+        if (safe) {
+          query = query.or(`title.ilike.%${safe}%,author.ilike.%${safe}%,description.ilike.%${safe}%`);
+        }
+      }
+    }
+
+    if (sort === 'oldest') {
+      query = query.order('created_at', { ascending: true });
+    } else if (sort === 'title_asc') {
+      query = query.order('title', { ascending: true });
+    } else if (sort === 'title_desc') {
+      query = query.order('title', { ascending: false });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ success: true, books: (data || []).map(toBookResponse) });
+  } catch (error) {
+    fail(res, error);
+  }
+});
+
+booksRouter.get('/books/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
     const { data, error } = await supabaseServer
       .from('books')
       .select(BOOK_FIELDS)
-      .order('created_at', { ascending: false });
+      .eq('id', id)
+      .maybeSingle();
     if (error) throw error;
-    res.json({ success: true, books: (data || []).map(toBookResponse) });
+    if (!data) return notFound(res, 'Buku tidak ditemukan');
+    res.json({ success: true, book: toBookResponse(data) });
   } catch (error) {
     fail(res, error);
   }

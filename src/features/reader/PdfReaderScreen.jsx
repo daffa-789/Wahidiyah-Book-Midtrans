@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft,
   FileText,
@@ -9,10 +9,14 @@ import {
   BookOpen,
   Bookmark,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2,
+  X,
+  Check
 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
-import { apiRequest, authHeaders } from '@lib/api';
+import { apiJson, apiRequest, authHeaders, readableError } from '@lib/api';
+import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 
 const TEXT_TYPES = new Set(['txt', 'md', 'csv', 'rtf']);
 const PDF_TYPES = new Set(['pdf']);
@@ -23,9 +27,9 @@ const THEMES = {
   light: {
     id: 'light',
     name: 'Terang',
-    bgMain: 'bg-[#FBF8F3]',
-    bgArticle: 'bg-white text-ink-900 border-cream-300',
-    header: 'bg-ink-900/95 text-white',
+    bgMain: 'bg-cream-50',
+    bgArticle: 'bg-cream-100 text-ink-900 border-cream-300',
+    header: 'bg-ink-900/95 text-cream-50',
     subText: 'text-ink-500'
   },
   sepia: {
@@ -47,16 +51,14 @@ const THEMES = {
 };
 
 export const PdfReaderScreen = () => {
-  const { activeBook, navigateTo } = useApp();
+  const { activeBook, navigateTo, user } = useApp();
   const [fontSize, setFontSize] = useState('base');
   const [textContent, setTextContent] = useState('');
   const [pdfUrl, setPdfUrl] = useState(null);
   const [contentStatus, setContentStatus] = useState('idle');
   const [reloadToken, setReloadToken] = useState(0);
 
-  // Theme Reader (Light / Sepia / Dark).
-  // Pembaca punya sistem temanya sendiri, jadi saat pertama dibuka ia mengikuti
-  // tema aplikasi (malam → malam) tanpa menimpa pilihan yang sudah tersimpan.
+  // Theme Reader (Light / Sepia / Dark)
   const [themeMode, setThemeMode] = useState(() => {
     const stored = localStorage.getItem('wb_reader_theme');
     if (stored) return stored;
@@ -64,32 +66,101 @@ export const PdfReaderScreen = () => {
     return appIsDark ? 'dark' : 'light';
   });
 
-  // Last Read Tracker
+  // Pelacak Halaman Terakhir
   const bookTotalPages = Number(activeBook?.pages || activeBook?.totalPages || (activeBook?.samplePages?.length || 1));
   const [currentPage, setCurrentPage] = useState(1);
   const [resumePrompt, setResumePrompt] = useState(null);
+
+  // Pembatas Buku (Bookmarks)
+  const [bookmarks, setBookmarks] = useState([]);
+  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
+  const [bookmarkFeedback, setBookmarkFeedback] = useState(null);
+  const bookmarkModalRef = useRef(null);
+
+  useDialogFocusTrap(bookmarkModalRef, {
+    isOpen: isBookmarkModalOpen,
+    onClose: () => setIsBookmarkModalOpen(false)
+  });
 
   const extension = getExtension(activeBook);
   const samplePages = activeBook?.samplePages || [];
   const totalPages = samplePages.length || bookTotalPages;
 
-  // Cek Halaman Terakhir yang Tersimpan
+  // Cek Halaman Terakhir yang Tersimpan dari Server & Penyimpanan Lokal
   useEffect(() => {
     if (!activeBook?.id) return;
-    const storageKey = `last_read_page_${activeBook.id}`;
-    const saved = localStorage.getItem(storageKey);
-    if (saved && Number(saved) > 1) {
-      const pageNum = Number(saved);
-      setResumePrompt({ page: pageNum });
-    }
+    let active = true;
+
+    const checkResume = async () => {
+      // 1. Cek dari penyimpanan lokal
+      const storageKey = `last_read_page_${activeBook.id}`;
+      const localSaved = Number(localStorage.getItem(storageKey));
+
+      // 2. Coba sinkronisasi dengan server
+      try {
+        const res = await apiJson(`/api/reading-progress/${activeBook.id}`);
+        if (active && res?.progress?.last_page && res.progress.last_page > 1) {
+          setResumePrompt({ page: res.progress.last_page });
+          return;
+        }
+      } catch {
+        // Abaikan galat jaringan
+      }
+
+      if (active && localSaved > 1) {
+        setResumePrompt({ page: localSaved });
+      }
+    };
+
+    checkResume();
+    return () => { active = false; };
   }, [activeBook?.id]);
 
+  // Muat pembatas buku milik pengguna untuk buku ini
+  useEffect(() => {
+    if (!activeBook?.id) return;
+    let active = true;
+
+    const fetchBookmarks = async () => {
+      try {
+        const res = await apiJson(`/api/books/${activeBook.id}/bookmarks`);
+        if (active && res?.bookmarks) {
+          setBookmarks(res.bookmarks);
+          return;
+        }
+      } catch {
+        // Fallback ke penyimpanan lokal bila offline
+      }
+
+      try {
+        const localKey = `bookmarks_${activeBook.id}`;
+        const raw = localStorage.getItem(localKey);
+        if (raw && active) {
+          setBookmarks(JSON.parse(raw));
+        }
+      } catch {
+        // Abaikan
+      }
+    };
+
+    fetchBookmarks();
+    return () => { active = false; };
+  }, [activeBook?.id]);
+
+  // Simpan halaman saat ini ke lokal & server
   const saveCurrentPage = useCallback((page) => {
     setCurrentPage(page);
     if (activeBook?.id) {
       localStorage.setItem(`last_read_page_${activeBook.id}`, String(page));
+      // Sinkronkan ke server secara asinkron
+      apiJson(`/api/reading-progress/${activeBook.id}`, {
+        method: 'PUT',
+        body: { last_page: page, total_pages: totalPages || null }
+      }).catch(() => {
+        // Abaikan galat jaringan
+      });
     }
-  }, [activeBook?.id]);
+  }, [activeBook?.id, totalPages]);
 
   const handleResumePage = () => {
     if (resumePrompt?.page) {
@@ -107,6 +178,73 @@ export const PdfReaderScreen = () => {
     localStorage.setItem('wb_reader_theme', mode);
   };
 
+  // Tambah pembatas pada halaman saat ini
+  const handleToggleCurrentBookmark = async () => {
+    if (!activeBook?.id) return;
+    const existing = bookmarks.find((b) => b.page === currentPage);
+
+    if (existing) {
+      // Hapus jika sudah ada
+      try {
+        await apiJson(`/api/books/${activeBook.id}/bookmarks/${existing.id}`, { method: 'DELETE' });
+        const next = bookmarks.filter((b) => b.id !== existing.id);
+        setBookmarks(next);
+        try {
+          localStorage.setItem(`bookmarks_${activeBook.id}`, JSON.stringify(next));
+        } catch {}
+        setBookmarkFeedback('Pembatas dihapus');
+        setTimeout(() => setBookmarkFeedback(null), 2000);
+      } catch (err) {
+        setBookmarkFeedback(readableError(err));
+        setTimeout(() => setBookmarkFeedback(null), 3000);
+      }
+    } else {
+      // Tambah baru
+      try {
+        const res = await apiJson(`/api/books/${activeBook.id}/bookmarks`, {
+          method: 'POST',
+          body: { page: currentPage, note: `Halaman ${currentPage}` }
+        });
+        const created = res?.bookmark || {
+          id: `local-${Date.now()}`,
+          book_id: activeBook.id,
+          page: currentPage,
+          note: `Halaman ${currentPage}`,
+          created_at: new Date().toISOString()
+        };
+        const next = [...bookmarks, created].sort((a, b) => a.page - b.page);
+        setBookmarks(next);
+        try {
+          localStorage.setItem(`bookmarks_${activeBook.id}`, JSON.stringify(next));
+        } catch {}
+        setBookmarkFeedback(`Halaman ${currentPage} ditandai`);
+        setTimeout(() => setBookmarkFeedback(null), 2000);
+      } catch (err) {
+        setBookmarkFeedback(readableError(err));
+        setTimeout(() => setBookmarkFeedback(null), 3000);
+      }
+    }
+  };
+
+  const handleDeleteBookmark = async (bmId) => {
+    if (!activeBook?.id) return;
+    try {
+      await apiJson(`/api/books/${activeBook.id}/bookmarks/${bmId}`, { method: 'DELETE' });
+      const next = bookmarks.filter((b) => b.id !== bmId);
+      setBookmarks(next);
+      try {
+        localStorage.setItem(`bookmarks_${activeBook.id}`, JSON.stringify(next));
+      } catch {}
+    } catch {
+      // Abaikan bila offline
+      const next = bookmarks.filter((b) => b.id !== bmId);
+      setBookmarks(next);
+    }
+  };
+
+  const isCurrentPageBookmarked = Boolean(bookmarks.some((b) => b.page === currentPage));
+
+  // Muat konten PDF / Teks
   useEffect(() => {
     let cancelled = false;
     let objectUrl = null;
@@ -142,7 +280,7 @@ export const PdfReaderScreen = () => {
     };
   }, [activeBook?.contentUrl, extension, reloadToken]);
 
-  const fontClass = useMemo(() => ({ sm: 'text-sm', base: 'text-base', lg: 'text-lg' }[fontSize]), [fontSize]);
+  const fontClass = useMemo(() => ({ sm: 'text-small', base: 'text-body', lg: 'text-lead' }[fontSize]), [fontSize]);
   const cycleFontSize = () => setFontSize((current) => current === 'sm' ? 'base' : current === 'base' ? 'lg' : 'sm');
 
   const retryLoadContent = () => {
@@ -155,12 +293,12 @@ export const PdfReaderScreen = () => {
       <div className="theme-light-scope flex min-h-screen items-center justify-center bg-ink-900 p-6">
         <div className="max-w-sm rounded-3xl bg-cream-50 p-7 text-center shadow-2xl">
           <FileText className="mx-auto h-8 w-8 text-brand-600" />
-          <h1 className="mt-4 font-black text-ink-900">Buku belum dipilih</h1>
-          <p className="mt-2 text-sm text-ink-400">Pilih buku dari katalog untuk mulai membaca.</p>
+          <h1 className="mt-4 font-black text-ink-900 text-h3">Buku belum dipilih</h1>
+          <p className="mt-2 text-caption text-ink-400">Pilih buku dari katalog untuk mulai membaca.</p>
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="mt-5 rounded-2xl bg-brand-700 px-4 py-3 text-sm font-bold text-white"
+            className="mt-5 rounded-2xl bg-brand-700 px-4 py-3 text-caption font-bold text-cream-50"
           >
             Kembali ke katalog
           </button>
@@ -174,14 +312,14 @@ export const PdfReaderScreen = () => {
   const lockedCard = (
     <div className="reader-empty-state">
       <Lock className="mx-auto h-9 w-9 text-gold-400" />
-      <h2 className="mt-4 text-lg font-black text-white">Konten khusus pembaca Pro</h2>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-cream-300">
+      <h2 className="mt-4 text-h3 font-black text-cream-50">Konten khusus pembaca Pro</h2>
+      <p className="mt-2 max-w-md text-caption leading-relaxed text-cream-300">
         Aktifkan paket Pro untuk membuka kitab eksklusif ini.
       </p>
       <button
         type="button"
         onClick={() => navigateTo('pro')}
-        className="mt-5 rounded-2xl bg-brand-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-brand-700"
+        className="mt-5 rounded-2xl bg-brand-700 px-5 py-3 text-caption font-bold text-cream-50 transition hover:bg-brand-800"
       >
         Lihat Paket Pro
       </button>
@@ -191,14 +329,14 @@ export const PdfReaderScreen = () => {
   const errorCard = (
     <div className="reader-empty-state" role="alert">
       <FileText className="mx-auto h-9 w-9 text-ink-300" />
-      <h2 className="mt-4 text-lg font-black text-white">Konten belum dapat dimuat</h2>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-cream-300">
+      <h2 className="mt-4 text-h3 font-black text-cream-50">Konten belum dapat dimuat</h2>
+      <p className="mt-2 max-w-md text-caption leading-relaxed text-cream-300">
         Server atau basis data tidak menjawab permintaan konten ini.
       </p>
       <button
         type="button"
         onClick={retryLoadContent}
-        className="mt-5 rounded-2xl bg-brand-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-brand-700"
+        className="mt-5 rounded-2xl bg-brand-700 px-5 py-3 text-caption font-bold text-cream-50 transition hover:bg-brand-800"
       >
         Coba muat ulang
       </button>
@@ -219,18 +357,29 @@ export const PdfReaderScreen = () => {
       }
       return (
         <div 
-          className="mx-auto h-[calc(100vh-7.5rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-ink-500 bg-cream-50 shadow-2xl select-none"
+          className="relative mx-auto h-[calc(100vh-7.5rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-cream-300 bg-cream-50 shadow-2xl select-none"
           onContextMenu={(e) => e.preventDefault()}
         >
+          {/* M1: Tanda air transparan hak cipta & keamanan konten */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute inset-0 z-10 flex flex-col justify-around items-center overflow-hidden opacity-[0.04]"
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="whitespace-nowrap font-sans font-bold text-h3 tracking-widest -rotate-25 text-ink-900">
+                {user?.name || 'Aplikasi Buku Wahidiyah'} • {user?.email || 'Pembaca Resmi'}
+              </div>
+            ))}
+          </div>
+
           <iframe
             key={`${pdfUrl}-${currentPage}`}
             title={`Konten ${activeBook.title}`}
             src={`${pdfUrl}#page=${currentPage}&toolbar=0&navpanes=0`}
-            className="h-full w-full border-0"
+            className="h-full w-full border-0 select-none"
           />
         </div>
       );
-
     }
 
     if (TEXT_TYPES.has(extension) && activeBook.contentUrl) {
@@ -238,8 +387,21 @@ export const PdfReaderScreen = () => {
       if (contentStatus === 'locked') return lockedCard;
       if (contentStatus === 'error') return errorCard;
       return (
-        <article className={`mx-auto w-full max-w-3xl whitespace-pre-wrap rounded-2xl p-7 leading-8 shadow-2xl sm:p-12 ${fontClass} ${currentTheme.bgArticle} border select-text cursor-text`}>
-          {textContent || 'Dokumen tidak berisi teks.'}
+        <article className={`relative mx-auto w-full max-w-3xl whitespace-pre-wrap rounded-2xl p-7 leading-8 shadow-2xl sm:p-12 ${fontClass} ${currentTheme.bgArticle} border select-none`}>
+          {/* M1: Tanda air transparan teks */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute inset-0 z-0 flex flex-col justify-around items-center overflow-hidden opacity-[0.03]"
+          >
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="whitespace-nowrap font-sans font-bold text-body tracking-wider -rotate-20 text-ink-900">
+                {user?.name || user?.email || 'Aplikasi Buku Wahidiyah'}
+              </div>
+            ))}
+          </div>
+          <div className="relative z-10">
+            {textContent || 'Dokumen tidak berisi teks.'}
+          </div>
         </article>
       );
     }
@@ -248,7 +410,7 @@ export const PdfReaderScreen = () => {
       const activeSample = samplePages[currentPage - 1] || samplePages[0];
       return (
         <div className="flex w-full flex-col items-center gap-6 sm:gap-8">
-          <article className={`w-full max-w-3xl rounded-2xl p-7 shadow-2xl sm:p-12 ${fontClass} ${currentTheme.bgArticle} border select-text cursor-text`}>
+          <article className={`w-full max-w-3xl rounded-2xl p-7 shadow-2xl sm:p-12 ${fontClass} ${currentTheme.bgArticle} border select-none`}>
             <header className="flex justify-between border-b border-cream-300/40 pb-4 text-micro font-bold tracking-wider opacity-70">
               <span>PERPUSTAKAAN DIGITAL WAHIDIYAH</span>
               <span>HALAMAN {currentPage} DARI {totalPages}</span>
@@ -258,7 +420,7 @@ export const PdfReaderScreen = () => {
                 {activeSample.arabicHeading}
               </p>
             )}
-            <h2 className="mb-6 text-center text-xl font-black text-brand-800">
+            <h2 className="mb-6 text-center text-h2 font-black text-brand-800">
               {activeSample?.title}
             </h2>
             <p className="whitespace-pre-line leading-8">
@@ -272,8 +434,8 @@ export const PdfReaderScreen = () => {
     return (
       <div className="reader-empty-state">
         <FileText className="mx-auto h-9 w-9 text-brand-400" />
-        <h2 className="mt-4 text-lg font-black text-white">Lampiran Dokumen</h2>
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-cream-300">
+        <h2 className="mt-4 text-h3 font-black text-cream-50">Lampiran Dokumen</h2>
+        <p className="mt-2 max-w-md text-caption leading-relaxed text-cream-300">
           {activeBook.contentName ? `${activeBook.contentName} telah tersimpan.` : 'Konten buku belum ditambahkan.'}
         </p>
       </div>
@@ -283,60 +445,77 @@ export const PdfReaderScreen = () => {
   return (
     <main className={`theme-light-scope flex min-h-screen flex-col ${currentTheme.bgMain} transition-colors duration-300 page-transition`}>
       {/* Top Sticky Header */}
-      <header className={`sticky top-0 z-30 border-b border-white/10 ${currentTheme.header} px-3 py-3 backdrop-blur sm:px-6 shadow-sm`}>
+      <header className={`sticky top-0 z-30 border-b border-cream-300/20 ${currentTheme.header} px-3 py-3 backdrop-blur sm:px-6 shadow-sm`}>
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           {/* Back & Title */}
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
               onClick={() => navigateTo('home')}
-              className="rounded-xl p-2 -m-1 min-h-11 min-w-11 flex items-center justify-center opacity-80 hover:opacity-100 transition hover:bg-white/10 focus-visible:outline-none"
+              className="rounded-xl p-2 -m-1 min-h-11 min-w-11 flex items-center justify-center opacity-80 hover:opacity-100 transition hover:bg-cream-100/10 focus-visible:outline-none"
               title="Kembali ke katalog"
               aria-label="Kembali ke katalog"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="min-w-0">
-              <h1 className="truncate text-sm font-bold">{activeBook.title}</h1>
+              <h1 className="truncate text-small font-bold">{activeBook.title}</h1>
               <p className="truncate text-caption opacity-70">
                 {activeBook.author} {activeBook.contentName ? `• ${activeBook.contentName}` : ''}
               </p>
             </div>
           </div>
 
-          {/* Controls: Page Navigation + Themes + Font Size */}
+          {/* Controls: Page Navigation + Bookmark + Themes + Font Size */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Page Tracker & Navigator */}
-            <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-xl text-xs font-semibold">
+            <div className="flex items-center gap-1 bg-cream-50/10 px-2 py-1 rounded-xl text-caption font-semibold">
               <button
                 type="button"
                 onClick={() => saveCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage <= 1}
-                className="p-1 rounded hover:bg-white/10 disabled:opacity-30"
+                className="p-1 rounded hover:bg-cream-50/10 disabled:opacity-30 cursor-pointer"
                 title="Halaman Sebelumnya"
+                aria-label="Halaman Sebelumnya"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </button>
-              <span className="px-1 text-micro sm:text-xs">
+              <span className="px-1 text-micro sm:text-caption">
                 Hal. {currentPage} {totalPages > 1 ? `/ ${totalPages}` : ''}
               </span>
               <button
                 type="button"
                 onClick={() => saveCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage >= totalPages}
-                className="p-1 rounded hover:bg-white/10 disabled:opacity-30"
+                className="p-1 rounded hover:bg-cream-50/10 disabled:opacity-30 cursor-pointer"
                 title="Halaman Berikutnya"
+                aria-label="Halaman Berikutnya"
               >
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
 
+            {/* Tombol Pembatas Buku */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsBookmarkModalOpen(true)}
+                className={`rounded-xl p-2 min-h-9 min-w-9 flex items-center justify-center transition hover:bg-cream-50/10 cursor-pointer ${
+                  isCurrentPageBookmarked ? 'text-gold-400' : 'opacity-80 hover:opacity-100'
+                }`}
+                title="Buka daftar pembatas buku"
+                aria-label="Pembatas buku"
+              >
+                <Bookmark className={`h-4 w-4 ${isCurrentPageBookmarked ? 'fill-current text-gold-400' : ''}`} />
+              </button>
+            </div>
+
             {/* Theme Selector (Light, Sepia, Dark) */}
-            <div className="flex items-center bg-white/10 p-0.5 rounded-xl">
+            <div className="flex items-center bg-cream-50/10 p-0.5 rounded-xl">
               <button
                 type="button"
                 onClick={() => handleThemeChange('light')}
-                className={`p-1.5 rounded-lg transition ${themeMode === 'light' ? 'bg-white text-ink-900 shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                className={`p-1.5 rounded-lg transition cursor-pointer ${themeMode === 'light' ? 'bg-cream-50 text-ink-900 shadow-xs' : 'opacity-70 hover:opacity-100'}`}
                 title="Mode Terang"
               >
                 <Sun className="h-3.5 w-3.5" />
@@ -344,7 +523,7 @@ export const PdfReaderScreen = () => {
               <button
                 type="button"
                 onClick={() => handleThemeChange('sepia')}
-                className={`p-1.5 rounded-lg transition ${themeMode === 'sepia' ? 'bg-[#FAF4E6] text-[#433422] shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                className={`p-1.5 rounded-lg transition cursor-pointer ${themeMode === 'sepia' ? 'bg-[#FAF4E6] text-[#433422] shadow-xs' : 'opacity-70 hover:opacity-100'}`}
                 title="Mode Sepia (Hangat)"
               >
                 <BookOpen className="h-3.5 w-3.5" />
@@ -352,7 +531,7 @@ export const PdfReaderScreen = () => {
               <button
                 type="button"
                 onClick={() => handleThemeChange('dark')}
-                className={`p-1.5 rounded-lg transition ${themeMode === 'dark' ? 'bg-[#1E1B18] text-[#E4D9C6] shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                className={`p-1.5 rounded-lg transition cursor-pointer ${themeMode === 'dark' ? 'bg-[#1E1B18] text-[#E4D9C6] shadow-xs' : 'opacity-70 hover:opacity-100'}`}
                 title="Mode Malam (Gelap)"
               >
                 <Moon className="h-3.5 w-3.5" />
@@ -363,7 +542,7 @@ export const PdfReaderScreen = () => {
             <button
               type="button"
               onClick={cycleFontSize}
-              className="rounded-xl p-2 min-h-9 min-w-9 flex items-center justify-center opacity-80 hover:opacity-100 transition hover:bg-white/10"
+              className="rounded-xl p-2 min-h-9 min-w-9 flex items-center justify-center opacity-80 hover:opacity-100 transition hover:bg-cream-50/10 cursor-pointer"
               title="Ubah ukuran teks"
             >
               <Type className="h-4 w-4" />
@@ -372,11 +551,19 @@ export const PdfReaderScreen = () => {
         </div>
       </header>
 
+      {/* Floating Feedback Penanda */}
+      {bookmarkFeedback && (
+        <div className="fixed top-16 right-4 z-40 rounded-xl bg-brand-800 text-cream-50 px-3.5 py-2 text-caption font-bold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <Check className="h-4 w-4 text-gold-300" />
+          <span>{bookmarkFeedback}</span>
+        </div>
+      )}
+
       {/* Floating Prompt: Lanjut Membaca */}
       {resumePrompt && (
         <div className="sticky top-16 z-20 mx-auto my-2 max-w-md w-full px-4 animate-in fade-in slide-in-from-top-3">
-          <div className="flex items-center justify-between gap-3 bg-brand-800 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-brand-600">
-            <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center justify-between gap-3 bg-brand-800 text-cream-50 px-4 py-2.5 rounded-2xl shadow-xl border border-brand-600">
+            <div className="flex items-center gap-2 text-caption">
               <Bookmark className="h-4 w-4 text-gold-300" />
               <span>Terakhir Anda membaca di <strong>Halaman {resumePrompt.page}</strong></span>
             </div>
@@ -384,14 +571,14 @@ export const PdfReaderScreen = () => {
               <button
                 type="button"
                 onClick={handleResumePage}
-                className="px-2.5 py-1 bg-white text-brand-900 rounded-lg text-micro font-bold shadow-xs hover:bg-cream-100 transition"
+                className="px-2.5 py-1 bg-cream-50 text-brand-900 rounded-lg text-micro font-bold shadow-xs hover:bg-cream-100 transition cursor-pointer"
               >
                 Lanjutkan
               </button>
               <button
                 type="button"
                 onClick={handleDismissResume}
-                className="px-2 py-1 text-white/70 hover:text-white text-micro font-medium"
+                className="px-2 py-1 text-cream-200 hover:text-cream-50 text-micro font-medium cursor-pointer"
               >
                 Abaikan
               </button>
@@ -401,9 +588,104 @@ export const PdfReaderScreen = () => {
       )}
 
       {/* Main Reading Area */}
-      <section className="flex-1 overflow-auto p-3 sm:p-7">
+      <section className="flex-1 overflow-auto p-3 sm:p-7 select-none">
         {renderContent()}
       </section>
+
+      {/* Modal / Dialog Pembatas Buku (Bookmarks) */}
+      {isBookmarkModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 backdrop-blur-sm p-4 duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bookmark-modal-title"
+          onClick={() => setIsBookmarkModalOpen(false)}
+        >
+          <div
+            ref={bookmarkModalRef}
+            tabIndex={-1}
+            className="bg-cream-50 max-w-sm w-full rounded-3xl p-6 shadow-2xl border border-cream-200 space-y-4 focus-visible:outline-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-cream-200 pb-3">
+              <div className="flex items-center gap-2 text-brand-800">
+                <Bookmark className="h-5 w-5 text-brand-700" />
+                <h3 id="bookmark-modal-title" className="text-body font-bold text-ink-900">
+                  Pembatas Buku
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBookmarkModalOpen(false)}
+                className="p-1 rounded-lg text-ink-400 hover:text-ink-700 hover:bg-cream-100 transition cursor-pointer"
+                aria-label="Tutup pembatas buku"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Aksi Tandai Halaman Ini */}
+            <button
+              type="button"
+              onClick={handleToggleCurrentBookmark}
+              className={`w-full py-2.5 px-4 rounded-xl text-caption font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm ${
+                isCurrentPageBookmarked
+                  ? 'bg-semantic-dangerLight text-semantic-danger border border-semantic-danger/30 hover:bg-semantic-dangerLight/80'
+                  : 'bg-brand-700 text-cream-50 hover:bg-brand-800'
+              }`}
+            >
+              <Bookmark className={`h-4 w-4 ${isCurrentPageBookmarked ? 'fill-current' : ''}`} />
+              <span>
+                {isCurrentPageBookmarked ? `Lepas Penanda Hal. ${currentPage}` : `+ Tandai Halaman Ini (Hal. ${currentPage})`}
+              </span>
+            </button>
+
+            {/* Daftar Penanda yang Tersimpan */}
+            <div className="space-y-2 pt-1 max-h-60 overflow-y-auto pr-1">
+              {bookmarks.length > 0 ? (
+                bookmarks.map((bm) => (
+                  <div
+                    key={bm.id}
+                    className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-cream-200 bg-cream-100/50 hover:bg-cream-100 transition group"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        saveCurrentPage(bm.page);
+                        setIsBookmarkModalOpen(false);
+                      }}
+                      className="flex-1 text-left min-w-0 cursor-pointer"
+                      title={`Buka halaman ${bm.page}`}
+                    >
+                      <p className="text-small font-bold text-ink-900 group-hover:text-brand-700 transition">
+                        Halaman {bm.page}
+                      </p>
+                      {bm.note && (
+                        <p className="text-caption text-ink-500 truncate">{bm.note}</p>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteBookmark(bm.id)}
+                      className="p-1.5 rounded-lg text-semantic-danger hover:bg-semantic-dangerLight transition cursor-pointer shrink-0"
+                      title="Hapus penanda ini"
+                      aria-label={`Hapus penanda halaman ${bm.page}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="py-6 text-center text-caption text-ink-500">
+                  <Bookmark className="h-8 w-8 text-ink-300 mx-auto mb-2 opacity-50" />
+                  <p>Belum ada halaman yang ditandai.</p>
+                  <p className="text-micro text-ink-400 mt-1">Tekan tombol di atas untuk menandai halaman ini.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
