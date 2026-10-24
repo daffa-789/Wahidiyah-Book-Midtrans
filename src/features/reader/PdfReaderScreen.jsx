@@ -46,22 +46,12 @@ export const PdfReaderScreen = () => {
     if (!activeBook?.id) return;
     let active = true;
 
-    const loadLastPage = async () => {
+    const loadLastPage = () => {
       const storageKey = `last_read_page_${activeBook.id}`;
       const localSaved = Number(localStorage.getItem(storageKey));
       if (localSaved && localSaved >= 1 && localSaved <= totalPages) {
         setCurrentPage(localSaved);
         setPageInput(String(localSaved));
-      }
-
-      try {
-        const res = await apiJson(`/api/reading-progress/${activeBook.id}`);
-        if (active && res?.progress?.last_page && res.progress.last_page <= totalPages) {
-          setCurrentPage(res.progress.last_page);
-          setPageInput(String(res.progress.last_page));
-        }
-      } catch {
-        // Abaikan bila offline
       }
     };
 
@@ -77,10 +67,6 @@ export const PdfReaderScreen = () => {
 
     if (activeBook?.id) {
       localStorage.setItem(`last_read_page_${activeBook.id}`, String(validPage));
-      apiJson(`/api/reading-progress/${activeBook.id}`, {
-        method: 'PUT',
-        body: { last_page: validPage, total_pages: totalPages || null }
-      }).catch(() => {});
     }
   }, [activeBook?.id, totalPages]);
 
@@ -211,8 +197,8 @@ export const PdfReaderScreen = () => {
 
   if (!activeBook) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] px-4 text-center">
-        <div className="max-w-md rounded-3xl border border-cream-300 bg-white p-8 shadow-xl">
+      <div className="flex min-h-screen items-center justify-center bg-canvas-subtle px-4 text-center">
+        <div className="max-w-md rounded-3xl border border-cream-300 bg-ui-card p-8 shadow-xl">
           <BookOpen className="mx-auto h-12 w-12 text-ink-300" />
           <h2 className="mt-4 text-h2 font-black text-ink-900">Buku tidak ditemukan</h2>
           <p className="mt-2 text-caption text-ink-500">Pilih buku dari beranda katalog terlebih dahulu.</p>
@@ -231,9 +217,9 @@ export const PdfReaderScreen = () => {
   const percentage = Math.min(100, Math.max(1, Math.round((currentPage / totalPages) * 100)));
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-ink-950 text-ink-900 dark:text-cream-50 select-none">
+    <div className="min-h-screen flex flex-col bg-canvas-subtle text-ink-900 dark:text-cream-50 select-none">
       {/* Top Header Minimalis & Bersih */}
-      <header className="sticky top-0 z-30 h-14 bg-white/95 dark:bg-ink-900/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs">
+      <header className="sticky top-0 z-30 h-14 bg-ui-card/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs">
         {/* Tombol Kembali & Judul Buku */}
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -264,7 +250,7 @@ export const PdfReaderScreen = () => {
             <button
               type="button"
               onClick={zoomOut}
-              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 hover:bg-white dark:hover:bg-ink-700 transition cursor-pointer"
+              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 hover:bg-ui-card dark:hover:bg-ink-700 transition cursor-pointer"
               title="Perkecil"
               aria-label="Perkecil"
             >
@@ -281,7 +267,7 @@ export const PdfReaderScreen = () => {
             <button
               type="button"
               onClick={zoomIn}
-              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 hover:bg-white dark:hover:bg-ink-700 transition cursor-pointer"
+              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 hover:bg-ui-card dark:hover:bg-ink-700 transition cursor-pointer"
               title="Perbesar"
               aria-label="Perbesar"
             >
@@ -305,7 +291,7 @@ export const PdfReaderScreen = () => {
       {/* Main Reading Canvas */}
       <main className="flex-1 flex flex-col items-center justify-start py-3 sm:py-5 px-2 sm:px-4 overflow-y-auto">
         {contentStatus === 'locked' ? (
-          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white dark:bg-ink-900 p-8 text-center shadow-xl">
+          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-ui-card p-8 text-center shadow-xl">
             <Lock className="mx-auto h-10 w-10 text-gold-500 mb-3" />
             <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Konten Khusus Member Pro</h2>
             <p className="mt-2 text-caption text-ink-500">Aktifkan paket Pro untuk membuka dan membaca naskah lengkap ini.</p>
@@ -318,7 +304,7 @@ export const PdfReaderScreen = () => {
             </button>
           </div>
         ) : contentStatus === 'error' ? (
-          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white dark:bg-ink-900 p-8 text-center shadow-xl">
+          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-ui-card p-8 text-center shadow-xl">
             <FileText className="mx-auto h-10 w-10 text-semantic-danger mb-3" />
             <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Gagal Memuat Dokumen</h2>
             <p className="mt-2 text-caption text-ink-500">Berkas dokumen naskah tidak dapat dimuat atau diekstrak.</p>
@@ -337,7 +323,7 @@ export const PdfReaderScreen = () => {
           </div>
         ) : (docHtml || DOCX_TYPES.has(extension)) && docHtml ? (
           <div
-            className="w-full bg-white dark:bg-ink-900 shadow-md rounded-2xl p-6 sm:p-12 md:p-16 my-4 border border-ink-200/60 dark:border-ink-800/80 leading-relaxed text-ink-900 dark:text-cream-50 select-text transition-all"
+            className="w-full bg-ui-card shadow-md rounded-2xl p-6 sm:p-12 md:p-16 my-4 border border-ink-200/60 dark:border-ink-800/80 leading-relaxed text-ink-900 dark:text-cream-50 select-text transition-all"
             style={{
               fontSize: `${(zoom / 100) * 1.05}rem`,
               maxWidth: `${Math.min(1200, Math.max(640, Math.round(860 * (zoom / 100))))}px`
@@ -350,7 +336,7 @@ export const PdfReaderScreen = () => {
           </div>
         ) : PDF_TYPES.has(extension) && activeBook.contentUrl && pdfUrl ? (
           <div
-            className="relative w-full max-w-4xl bg-white dark:bg-ink-900 shadow-md rounded-lg overflow-hidden border border-ink-200/60 dark:border-ink-800/70"
+            className="relative w-full max-w-4xl bg-ui-card shadow-md rounded-lg overflow-hidden border border-ink-200/60 dark:border-ink-800/70"
             style={{
               height: 'calc(100vh - 5.5rem)',
               maxWidth: `${Math.min(1200, Math.max(640, Math.round(896 * (zoom / 100))))}px`
@@ -365,11 +351,11 @@ export const PdfReaderScreen = () => {
             />
           </div>
         ) : TEXT_TYPES.has(extension) && (textContent || docHtml) ? (
-          <article className="relative w-full max-w-3xl bg-white dark:bg-ink-900 p-8 sm:p-14 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 whitespace-pre-wrap select-none">
+          <article className="relative w-full max-w-3xl bg-ui-card p-8 sm:p-14 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 whitespace-pre-wrap select-none">
             {textContent || 'Dokumen tidak berisi teks.'}
           </article>
         ) : totalPages > 0 && samplePages.length > 0 ? (
-          <article className="relative w-full max-w-3xl bg-white dark:bg-ink-900 p-8 sm:p-12 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 select-none">
+          <article className="relative w-full max-w-3xl bg-ui-card p-8 sm:p-12 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 select-none">
             <header className="flex justify-between border-b border-ink-100 pb-3 text-micro font-bold text-ink-400">
               <span>PERPUSTAKAAN DIGITAL WAHIDIYAH</span>
               <span>HALAMAN {currentPage} / {totalPages}</span>
@@ -387,7 +373,7 @@ export const PdfReaderScreen = () => {
             </p>
           </article>
         ) : (
-          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-white p-8 text-center shadow-xl">
+          <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-ui-card p-8 text-center shadow-xl">
             <FileText className="mx-auto h-10 w-10 text-ink-300 mb-3" />
             <h2 className="text-h3 font-bold text-ink-900">Lampiran Dokumen</h2>
             <p className="mt-2 text-caption text-ink-500">
@@ -401,7 +387,7 @@ export const PdfReaderScreen = () => {
       <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30">
         <form
           onSubmit={handlePageInputSubmit}
-          className="flex items-center gap-2 bg-white/95 dark:bg-ink-900/95 backdrop-blur-md shadow-xl border border-ink-200/90 dark:border-ink-700/80 rounded-full px-3.5 py-1.5 text-caption font-medium text-ink-800 dark:text-cream-100"
+          className="flex items-center gap-2 bg-ui-card/95 backdrop-blur-md shadow-xl border border-ink-200/90 dark:border-ink-700/80 rounded-full px-3.5 py-1.5 text-caption font-medium text-ink-800 dark:text-cream-100"
         >
           {/* Tombol Sebelumnya */}
           <button

@@ -6,12 +6,8 @@ import { AppProvider } from '@context/AppContext';
 import { ThemeProvider, useTheme } from '@theme/ThemeProvider';
 import { ErrorBoundary } from '@ui/ErrorBoundary';
 import { Toaster } from 'sonner';
-import { initTextScale } from '@lib/textSize';
 import './theme/themeInjector.js';
 import './index.css';
-
-// Inisialisasi skala ukuran teks (Normal / Besar / Sangat Besar) untuk kenyamanan lansia
-initTextScale();
 
 /* Sonner (toast) merender lewat portal di luar shell aplikasi, jadi warnanya
    tidak ikut berubah otomatis — kita teruskan tema aktif secara eksplisit. */

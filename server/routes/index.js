@@ -11,14 +11,12 @@ import { eventsRouter } from './events.routes.js';
 import { carouselRouter } from './carousel.routes.js';
 import { adminRouter } from './admin.routes.js';
 import { notificationsRouter } from './notifications.routes.js';
-import { readingRouter } from './reading.routes.js';
 
 
 const ROUTERS = [
   { path: '/api', router: healthRouter },       
   { path: '/api/auth', router: authRouter },    
   { path: '/api', router: booksRouter },        
-  { path: '/api', router: readingRouter },      
   { path: '/api', router: usersRouter },        
   { path: '/api', router: transactionsRouter }, 
   { path: '/api/payments', router: paymentsRouter },

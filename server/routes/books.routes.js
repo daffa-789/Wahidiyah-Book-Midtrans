@@ -37,17 +37,12 @@ booksRouter.get('/books', async (req, res) => {
     const { search, category, sort } = req.query;
     let query = supabaseServer.from('books').select(BOOK_FIELDS);
 
-    if (category && category !== 'Semua') {
-      query = query.eq('category', category);
-    }
-
     if (search && typeof search === 'string') {
       const trimmed = search.trim();
       if (trimmed) {
-        // Hilangkan karakter pengendali PostgREST sebelum dimasukkan ke pola pencarian
         const safe = trimmed.replace(/[%_,()]/g, '');
         if (safe) {
-          query = query.or(`title.ilike.%${safe}%,author.ilike.%${safe}%,description.ilike.%${safe}%`);
+          query = query.ilike('title', `%${safe}%`);
         }
       }
     }
@@ -167,28 +162,18 @@ booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wr
    * bukan `content.mimetype` kiriman klien (VULN-13).
    */
   const canonicalContentMime = CONTENT_MIME_BY_EXTENSION[extension] || 'application/octet-stream';
-  const safeAuthor = (author && String(author).trim()) || '';
-  const safeCategory = (category && String(category).trim()) || 'Kitab';
-  const safeDescription = (description && String(description).trim()) || '';
-
   const { error } = await supabaseServer.from('books').insert({
     id,
     title: title.trim(),
-    subtitle: subtitle || '',
-    author: safeAuthor,
-    category: safeCategory,
     pages: Number(pages) || 1,
-    total_pages: Number(pages) || 1,
     is_locked: is_locked === 'true' || is_locked === true || is_locked === 1,
     cover_url: coverUrl,
-    thumbnail_url: coverUrl,
     content_url: `data:${canonicalContentMime};base64,${content.buffer.toString('base64')}`,
     content_name: content.originalname,
     content_extension: extension,
     content_mime: canonicalContentMime,
     content_size: content.size,
-    content_type: extension,
-    description: safeDescription
+    content_type: extension
   });
   if (error) throw error;
 
@@ -199,11 +184,11 @@ booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wr
 booksRouter.get('/books/:id/thumbnail', wrap(async (req, res) => {
   const { data: book } = await supabaseServer
     .from('books')
-    .select('cover_url, thumbnail_url')
+    .select('cover_url')
     .eq('id', req.params.id)
     .maybeSingle();
 
-  const url = book?.thumbnail_url || book?.cover_url;
+  const url = book?.cover_url;
   if (!url) return notFound(res, 'Thumbnail tidak ditemukan');
 
   /* Jenis gambar ditentukan dari byte-nya, bukan label di data URL (VULN-13).
