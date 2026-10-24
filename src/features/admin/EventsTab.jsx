@@ -1,3 +1,4 @@
+import { getMapUrl, getDisplayLocation } from '@lib/maps';
 
 
 import { useEffect, useMemo, useState } from 'react';
@@ -401,14 +402,14 @@ export const EventsTab = ({
                                   </span>
                                   {evt.location ? (
                                     <a
-                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(evt.location)}`}
+                                      href={getMapUrl(evt.location)}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline transition"
-                                      title="Buka lokasi di Google Maps"
+                                      title="Buka rute presisi di Google Maps"
                                     >
                                       <MapPin className="h-3.5 w-3.5 text-brand-600" />
-                                      {evt.location}
+                                      {getDisplayLocation(evt.location)}
                                     </a>
                                   ) : (
                                     <span className="text-ink-400 italic">Lokasi belum ditentukan</span>

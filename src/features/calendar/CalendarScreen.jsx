@@ -1,3 +1,4 @@
+import { getMapUrl, getDisplayLocation } from '@lib/maps';
 import { useState, useMemo, useCallback } from 'react';
 import {
   Calendar as CalendarIcon,
@@ -235,14 +236,14 @@ export const CalendarScreen = () => {
                     <div className="flex items-center justify-between pt-1 text-micro text-ink-500 border-t border-brand-100/50">
                       {evt.location ? (
                         <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(evt.location)}`}
+                          href={getMapUrl(evt.location)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline transition group"
                           title="Buka rute di Google Maps"
                         >
                           <MapPin className={`${controls.iconXs} text-brand-600 group-hover:scale-110 transition-transform`} />
-                          <span className="line-clamp-1">{evt.location}</span>
+                          <span className="line-clamp-1">{getDisplayLocation(evt.location)}</span>
                         </a>
                       ) : (
                         <span className="text-ink-400 italic">Lokasi belum ditentukan</span>
@@ -311,7 +312,7 @@ export const CalendarScreen = () => {
                   <div className="flex items-center justify-between text-micro text-ink-400">
                     {evt.location ? (
                       <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(evt.location)}`}
+                        href={getMapUrl(evt.location)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
@@ -319,7 +320,7 @@ export const CalendarScreen = () => {
                         title="Buka rute di Google Maps"
                       >
                         <MapPin className={`${controls.iconXs} text-brand-600 group-hover:scale-110 transition-transform`} />
-                        <span className="line-clamp-1">{evt.location}</span>
+                        <span className="line-clamp-1">{getDisplayLocation(evt.location)}</span>
                       </a>
                     ) : (
                       <span className="text-ink-400 italic">Lokasi belum ditentukan</span>
