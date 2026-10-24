@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, Sparkles, CreditCard } from 'lucide-react';
+import { Clock, Sparkles } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { formatWIB } from '@lib/date';
 import { layout, controls } from '@lib/styles';
@@ -26,21 +26,17 @@ export const SubscriptionHistoryScreen = () => {
 
 
         {subscriptions.length === 0 ? (
-          <div className="py-12 px-4 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-brand-100 text-brand-700 mx-auto flex items-center justify-center">
-              <CreditCard className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-sm text-ink-800">Belum Ada Riwayat Langganan</h3>
-            <p className="text-xs text-ink-400 max-w-xs mx-auto">
+          <div className="min-h-[460px] flex flex-col items-center justify-center py-12 px-4 text-center space-y-3">
+            <h3 className="font-bold text-body text-ink-800">Belum Ada Riwayat Langganan</h3>
+            <p className="text-caption text-ink-400 max-w-xs mx-auto">
               Anda belum memiliki transaksi langganan aktif maupun riwayat terdahulu.
             </p>
             <button
               type="button"
               onClick={() => navigateTo('pro')}
-              className="inline-flex items-center justify-center gap-1.5 min-h-11 px-4 py-2 bg-brand-700 hover:bg-brand-800 text-cream-50 text-xs font-bold rounded-xl shadow-sm transition mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="inline-flex items-center justify-center min-h-10 px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-cream-50 text-caption font-bold rounded-xl shadow-sm transition mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Lihat Paket Pro</span>
+              Lihat Paket Pro
             </button>
           </div>
         ) : (

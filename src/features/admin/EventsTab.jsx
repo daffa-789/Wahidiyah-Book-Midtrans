@@ -401,16 +401,21 @@ export const EventsTab = ({
                                     {evt.time}
                                   </span>
                                   {evt.location ? (
-                                    <a
-                                      href={getMapUrl(evt.location)}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline transition"
-                                      title="Buka rute presisi di Google Maps"
-                                    >
-                                      <MapPin className="h-3.5 w-3.5 text-brand-600" />
-                                      {getDisplayLocation(evt.location)}
-                                    </a>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-semibold text-ink-700">{getDisplayLocation(evt.location)}</span>
+                                      {getMapUrl(evt.location) && (
+                                        <a
+                                          href={getMapUrl(evt.location)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-800 font-bold text-micro transition shadow-2xs"
+                                          title="Buka rute presisi di Google Maps"
+                                        >
+                                          <MapPin className="h-3 w-3 text-brand-600" />
+                                          Rute Maps
+                                        </a>
+                                      )}
+                                    </div>
                                   ) : (
                                     <span className="text-ink-400 italic">Lokasi belum ditentukan</span>
                                   )}
@@ -538,31 +543,51 @@ export const EventsTab = ({
                         />
                       </div>
 
-                      <div>
+                      <div className="space-y-3">
                         <Field
-                          id="evt-location"
-                          label="Lokasi kegiatan *"
+                          id="evt-location-name"
+                          label="Nama tempat / gedung *"
                           required
-                          value={eventForm.location}
-                          onChange={(e) => setEventForm((form) => ({ ...form, location: e.target.value }))}
-                          placeholder="Contoh: Ponpes Kedunglo | https://maps.app.goo.gl/... atau koordinat"
+                          value={eventForm.location_name ?? eventForm.location ?? ''}
+                          onChange={(e) => setEventForm((form) => ({
+                            ...form,
+                            location_name: e.target.value,
+                            location: form.maps_url?.trim()
+                              ? `${e.target.value.trim()} | ${form.maps_url.trim()}`
+                              : e.target.value
+                          }))}
+                          placeholder="Contoh: NEKA KEDIRI atau Ponpes Kedunglo"
                         />
-                        <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-micro text-ink-400">
-                          <span>
-                            Format: <code>Nama Tempat | Link Maps</code> atau link/koordinat langsung
-                          </span>
-                          {getMapUrl(eventForm.location) && (
-                            <a
-                              href={getMapUrl(eventForm.location)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-bold text-brand-700 hover:text-brand-800 hover:underline"
-                              title="Uji buka rute lokasi di Google Maps"
-                            >
-                              <MapPin className="h-3 w-3 text-brand-600" />
-                              Uji Rute Maps
-                            </a>
-                          )}
+
+                        <div>
+                          <Field
+                            id="evt-maps-url"
+                            label="Tautan Google Maps / Koordinat (opsional)"
+                            value={eventForm.maps_url ?? ''}
+                            onChange={(e) => setEventForm((form) => ({
+                              ...form,
+                              maps_url: e.target.value,
+                              location: e.target.value?.trim()
+                                ? `${(form.location_name || '').trim()} | ${e.target.value.trim()}`
+                                : (form.location_name || '')
+                            }))}
+                            placeholder="Tempel tautan (https://maps.app.goo.gl/...) atau koordinat"
+                          />
+                          <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-micro text-ink-400">
+                            <span>Buka Google Maps &gt; Bagikan &gt; Salin Tautan</span>
+                            {getMapUrl(eventForm.maps_url || eventForm.location) && (
+                              <a
+                                href={getMapUrl(eventForm.maps_url || eventForm.location)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 font-bold text-brand-700 hover:text-brand-800 hover:underline"
+                                title="Uji buka rute lokasi di Google Maps"
+                              >
+                                <MapPin className="h-3 w-3 text-brand-600" />
+                                Uji Rute Maps
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
 

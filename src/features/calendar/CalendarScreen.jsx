@@ -1,7 +1,6 @@
 import { getMapUrl, getDisplayLocation } from '@lib/maps';
 import { useState, useMemo, useCallback } from 'react';
 import {
-  Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -72,24 +71,6 @@ export const CalendarScreen = () => {
   return (
     <div className="min-h-[640px] flex flex-col justify-between bg-cream-50 page-transition pb-6 font-sans">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
-
-        <div className="relative overflow-hidden rounded-3xl bg-brand-900 p-6 text-cream-50 shadow-md">
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="font-display text-title font-bold tracking-tight text-cream-50">
-                Kalender Majelis Wahidiyah
-              </h1>
-              <p className="mt-1 text-caption text-cream-200/90 leading-relaxed max-w-md">
-                Jadwal resmi Mujahadah Kubro, pengajian selapanan, dan agenda bimbingan ruhani.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 self-start sm:self-auto">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cream-50/15 bg-cream-50/10 text-cream-50 backdrop-blur-sm shrink-0">
-                <CalendarIcon className="h-5 w-5 text-brand-100" strokeWidth={1.8} />
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
@@ -235,16 +216,23 @@ export const CalendarScreen = () => {
                     <p className="text-caption text-ink-400 leading-relaxed">{evt.description}</p>
                     <div className="flex items-center justify-between pt-1 text-micro text-ink-500 border-t border-brand-100/50">
                       {evt.location ? (
-                        <a
-                          href={getMapUrl(evt.location)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline transition group"
-                          title="Buka rute di Google Maps"
-                        >
-                          <MapPin className={`${controls.iconXs} text-brand-600 group-hover:scale-110 transition-transform`} />
-                          <span className="line-clamp-1">{getDisplayLocation(evt.location)}</span>
-                        </a>
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          <span className="font-semibold text-ink-800 truncate" title={getDisplayLocation(evt.location)}>
+                            {getDisplayLocation(evt.location)}
+                          </span>
+                          {getMapUrl(evt.location) && (
+                            <a
+                              href={getMapUrl(evt.location)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-800 font-bold text-micro transition shadow-2xs shrink-0 cursor-pointer"
+                              title="Buka rute di Google Maps"
+                            >
+                              <MapPin className="h-3 w-3 text-brand-600" />
+                              <span>Rute Maps</span>
+                            </a>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-ink-400 italic">Lokasi belum ditentukan</span>
                       )}
@@ -311,17 +299,22 @@ export const CalendarScreen = () => {
                   <h4 className="font-bold text-caption text-ink-800 leading-snug">{evt.title}</h4>
                   <div className="flex items-center justify-between text-micro text-ink-400">
                     {evt.location ? (
-                      <a
-                        href={getMapUrl(evt.location)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline transition group"
-                        title="Buka rute di Google Maps"
-                      >
-                        <MapPin className={`${controls.iconXs} text-brand-600 group-hover:scale-110 transition-transform`} />
-                        <span className="line-clamp-1">{getDisplayLocation(evt.location)}</span>
-                      </a>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-ink-700 truncate">{getDisplayLocation(evt.location)}</span>
+                        {getMapUrl(evt.location) && (
+                          <a
+                            href={getMapUrl(evt.location)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-50 hover:bg-brand-100 border border-brand-200 text-brand-800 font-bold text-micro transition shrink-0 cursor-pointer"
+                            title="Buka rute di Google Maps"
+                          >
+                            <MapPin className="h-2.5 w-2.5 text-brand-600" />
+                            <span>Rute Maps</span>
+                          </a>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-ink-400 italic">Lokasi belum ditentukan</span>
                     )}

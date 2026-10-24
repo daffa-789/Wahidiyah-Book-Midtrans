@@ -51,6 +51,8 @@ const EMPTY_EVENT_FORM = {
   time_start: '19:30',
   time_end: '21:00',
   location: '',
+  location_name: '',
+  maps_url: '',
   category: 'Mujahadah',
   description: '',
   organizer: 'DPP PSW',
@@ -58,18 +60,35 @@ const EMPTY_EVENT_FORM = {
   broadcast_notification: true
 };
 
-const toEventForm = (event) => ({
-  title: event.title || '',
-  event_date: String(event.date || '').slice(0, 10),
-  time_start: event.timeStart || '19:30',
-  time_end: event.timeEnd || '21:00',
-  location: event.location || '',
-  category: event.category || 'Mujahadah',
-  description: event.description || '',
-  organizer: event.organizer || 'DPP PSW',
-  show_in_carousel: Boolean(event.showInCarousel),
-  broadcast_notification: false
-});
+const toEventForm = (event) => {
+  const rawLoc = String(event.location || '').trim();
+  let locName = rawLoc;
+  let mapUrl = '';
+  if (rawLoc.includes('|')) {
+    const parts = rawLoc.split('|');
+    const urlPart = parts.find((p) => /^https?:\/\//i.test(p.trim())) || '';
+    const namePart = parts.find((p) => p !== urlPart) || parts[0];
+    locName = namePart.trim();
+    mapUrl = urlPart.trim();
+  } else if (/^https?:\/\//i.test(rawLoc)) {
+    locName = '';
+    mapUrl = rawLoc;
+  }
+  return {
+    title: event.title || '',
+    event_date: String(event.date || '').slice(0, 10),
+    time_start: event.timeStart || '19:30',
+    time_end: event.timeEnd || '21:00',
+    location: event.location || '',
+    location_name: locName,
+    maps_url: mapUrl,
+    category: event.category || 'Mujahadah',
+    description: event.description || '',
+    organizer: event.organizer || 'DPP PSW',
+    show_in_carousel: Boolean(event.showInCarousel),
+    broadcast_notification: false
+  };
+};
 
 const formatCurrency = formatRupiah;
 
@@ -232,17 +251,31 @@ export const AdminDashboard = () => {
     return withToast(
       async () => {
         if (editingEventId) {
+          const locationCombined = eventForm.maps_url?.trim()
+            ? (eventForm.location_name?.trim() ? `${eventForm.location_name.trim()} | ${eventForm.maps_url.trim()}` : eventForm.maps_url.trim())
+            : (eventForm.location_name?.trim() || eventForm.location || '');
+          const eventPayload = {
+            ...eventForm,
+            location: locationCombined
+          };
           const res = await apiJson(`/api/events/${encodeURIComponent(editingEventId)}`, {
             method: 'PUT',
             headers: { ...headers, 'Content-Type': 'application/json' },
-            body: JSON.stringify(eventForm)
+            body: JSON.stringify(eventPayload)
           });
           toast.success(res?.message || 'Agenda berhasil diperbarui.');
         } else {
+          const locationCombined = eventForm.maps_url?.trim()
+            ? (eventForm.location_name?.trim() ? `${eventForm.location_name.trim()} | ${eventForm.maps_url.trim()}` : eventForm.maps_url.trim())
+            : (eventForm.location_name?.trim() || eventForm.location || '');
+          const eventPayload = {
+            ...eventForm,
+            location: locationCombined
+          };
           const res = await apiJson('/api/events', {
             method: 'POST',
             headers: { ...headers, 'Content-Type': 'application/json' },
-            body: JSON.stringify(eventForm)
+            body: JSON.stringify(eventPayload)
           });
           if (res?.announcementSent > 0) {
             toast.success(`Agenda ditambahkan & disiarkan ke ${res.announcementSent} perangkat!`);
