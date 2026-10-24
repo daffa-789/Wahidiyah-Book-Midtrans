@@ -538,14 +538,33 @@ export const EventsTab = ({
                         />
                       </div>
 
-                      <Field
-                        id="evt-location"
-                        label="Lokasi kegiatan *"
-                        required
-                        value={eventForm.location}
-                        onChange={(e) => setEventForm((form) => ({ ...form, location: e.target.value }))}
-                        placeholder="Contoh: Ponpes Kedunglo Kediri / Daring"
-                      />
+                      <div>
+                        <Field
+                          id="evt-location"
+                          label="Lokasi kegiatan *"
+                          required
+                          value={eventForm.location}
+                          onChange={(e) => setEventForm((form) => ({ ...form, location: e.target.value }))}
+                          placeholder="Contoh: Ponpes Kedunglo | https://maps.app.goo.gl/... atau koordinat"
+                        />
+                        <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-micro text-ink-400">
+                          <span>
+                            Format: <code>Nama Tempat | Link Maps</code> atau link/koordinat langsung
+                          </span>
+                          {getMapUrl(eventForm.location) && (
+                            <a
+                              href={getMapUrl(eventForm.location)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-bold text-brand-700 hover:text-brand-800 hover:underline"
+                              title="Uji buka rute lokasi di Google Maps"
+                            >
+                              <MapPin className="h-3 w-3 text-brand-600" />
+                              Uji Rute Maps
+                            </a>
+                          )}
+                        </div>
+                      </div>
 
                       <Field
                         as="select"
