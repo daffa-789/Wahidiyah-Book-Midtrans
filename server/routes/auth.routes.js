@@ -89,10 +89,11 @@ authRouter.post('/login', async (req, res) => {
 
 authRouter.post('/register', async (req, res) => {
   try {
-    const { name, email, phone, password, deliveryMethod } = req.body;
+    const { name, email, phone, password } = req.body;
     const normalizedEmail = normalizeEmail(email);
     const normalizedPhone = normalizePhone(phone);
-    const chosenMethod = deliveryMethod === 'whatsapp' ? 'whatsapp' : 'email';
+    // Pendaftaran selalu diprioritaskan melalui Email untuk efisiensi biaya & proteksi anti-spam
+    const chosenMethod = 'email';
 
     const parsed = registerSchema.safeParse({
       name,

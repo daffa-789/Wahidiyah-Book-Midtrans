@@ -8,7 +8,7 @@ import { PhoneInput } from '@ui/PhoneInput';
 
 export const ForgotPasswordScreen = () => {
   const { navigateTo, setVerification } = useApp();
-  const [method, setMethod] = useState('whatsapp');
+  const [method, setMethod] = useState('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const { error, setError, isSubmitting, runSubmit } = useSubmit('Permintaan belum dapat diproses.');
@@ -72,24 +72,12 @@ export const ForgotPasswordScreen = () => {
         <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-ink-900">Atur ulang password</h1>
         <p className={typography.helperRelaxed}>
           {method === 'whatsapp'
-            ? 'Pilih metode pemulihan akun. Kami akan mengirimkan kode 6 angka melalui WhatsApp terdaftar.'
-            : 'Pilih metode pemulihan akun. Kami akan mengirimkan kode 6 angka ke alamat email terdaftar.'}
+            ? 'Opsi alternatif jika Anda tidak dapat membuka email. Kami akan mengirimkan kode 6 angka ke nomor WhatsApp terdaftar.'
+            : 'Prioritas utama pemulihan akun. Kami akan mengirimkan kode verifikasi 6 angka ke alamat email terdaftar Anda.'}
         </p>
 
-        {/* Tab Selector Metode Reset */}
+        {/* Tab Selector Metode Reset: Prioritas Email, WhatsApp sebagai Opsi Cadangan */}
         <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl bg-cream-100 p-1">
-          <button
-            type="button"
-            onClick={() => { setMethod('whatsapp'); setError(''); }}
-            className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition ${
-              method === 'whatsapp'
-                ? 'bg-cream-50 text-brand-800 shadow-sm'
-                : 'text-ink-500 hover:text-ink-800'
-            }`}
-          >
-            <Phone className="h-3.5 w-3.5 text-brand-600" />
-            WhatsApp
-          </button>
           <button
             type="button"
             onClick={() => { setMethod('email'); setError(''); }}
@@ -100,7 +88,19 @@ export const ForgotPasswordScreen = () => {
             }`}
           >
             <Mail className="h-3.5 w-3.5 text-brand-600" />
-            Email
+            Email (Utama)
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMethod('whatsapp'); setError(''); }}
+            className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition ${
+              method === 'whatsapp'
+                ? 'bg-cream-50 text-brand-800 shadow-sm'
+                : 'text-ink-500 hover:text-ink-800'
+            }`}
+          >
+            <Phone className="h-3.5 w-3.5 text-brand-600" />
+            WhatsApp (Cadangan)
           </button>
         </div>
 

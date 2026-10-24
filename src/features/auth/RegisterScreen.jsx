@@ -55,7 +55,7 @@ export const RegisterScreen = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState('whatsapp');
+  const deliveryMethod = 'email';
 
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -118,7 +118,7 @@ export const RegisterScreen = () => {
           <label className="block"><span className="auth-label">Alamat email</span><span className={controls.inputWrap}><Mail className="auth-input-icon" /><input type="email" value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} autoComplete="email" placeholder="nama@email.com" /></span></label>
           
           <div className="block">
-            <label htmlFor="reg-phone" className="auth-label">Nomor WhatsApp</label>
+            <label htmlFor="reg-phone" className="auth-label">Nomor WhatsApp <span className="font-normal text-ink-400">(untuk pemulihan akun)</span></label>
             <PhoneInput
               id="reg-phone"
               value={phone}
@@ -127,34 +127,8 @@ export const RegisterScreen = () => {
             />
           </div>
 
-          <div className="pt-0.5">
-            <span className="auth-label block mb-1.5">Kirim kode verifikasi ke</span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => { setDeliveryMethod('whatsapp'); setError(''); }}
-                className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition border ${
-                  deliveryMethod === 'whatsapp'
-                    ? 'bg-brand-50 text-brand-800 border-brand-400 shadow-xs'
-                    : 'bg-ui-card text-ink-500 border-cream-300 hover:bg-cream-100'
-                }`}
-              >
-                <Phone className="h-3.5 w-3.5 text-brand-600" />
-                WhatsApp
-              </button>
-              <button
-                type="button"
-                onClick={() => { setDeliveryMethod('email'); setError(''); }}
-                className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition border ${
-                  deliveryMethod === 'email'
-                    ? 'bg-brand-50 text-brand-800 border-brand-400 shadow-xs'
-                    : 'bg-ui-card text-ink-500 border-cream-300 hover:bg-cream-100'
-                }`}
-              >
-                <Mail className="h-3.5 w-3.5 text-brand-600" />
-                Email
-              </button>
-            </div>
+          <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-3 text-xs leading-relaxed text-brand-900">
+            Kode verifikasi 6 angka akan dikirimkan ke <strong>alamat email</strong> Anda untuk mengaktifkan akun secara instan.
           </div>
           <label className="block"><span className="auth-label">Password</span><span className={controls.inputWrap}><Lock className="auth-input-icon" /><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Minimal 8 karakter" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="auth-icon-button" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
           <label className="block"><span className="auth-label">Konfirmasi password</span><span className={controls.inputWrap}><Lock className="auth-input-icon" /><input type={showConfirmation ? 'text' : 'password'} value={confirmation} onChange={(event) => { setConfirmation(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Tulis ulang password" /><button type="button" onClick={() => setShowConfirmation((value) => !value)} className="auth-icon-button" aria-label={showConfirmation ? 'Sembunyikan konfirmasi password' : 'Tampilkan ulang password'}>{showConfirmation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
@@ -165,7 +139,7 @@ export const RegisterScreen = () => {
           </label>
 
           {error && <div role="alert" className="auth-alert"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
-          <button type="submit" disabled={isSubmitting} className="auth-primary-button">{isSubmitting ? <><span className="auth-spinner" />Mengirim kode…</> : 'Daftar & kirim kode'}</button>
+          <button type="submit" disabled={isSubmitting} className="auth-primary-button">{isSubmitting ? <><span className="auth-spinner" />Mengirim kode…</> : 'Daftar & verifikasi email'}</button>
         </form>
 
         <div className="mt-6 border-t border-cream-200 pt-5 text-center text-sm text-ink-500">Sudah punya akun? <button type="button" onClick={() => navigateTo('login')} className="auth-link font-bold">Masuk</button></div>

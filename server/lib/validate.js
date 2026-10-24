@@ -29,7 +29,7 @@ export const registerSchema = z.object({
     .trim()
     .refine(isValidPhone, 'Nomor WhatsApp tidak valid (contoh: 081234567890 atau format internasional)'),
   password: z.string().min(8, 'Password minimal 8 karakter'),
-  deliveryMethod: z.enum(['whatsapp', 'email']).optional().default('whatsapp')
+  deliveryMethod: z.enum(['whatsapp', 'email']).optional().default('email')
 });
 
 export const bookInputSchema = z.object({
