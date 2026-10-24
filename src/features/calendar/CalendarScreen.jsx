@@ -233,10 +233,20 @@ export const CalendarScreen = () => {
                     <h4 className="font-bold text-caption text-ink-800">{evt.title}</h4>
                     <p className="text-caption text-ink-400 leading-relaxed">{evt.description}</p>
                     <div className="flex items-center justify-between pt-1 text-micro text-ink-500 border-t border-brand-100/50">
-                      <span className="flex items-center gap-1">
-                        <MapPin className={controls.iconXs} />
-                        {evt.location}
-                      </span>
+                      {evt.location ? (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(evt.location)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline transition group"
+                          title="Buka rute di Google Maps"
+                        >
+                          <MapPin className={`${controls.iconXs} text-brand-600 group-hover:scale-110 transition-transform`} />
+                          <span className="line-clamp-1">{evt.location}</span>
+                        </a>
+                      ) : (
+                        <span className="text-ink-400 italic">Lokasi belum ditentukan</span>
+                      )}
                       <span className="font-medium text-brand-700">{evt.organizer}</span>
                     </div>
                   </div>
@@ -299,10 +309,21 @@ export const CalendarScreen = () => {
                   </div>
                   <h4 className="font-bold text-caption text-ink-800 leading-snug">{evt.title}</h4>
                   <div className="flex items-center justify-between text-micro text-ink-400">
-                    <span className="flex items-center gap-1">
-                      <MapPin className={controls.iconXs} />
-                      {evt.location}
-                    </span>
+                    {evt.location ? (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(evt.location)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline transition group"
+                        title="Buka rute di Google Maps"
+                      >
+                        <MapPin className={`${controls.iconXs} text-brand-600 group-hover:scale-110 transition-transform`} />
+                        <span className="line-clamp-1">{evt.location}</span>
+                      </a>
+                    ) : (
+                      <span className="text-ink-400 italic">Lokasi belum ditentukan</span>
+                    )}
                     <span className="flex items-center gap-1">
                       <Clock className={controls.iconXs} />
                       {evt.time}

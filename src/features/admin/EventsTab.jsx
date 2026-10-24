@@ -399,10 +399,20 @@ export const EventsTab = ({
                                     <Clock className="h-3.5 w-3.5 text-ink-300" />
                                     {evt.time}
                                   </span>
-                                  <span className="flex items-center gap-1">
-                                    <MapPin className="h-3.5 w-3.5 text-ink-300" />
-                                    {evt.location}
-                                  </span>
+                                  {evt.location ? (
+                                    <a
+                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(evt.location)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline transition"
+                                      title="Buka lokasi di Google Maps"
+                                    >
+                                      <MapPin className="h-3.5 w-3.5 text-brand-600" />
+                                      {evt.location}
+                                    </a>
+                                  ) : (
+                                    <span className="text-ink-400 italic">Lokasi belum ditentukan</span>
+                                  )}
                                 </div>
                                 {evt.description && (
                                   <p className="text-caption text-ink-500 pt-1 italic">{evt.description}</p>
