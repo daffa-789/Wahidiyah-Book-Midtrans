@@ -4,17 +4,14 @@ import {
   Loader2,
   AlertCircle,
   ReceiptText,
-  Sparkles,
   HelpCircle,
   Info,
   ChevronRight,
   LogOut,
   Save,
-  ShieldCheck,
   User,
   Mail,
-  Phone,
-  BookOpen
+  Phone
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
@@ -26,7 +23,7 @@ import { FlagIcon } from '@ui/FlagIcon';
 import { LogoutConfirmDialog } from '../../components/layout/LogoutConfirmDialog';
 
 export const EditProfileScreen = () => {
-  const { user, patchUser, sessionToken, navigateTo, logout, isSubscriptionActive } = useApp();
+  const { user, patchUser, sessionToken, navigateTo, logout } = useApp();
   const { isDark, toggleTheme } = useTheme();
 
   const [name, setName] = useState(user.name || '');
@@ -37,15 +34,6 @@ export const EditProfileScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const timeoutRef = useRef(null);
-
-  const isPro = isSubscriptionActive ? isSubscriptionActive(user) : Boolean(user?.isPro);
-  const userInitials = (user?.name || 'U')
-    .split(' ')
-    .map((s) => s[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase() || 'U';
 
   const isNameChanged = name.trim() !== (user.name || '').trim();
 
@@ -107,96 +95,7 @@ export const EditProfileScreen = () => {
     <div className="min-h-[640px] flex flex-col px-4 sm:px-6 py-6 sm:py-8 bg-cream-50 page-transition pb-24 md:pb-12">
       <div className="mx-auto w-full max-w-content-narrow space-y-6">
 
-        {/* 1. Hero Identity Card (Editorial & Modern Inset Group) */}
-        <div className="rounded-3xl border border-cream-300 bg-ui-card p-6 shadow-xs relative overflow-hidden">
-          {/* Subtle decorative background accent */}
-          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-brand-50/60 dark:bg-brand-900/10 pointer-events-none" />
-
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left relative z-10">
-            {/* Avatar with status ring */}
-            <div className="relative shrink-0">
-              <div
-                className={`flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-2xl font-display font-black text-2xl shadow-sm transition-transform duration-200 ${
-                  isPro
-                    ? 'bg-gradient-to-br from-brand-700 to-brand-900 text-cream-50 ring-2 ring-gold-400/60 shadow-gold-500/10'
-                    : 'bg-brand-100 text-brand-800 ring-2 ring-brand-300/80'
-                }`}
-              >
-                {userInitials}
-              </div>
-              {isPro && (
-                <div
-                  className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-gold-500 text-cream-50 shadow-sm ring-2 ring-cream-50"
-                  title="Member Pro Aktif"
-                >
-                  <Sparkles className="h-3.5 w-3.5 stroke-[2.5]" />
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
-                <h1 className="text-lead font-bold text-ink-900 tracking-tight truncate">
-                  {user.name || 'Pengguna Wahidiyah'}
-                </h1>
-              </div>
-
-              <p className="text-caption text-ink-500 truncate mt-0.5">
-                {user.email}
-              </p>
-
-              <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                {isPro ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-400/15 text-gold-700 dark:text-gold-400 text-micro font-bold border border-gold-400/30 shadow-xs">
-                    <Sparkles className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
-                    Member Pro Aktif
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cream-200/80 text-ink-600 text-micro font-semibold border border-cream-300">
-                    <ShieldCheck className="w-3.5 h-3.5 text-brand-700" />
-                    Akun Standar
-                  </span>
-                )}
-
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cream-100 text-ink-500 text-micro font-medium border border-cream-200">
-                  <BookOpen className="w-3 h-3 text-ink-400" />
-                  Pembaca Digital
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Menu Hub: Layanan & Langganan (Cupertino Inset Grouped) */}
-        <div className="space-y-2">
-          <h2 className="text-caption font-bold uppercase tracking-wider text-ink-400 px-1">
-            Layanan & Langganan
-          </h2>
-          <div className="rounded-3xl border border-cream-300 bg-ui-card overflow-hidden shadow-xs">
-            <button
-              type="button"
-              onClick={() => navigateTo('subscription-history')}
-              className="w-full flex items-center justify-between p-4.5 hover:bg-cream-100 active:bg-cream-200/70 transition-colors text-left cursor-pointer group"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 group-hover:bg-brand-100 transition-colors">
-                  <ReceiptText className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-body font-bold text-ink-900 group-hover:text-brand-800 transition-colors">
-                    Riwayat Langganan & Kwitansi
-                  </p>
-                  <p className="text-caption text-ink-500 truncate mt-0.5">
-                    Lihat riwayat transaksi dan kwitansi resmi
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-ink-300 group-hover:text-ink-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-            </button>
-          </div>
-        </div>
-
-        {/* 3. Form Ubah Data Profil (Modern Form Card) */}
+        {/* 1. Data Akun (Paling Atas) */}
         <div className="space-y-2">
           <h2 className="text-caption font-bold uppercase tracking-wider text-ink-400 px-1">
             Data Akun
@@ -331,7 +230,36 @@ export const EditProfileScreen = () => {
           </div>
         </div>
 
-        {/* 4. Menu Hub: Bantuan & Info Aplikasi */}
+        {/* 2. Layanan & Langganan */}
+        <div className="space-y-2">
+          <h2 className="text-caption font-bold uppercase tracking-wider text-ink-400 px-1">
+            Layanan & Langganan
+          </h2>
+          <div className="rounded-3xl border border-cream-300 bg-ui-card overflow-hidden shadow-xs">
+            <button
+              type="button"
+              onClick={() => navigateTo('subscription-history')}
+              className="w-full flex items-center justify-between p-4.5 hover:bg-cream-100 active:bg-cream-200/70 transition-colors text-left cursor-pointer group"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 group-hover:bg-brand-100 transition-colors">
+                  <ReceiptText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-body font-bold text-ink-900 group-hover:text-brand-800 transition-colors">
+                    Riwayat Langganan & Kwitansi
+                  </p>
+                  <p className="text-caption text-ink-500 truncate mt-0.5">
+                    Lihat riwayat transaksi dan kwitansi resmi
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-ink-300 group-hover:text-ink-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Bantuan & Info */}
         <div className="space-y-2">
           <h2 className="text-caption font-bold uppercase tracking-wider text-ink-400 px-1">
             Bantuan & Info
@@ -381,7 +309,7 @@ export const EditProfileScreen = () => {
           </div>
         </div>
 
-        {/* 5. Pengaturan Tampilan & Sesi Akun */}
+        {/* 4. Pengaturan & Sesi */}
         <div className="space-y-2">
           <h2 className="text-caption font-bold uppercase tracking-wider text-ink-400 px-1">
             Pengaturan & Sesi
@@ -430,11 +358,6 @@ export const EditProfileScreen = () => {
             </div>
           </div>
         </div>
-
-        {/* Footer info versi */}
-        <p className="text-center text-micro text-ink-400 pt-2 pb-2">
-          Wahidiyah Book v1.0.0 • Perpustakaan Digital Sholawat Wahidiyah
-        </p>
 
       </div>
 
