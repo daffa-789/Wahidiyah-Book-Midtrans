@@ -290,7 +290,7 @@ export const PdfReaderScreen = () => {
       </header>
 
       {/* Main Reading Canvas */}
-      <main className="flex-1 flex flex-col items-center justify-start py-3 sm:py-5 px-2 sm:px-4 overflow-y-auto">
+      <main className="flex-1 flex flex-col items-center justify-center p-0 md:p-3 overflow-hidden w-full h-[calc(100dvh-3.5rem)]">
         {contentStatus === 'locked' ? (
           <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-ui-card p-8 text-center shadow-xl">
             <Lock className="mx-auto h-10 w-10 text-gold-500 mb-3" />
@@ -324,10 +324,9 @@ export const PdfReaderScreen = () => {
           </div>
         ) : (docHtml || DOCX_TYPES.has(extension)) && docHtml ? (
           <div
-            className="w-full bg-ui-card shadow-md rounded-2xl p-6 sm:p-12 md:p-16 my-4 border border-ink-200/60 dark:border-ink-800/80 leading-relaxed text-ink-900 dark:text-cream-50 select-text transition-all"
+            className="w-full max-w-full md:max-w-4xl xl:max-w-5xl bg-ui-card shadow-none md:shadow-md rounded-none md:rounded-2xl p-4 sm:p-8 md:p-12 border-0 md:border border-ink-200/60 dark:border-ink-800/80 leading-relaxed text-ink-900 dark:text-cream-50 select-text transition-all overflow-y-auto h-full"
             style={{
-              fontSize: `${(zoom / 100) * 1.05}rem`,
-              maxWidth: `${Math.min(1200, Math.max(640, Math.round(860 * (zoom / 100))))}px`
+              fontSize: `${(zoom / 100) * 1.05}rem`
             }}
           >
             <div
@@ -337,18 +336,19 @@ export const PdfReaderScreen = () => {
           </div>
         ) : PDF_TYPES.has(extension) && activeBook.contentUrl && pdfUrl ? (
           <div
-            className="relative w-full max-w-4xl bg-ui-card shadow-md rounded-lg overflow-hidden border border-ink-200/60 dark:border-ink-800/70"
+            className="relative w-full h-full max-w-full xl:max-w-[1600px] 2xl:max-w-[1800px] bg-ui-card shadow-none md:shadow-lg rounded-none md:rounded-2xl overflow-hidden border-0 md:border md:border-ink-200/60 dark:md:border-ink-800/70 transition-all duration-200"
             style={{
-              height: 'calc(100vh - 5.5rem)',
-              maxWidth: `${Math.min(1200, Math.max(640, Math.round(896 * (zoom / 100))))}px`
+              height: '100%',
+              width: '100%',
+              maxWidth: zoom > 100 ? `${Math.min(2400, Math.round(1400 * (zoom / 100)))}px` : undefined
             }}
             onContextMenu={(e) => e.preventDefault()}
           >
             <iframe
               key={`${pdfUrl}-${currentPage}-${zoom}`}
               title={`Konten ${activeBook.title}`}
-              src={`${pdfUrl}#page=${currentPage}&zoom=${zoom}&toolbar=0&navpanes=0`}
-              className="h-full w-full border-0 select-none"
+              src={`${pdfUrl}#page=${currentPage}&${zoom === 100 ? 'view=FitH' : `zoom=${zoom}`}&toolbar=0&navpanes=0`}
+              className="h-full w-full border-0 select-none bg-canvas-subtle"
             />
           </div>
         ) : TEXT_TYPES.has(extension) && (textContent || docHtml) ? (
@@ -385,10 +385,10 @@ export const PdfReaderScreen = () => {
       </main>
 
       {/* Floating Bottom Navigation Pill (Persis seperti tampilan e-reader Moco / Gramedia) */}
-      <footer className="fixed bottom-5 left-1/2 -translate-x-1/2 z-30">
+      <footer className="fixed bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
         <form
           onSubmit={handlePageInputSubmit}
-          className="flex items-center gap-2 bg-ui-card/95 backdrop-blur-md shadow-xl border border-ink-200/90 dark:border-ink-700/80 rounded-full px-3.5 py-1.5 text-caption font-medium text-ink-800 dark:text-cream-100"
+          className="pointer-events-auto flex items-center gap-2 bg-ui-card/95 backdrop-blur-md shadow-xl border border-ink-200/90 dark:border-ink-700/80 rounded-full px-3.5 py-1.5 text-caption font-medium text-ink-800 dark:text-cream-100"
         >
           {/* Tombol Sebelumnya */}
           <button
