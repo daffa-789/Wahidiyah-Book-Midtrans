@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { pdfjsLib } from './pdfWorkerSetup';
 
 /**
  * ContinuousPdfViewer
  * Penampil PDF dengan model gulir vertikal alami (Continuous Vertical Scroll),
  * pelacakan halaman aktif otomatis (Scroll-Spy), serta perbesaran proporsional
- * yang 100% responsif pada layar Mobile maupun Desktop.
+ * yang 100% responsif pada layar Mobile maupun Desktop dengan zoom anchor
+ * yang mengunci posisi teks saat zoom in maupun zoom out.
  */
 export const ContinuousPdfViewer = ({
   pdfBuffer,
@@ -29,6 +30,12 @@ export const ContinuousPdfViewer = ({
   const renderTasksRef = useRef({});
   const canvasRefs = useRef({});
   const pageContainerRefs = useRef({});
+
+  // Ref untuk melacak dimensi sebelumnya & anchor fokus scroll saat perbesaran berubah
+  const prevZoomRef = useRef(zoom);
+  const prevHeightRef = useRef(0);
+  const prevWidthRef = useRef(0);
+  const customAnchorRef = useRef(null);
 
   // Ref untuk mendeteksi Pinch-to-zoom (2 jari di mobile)
   const touchStartDistRef = useRef(0);
@@ -104,6 +111,11 @@ export const ContinuousPdfViewer = ({
   const displayPageWidth = Math.round(baseFitWidth * (zoom / 100));
   const displayPageHeight = Math.round(displayPageWidth * pageAspect);
 
+  const displayPageHeightRef = useRef(displayPageHeight);
+  displayPageHeightRef.current = displayPageHeight;
+  const displayPageWidthRef = useRef(displayPageWidth);
+  displayPageWidthRef.current = displayPageWidth;
+
   // 4. Deteksi Zoom Manual: Pinch 2 Jari (Mobile) & Ctrl + Wheel (Desktop)
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
@@ -127,8 +139,24 @@ export const ContinuousPdfViewer = ({
       if (touchStartDistRef.current > 10) {
         if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
         pinchRafRef.current = requestAnimationFrame(() => {
+          const el = containerRef.current;
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+
+            customAnchorRef.current = {
+              scrollY: el.scrollTop + midY,
+              scrollX: el.scrollLeft + midX,
+              fy: midY,
+              fx: midX,
+              oldHeight: displayPageHeightRef.current,
+              oldWidth: displayPageWidthRef.current
+            };
+          }
+
           const factor = currentDist / touchStartDistRef.current;
-          const targetZoom = Math.min(250, Math.max(50, Math.round(initialPinchZoomRef.current * factor)));
+          const targetZoom = Math.min(300, Math.max(40, Math.round(initialPinchZoomRef.current * factor)));
           setZoom(targetZoom);
         });
       }
@@ -149,15 +177,76 @@ export const ContinuousPdfViewer = ({
     const handleWheel = (e) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
+        const rect = el.getBoundingClientRect();
+        const cursorY = e.clientY - rect.top;
+        const cursorX = e.clientX - rect.left;
+
+        customAnchorRef.current = {
+          scrollY: el.scrollTop + cursorY,
+          scrollX: el.scrollLeft + cursorX,
+          fy: cursorY,
+          fx: cursorX,
+          oldHeight: displayPageHeightRef.current,
+          oldWidth: displayPageWidthRef.current
+        };
+
+        // Perbesaran berkelanjutan (seamless) tanpa batas kelipatan 5%
         const delta = -e.deltaY;
-        const step = delta > 0 ? 5 : -5;
-        setZoom((prev) => Math.min(250, Math.max(50, prev + step)));
+        const deltaZoom = delta * 0.15;
+        setZoom((prev) => Math.min(300, Math.max(40, Math.round(prev + deltaZoom))));
       }
     };
 
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
   }, [setZoom]);
+
+  // 5. Kunci Posisi Fokus Membaca (Zoom Anchor) saat Zoom Berubah
+  // Menjaga agar teks/paragraf yang sedang dilihat pengguna tidak bergeser atau loncat ke halaman lain
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container || !prevHeightRef.current || prevHeightRef.current === displayPageHeight) {
+      prevHeightRef.current = displayPageHeight;
+      prevWidthRef.current = displayPageWidth;
+      prevZoomRef.current = zoom;
+      return;
+    }
+
+    const oldH = prevHeightRef.current;
+    const oldW = prevWidthRef.current;
+    const newH = displayPageHeight;
+    const newW = displayPageWidth;
+
+    // Ambil koordinat anchor (dari gesture kursor mouse/pinch, atau default ke tengah layar baca)
+    const anchor = customAnchorRef.current || {
+      scrollY: container.scrollTop + container.clientHeight / 2,
+      scrollX: container.scrollLeft + container.clientWidth / 2,
+      fy: container.clientHeight / 2,
+      fx: container.clientWidth / 2,
+      oldHeight: oldH,
+      oldWidth: oldW
+    };
+    customAnchorRef.current = null;
+
+    const oldStride = (anchor.oldHeight || oldH) + 16;
+    const pageIndex = Math.max(0, Math.min(Math.max(0, totalPages - 1), Math.floor(anchor.scrollY / oldStride)));
+    const offsetInPage = anchor.scrollY - (pageIndex * oldStride);
+    const ratioInPage = (anchor.oldHeight || oldH) > 0 ? Math.min(1, Math.max(0, offsetInPage / (anchor.oldHeight || oldH))) : 0;
+
+    const newStride = newH + 16;
+    const newScrollY = (pageIndex * newStride) + (ratioInPage * newH);
+    container.scrollTop = Math.max(0, newScrollY - anchor.fy);
+
+    // Pertahankan posisi horizontal jika dokumen lebih lebar dari viewport
+    if (newW > container.clientWidth && (anchor.oldWidth || oldW) > 0) {
+      const ratioX = newW / (anchor.oldWidth || oldW);
+      container.scrollLeft = Math.max(0, (anchor.scrollX * ratioX) - anchor.fx);
+    }
+
+    prevHeightRef.current = newH;
+    prevWidthRef.current = newW;
+    prevZoomRef.current = zoom;
+  }, [zoom, displayPageHeight, displayPageWidth, totalPages]);
 
   // 5. Scroll-Spy: Otomatis deteksi halaman yang sedang dibaca saat scroll ke bawah
   useEffect(() => {
@@ -309,7 +398,7 @@ export const ContinuousPdfViewer = ({
   );
 
   // Trigger render canvas saat renderedPages atau displayPageWidth berubah
-  // Debounce 180ms agar transisi animasi CSS zoom berjalan mulus (GPU hardware scaling) tanpa jank render
+  // Debounce 120ms agar render berjalan cepat tanpa lag saat zooming aktif
   useEffect(() => {
     const timer = setTimeout(() => {
       Object.keys(renderedPages).forEach((pageStr) => {
@@ -318,7 +407,7 @@ export const ContinuousPdfViewer = ({
           renderPageCanvas(pageNum);
         }
       });
-    }, 180);
+    }, 120);
 
     return () => clearTimeout(timer);
   }, [renderedPages, displayPageWidth, renderPageCanvas]);
@@ -363,10 +452,9 @@ export const ContinuousPdfViewer = ({
     >
       {/* Tampilan Daftar Halaman yang Mengalir Vertikal (Continuous Scroll) */}
       <div
-        className="flex flex-col items-center gap-4 will-change-[width,height]"
+        className="mx-auto flex flex-col items-center gap-4"
         style={{
-          width: `${displayPageWidth}px`,
-          transition: 'width 0.25s cubic-bezier(0.2, 0, 0, 1)'
+          width: `${displayPageWidth}px`
         }}
       >
         {pageNumbers.map((pageNum) => {
@@ -378,11 +466,10 @@ export const ContinuousPdfViewer = ({
               id={`pdf-page-${pageNum}`}
               data-page-number={pageNum}
               ref={(el) => (pageContainerRefs.current[pageNum] = el)}
-              className="relative shadow-md md:shadow-lg rounded-sm sm:rounded-md overflow-hidden bg-ui-card border border-ink-200/50 dark:border-ink-700/50 will-change-[width,height]"
+              className="relative shadow-md md:shadow-lg rounded-sm sm:rounded-md overflow-hidden bg-ui-card border border-ink-200/50 dark:border-ink-700/50"
               style={{
                 width: `${displayPageWidth}px`,
-                height: `${displayPageHeight}px`,
-                transition: 'width 0.25s cubic-bezier(0.2, 0, 0, 1), height 0.25s cubic-bezier(0.2, 0, 0, 1)'
+                height: `${displayPageHeight}px`
               }}
             >
               {isVisible ? (

@@ -5,7 +5,9 @@ import {
   FileText,
   Lock,
   Maximize,
-  Minimize
+  Minimize,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiJson, apiRequest, authHeaders } from '@lib/api';
@@ -65,11 +67,11 @@ export const PdfReaderScreen = () => {
     }
   }, [activeBook?.id, totalPages]);
 
-  // Update level zoom dengan batasan aman (50% - 250%)
+  // Update level zoom dengan batasan aman (40% - 300%)
   const setClampedZoom = useCallback((newValOrFn) => {
     setZoom((prev) => {
       const raw = typeof newValOrFn === 'function' ? newValOrFn(prev) : newValOrFn;
-      return Math.min(250, Math.max(50, Math.round(raw)));
+      return Math.min(300, Math.max(40, Math.round(raw)));
     });
   }, []);
 
@@ -211,8 +213,8 @@ export const PdfReaderScreen = () => {
     <div className="fixed inset-0 z-40 flex flex-col bg-canvas-subtle text-ink-900 dark:text-cream-50 select-none overflow-hidden">
       {/* Top Header Minimalis & Bersih */}
       <header className="h-14 shrink-0 z-30 bg-ui-card/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs">
-        {/* Tombol Kembali, Zoom Minimalis & Judul Buku di Kiri Atas */}
-        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+        {/* Tombol Kembali & Judul Buku di Kiri Atas */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
             onClick={() => navigateTo('home')}
@@ -221,21 +223,6 @@ export const PdfReaderScreen = () => {
             aria-label="Kembali ke beranda"
           >
             <ArrowLeft className="h-5 w-5" />
-          </button>
-
-          {/* Persentase Zoom di Kiri Atas (Minimalis, Klik untuk Reset ke 100%) */}
-          <button
-            type="button"
-            onClick={resetZoom}
-            className={`shrink-0 px-2.5 py-1 rounded-xl text-caption font-mono font-bold transition-all cursor-pointer ${
-              zoom !== 100
-                ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 shadow-xs'
-                : 'text-ink-600 dark:text-ink-300 bg-ink-100/70 dark:bg-ink-800/70 hover:bg-ink-200/70 dark:hover:bg-ink-700/70 border border-ink-200/50 dark:border-ink-700/50'
-            }`}
-            title="Reset Zoom (100%)"
-            aria-label={`Zoom ${zoom}%. Klik untuk reset ke 100%`}
-          >
-            {zoom}%
           </button>
 
           <div className="min-w-0">
@@ -250,8 +237,50 @@ export const PdfReaderScreen = () => {
           </div>
         </div>
 
-        {/* Kontrol Kanan: Hanya Fullscreen */}
-        <div className="flex items-center gap-1">
+        {/* Kontrol Kanan: Tombol Zoom di sebelah kiri Fullscreen */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Zoom Control Group */}
+          <div className="flex items-center bg-cream-100/90 dark:bg-ink-800/90 rounded-xl p-0.5 border border-cream-300 dark:border-ink-700 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setClampedZoom((prev) => Math.max(40, prev - 10))}
+              disabled={zoom <= 40}
+              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-cream-200/80 dark:hover:bg-ink-700/80 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
+              title="Perkecil (Zoom Out)"
+              aria-label="Perkecil dokumen"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={resetZoom}
+              className={`px-2 py-0.5 rounded-md text-caption font-mono font-bold transition cursor-pointer ${
+                zoom !== 100
+                  ? 'text-brand-700 dark:text-brand-400 bg-cream-50 dark:bg-ink-900 shadow-2xs'
+                  : 'text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50'
+              }`}
+              title="Klik untuk reset ke 100%"
+              aria-label={`Zoom ${zoom}%. Klik untuk reset ke 100%`}
+            >
+              {zoom}%
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setClampedZoom((prev) => Math.min(300, prev + 10))}
+              disabled={zoom >= 300}
+              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-cream-200/80 dark:hover:bg-ink-700/80 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
+              title="Perbesar (Zoom In)"
+              aria-label="Perbesar dokumen"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="h-4 w-px bg-cream-300 dark:bg-ink-700 mx-0.5" />
+
+          {/* Tombol Fullscreen */}
           <button
             type="button"
             onClick={toggleFullscreen}
