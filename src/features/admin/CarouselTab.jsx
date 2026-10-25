@@ -194,19 +194,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
 
   return (
     <section className="space-y-6">
-      <div className={layout.toolbarRow}>
-        <div>
-          <h2 className={typography.sectionTitle}>Banner beranda</h2>
-          <p className={typography.helper}>
-            Slide yang tayang di beranda jemaah. Agenda yang ditandai “Tampilkan di Carousel” di tab Agenda
-            otomatis muncul di sini.
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-1.5 self-start rounded-2xl border border-brand-200 bg-brand-50 px-3.5 py-2 text-small font-bold text-brand-800 sm:self-auto">
-          <Images className={controls.iconBrand} />
-          {orderedSlides.length} banner · {orderedSlides.filter(isCurrentlyShowing).length} tayang
-        </span>
-      </div>
+      
 
       {carouselReady === false && (
         <div role="alert" className="rounded-2xl border border-cream-300 bg-cream-100 px-4 py-3 text-body text-ink-800">
@@ -251,13 +239,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                       #{index + 1}
                     </span>
                     <h3 className="font-bold text-ink-900">{slide.title}</h3>
-                    <span className={`rounded-full px-2 py-0.5 text-micro font-bold ${
-                      isCurrentlyShowing(slide)
-                        ? 'bg-brand-50 text-brand-700 border border-brand-200'
-                        : 'bg-cream-200 text-ink-500'
-                    }`}>
-                      {isCurrentlyShowing(slide) ? 'Tayang' : 'Tidak tayang'}
-                    </span>
+                    
                     {slide.eventId && (
                       <span className="rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 text-micro font-bold text-brand-700">
                         Dari agenda
@@ -277,50 +259,20 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                 <div className={layout.rowShrink}>
                   <button
                     type="button"
-                    onClick={() => moveSlide(slide, -1)}
-                    disabled={index === 0 || busyId === slide.id}
-                    className="rounded-lg border border-cream-300 p-1.5 text-ink-500 transition hover:bg-cream-100 disabled:opacity-40"
-                    title="Naikkan urutan"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveSlide(slide, 1)}
-                    disabled={index === orderedSlides.length - 1 || busyId === slide.id}
-                    className="rounded-lg border border-cream-300 p-1.5 text-ink-500 transition hover:bg-cream-100 disabled:opacity-40"
-                    title="Turunkan urutan"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleActive(slide)}
-                    disabled={busyId === slide.id}
-                    className={`rounded-xl border px-2.5 py-1.5 text-caption font-bold transition disabled:opacity-50 ${
-                      slide.isActive
-                        ? 'border-cream-300 text-ink-600 hover:bg-cream-100'
-                        : 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100'
-                    }`}
-                  >
-                    {slide.isActive ? 'Nonaktifkan' : 'Aktifkan'}
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => startEdit(slide)}
-                    className="rounded-xl border border-cream-300 p-2 text-ink-600 transition hover:bg-cream-100"
+                    className="rounded-xl border border-cream-300 p-2 text-ink-700 hover:bg-cream-100 transition cursor-pointer"
                     title="Ubah banner"
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Pencil className="h-4 w-4 text-brand-700" />
                   </button>
                   <button
                     type="button"
                     onClick={() => deleteSlide(slide)}
                     disabled={busyId === slide.id}
-                    className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight disabled:opacity-50"
+                    className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight disabled:opacity-50 cursor-pointer"
                     title="Hapus banner"
                   >
-                    {busyId === slide.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    {busyId === slide.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   </button>
                 </div>
 

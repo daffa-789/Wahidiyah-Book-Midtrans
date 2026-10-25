@@ -169,32 +169,16 @@ export const EventsTab = ({
   return (
     <section className="space-y-6">
 
-              <div className={layout.toolbarRow}>
-                <div>
-                  <h2 className={typography.sectionTitle}>Agenda &amp; kegiatan majelis</h2>
-                  <p className={typography.helper}>
-                    Jadwal pengajian dan mujahadah tersinkronisasi langsung ke kalender aplikasi dan database Supabase Cloud.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleExportEvents}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2 text-caption font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
-                    title="Ekspor seluruh daftar agenda ke Excel"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 text-brand-700" />
-                    Export Excel
-                  </button>
-                  <span className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-50 border border-brand-200 px-3.5 py-2 text-caption font-bold text-brand-800">
-                    <CalendarCheck className={controls.iconBrand} />
-                    {events.length} Agenda Terdaftar
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-50 border border-brand-200 px-3.5 py-2 text-caption font-bold text-brand-800">
-                    <Images className="h-4 w-4 text-brand-700" />
-                    {events.filter((evt) => evt.showInCarousel).length} di Carousel
-                  </span>
-                </div>
+              <div className="flex items-center justify-end pb-1">
+                <button
+                  type="button"
+                  onClick={handleExportEvents}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-4 py-2.5 text-caption font-bold text-ink-700 shadow-sm transition hover:bg-cream-100 cursor-pointer"
+                  title="Ekspor seluruh daftar agenda ke Excel"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-brand-700" />
+                  Export Laporan Lengkap (.xlsx)
+                </button>
               </div>
 
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] items-start">
@@ -559,36 +543,19 @@ export const EventsTab = ({
                           placeholder="Contoh: NEKA KEDIRI atau Ponpes Kedunglo"
                         />
 
-                        <div>
-                          <Field
-                            id="evt-maps-url"
-                            label="Tautan Google Maps / Koordinat (opsional)"
-                            value={eventForm.maps_url ?? ''}
-                            onChange={(e) => setEventForm((form) => ({
-                              ...form,
-                              maps_url: e.target.value,
-                              location: e.target.value?.trim()
-                                ? `${(form.location_name || '').trim()} | ${e.target.value.trim()}`
-                                : (form.location_name || '')
-                            }))}
-                            placeholder="Tempel tautan (https://maps.app.goo.gl/...) atau koordinat"
-                          />
-                          <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-micro text-ink-400">
-                            <span>Buka Google Maps &gt; Bagikan &gt; Salin Tautan</span>
-                            {getMapUrl(eventForm.maps_url || eventForm.location) && (
-                              <a
-                                href={getMapUrl(eventForm.maps_url || eventForm.location)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 font-bold text-brand-700 hover:text-brand-800 hover:underline"
-                                title="Uji buka rute lokasi di Google Maps"
-                              >
-                                <MapPin className="h-3 w-3 text-brand-600" />
-                                Uji Rute Maps
-                              </a>
-                            )}
-                          </div>
-                        </div>
+                        <Field
+                          id="evt-maps-url"
+                          label="Tautan Google Maps / Koordinat (opsional)"
+                          value={eventForm.maps_url ?? ''}
+                          onChange={(e) => setEventForm((form) => ({
+                            ...form,
+                            maps_url: e.target.value,
+                            location: e.target.value?.trim()
+                              ? `${(form.location_name || '').trim()} | ${e.target.value.trim()}`
+                              : (form.location_name || '')
+                          }))}
+                          placeholder="Contoh: https://maps.app.goo.gl/... atau koordinat GPS"
+                        />
                       </div>
 
                       <Field

@@ -280,25 +280,50 @@ booksRouter.get('/books/:id/content', requireAuth, wrap(async (req, res) => {
 }));
 
 
-booksRouter.put('/books/:id', requireAuth, requireAdmin, wrap(async (req, res) => {
+booksRouter.put('/books/:id', requireAuth, requireAdmin, uploadBookFiles, wrap(async (req, res) => {
   const { id } = req.params;
-  const { title, subtitle, author, category, pages, is_locked, cover_url, description } = req.body;
+  const { title, pages, is_locked } = req.body;
 
-  if (!title || !author || !category) {
-    return badRequest(res, 'Judul, Penulis, dan Kategori wajib diisi');
+  if (!title || !title.trim()) {
+    return badRequest(res, 'Judul buku wajib diisi');
   }
 
-  const { error } = await supabaseServer.from('books').update({
+  const updatePayload = {
     title: title.trim(),
-    subtitle: subtitle || '',
-    author: author.trim(),
-    category: String(category).trim(),
     pages: Number(pages) || 1,
     is_locked: parseBooleanFlag(is_locked),
-    cover_url: cover_url || '',
-    description: description || '',
     updated_at: new Date().toISOString()
-  }).eq('id', id);
+  };
+
+  const thumbnail = req.files?.thumbnail?.[0];
+  if (thumbnail?.buffer) {
+    const thumbnailMimeDetected = sniffImageMime(thumbnail.buffer);
+    if (!thumbnailMimeDetected) {
+      return res.status(415).json({ success: false, message: 'Thumbnail harus berupa gambar PNG, JPG, WebP, atau GIF.' });
+    }
+    const result = await toWebp(thumbnail.buffer, {
+      width: 600,
+      quality: 80,
+      fallbackMime: thumbnailMimeDetected
+    });
+    updatePayload.cover_url = toDataUrl(result.buffer, result.mime);
+  }
+
+  const content = req.files?.content?.[0];
+  if (content?.buffer) {
+    const contentExtension = path.extname(content.originalname).toLowerCase();
+    if (!CONTENT_EXTENSIONS.has(contentExtension)) {
+      return res.status(415).json({ success: false, message: 'Format dokumen tidak didukung.' });
+    }
+    const extension = contentExtension.replace(/^\./, '');
+    const canonicalContentMime = CONTENT_MIME_BY_EXTENSION[extension] || 'application/octet-stream';
+    updatePayload.content_url = `data:${canonicalContentMime};base64,${content.buffer.toString('base64')}`;
+    updatePayload.content_name = content.originalname;
+    updatePayload.content_extension = extension;
+    updatePayload.content_size = content.size;
+  }
+
+  const { error } = await supabaseServer.from('books').update(updatePayload).eq('id', id);
   if (error) throw error;
 
   res.json({ success: true, message: 'Buku berhasil diperbarui' });

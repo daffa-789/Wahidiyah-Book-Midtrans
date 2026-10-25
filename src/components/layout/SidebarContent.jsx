@@ -44,7 +44,7 @@ export const SidebarContent = React.memo(({
             aria-label={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
             className="flex h-10 w-10 items-center justify-center rounded-md text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500 font-display font-bold text-caption"
           >
-            {isAdminNav ? 'PA' : <BrandMark className="h-10 w-10 rounded-md" />}
+            {isAdminNav ? 'PA' : 'EB'}
           </button>
           {collapseToggle}
           <ThemeToggle variant="onDark" />
@@ -70,20 +70,15 @@ export const SidebarContent = React.memo(({
         <button
           type="button"
           onClick={() => onNavClick(isAdminNav ? 'admin-dashboard' : 'home')}
-          className="flex min-h-9 min-w-0 select-none items-center gap-2 text-left transition-colors duration-200 hover:opacity-80 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
+          className="flex min-h-9 min-w-0 select-none items-center gap-2 text-left transition-colors duration-200 hover:opacity-80 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg px-0.5"
         >
-          {!isAdminNav && (
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-cream-50 bg-brand-700">
-              <BrandMark className="h-7 w-7 rounded-lg" />
-            </span>
-          )}
           {isAdminNav ? (
-            <span className="min-w-0 font-display text-lead font-bold tracking-tight text-cream-50">
+            <span className="min-w-0 font-display text-base font-bold tracking-tight text-cream-50">
               Panel Admin
             </span>
           ) : (
-            <span className="min-w-0 font-display text-lead font-bold leading-[1.15] tracking-tight text-cream-50">
-              Wahidiyah<br />Book
+            <span className="min-w-0 font-display text-base font-bold tracking-tight text-cream-50 whitespace-nowrap">
+              E-Book Wahidiyah
             </span>
           )}
         </button>

@@ -11,7 +11,8 @@ export const BookModal = ({
   bookForm,
   setBookForm,
   onSubmit,
-  isSavingBook
+  isSavingBook,
+  editingBookId = null
 }) => {
   const panelRef = useRef(null);
 
@@ -36,7 +37,7 @@ export const BookModal = ({
         <div className={layout.rowEnd}>
           <div>
             <h2 id="book-modal-title" className="text-title font-black text-ink-900">
-              Tambah buku
+              {editingBookId ? 'Ubah buku' : 'Tambah buku'}
             </h2>
           </div>
           <button
@@ -65,7 +66,7 @@ export const BookModal = ({
           <label className="block rounded-2xl border border-dashed border-cream-300 p-3 text-caption text-ink-500">
             <span className="font-bold text-ink-800">Thumbnail</span>
             <input
-              required
+              required={!editingBookId && !bookForm.cover_url}
               type="file"
               accept="image/*"
               className="mt-2 block w-full text-caption text-ink-500 file:mr-3 file:rounded-xl file:border-0 file:bg-cream-200 file:px-3 file:py-1.5 file:text-caption file:font-semibold file:text-ink-700 hover:file:bg-cream-300 cursor-pointer"
@@ -73,7 +74,7 @@ export const BookModal = ({
                 setBookForm((form) => ({ ...form, thumbnail: e.target.files?.[0] || null }))
               }
             />
-            {bookForm.thumbnail && (
+            {bookForm.thumbnail ? (
               <div className="mt-2.5 flex items-center gap-3 p-2 bg-cream-100 rounded-xl border border-cream-300">
                 <div className="h-16 w-12 rounded-lg overflow-hidden bg-cream-300 shrink-0 border border-cream-300">
                   <img
@@ -90,13 +91,29 @@ export const BookModal = ({
                   </span>
                 </div>
               </div>
-            )}
+            ) : bookForm.cover_url ? (
+              <div className="mt-2.5 flex items-center gap-3 p-2 bg-cream-100 rounded-xl border border-cream-300">
+                <div className="h-16 w-12 rounded-lg overflow-hidden bg-cream-300 shrink-0 border border-cream-300">
+                  <img
+                    src={bookForm.cover_url}
+                    alt="Thumbnail saat ini"
+                    className={layout.media}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-ink-800 text-caption truncate">Thumbnail saat ini</p>
+                  <span className="inline-flex items-center gap-1 text-micro font-bold text-ink-500 mt-1">
+                    Pilih gambar baru jika ingin mengganti
+                  </span>
+                </div>
+              </div>
+            ) : null}
           </label>
 
           <label className="block rounded-2xl border border-dashed border-brand-300 bg-brand-50/40 p-3 text-caption text-ink-500">
             <span className="font-bold text-ink-800">Konten buku</span>
             <input
-              required
+              required={!editingBookId && !bookForm.content_name}
               type="file"
               accept=".pdf,.txt,.doc,.docx,.rtf,.odt,.epub,.md,.csv"
               className="mt-2 block w-full text-caption text-ink-500 file:mr-3 file:rounded-xl file:border-0 file:bg-brand-100 file:px-3 file:py-1.5 file:text-caption file:font-semibold file:text-brand-800 hover:file:bg-brand-200 cursor-pointer"
@@ -104,7 +121,7 @@ export const BookModal = ({
                 setBookForm((form) => ({ ...form, content: e.target.files?.[0] || null }))
               }
             />
-            {bookForm.content && (
+            {bookForm.content ? (
               <div className="mt-2.5 flex items-center gap-3 p-2.5 bg-cream-50 rounded-xl border border-brand-200 shadow-sm">
                 <div className="h-10 w-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center shrink-0">
                   <FileText className="w-5 h-5" />
@@ -119,7 +136,19 @@ export const BookModal = ({
                   </span>
                 </div>
               </div>
-            )}
+            ) : bookForm.content_name ? (
+              <div className="mt-2.5 flex items-center gap-3 p-2.5 bg-cream-50 rounded-xl border border-brand-200 shadow-sm">
+                <div className="h-10 w-10 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-ink-800 text-caption truncate">{bookForm.content_name}</p>
+                  <span className="inline-flex items-center gap-1 text-micro font-bold text-ink-500 mt-0.5">
+                    Berkas saat ini • Pilih berkas baru jika ingin mengganti
+                  </span>
+                </div>
+              </div>
+            ) : null}
           </label>
 
           <label className="flex min-h-6 items-center gap-2 text-caption font-medium text-ink-500 cursor-pointer pt-1">

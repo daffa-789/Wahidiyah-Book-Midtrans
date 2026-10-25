@@ -128,6 +128,7 @@ export const AdminDashboard = () => {
   const [editingEventId, setEditingEventId] = useState(null);
   const [carouselReady, setCarouselReady] = useState(true);
   const [isSavingBook, setIsSavingBook] = useState(false);
+  const [editingBookId, setEditingBookId] = useState(null);
 
   const headers = useMemo(() => authHeaders(sessionToken), [sessionToken]);
 
@@ -205,17 +206,15 @@ export const AdminDashboard = () => {
 
   const submitBook = async (event) => {
     event.preventDefault();
-    if (!bookForm.thumbnail) {
+    if (!editingBookId && !bookForm.thumbnail) {
       toast.error('Pilih berkas thumbnail terlebih dahulu.');
       return;
     }
-    if (!bookForm.content) {
+    if (!editingBookId && !bookForm.content) {
       toast.error('Pilih lampiran konten buku terlebih dahulu.');
       return;
     }
     setIsSavingBook(true);
-    // `withToast` mengembalikan promise, jadi pembersihan tetap bisa dipasang
-    // lewat `.finally()` seperti blok try/finally sebelumnya.
     return withToast(
       async () => {
         const data = new FormData();
@@ -232,14 +231,44 @@ export const AdminDashboard = () => {
           data.set('content', bookForm.content);
         }
 
-        await apiJson('/api/books/upload', { method: 'POST', headers, body: data, timeoutMs: 120000 });
+        if (editingBookId) {
+          await apiJson(`/api/books/${encodeURIComponent(editingBookId)}`, {
+            method: 'PUT',
+            headers,
+            body: data,
+            timeoutMs: 120000
+          });
+          toast.success('Buku berhasil diperbarui.');
+        } else {
+          await apiJson('/api/books/upload', {
+            method: 'POST',
+            headers,
+            body: data,
+            timeoutMs: 120000
+          });
+          toast.success('Buku berhasil ditambahkan.');
+        }
         setBookForm(EMPTY_BOOK_FORM);
+        setEditingBookId(null);
         setIsBookModalOpen(false);
         await loadDashboard();
       },
-      'Buku belum dapat disimpan.',
-      'Buku dan lampirannya berhasil ditambahkan.'
+      editingBookId ? 'Buku belum dapat diperbarui.' : 'Buku belum dapat disimpan.'
     ).finally(() => setIsSavingBook(false));
+  };
+
+  const startEditBook = (book) => {
+    setEditingBookId(book.id);
+    setBookForm({
+      title: book.title || '',
+      pages: String(book.pages || ''),
+      is_locked: Boolean(book.isLocked),
+      thumbnail: null,
+      cover_url: book.coverUrl || '',
+      content: null,
+      content_name: book.contentName || ''
+    });
+    setIsBookModalOpen(true);
   };
 
   const submitEvent = async (event) => {
@@ -405,31 +434,16 @@ export const AdminDashboard = () => {
 
           {activeTab === 'overview' && (
             <section className="space-y-6">
-              <div className={layout.toolbarRow}>
-                <div>
-                  <h2 className={typography.sectionTitlePlain}>Beranda operasional</h2>
-                  <p className={typography.helper}>Semua angka diambil langsung dari database Supabase Cloud.</p>
-                </div>
-                <div className={layout.rowWrap}>
-                  <button
-                    type="button"
-                    onClick={handleExportTransactions}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-small font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
-                    title="Ekspor seluruh riwayat transaksi & keuangan ke Excel"
-                  >
-                    <FileDown className="h-4 w-4 text-brand-700" />
-                    Export Transaksi ({transactions.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleExportFull}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-2.5 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800"
-                    title="Ekspor buku kerja lengkap (Semua sheet: KPI, Transaksi, Pengguna, Buku, Agenda)"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 text-brand-100" />
-                    Export Laporan Lengkap (.xlsx)
-                  </button>
-                </div>
+              <div className="flex items-center justify-end pb-1">
+                <button
+                  type="button"
+                  onClick={handleExportFull}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-2.5 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 cursor-pointer"
+                  title="Ekspor buku kerja lengkap (Semua sheet: KPI, Transaksi, Pengguna, Buku, Agenda)"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-brand-100" />
+                  Export Laporan Lengkap (.xlsx)
+                </button>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
@@ -489,36 +503,12 @@ export const AdminDashboard = () => {
                 </div>
 
                 {/* Kolom Kanan: Pendapatan Tervalidasi */}
-                <div className={`${surfaces.panel} flex flex-col justify-between`}>
+                <div className={`${surfaces.panel} flex flex-col justify-center`}>
                   <div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-bold text-body text-ink-900">Pendapatan tervalidasi</h3>
-                        <p className="text-caption text-ink-500 mt-0.5">Pemasukan pembayaran langganan Pro.</p>
-                      </div>
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border text-brand-800 bg-brand-100/70 border-brand-300">
-                        <CheckCircle2 className="h-5 w-5" />
-                      </div>
-                    </div>
-                    <p className="mt-5 text-3xl font-black tracking-tight text-brand-800">
+                    <h3 className="font-bold text-body text-ink-900">Pendapatan tervalidasi</h3>
+                    <p className="mt-4 text-3xl font-black tracking-tight text-brand-800">
                       {formatCurrency(stats?.totalRevenue)}
                     </p>
-                    <p className="mt-1.5 text-caption font-medium text-ink-500 leading-relaxed">
-                      Total penerimaan dari transaksi membership Pro yang berhasil tervalidasi secara real-time via QRIS Midtrans.
-                    </p>
-                  </div>
-
-                  <div className="mt-6 border-t border-cream-200/60 pt-4 grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-micro font-bold uppercase tracking-wider text-ink-400">Transaksi Sukses</p>
-                      <p className="mt-1 text-body font-bold text-ink-900">
-                        {transactions.filter((t) => t.status === 'success').length} transaksi
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-micro font-bold uppercase tracking-wider text-ink-400">Saluran Pembayaran</p>
-                      <p className="mt-1 text-body font-bold text-brand-700">QRIS Midtrans</p>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -614,10 +604,7 @@ export const AdminDashboard = () => {
           {activeTab === 'books' && (
             <section className="space-y-5">
               <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-                <div>
-                  <h2 className={typography.sectionTitlePlain}>Koleksi buku</h2>
-                  <p className={typography.helper}>Unggah thumbnail dan lampiran bacaan. Tidak ada tombol unduh di pembaca.</p>
-                </div>
+                <div></div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -634,7 +621,24 @@ export const AdminDashboard = () => {
                 </div>
               </div>
               <div className="overflow-hidden rounded-3xl border border-cream-300 bg-cream-50 shadow-sm">
-                {books.length === 0 ? <div className="p-12 text-center"><BookOpen className={controls.emptyIcon} /><p className="mt-3 font-bold text-ink-700">Koleksi masih kosong</p><p className={typography.helper}>Tambahkan buku pertama beserta thumbnail dan lampirannya.</p></div> : <div className={layout.divider}>{books.map((book) => <div key={book.id} className="flex flex-wrap items-center gap-4 p-4"><div className="h-14 w-11 overflow-hidden rounded-xl bg-gradient-to-tr from-brand-800 to-brand-800 flex items-center justify-center text-cream-50 shrink-0 shadow-sm">{book.coverUrl ? <img src={book.coverUrl} alt={book.title} className={layout.media} onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <BookOpen className="h-5 w-5 text-cream-50/80" />}</div><div className="min-w-[180px] flex-1"><p className="font-bold text-ink-900">{book.title}</p><p className={typography.helperTight}>{book.pages ? `${book.pages} halaman • ` : ''}{book.contentName || 'Tanpa lampiran'} {book.isLocked ? '• Pro' : ''}</p></div><button type="button" onClick={() => deleteBook(book)} className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight" title="Hapus buku"><Trash2 className="h-4 w-4" /></button></div>)}</div>}
+                {books.length === 0 ? <div className="p-12 text-center"><BookOpen className={controls.emptyIcon} /><p className="mt-3 font-bold text-ink-700">Koleksi masih kosong</p><p className={typography.helper}>Tambahkan buku pertama beserta thumbnail dan lampirannya.</p></div> : <div className={layout.divider}>{books.map((book) => <div key={book.id} className="flex flex-wrap items-center gap-4 p-4"><div className="h-14 w-11 overflow-hidden rounded-xl bg-gradient-to-tr from-brand-800 to-brand-800 flex items-center justify-center text-cream-50 shrink-0 shadow-sm">{book.coverUrl ? <img src={book.coverUrl} alt={book.title} className={layout.media} onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <BookOpen className="h-5 w-5 text-cream-50/80" />}</div><div className="min-w-[180px] flex-1"><p className="font-bold text-ink-900">{book.title}</p><p className={typography.helperTight}>{book.pages ? `${book.pages} halaman • ` : ''}{book.contentName || 'Tanpa lampiran'} {book.isLocked ? '• Pro' : ''}</p></div><div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => startEditBook(book)}
+                        className="rounded-xl border border-cream-300 p-2 text-ink-700 hover:bg-cream-100 transition cursor-pointer"
+                        title="Ubah buku"
+                      >
+                        <Pencil className="h-4 w-4 text-brand-700" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteBook(book)}
+                        className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight cursor-pointer"
+                        title="Hapus buku"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div></div>)}</div>}
               </div>
             </section>
           )}
@@ -684,7 +688,7 @@ export const AdminDashboard = () => {
                           </span>
                         )}
                         <span className={`text-caption font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-500'}`}>
-                          {item.isPro ? '⭐ Pro aktif' : 'Reguler'}
+                          {item.isPro ? 'Pro' : 'Reguler'}
                         </span>
                       </div>
                       <button
@@ -745,7 +749,7 @@ export const AdminDashboard = () => {
                         </td>
                         <td className="px-4 py-3">
                           <span className={`text-caption font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-500'}`}>
-                            {item.isPro ? 'Pro aktif' : 'Reguler'}
+                            {item.isPro ? 'Pro' : 'Reguler'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -810,7 +814,12 @@ export const AdminDashboard = () => {
       {isBookModalOpen && (
         <BookModal
           isOpen={isBookModalOpen}
-          onClose={() => setIsBookModalOpen(false)}
+          editingBookId={editingBookId}
+          onClose={() => {
+            setIsBookModalOpen(false);
+            setEditingBookId(null);
+            setBookForm(EMPTY_BOOK_FORM);
+          }}
           bookForm={bookForm}
           setBookForm={setBookForm}
           onSubmit={submitBook}

@@ -55,7 +55,7 @@ const DeviceFrameBase = ({ children }) => {
       {/* Sidebar Desktop */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 hidden shrink-0 select-none flex-col border-r border-cream-50/[0.06] bg-ink-900 transition-[width] duration-300 ease-out md:flex ${
-          sidebarCollapsed ? 'w-[68px]' : 'w-[248px]'
+          sidebarCollapsed ? 'w-[68px]' : 'w-[218px]'
         }`}
       >
         <div className={`h-full w-full ${sidebarCollapsed ? 'px-2 py-3' : 'px-3 py-4'}`}>
@@ -88,13 +88,9 @@ const DeviceFrameBase = ({ children }) => {
             onClick={() => navigateTo(isAdmin ? 'admin-dashboard' : 'home')}
             className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
           >
-            {!isAdmin && (
-              <span className="flex h-8 w-8 items-center justify-center rounded-md text-cream-50 bg-brand-700">
-                <BrandMark className="h-8 w-8 rounded-md" />
-              </span>
-            )}
+            
             <span className="font-display text-lead font-bold tracking-tight text-ink-900">
-              {isAdmin ? 'Panel Admin' : 'Wahidiyah Book'}
+              {isAdmin ? 'Panel Admin' : 'E-Book Wahidiyah'}
             </span>
           </button>
         </div>
@@ -169,7 +165,7 @@ const DeviceFrameBase = ({ children }) => {
       {/* Konten Halaman Utama */}
       <div
         className={`flex min-h-screen min-w-0 flex-1 flex-col bg-cream-50 transition-[margin] duration-300 ease-out ${
-          sidebarCollapsed ? 'md:ml-[68px]' : 'md:ml-[248px]'
+          sidebarCollapsed ? 'md:ml-[68px]' : 'md:ml-[218px]'
         }`}
       >
         <main className="flex w-full flex-1 flex-col">

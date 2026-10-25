@@ -49,13 +49,7 @@ export const LogsTab = ({ sessionToken }) => {
   return (
     <section className="space-y-5 animate-in fade-in duration-200">
 
-      <div className={layout.toolbarRow}>
-        <div>
-          <h2 className={typography.sectionTitle}>Log Aktivitas Pengguna</h2>
-          <p className={typography.helper}>
-            Riwayat pendaftaran akun baru, pembayaran langganan, dan perubahan status pengguna secara kronologis.
-          </p>
-        </div>
+      <div className="flex items-center justify-end pb-1">
         <button
           type="button"
           onClick={() => { setLoading(true); loadLogs(); }}
