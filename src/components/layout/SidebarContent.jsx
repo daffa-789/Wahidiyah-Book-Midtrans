@@ -34,16 +34,7 @@ export const SidebarContent = React.memo(({
   if (isCollapsed) {
     return (
       <div className="flex h-full w-full flex-col items-center">
-        <div className="flex flex-col items-center gap-1 pb-2">
-          <button
-            type="button"
-            onClick={() => onNavClick(isAdminNav ? 'admin-dashboard' : 'home')}
-            title={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
-            aria-label={isAdminNav ? 'Panel Admin' : 'Wahidiyah Book'}
-            className="flex h-10 w-10 items-center justify-center rounded-md text-cream-50 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 bg-brand-700 hover:bg-brand-600 focus-visible:ring-brand-500 font-display font-bold text-caption"
-          >
-            {isAdminNav ? 'PA' : 'EB'}
-          </button>
+        <div className="flex flex-col items-center pb-2">
           {collapseToggle}
         </div>
 
