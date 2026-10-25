@@ -4,6 +4,7 @@ import {
   Loader2,
   AlertCircle,
   CreditCard,
+  Sparkles,
   HelpCircle,
   Info,
   ChevronRight,
