@@ -9,9 +9,12 @@ export const SCREEN_TO_PATH = {
   pro: '/pro',
 
   'profile-edit': '/profile',
+  profile: '/profile',
 
   'subscription-history': '/riwayat',
+  riwayat: '/riwayat',
   'help-center': '/help',
+  help: '/help',
   about: '/about',
   'auth-success': '/auth/success',
   reader: '/reader',

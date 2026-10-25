@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { ChevronDown, Mail, MessageCircleQuestion, Clock } from 'lucide-react';
+import { ChevronDown, Mail, MessageCircleQuestion, Clock, ArrowLeft } from 'lucide-react';
+import { useApp } from '@context/AppContext';
 import { FAQ_ITEMS } from '@data/mockData';
 import { layout, typography } from '@lib/styles';
 
 const CONTACT_EMAIL = 'support@bukuku.id';
 
 export const HelpCenterScreen = () => {
+  const { navigateTo } = useApp();
   const [expandedId, setExpandedId] = useState(FAQ_ITEMS[0]?.id ?? null);
 
   const toggleAccordion = (id) => setExpandedId((prev) => (prev === id ? null : id));
@@ -13,6 +15,21 @@ export const HelpCenterScreen = () => {
   return (
     <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
       <div className={layout.contentCenter}>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              navigateTo('profile-edit');
+            }
+          }}
+          className="inline-flex items-center gap-1.5 text-caption font-bold text-ink-500 hover:text-ink-800 active:text-ink-900 mb-4 cursor-pointer transition-colors"
+          aria-label="Kembali"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Kembali</span>
+        </button>
 
         <div className="flex items-start gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-brand-50 text-brand-800 flex items-center justify-center shrink-0">

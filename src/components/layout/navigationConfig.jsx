@@ -62,7 +62,9 @@ export const ACTIVE_KEYS_BY_SCREEN = {
   calendar: ['calendar'],
   pro: ['pro'],
   'subscription-history': ['subscription-history'],
+  riwayat: ['subscription-history'],
   'help-center': ['help-center'],
+  help: ['help-center'],
   about: ['about'],
   'profile-edit': ['profile']
 };

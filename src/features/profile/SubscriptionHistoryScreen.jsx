@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowLeft } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { formatWIB } from '@lib/date';
 import { layout, controls } from '@lib/styles';
@@ -25,6 +25,21 @@ export const SubscriptionHistoryScreen = () => {
   return (
     <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
       <div className={layout.contentCenter}>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              navigateTo('profile-edit');
+            }
+          }}
+          className="inline-flex items-center gap-1.5 text-caption font-bold text-ink-500 hover:text-ink-800 active:text-ink-900 mb-4 cursor-pointer transition-colors"
+          aria-label="Kembali"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Kembali</span>
+        </button>
         {subscriptions.length === 0 ? (
           <div className="min-h-[460px] flex flex-col items-center justify-center py-12 px-4 text-center space-y-3">
             <h3 className="font-bold text-body text-ink-800">Belum Ada Riwayat Langganan</h3>

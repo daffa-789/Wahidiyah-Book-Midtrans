@@ -3,8 +3,6 @@ import {
   CheckCircle2,
   Loader2,
   AlertCircle,
-  Moon,
-  Sun,
   CreditCard,
   Sparkles,
   HelpCircle,
@@ -330,22 +328,13 @@ export const EditProfileScreen = () => {
           <div className="rounded-2xl border border-cream-300 bg-ui-card p-4 shadow-xs space-y-4">
             {/* Slider Switch Mode Gelap / Terang */}
             <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                    isDark ? 'bg-gold-500/15 text-gold-400' : 'bg-brand-50 text-brand-700'
-                  }`}
-                >
-                  {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                </div>
-                <div>
-                  <p className="text-body font-bold text-ink-900">
-                    Mode Tampilan
-                  </p>
-                  <p className="text-caption text-ink-500">
-                    {isDark ? 'Mode Gelap (Malam) aktif' : 'Mode Terang (Siang) aktif'}
-                  </p>
-                </div>
+              <div>
+                <p className="text-body font-bold text-ink-900">
+                  Mode Tampilan
+                </p>
+                <p className="text-caption text-ink-500">
+                  {isDark ? 'Mode Gelap (Malam) aktif' : 'Mode Terang (Siang) aktif'}
+                </p>
               </div>
 
               <button
@@ -360,16 +349,10 @@ export const EditProfileScreen = () => {
                 aria-label="Peralihan tema gelap dan terang"
               >
                 <span
-                  className={`pointer-events-none inline-flex h-6 w-6 transform items-center justify-center rounded-full bg-cream-50 shadow-md ring-0 transition duration-200 ease-in-out ${
-                    isDark ? 'translate-x-5 text-brand-800' : 'translate-x-0 text-gold-600'
+                  className={`pointer-events-none inline-flex h-6 w-6 transform rounded-full bg-cream-50 shadow-md ring-0 transition duration-200 ease-in-out ${
+                    isDark ? 'translate-x-5' : 'translate-x-0'
                   }`}
-                >
-                  {isDark ? (
-                    <Moon className="h-3.5 w-3.5 text-brand-800" strokeWidth={2.2} />
-                  ) : (
-                    <Sun className="h-3.5 w-3.5 text-gold-600" strokeWidth={2.2} />
-                  )}
-                </span>
+                />
               </button>
             </div>
 
@@ -380,7 +363,7 @@ export const EditProfileScreen = () => {
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-semantic-danger/30 bg-semantic-dangerLight text-semantic-danger text-caption font-bold hover:bg-semantic-danger/15 active:bg-semantic-danger/25 transition cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Keluar dari Akun (Log Out)</span>
+                <span>Logout</span>
               </button>
             </div>
           </div>

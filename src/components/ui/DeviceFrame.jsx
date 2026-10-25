@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, Fragment } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, ArrowLeft } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 import { useApp } from '@context/AppContext';
 import { ThemeToggle } from '@ui/ThemeToggle';
@@ -9,6 +9,15 @@ import { SidebarContent } from '../layout/SidebarContent';
 import { LogoutConfirmDialog } from '../layout/LogoutConfirmDialog';
 import { MobileBottomNav } from '../layout/MobileBottomNav';
 import { buildSidebarSections, ACTIVE_KEYS_BY_SCREEN } from '../layout/navigationConfig';
+
+const SUBPAGE_TITLES = {
+  'help-center': 'Pusat Bantuan',
+  help: 'Pusat Bantuan',
+  'subscription-history': 'Riwayat Langganan',
+  riwayat: 'Riwayat Langganan',
+  about: 'Tentang Aplikasi',
+  pro: 'Paket Pro'
+};
 
 const DeviceFrameBase = ({ children }) => {
   const { currentScreen, currentPath, navigateTo, user, logout } = useApp();
@@ -72,9 +81,9 @@ const DeviceFrameBase = ({ children }) => {
       </aside>
 
       {/* Header Mobile */}
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 py-2.5 backdrop-blur-md md:hidden">
-        <div className="flex items-center gap-2">
-          {isAdmin && (
+      {isAdmin ? (
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 py-2.5 backdrop-blur-md md:hidden">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
@@ -83,23 +92,36 @@ const DeviceFrameBase = ({ children }) => {
             >
               <Menu className="h-5 w-5" strokeWidth={2} />
             </button>
-          )}
+            <span className="font-display text-lead font-bold tracking-tight text-ink-900">
+              Panel Admin
+            </span>
+          </div>
 
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+          </div>
+        </header>
+      ) : SUBPAGE_TITLES[currentScreen] ? (
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 py-2.5 backdrop-blur-md md:hidden">
           <button
             type="button"
-            onClick={() => navigateTo(isAdmin ? 'admin-dashboard' : 'home')}
-            className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg cursor-pointer"
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                navigateTo('profile-edit');
+              }
+            }}
+            className="flex items-center gap-2 text-ink-800 hover:text-ink-900 active:opacity-75 cursor-pointer -ml-1 py-1 px-2 rounded-xl transition"
+            aria-label="Kembali"
           >
-            <span className="font-display text-lead font-bold tracking-tight text-ink-900">
-              {isAdmin ? 'Panel Admin' : 'E-Book Wahidiyah'}
+            <ArrowLeft className="w-5 h-5 text-ink-700" strokeWidth={2.2} />
+            <span className="text-body font-bold text-ink-900">
+              {SUBPAGE_TITLES[currentScreen]}
             </span>
           </button>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <ThemeToggle />
-        </div>
-      </header>
+        </header>
+      ) : null}
 
       {/* Drawer Menu Mobile */}
       <Transition show={mobileMenuOpen} as={Fragment}>
