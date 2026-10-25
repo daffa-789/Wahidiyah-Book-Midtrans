@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { layout, surfaces } from '@lib/styles';
 
@@ -26,21 +26,6 @@ export const ProScreen = () => {
   return (
     <div className="flex-1 flex flex-col justify-center items-center bg-cream-50 page-transition px-4 py-8 sm:px-6 lg:px-8">
       <div className="w-full max-w-lg">
-        <button
-          type="button"
-          onClick={() => {
-            if (window.history.length > 1) {
-              window.history.back();
-            } else {
-              navigateTo('profile-edit');
-            }
-          }}
-          className="inline-flex items-center gap-1.5 text-caption font-bold text-ink-500 hover:text-ink-800 active:text-ink-900 mb-4 cursor-pointer transition-colors"
-          aria-label="Kembali"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Kembali</span>
-        </button>
         <div className="w-full bg-cream-50 rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative group hover:border-brand-200">
             <div>
               <div>

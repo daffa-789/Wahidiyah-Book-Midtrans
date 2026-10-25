@@ -4,7 +4,6 @@ import {
   Loader2,
   AlertCircle,
   CreditCard,
-  Sparkles,
   HelpCircle,
   Info,
   ChevronRight,
@@ -147,23 +146,6 @@ export const EditProfileScreen = () => {
                 <div className="min-w-0">
                   <p className="text-body font-bold text-ink-900">Riwayat Langganan & Kwitansi</p>
                   <p className="text-caption text-ink-400 truncate">Lihat riwayat pembelian dan kwitansi resmi</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-ink-300 group-hover:text-ink-600 transition-colors shrink-0 ml-2" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigateTo('pro')}
-              className="w-full flex items-center justify-between p-4 hover:bg-cream-100 active:bg-cream-200 transition-colors text-left cursor-pointer group"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gold-400/20 text-gold-600 group-hover:bg-gold-400/30 transition-colors">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-body font-bold text-ink-900">Paket Langganan Pro</p>
-                  <p className="text-caption text-ink-400 truncate">Kelola dan nikmati akses penuh seluruh kitab</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-ink-300 group-hover:text-ink-600 transition-colors shrink-0 ml-2" />

@@ -1,4 +1,4 @@
-import { BookOpen, Shield, Award, ArrowLeft } from 'lucide-react';
+import { BookOpen, Shield, Award } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { layout } from '@lib/styles';
 
@@ -7,21 +7,6 @@ export const AboutScreen = () => {
   return (
     <div className="min-h-[700px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
       <div className={layout.contentCenter}>
-        <button
-          type="button"
-          onClick={() => {
-            if (window.history.length > 1) {
-              window.history.back();
-            } else {
-              navigateTo('profile-edit');
-            }
-          }}
-          className="inline-flex items-center gap-1.5 text-caption font-bold text-ink-500 hover:text-ink-800 active:text-ink-900 mb-4 cursor-pointer transition-colors"
-          aria-label="Kembali"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Kembali</span>
-        </button>
 
         <div className="text-center my-4">
           <div className="w-20 h-20 bg-gradient-to-tr from-brand-800 to-brand-900 rounded-3xl mx-auto flex items-center justify-center text-cream-50 shadow-lg shadow-brand-700/20 mb-3">

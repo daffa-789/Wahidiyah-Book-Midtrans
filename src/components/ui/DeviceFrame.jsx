@@ -15,8 +15,7 @@ const SUBPAGE_TITLES = {
   help: 'Pusat Bantuan',
   'subscription-history': 'Riwayat Langganan',
   riwayat: 'Riwayat Langganan',
-  about: 'Tentang Aplikasi',
-  pro: 'Paket Pro'
+  about: 'Tentang Aplikasi'
 };
 
 const DeviceFrameBase = ({ children }) => {
