@@ -159,7 +159,7 @@ export function isVoidAcknowledged(payload = {}) {
   const code = String(payload?.status_code ?? '').trim();
   const pesan = String(payload?.status_message ?? '');
   if (code.startsWith('2')) return true;
-  if (code === '407') return /success|expired/i.test(pesan);
+  if (code === '407') return /success|expired/i.test(pesan) && !/not expired/i.test(pesan);
   if (code === '404') return /does ?n'?t exist|not found|tidak ditemukan/i.test(pesan);
   return false;
 }

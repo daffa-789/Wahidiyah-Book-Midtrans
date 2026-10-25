@@ -342,8 +342,8 @@ Bagi model AI (Claude, GPT, Gemini, dsb.) yang melanjutkan pekerjaan pada reposi
 | **Fase 1** | Implementasi Continuous Vertical Scroll & Real-Time Zoom pada PDF Reader | *Performance, Usability, Mobile Responsiveness* | **SELESAI (Commit `3d5b646`)** |
 | **Fase 2** | Pemisahan Service Layer untuk Modul Pembayaran (`payments`) & Webhook Idempotency | *Separation of Concerns, Idempotency, Robustness* | **SELESAI** |
 | **Fase 3** | Pemisahan Service Layer untuk Modul Otentikasi (`auth`) & Standardisasi Respon | *High Cohesion, Maintainability, Security* | **SELESAI** |
-| **Fase 4** | Pemasangan Unit Test Harness (Vitest) untuk Logika Membership & Payment Parsing | *Testability, Reliability, Deterministic* | Direncanakan |
-| **Fase 5** | Pemecahan Komponen Inline pada `AdminDashboard.jsx` ke Sub-tab Terisolasi | *Composability, Loose Coupling, Readability* | Direncanakan |
+| **Fase 4** | Pemasangan Unit Test Harness (Vitest) untuk Logika Membership & Payment Parsing | *Testability, Reliability, Deterministic* | **SELESAI** |
+| **Fase 5** | Pemecahan Komponen Inline pada `AdminDashboard.jsx` ke Sub-tab Terisolasi | *Composability, Loose Coupling, Readability* | Siap Dikerjakan |
 
 ---
 *Dokumen ini adalah aset panduan resmi proyek skripsi Aplikasi Perpustakaan Digital Wahidiyah.*
