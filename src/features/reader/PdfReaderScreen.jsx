@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft,
+  BookOpen,
   FileText,
   Lock,
   ChevronLeft,
