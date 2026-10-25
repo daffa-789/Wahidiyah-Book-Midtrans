@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Check, ArrowRight } from 'lucide-react';
 import { useApp } from '@context/AppContext';
-import { layout, typography, surfaces } from '@lib/styles';
+import { layout, surfaces } from '@lib/styles';
 
 export const ProScreen = () => {
   const { user, setSelectedPlan, navigateTo, isSubscriptionActive, clearLastPaymentResult } = useApp();
@@ -28,21 +28,8 @@ export const ProScreen = () => {
       <div className="w-full max-w-lg">
         <div className="w-full bg-cream-50 rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative group hover:border-brand-200">
             <div>
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-micro font-extrabold uppercase tracking-wider text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-100">
-                      Paket Reguler
-                    </span>
-                    {isMonthlyActive && (
-                      <span className="text-micro font-extrabold bg-brand-100 text-brand-800 border border-brand-300 px-2.5 py-0.5 rounded-full">
-                        Aktif
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-title font-black text-ink-900 mt-2">Paket Bulanan</h3>
-                  <p className={typography.metaTight}>Fleksibel, bayar per bulan tanpa komitmen panjang</p>
-                </div>
+              <div>
+                <h3 className="text-title font-black text-ink-900">Paket Bulanan</h3>
               </div>
 
               <div className="mt-5 pb-5 border-b border-cream-200">
@@ -50,16 +37,9 @@ export const ProScreen = () => {
                   <span className="text-2xl sm:text-3xl font-black text-ink-900 tracking-tight">Rp 25.000</span>
                   <span className="text-caption font-semibold text-ink-500">/bulan</span>
                 </div>
-                <p className="text-caption text-ink-500 mt-1">Dapat dibatalkan sewaktu-waktu</p>
               </div>
 
               <div className="mt-5 space-y-3 text-caption text-ink-700">
-                <div className={layout.rowStartGap}>
-                  <div className={surfaces.statBadge}>
-                    <Check className="w-3 h-3 stroke-[3]" />
-                  </div>
-                  <span>Akses penuh ke Perpustakaan Buku Wahidiyah</span>
-                </div>
                 <div className={layout.rowStartGap}>
                   <div className={surfaces.statBadge}>
                     <Check className="w-3 h-3 stroke-[3]" />
@@ -71,12 +51,6 @@ export const ProScreen = () => {
                     <Check className="w-3 h-3 stroke-[3]" />
                   </div>
                   <span>Dukungan pelanggan standar</span>
-                </div>
-                <div className={layout.rowStartGap}>
-                  <div className={surfaces.statBadge}>
-                    <Check className="w-3 h-3 stroke-[3]" />
-                  </div>
-                  <span>Aktif otomatis lewat QRIS, atau transfer manual yang diverifikasi admin</span>
                 </div>
               </div>
             </div>

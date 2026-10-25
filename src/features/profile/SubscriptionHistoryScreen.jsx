@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Clock, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { formatWIB } from '@lib/date';
 import { layout, controls } from '@lib/styles';
+import { PaymentReceiptModal } from '../payment/PaymentReceiptModal';
 
 export const SubscriptionHistoryScreen = () => {
-  const { subscriptions, refreshSubscriptions, navigateTo } = useApp();
+  const { subscriptions, refreshSubscriptions, navigateTo, user } = useApp();
   const [displayCount, setDisplayCount] = useState(2);
+  const [selectedSub, setSelectedSub] = useState(null);
 
   useEffect(() => {
     refreshSubscriptions?.();
@@ -23,8 +25,6 @@ export const SubscriptionHistoryScreen = () => {
   return (
     <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
       <div className={layout.contentCenter}>
-
-
         {subscriptions.length === 0 ? (
           <div className="min-h-[460px] flex flex-col items-center justify-center py-12 px-4 text-center space-y-3">
             <h3 className="font-bold text-body text-ink-800">Belum Ada Riwayat Langganan</h3>
@@ -43,11 +43,14 @@ export const SubscriptionHistoryScreen = () => {
           <div className="space-y-3.5">
             {subscriptions.slice(0, displayCount).map((sub) => {
               const isActive = sub.status === 'Aktif';
+              const refNumber = sub.ref || sub.orderId || 'REF-86331757';
+
               return (
                 <div
                   key={sub.id}
                   data-testid={`sub-card-${sub.id}`}
-                  className="bg-cream-50 rounded-3xl p-5 border border-cream-300/80 shadow-sm hover:shadow-md transition"
+                  onClick={() => setSelectedSub(sub)}
+                  className="bg-cream-50 rounded-3xl p-5 border border-cream-300/80 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-pointer active:scale-[0.99]"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -56,6 +59,7 @@ export const SubscriptionHistoryScreen = () => {
                         {isActive && <Sparkles className={controls.iconSm} />}
                       </h3>
                       <p className="text-xs font-semibold text-brand-800 mt-0.5">{sub.price}</p>
+                      <p className="text-micro font-mono text-ink-400 mt-0.5">{refNumber}</p>
                       <p className="text-micro text-ink-400 mt-1">Dibeli: {formatWIB(sub.createdAt)}</p>
                     </div>
 
@@ -66,14 +70,6 @@ export const SubscriptionHistoryScreen = () => {
                     }`}>
                       {sub.status}
                     </span>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-cream-200 flex items-center justify-between text-xs text-ink-400">
-                    <div className={layout.rowStart}>
-                      <Clock className="w-3.5 h-3.5 text-ink-400" />
-                      <span className="text-caption font-medium">{sub.period}</span>
-                    </div>
-                    <span className="text-micro font-mono text-ink-400">{sub.ref || 'REF-202301'}</span>
                   </div>
                 </div>
               );
@@ -94,6 +90,21 @@ export const SubscriptionHistoryScreen = () => {
           </button>
         </div>
       )}
+
+      {/* Kwitansi / Invoice Resmi Popup */}
+      <PaymentReceiptModal
+        isOpen={Boolean(selectedSub)}
+        onClose={() => setSelectedSub(null)}
+        details={selectedSub ? {
+          refNo: selectedSub.ref || selectedSub.orderId,
+          dateStr: formatWIB(selectedSub.createdAt),
+          planName: selectedSub.planName || 'Paket Bulanan Pro',
+          amount: 25000,
+          adminFee: 0,
+          totalPaid: 25000
+        } : null}
+        user={user}
+      />
     </div>
   );
 };

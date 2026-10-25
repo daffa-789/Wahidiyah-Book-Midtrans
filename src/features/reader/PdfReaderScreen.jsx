@@ -1,11 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ArrowLeft,
   BookOpen,
   FileText,
   Lock,
-  ZoomIn,
-  ZoomOut,
   Maximize,
   Minimize
 } from 'lucide-react';
@@ -32,8 +30,6 @@ export const PdfReaderScreen = () => {
   // Status Perbesaran Dokumen (Zoom) - Default 100%
   const [zoom, setZoom] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showZoomToast, setShowZoomToast] = useState(false);
-  const zoomToastTimerRef = useRef(null);
 
   // Pelacak Halaman Terakhir & Navigasi Scroll
   const bookTotalPages = Number(activeBook?.pages || activeBook?.totalPages || (activeBook?.samplePages?.length || 1));
@@ -69,29 +65,15 @@ export const PdfReaderScreen = () => {
     }
   }, [activeBook?.id, totalPages]);
 
-  // Tampilkan notifikasi indikator perbesaran (Toast Feedback) real-time
-  const triggerZoomFeedback = useCallback(() => {
-    setShowZoomToast(true);
-    if (zoomToastTimerRef.current) {
-      clearTimeout(zoomToastTimerRef.current);
-    }
-    zoomToastTimerRef.current = setTimeout(() => {
-      setShowZoomToast(false);
-    }, 1200);
-  }, []);
-
   // Update level zoom dengan batasan aman (50% - 250%)
   const setClampedZoom = useCallback((newValOrFn) => {
     setZoom((prev) => {
       const raw = typeof newValOrFn === 'function' ? newValOrFn(prev) : newValOrFn;
       return Math.min(250, Math.max(50, Math.round(raw)));
     });
-    triggerZoomFeedback();
-  }, [triggerZoomFeedback]);
+  }, []);
 
-  // Tombol Zoom Manual
-  const zoomIn = () => setClampedZoom((prev) => Math.min(250, prev + 15));
-  const zoomOut = () => setClampedZoom((prev) => Math.max(50, prev - 15));
+  // Reset Zoom ke 100%
   const resetZoom = () => setClampedZoom(100);
 
   // Toggle Layar Penuh
@@ -229,17 +211,33 @@ export const PdfReaderScreen = () => {
     <div className="fixed inset-0 z-40 flex flex-col bg-canvas-subtle text-ink-900 dark:text-cream-50 select-none overflow-hidden">
       {/* Top Header Minimalis & Bersih */}
       <header className="h-14 shrink-0 z-30 bg-ui-card/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs">
-        {/* Tombol Kembali & Judul Buku */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Tombol Kembali, Zoom Minimalis & Judul Buku di Kiri Atas */}
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
           <button
             type="button"
             onClick={() => navigateTo('home')}
-            className="p-2 -ml-2 rounded-xl text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-ink-100 dark:hover:bg-ink-800/80 transition cursor-pointer"
+            className="p-2 -ml-2 rounded-xl text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-ink-100 dark:hover:bg-ink-800/80 transition cursor-pointer shrink-0"
             title="Kembali ke beranda"
             aria-label="Kembali ke beranda"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
+
+          {/* Persentase Zoom di Kiri Atas (Minimalis, Klik untuk Reset ke 100%) */}
+          <button
+            type="button"
+            onClick={resetZoom}
+            className={`shrink-0 px-2.5 py-1 rounded-xl text-caption font-mono font-bold transition-all cursor-pointer ${
+              zoom !== 100
+                ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 shadow-xs'
+                : 'text-ink-600 dark:text-ink-300 bg-ink-100/70 dark:bg-ink-800/70 hover:bg-ink-200/70 dark:hover:bg-ink-700/70 border border-ink-200/50 dark:border-ink-700/50'
+            }`}
+            title="Reset Zoom (100%)"
+            aria-label={`Zoom ${zoom}%. Klik untuk reset ke 100%`}
+          >
+            {zoom}%
+          </button>
+
           <div className="min-w-0">
             <h1 className="text-body font-bold text-ink-900 dark:text-cream-50 truncate max-w-xs sm:max-w-md md:max-w-lg">
               {activeBook.title}
@@ -252,46 +250,8 @@ export const PdfReaderScreen = () => {
           </div>
         </div>
 
-        {/* Kontrol Kanan: Zoom & Fullscreen */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Zoom Controls (Minus, Persentase Dinamis, Plus) */}
-          <div className="flex items-center bg-ink-100/80 dark:bg-ink-800/80 rounded-xl p-0.5 border border-ink-200/50 dark:border-ink-700/50 text-caption font-semibold">
-            <button
-              type="button"
-              onClick={zoomOut}
-              disabled={zoom <= 50}
-              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 hover:bg-ui-card dark:hover:bg-ink-700 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Perkecil (-15%)"
-              aria-label="Perkecil Zoom"
-            >
-              <ZoomOut className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={resetZoom}
-              className={`px-2.5 py-0.5 rounded-md text-micro font-mono font-bold transition cursor-pointer ${
-                zoom !== 100
-                  ? 'text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 shadow-xs'
-                  : 'text-ink-700 dark:text-cream-200 hover:text-brand-700'
-              }`}
-              title={zoom === 100 ? 'Reset Zoom (100%)' : 'Klik untuk mengembalikan ke 100%'}
-              aria-label={`Tingkat zoom ${zoom}%. Klik untuk reset ke 100%`}
-            >
-              {zoom}%
-            </button>
-            <button
-              type="button"
-              onClick={zoomIn}
-              disabled={zoom >= 250}
-              className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 hover:bg-ui-card dark:hover:bg-ink-700 transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Perbesar (+15%)"
-              aria-label="Perbesar Zoom"
-            >
-              <ZoomIn className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Fullscreen Toggle */}
+        {/* Kontrol Kanan: Hanya Fullscreen */}
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={toggleFullscreen}
@@ -303,18 +263,6 @@ export const PdfReaderScreen = () => {
           </button>
         </div>
       </header>
-
-      {/* Floating Zoom Toast Feedback (Muncul saat Zoom Berubah Manual) */}
-      {showZoomToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-200">
-          <div className="px-3.5 py-1.5 rounded-full bg-ink-900/90 dark:bg-cream-100/90 backdrop-blur-md text-white dark:text-ink-900 text-caption font-bold shadow-xl flex items-center gap-2 border border-ink-700/30">
-            <span>Zoom: {zoom}%</span>
-            {zoom !== 100 && (
-              <span className="text-micro font-medium opacity-80">(Klik untuk reset ke 100%)</span>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Main Reading Canvas */}
       <main className="flex-1 min-h-0 w-full relative flex flex-col items-center p-0 overflow-hidden">

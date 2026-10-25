@@ -97,18 +97,6 @@ const DeviceFrameBase = ({ children }) => {
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          {!isAdmin && (
-            <button
-              type="button"
-              onClick={() => navigateTo('profile-edit')}
-              aria-label="Buka profil saya"
-              className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-caption font-bold text-brand-800 ring-1 ring-brand-200">
-                {(user?.name || 'U').split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U'}
-              </span>
-            </button>
-          )}
         </div>
       </header>
 

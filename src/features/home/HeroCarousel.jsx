@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { dateLabel, fullDateLabel } from '@lib/date';
 import { layout } from '@lib/styles';
 
@@ -12,7 +12,6 @@ const prefersReducedMotion = () =>
 const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [hasFailedImage, setHasFailedImage] = useState({});
   const touchStartX = useRef(null);
 
   const total = slides.length;
@@ -93,22 +92,10 @@ const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
         tabIndex={0}
       >
         <div className="relative aspect-[16/9] w-full sm:aspect-[21/8]">
-          {active?.imageUrl && !hasFailedImage[active.id] ? (
-            <img
-              key={active.id}
-              src={active.imageUrl}
-              alt={active.title}
-              loading="eager"
-              decoding="async"
-              onError={() => setHasFailedImage((prev) => ({ ...prev, [active.id]: true }))}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(184,134,11,0.30),transparent_58%)]"
-            />
-          )}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(184,134,11,0.30),transparent_58%)]"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-ink-900/85 via-brand-900/45 to-transparent" />
 
           <div className="absolute inset-0 flex items-end">
@@ -155,7 +142,7 @@ const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
       </div>
 
       {total > 1 && (
-        <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="mt-3 flex items-center justify-start gap-3">
           <div className={layout.rowStart} role="tablist" aria-label="Pilih banner">
             {slides.map((slide, dotIndex) => (
               <button
@@ -170,23 +157,6 @@ const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
                 }`}
               />
             ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {autoPlay && (
-              <button
-                type="button"
-                onClick={() => setIsPaused((paused) => !paused)}
-                aria-label={isPaused ? 'Jalankan banner otomatis' : 'Jeda banner otomatis'}
-                className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-cream-300 bg-ui-card px-2.5 py-1 text-caption font-bold text-ink-600 transition hover:bg-cream-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-              >
-                {isPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-                <span className="hidden sm:inline">{isPaused ? 'Putar' : 'Jeda'}</span>
-              </button>
-            )}
-            <span className="text-caption font-semibold text-ink-400">
-              {index + 1} / {total}
-            </span>
           </div>
         </div>
       )}

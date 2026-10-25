@@ -34,6 +34,7 @@ export const ContinuousPdfViewer = ({
   const touchStartDistRef = useRef(0);
   const initialPinchZoomRef = useRef(100);
   const isPinchingRef = useRef(false);
+  const pinchRafRef = useRef(null);
 
   // 1. Muat Dokumen PDF dari ArrayBuffer
   useEffect(() => {
@@ -124,9 +125,12 @@ export const ContinuousPdfViewer = ({
         e.touches[0].clientY - e.touches[1].clientY
       );
       if (touchStartDistRef.current > 10) {
-        const factor = currentDist / touchStartDistRef.current;
-        const targetZoom = Math.min(250, Math.max(50, Math.round(initialPinchZoomRef.current * factor)));
-        setZoom(targetZoom);
+        if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
+        pinchRafRef.current = requestAnimationFrame(() => {
+          const factor = currentDist / touchStartDistRef.current;
+          const targetZoom = Math.min(250, Math.max(50, Math.round(initialPinchZoomRef.current * factor)));
+          setZoom(targetZoom);
+        });
       }
     }
   };
@@ -305,13 +309,18 @@ export const ContinuousPdfViewer = ({
   );
 
   // Trigger render canvas saat renderedPages atau displayPageWidth berubah
+  // Debounce 180ms agar transisi animasi CSS zoom berjalan mulus (GPU hardware scaling) tanpa jank render
   useEffect(() => {
-    Object.keys(renderedPages).forEach((pageStr) => {
-      const pageNum = Number(pageStr);
-      if (renderedPages[pageNum]) {
-        renderPageCanvas(pageNum);
-      }
-    });
+    const timer = setTimeout(() => {
+      Object.keys(renderedPages).forEach((pageStr) => {
+        const pageNum = Number(pageStr);
+        if (renderedPages[pageNum]) {
+          renderPageCanvas(pageNum);
+        }
+      });
+    }, 180);
+
+    return () => clearTimeout(timer);
   }, [renderedPages, displayPageWidth, renderPageCanvas]);
 
   // 8. Loncat ke Halaman yang Diminta (Smooth Scroll ke Halaman Tertentu)
@@ -354,10 +363,10 @@ export const ContinuousPdfViewer = ({
     >
       {/* Tampilan Daftar Halaman yang Mengalir Vertikal (Continuous Scroll) */}
       <div
-        className="flex flex-col items-center gap-4 transition-all duration-75"
+        className="flex flex-col items-center gap-4 will-change-[width,height]"
         style={{
           width: `${displayPageWidth}px`,
-          maxWidth: '100%'
+          transition: 'width 0.25s cubic-bezier(0.2, 0, 0, 1)'
         }}
       >
         {pageNumbers.map((pageNum) => {
@@ -369,11 +378,11 @@ export const ContinuousPdfViewer = ({
               id={`pdf-page-${pageNum}`}
               data-page-number={pageNum}
               ref={(el) => (pageContainerRefs.current[pageNum] = el)}
-              className="relative shadow-md md:shadow-lg rounded-sm sm:rounded-md overflow-hidden bg-ui-card transition-all duration-75 border border-ink-200/50 dark:border-ink-700/50"
+              className="relative shadow-md md:shadow-lg rounded-sm sm:rounded-md overflow-hidden bg-ui-card border border-ink-200/50 dark:border-ink-700/50 will-change-[width,height]"
               style={{
                 width: `${displayPageWidth}px`,
                 height: `${displayPageHeight}px`,
-                maxWidth: '100%'
+                transition: 'width 0.25s cubic-bezier(0.2, 0, 0, 1), height 0.25s cubic-bezier(0.2, 0, 0, 1)'
               }}
             >
               {isVisible ? (
