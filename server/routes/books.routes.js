@@ -98,9 +98,7 @@ booksRouter.post('/books', requireAuth, requireAdmin, wrap(async (req, res) => {
     content_url: `data:${canonicalContentMime};base64,${content.buffer.toString('base64')}`,
     content_name: content.originalname,
     content_extension: extension,
-    content_mime: canonicalContentMime,
     content_size: content.size,
-    content_type: extension
   });
   if (error) throw error;
 
@@ -171,9 +169,7 @@ booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wr
     content_url: `data:${canonicalContentMime};base64,${content.buffer.toString('base64')}`,
     content_name: content.originalname,
     content_extension: extension,
-    content_mime: canonicalContentMime,
     content_size: content.size,
-    content_type: extension
   });
   if (error) throw error;
 
@@ -207,7 +203,7 @@ booksRouter.get('/books/:id/thumbnail', wrap(async (req, res) => {
 booksRouter.get('/books/:id/html', requireAuth, wrap(async (req, res) => {
   const { data: book } = await supabaseServer
     .from('books')
-    .select('content_url, content_name, content_mime, content_extension, is_locked')
+    .select('content_url, content_name, content_extension, is_locked')
     .eq('id', req.params.id)
     .maybeSingle();
 
@@ -254,7 +250,7 @@ booksRouter.get('/books/:id/html', requireAuth, wrap(async (req, res) => {
 booksRouter.get('/books/:id/content', requireAuth, wrap(async (req, res) => {
   const { data: book } = await supabaseServer
     .from('books')
-    .select('content_url, content_name, content_mime, content_extension, is_locked')
+    .select('content_url, content_name, content_extension, is_locked')
     .eq('id', req.params.id)
     .maybeSingle();
 

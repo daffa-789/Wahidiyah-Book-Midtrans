@@ -1,7 +1,5 @@
 import React from 'react';
 import { PanelLeft } from 'lucide-react';
-import { BrandMark } from '@ui/BrandMark';
-import { ThemeToggle } from '@ui/ThemeToggle';
 import { SidebarNavSection } from './SidebarNavButton';
 
 export const SidebarContent = React.memo(({
@@ -47,7 +45,6 @@ export const SidebarContent = React.memo(({
             {isAdminNav ? 'PA' : 'EB'}
           </button>
           {collapseToggle}
-          <ThemeToggle variant="onDark" />
         </div>
 
         <nav className="flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto thin-scrollbar">
@@ -82,10 +79,7 @@ export const SidebarContent = React.memo(({
             </span>
           )}
         </button>
-        <div className="flex items-center gap-1">
-          <ThemeToggle variant="onDark" />
-          {collapseToggle}
-        </div>
+        {collapseToggle}
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto thin-scrollbar">
