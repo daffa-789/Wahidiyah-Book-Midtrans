@@ -67,7 +67,7 @@ graph TD
 ### 2.1 Tier 1: Prinsip Kritis & Prioritas Utama (P1)
 
 #### 1. Separation of Concerns (SoC) & High Cohesion
-- **Masalah Saat Ini**: Route Express di `server/routes/auth.routes.js` (690 baris) masih memadukan penanganan HTTP request/response, validasi skema, logika bisnis perhitungan durasi, query SQL Supabase langsung, dan pemanggilan gateway pihak ketiga dalam satu fungsi route. Modul pembayaran telah dipisah pada Fase 2 menjadi `routes/payments.routes.js` (tipis) → `controllers/payment.controller.js` → `services/payment.service.js`.
+- **Masalah Saat Ini**: Route Express di `server/routes/auth.routes.js` (689 baris) masih memadukan penanganan HTTP request/response, validasi skema, logika bisnis perhitungan durasi, query SQL Supabase langsung, dan pemanggilan gateway pihak ketiga dalam satu fungsi route. Modul pembayaran telah dipisah pada Fase 2 menjadi `routes/payments.routes.js` (tipis) → `controllers/payment.controller.js` → `services/payment.service.js`.
 - **Aturan Standar**: Setiap layer hanya mengurusi satu domain tanggung jawab:
   - `Routes`: Routing URL, HTTP method, middleware otentikasi/rate-limiting.
   - `Controllers`: Ekstraksi DTO dari `req.body`/`req.params` dan pemformatan HTTP response (`200 OK`, `400 Bad Request`, `500 Internal Server Error`).
@@ -341,7 +341,7 @@ Bagi model AI (Claude, GPT, Gemini, dsb.) yang melanjutkan pekerjaan pada reposi
 | :---: | :--- | :--- | :---: |
 | **Fase 1** | Implementasi Continuous Vertical Scroll & Real-Time Zoom pada PDF Reader | *Performance, Usability, Mobile Responsiveness* | **SELESAI (Commit `3d5b646`)** |
 | **Fase 2** | Pemisahan Service Layer untuk Modul Pembayaran (`payments`) & Webhook Idempotency | *Separation of Concerns, Idempotency, Robustness* | **SELESAI** |
-| **Fase 3** | Pemisahan Service Layer untuk Modul Otentikasi (`auth`) & Standardisasi Respon | *High Cohesion, Maintainability, Security* | Direncanakan |
+| **Fase 3** | Pemisahan Service Layer untuk Modul Otentikasi (`auth`) & Standardisasi Respon | *High Cohesion, Maintainability, Security* | **SELESAI** |
 | **Fase 4** | Pemasangan Unit Test Harness (Vitest) untuk Logika Membership & Payment Parsing | *Testability, Reliability, Deterministic* | Direncanakan |
 | **Fase 5** | Pemecahan Komponen Inline pada `AdminDashboard.jsx` ke Sub-tab Terisolasi | *Composability, Loose Coupling, Readability* | Direncanakan |
 
