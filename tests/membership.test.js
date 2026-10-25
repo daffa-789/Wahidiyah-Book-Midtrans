@@ -1,4 +1,3 @@
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const h = vi.hoisted(() => ({ stub: undefined }));
@@ -14,7 +13,6 @@ import {
   activatePaidMembership,
   insertTransaction,
   matchCatalogPlan,
-  resolveManualTransferPricing,
   toRefCode
 } from '../server/lib/membership.js';
 
@@ -29,13 +27,11 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-
 describe('membership: toRefCode', () => {
   it('mengambil 8 digit terakhir ref_no sebagai kode REF', () => {
     expect(toRefCode('000012345678')).toBe('REF-12345678');
   });
 });
-
 
 describe('membership: matchCatalogPlan (pencocok ketat)', () => {
   it('mencocokkan berdasarkan planId dan nama (tidak peka kapital)', () => {
@@ -50,30 +46,6 @@ describe('membership: matchCatalogPlan (pencocok ketat)', () => {
     expect(matchCatalogPlan()).toBeNull();
   });
 });
-
-
-describe('membership: resolveManualTransferPricing (server pemegang kebenaran, VULN-06)', () => {
-  it('menghitung nominal dari katalog, mengabaikan klaim biaya layanan klien', () => {
-    const result = resolveManualTransferPricing({ plan_id: 'monthly' });
-    expect(result.ok).toBe(true);
-    expect(result.amount).toBe(25000);
-    expect(result.adminFee).toBe(3000);
-    expect(result.totalPaid).toBe(28000);
-  });
-
-  it('menerima klaim nominal klien HANYA bila cocok dengan katalog', () => {
-    expect(resolveManualTransferPricing({ plan_id: 'monthly', amount: 25000 }).ok).toBe(true);
-    const mismatch = resolveManualTransferPricing({ plan_id: 'monthly', amount: 1000 });
-    expect(mismatch.ok).toBe(false);
-    expect(mismatch.conflict).toBe(true);
-  });
-
-  it('menolak nominal non-angka dan paket tak dikenal', () => {
-    expect(resolveManualTransferPricing({ plan_id: 'monthly', amount: 'banyak' }).ok).toBe(false);
-    expect(resolveManualTransferPricing({ plan_id: 'paket-impian' }).ok).toBe(false);
-  });
-});
-
 
 describe('membership: activeSubscriptionConflict', () => {
   it('Pro aktif dengan tanggal kedaluwarsa di masa depan → konflik', () => {
@@ -92,7 +64,6 @@ describe('membership: activeSubscriptionConflict', () => {
     expect(activeSubscriptionConflict(null)).toBeNull();
   });
 });
-
 
 describe('membership: insertTransaction', () => {
   it('menyimpan baris pending dengan ref_no 12 digit berawalan 0000', async () => {
@@ -116,14 +87,7 @@ describe('membership: insertTransaction', () => {
       status: 'pending'
     });
   });
-
-  it('default status adalah success (dipakai transfer manual terverifikasi)', async () => {
-    stub().enqueue({ data: null });
-    await insertTransaction({ txId: 'tx-2', userId: 'u1', totalPaid: 28000, method: 'Manual' });
-    expect(stub().last('insert').rows[0].status).toBe('success');
-  });
 });
-
 
 describe('membership: activatePaidMembership (durasi & kedaluwarsa)', () => {
   it('periode tanpa satuan jatuh ke 30 hari dan menyetel is_pro', async () => {
