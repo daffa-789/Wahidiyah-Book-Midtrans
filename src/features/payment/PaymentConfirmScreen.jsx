@@ -9,7 +9,10 @@ import {
   Clock,
   PlayCircle,
   ShieldCheck,
-  Download
+  Download,
+  Copy,
+  Link,
+  ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -36,6 +39,7 @@ export const PaymentConfirmScreen = () => {
   const isSubscribed = isSubscriptionActive ? isSubscriptionActive(user) : Boolean(user?.isPro);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [copiedType, setCopiedType] = useState(null);
   const timerRef = useRef(null);
   const qrContainerRef = useRef(null);
 
@@ -45,6 +49,42 @@ export const PaymentConfirmScreen = () => {
       planId: selectedPlan?.id,
       qrImageUrl: qrTransaction?.qrImageUrl
     });
+  };
+
+  const handleCopyQrString = async () => {
+    const textToCopy = qrTransaction?.qrString || '';
+    if (!textToCopy) {
+      toast.error('Kode QR string belum tersedia.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedType('string');
+      toast.success('Kode QRIS (string) berhasil disalin! Silakan tempel di Midtrans Simulator.');
+      setTimeout(() => setCopiedType(null), 2500);
+    } catch {
+      toast.error('Gagal menyalin kode QRIS.');
+    }
+  };
+
+  const handleCopyQrLink = async () => {
+    const urlToCopy =
+      qrTransaction?.qrMidtransUrl ||
+      (qrTransaction?.qrImageUrl ? `${window.location.origin}${qrTransaction.qrImageUrl}` : '') ||
+      qrTransaction?.qrString ||
+      '';
+    if (!urlToCopy) {
+      toast.error('Link gambar QRIS belum tersedia.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(urlToCopy);
+      setCopiedType('link');
+      toast.success('Link / data QRIS berhasil disalin!');
+      setTimeout(() => setCopiedType(null), 2500);
+    } catch {
+      toast.error('Gagal menyalin link QRIS.');
+    }
   };
 
   const isQrisMethod = isQrisPaymentMethod(selectedPaymentMethod);
@@ -197,7 +237,7 @@ export const PaymentConfirmScreen = () => {
                   <p className="text-xs text-semantic-danger font-medium">{qrError}</p>
                   <button
                     onClick={regenerateQr}
-                    className="px-3 py-1.5 bg-cream-300 hover:bg-cream-300 rounded-lg text-xs font-bold text-ink-800 inline-flex items-center gap-1"
+                    className="px-3 py-1.5 bg-cream-300 hover:bg-cream-300 rounded-lg text-xs font-bold text-ink-800 inline-flex items-center gap-1 cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Coba Lagi</span>
@@ -217,7 +257,7 @@ export const PaymentConfirmScreen = () => {
                   <span className="text-xs font-bold">Kode QR kedaluwarsa</span>
                   <button
                     onClick={regenerateQr}
-                    className="px-3 py-1.5 bg-cream-300 hover:bg-cream-400 rounded-lg text-xs font-bold text-ink-800 inline-flex items-center gap-1"
+                    className="px-3 py-1.5 bg-cream-300 hover:bg-cream-400 rounded-lg text-xs font-bold text-ink-800 inline-flex items-center gap-1 cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Buat Ulang</span>
@@ -251,11 +291,83 @@ export const PaymentConfirmScreen = () => {
             )}
 
             {!isQrisPaid && !isExpired && !isGeneratingQr && qrTransaction && (
-              <div className="pt-1 space-y-2">
+              <div className="pt-1 space-y-2.5">
+                {/* Kotak Bantuan Simulator QRIS Midtrans (Salin Cepat) */}
+                <div className="rounded-2xl border border-cream-300 bg-cream-100/70 p-3 space-y-2 text-left">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />
+                      <span className="text-caption font-bold text-ink-900 truncate">
+                        Simulator QRIS Midtrans
+                      </span>
+                    </div>
+                    <a
+                      href="https://simulator.sandbox.midtrans.com/qris/index"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-micro font-bold text-brand-700 hover:text-brand-800 hover:underline shrink-0"
+                      title="Buka Midtrans Simulator di tab baru"
+                    >
+                      <span>Buka Simulator</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+
+                  {qrTransaction.qrString && (
+                    <p
+                      onClick={handleCopyQrString}
+                      className="font-mono text-micro text-ink-600 bg-cream-50 rounded-xl p-2 border border-cream-200 truncate select-all cursor-pointer hover:border-brand-500/50 transition"
+                      title="Klik untuk menyalin kode QR string"
+                    >
+                      {qrTransaction.qrString}
+                    </p>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCopyQrString}
+                      className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-cream-300 bg-cream-50 hover:bg-cream-200 text-ink-800 text-caption font-bold transition shadow-xs cursor-pointer active:scale-95"
+                      title="Salin QR string untuk ditempel langsung di Midtrans Simulator"
+                    >
+                      {copiedType === 'string' ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-brand-700" />
+                          <span className="text-brand-800">Tersalin!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-ink-600" />
+                          <span>Salin Kode QR</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCopyQrLink}
+                      className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-cream-300 bg-cream-50 hover:bg-cream-200 text-ink-800 text-caption font-bold transition shadow-xs cursor-pointer active:scale-95"
+                      title="Salin tautan gambar QRIS"
+                    >
+                      {copiedType === 'link' ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-brand-700" />
+                          <span className="text-brand-800">Tersalin!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Link className="w-3.5 h-3.5 text-ink-600" />
+                          <span>Salin Link</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={handleDownloadQr}
-                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   <span>Simpan QRIS ke Galeri (Buka di DANA/BCA)</span>
@@ -266,7 +378,7 @@ export const PaymentConfirmScreen = () => {
                   data-testid="qris-cancel"
                   onClick={cancelQris}
                   disabled={isCancelling}
-                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 border border-cream-300 bg-cream-50 hover:bg-cream-100 active:bg-cream-200 text-ink-700 text-xs font-bold rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 border border-cream-300 bg-cream-50 hover:bg-cream-100 active:bg-cream-200 text-ink-700 text-xs font-bold rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isCancelling ? (
                     <>
@@ -288,7 +400,7 @@ export const PaymentConfirmScreen = () => {
                       data-testid="qris-simulate-paid"
                       onClick={simulatePaid}
                       disabled={isSimulating}
-                      className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gold-600 hover:bg-gold-700 active:bg-gold-700 dark:bg-gold-700 dark:hover:bg-gold-700/80 dark:active:bg-gold-700/80 disabled:opacity-60 disabled:cursor-not-allowed text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+                      className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gold-600 hover:bg-gold-700 active:bg-gold-700 dark:bg-gold-700 dark:hover:bg-gold-700/80 dark:active:bg-gold-700/80 disabled:opacity-60 disabled:cursor-not-allowed text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 cursor-pointer"
                     >
                       {isSimulating ? (
                         <>
@@ -362,7 +474,7 @@ export const PaymentConfirmScreen = () => {
 
             <button
               type="submit"
-              className="w-full mt-4 bg-brand-700 hover:bg-brand-700 active:bg-brand-800 text-cream-50 font-semibold py-3.5 rounded-2xl shadow-md shadow-brand-600/20 transition text-sm flex items-center justify-center gap-2"
+              className="w-full mt-4 bg-brand-700 hover:bg-brand-700 active:bg-brand-800 text-cream-50 font-semibold py-3.5 rounded-2xl shadow-md shadow-brand-600/20 transition text-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Bayar Sekarang</span>
             </button>
@@ -380,7 +492,7 @@ export const PaymentConfirmScreen = () => {
                 if (timerRef.current) clearTimeout(timerRef.current);
                 setIsProcessing(false);
               }}
-              className="p-2 -m-1 min-h-11 min-w-11 flex items-center justify-center text-ink-400 hover:text-ink-800 rounded-full hover:bg-cream-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              className="p-2 -m-1 min-h-11 min-w-11 flex items-center justify-center text-ink-400 hover:text-ink-800 rounded-full hover:bg-cream-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer"
               title="Batal Memproses"
               aria-label="Batal memproses pembayaran"
             >
