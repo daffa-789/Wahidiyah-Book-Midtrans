@@ -18,7 +18,7 @@ import {
 } from '../lib/http.js';
 import { createOneTimeCode } from '../lib/oneTimeCode.js';
 import { logger } from '../logger.js';
-import { toPublicUser } from '../auth.js';
+import { createSessionToken, toPublicUser } from '../auth.js';
 import { resolveFrontendOrigin } from '../lib/origin.js';
 import { ALLOWED_ORIGINS, FRONTEND_ORIGIN } from '../config.js';
 import {

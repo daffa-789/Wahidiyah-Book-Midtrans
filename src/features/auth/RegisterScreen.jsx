@@ -127,9 +127,6 @@ export const RegisterScreen = () => {
             />
           </div>
 
-          <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-3 text-xs leading-relaxed text-brand-900">
-            Kode verifikasi 6 angka akan dikirimkan ke <strong>alamat email</strong> Anda untuk mengaktifkan akun secara instan.
-          </div>
           <label className="block"><span className="auth-label">Password</span><span className={controls.inputWrap}><Lock className="auth-input-icon" /><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Minimal 8 karakter" /><button type="button" onClick={() => setShowPassword((value) => !value)} className="auth-icon-button" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
           <label className="block"><span className="auth-label">Konfirmasi password</span><span className={controls.inputWrap}><Lock className="auth-input-icon" /><input type={showConfirmation ? 'text' : 'password'} value={confirmation} onChange={(event) => { setConfirmation(event.target.value); setError(''); }} autoComplete="new-password" placeholder="Tulis ulang password" /><button type="button" onClick={() => setShowConfirmation((value) => !value)} className="auth-icon-button" aria-label={showConfirmation ? 'Sembunyikan konfirmasi password' : 'Tampilkan ulang password'}>{showConfirmation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></span></label>
 
