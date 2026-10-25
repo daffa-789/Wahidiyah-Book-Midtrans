@@ -218,9 +218,9 @@ export const PdfReaderScreen = () => {
   const percentage = Math.min(100, Math.max(1, Math.round((currentPage / totalPages) * 100)));
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas-subtle text-ink-900 dark:text-cream-50 select-none">
+    <div className="fixed inset-0 z-40 flex flex-col bg-canvas-subtle text-ink-900 dark:text-cream-50 select-none overflow-hidden">
       {/* Top Header Minimalis & Bersih */}
-      <header className="sticky top-0 z-30 h-14 bg-ui-card/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs">
+      <header className="h-14 shrink-0 z-30 bg-ui-card/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs">
         {/* Tombol Kembali & Judul Buku */}
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -290,7 +290,7 @@ export const PdfReaderScreen = () => {
       </header>
 
       {/* Main Reading Canvas */}
-      <main className="flex-1 flex flex-col items-center justify-center p-0 md:p-3 overflow-hidden w-full h-[calc(100dvh-3.5rem)]">
+      <main className="flex-1 min-h-0 w-full relative flex flex-col items-center p-0 md:p-2 overflow-hidden">
         {contentStatus === 'locked' ? (
           <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-ui-card p-8 text-center shadow-xl">
             <Lock className="mx-auto h-10 w-10 text-gold-500 mb-3" />
@@ -336,10 +336,8 @@ export const PdfReaderScreen = () => {
           </div>
         ) : PDF_TYPES.has(extension) && activeBook.contentUrl && pdfUrl ? (
           <div
-            className="relative w-full h-full max-w-full xl:max-w-[1600px] 2xl:max-w-[1800px] bg-ui-card shadow-none md:shadow-lg rounded-none md:rounded-2xl overflow-hidden border-0 md:border md:border-ink-200/60 dark:md:border-ink-800/70 transition-all duration-200"
+            className="relative flex-1 min-h-0 w-full h-full max-w-full xl:max-w-[1600px] 2xl:max-w-[1800px] bg-ui-card shadow-none md:shadow-lg rounded-none md:rounded-2xl overflow-hidden border-0 md:border md:border-ink-200/60 dark:md:border-ink-800/70 transition-all duration-200 flex flex-col"
             style={{
-              height: '100%',
-              width: '100%',
               maxWidth: zoom > 100 ? `${Math.min(2400, Math.round(1400 * (zoom / 100)))}px` : undefined
             }}
             onContextMenu={(e) => e.preventDefault()}
@@ -348,7 +346,7 @@ export const PdfReaderScreen = () => {
               key={`${pdfUrl}-${currentPage}-${zoom}`}
               title={`Konten ${activeBook.title}`}
               src={`${pdfUrl}#page=${currentPage}&${zoom === 100 ? 'view=FitH' : `zoom=${zoom}`}&toolbar=0&navpanes=0`}
-              className="h-full w-full border-0 select-none bg-canvas-subtle"
+              className="flex-1 min-h-0 w-full h-full border-0 select-none bg-canvas-subtle"
             />
           </div>
         ) : TEXT_TYPES.has(extension) && (textContent || docHtml) ? (
@@ -385,7 +383,7 @@ export const PdfReaderScreen = () => {
       </main>
 
       {/* Floating Bottom Navigation Pill (Persis seperti tampilan e-reader Moco / Gramedia) */}
-      <footer className="fixed bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+      <footer className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
         <form
           onSubmit={handlePageInputSubmit}
           className="pointer-events-auto flex items-center gap-2 bg-ui-card/95 backdrop-blur-md shadow-xl border border-ink-200/90 dark:border-ink-700/80 rounded-full px-3.5 py-1.5 text-caption font-medium text-ink-800 dark:text-cream-100"
