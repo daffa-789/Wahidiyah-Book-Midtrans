@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  FileSpreadsheet,
   Images,
   Loader2,
   MapPin,
@@ -160,28 +159,9 @@ export const EventsTab = ({
     }
   };
 
-  const handleExportEvents = () => withToastSync(
-    () => import('@lib/excelExport').then((m) => m.exportEventsToExcel(events)),
-    'Gagal mengekspor data agenda.',
-    (res) => `${res.count} data agenda berhasil diekspor (${res.fileName})`
-  );
-
   return (
     <section className="space-y-6">
-
-              <div className="flex items-center justify-end pb-1">
-                <button
-                  type="button"
-                  onClick={handleExportEvents}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-4 py-2.5 text-caption font-bold text-ink-700 shadow-sm transition hover:bg-cream-100 cursor-pointer"
-                  title="Ekspor seluruh daftar agenda ke Excel"
-                >
-                  <FileSpreadsheet className="h-4 w-4 text-brand-700" />
-                  Export Laporan Lengkap (.xlsx)
-                </button>
-              </div>
-
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] items-start">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] items-start">
 
                 <div className="space-y-5">
 

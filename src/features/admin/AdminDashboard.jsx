@@ -380,23 +380,6 @@ export const AdminDashboard = () => {
     (res) => `Laporan lengkap berhasil diunduh (${res.fileName})`
   );
 
-  const handleExportTransactions = () => withToastSync(
-    () => import('@lib/excelExport').then((m) => m.exportTransactionsToExcel(transactions)),
-    'Gagal mengekspor data transaksi.',
-    (res) => `${res.count} data transaksi berhasil diekspor (${res.fileName})`
-  );
-
-  const handleExportUsers = () => withToastSync(
-    () => import('@lib/excelExport').then((m) => m.exportUsersToExcel(users)),
-    'Gagal mengekspor data pengguna.',
-    (res) => `${res.count} data pengguna berhasil diekspor (${res.fileName})`
-  );
-
-  const handleExportBooks = () => withToastSync(
-    () => import('@lib/excelExport').then((m) => m.exportBooksToExcel(books)),
-    'Gagal mengekspor katalog buku.',
-    (res) => `${res.count} data buku berhasil diekspor (${res.fileName})`
-  );
 
   const kpis = [
     { label: 'Total pengguna', value: stats?.totalUsers ?? 0, icon: Users, tone: 'text-ink-700 bg-cream-100 border-cream-200' },
@@ -519,14 +502,6 @@ export const AdminDashboard = () => {
                     <h3 className="font-bold text-ink-900">Riwayat Transaksi Langganan</h3>
                     <p className={typography.helperTight}>Daftar transaksi pembayaran Pro melalui QRIS Midtrans ({transactions.length} total).</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleExportTransactions}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-50 px-3 py-1.5 text-small font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
-                  >
-                    <FileSpreadsheet className="h-3.5 w-3.5 text-brand-700" />
-                    Unduh Excel
-                  </button>
                 </div>
                 {/* Mobile Transaction Cards (< sm) */}
                 <div className="space-y-2.5 sm:hidden">
@@ -606,15 +581,6 @@ export const AdminDashboard = () => {
               <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
                 <div></div>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleExportBooks}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-3 text-small font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
-                    title="Ekspor daftar koleksi buku ke Excel"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 text-brand-700" />
-                    Export Excel
-                  </button>
                   <button type="button" onClick={() => setIsBookModalOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800">
                     <Plus className="h-4 w-4" /> Tambah buku
                   </button>
@@ -645,17 +611,6 @@ export const AdminDashboard = () => {
 
           {activeTab === 'users' && (
             <section className="space-y-5">
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleExportUsers}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-small font-bold text-ink-700 shadow-sm transition hover:bg-cream-100"
-                  title="Ekspor seluruh pengguna ke Excel"
-                >
-                  <FileSpreadsheet className="h-4 w-4 text-brand-700" />
-                  Export Excel ({users.length})
-                </button>
-              </div>
               {/* Mobile User Cards (< sm) */}
               <div className="space-y-3 sm:hidden">
                 {users.map((item) => (
