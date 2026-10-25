@@ -74,21 +74,22 @@ const DeviceFrameBase = ({ children }) => {
       {/* Header Mobile */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 py-2.5 backdrop-blur-md md:hidden">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            className="flex h-11 w-11 items-center justify-center rounded-md text-ink-700 transition-colors duration-200 hover:bg-cream-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            aria-label="Buka menu navigasi"
-          >
-            <Menu className="h-5 w-5" strokeWidth={2} />
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex h-11 w-11 items-center justify-center rounded-md text-ink-700 transition-colors duration-200 hover:bg-cream-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer"
+              aria-label="Buka menu navigasi"
+            >
+              <Menu className="h-5 w-5" strokeWidth={2} />
+            </button>
+          )}
 
           <button
             type="button"
             onClick={() => navigateTo(isAdmin ? 'admin-dashboard' : 'home')}
-            className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg"
+            className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-lg cursor-pointer"
           >
-            
             <span className="font-display text-lead font-bold tracking-tight text-ink-900">
               {isAdmin ? 'Panel Admin' : 'E-Book Wahidiyah'}
             </span>
