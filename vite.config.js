@@ -33,34 +33,14 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             // Urutan penting: cek paling spesifik lebih dulu. Vite memanggil
             // fungsi ini per-modul, dan cabang pertama yang cocok menang.
-            //
-            // R25 — pemisahan diperluas. Sebelumnya hanya recharts/d3, lucide, dan
-            // react-dom yang dipecah; sisanya menumpuk di chunk `index` yang jadi
-            // 419 KB (terbesar di seluruh build) padahal itu bundle jalur-kritis
-            // yang dimuat SEMUA pengunjung, termasuk yang cuma membuka /login.
-            //
-            // Yang dipindahkan dan alasannya:
-            //
-            // R37 — nama chunk `supabase` DIGANTI jadi `supabase-sdk`.
-            // `src/lib/supabase.js` (pembungkus milik sendiri) juga menghasilkan
-            // chunk bernama `supabase`, sehingga build memunculkan DUA berkas
-            // berbeda dengan nama yang sama (`supabase-B4WnJLNZ.js` 226 KB dan
-            // `supabase-CwXGP15H.js` 2,2 KB). Secara fungsi tidak rusak, tetapi
-            // mustahil dipelihara: tidak ada yang bisa menebak berkas mana yang
-            // mana dari namanya saja, dan laporan ukuran jadi menyesatkan.
-            //
-            // • @supabase/supabase-js — ±190 KB. HANYA dipakai PaymentConfirmScreen
-            //   (lazy) + ServerStatusBanner. Semula ikut ke `index` karena rollup
-            //   menaikkan modul yang di-import dari jalur eager (ServerStatusBanner
-            //   ada di DeviceFrame). Dipecah supaya bisa ditunda.
-            // • @headlessui/react — hanya DeviceFrame (dialog/drawer). Kecil, tapi
-            //   membebaskan `index` dari React-nya headlessui.
-            // • sonner — Toaster global; sekali pakai di 5 berkas, tab sendiri.
             if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
               return 'charts';
             }
             if (id.includes('node_modules/exceljs')) {
               return 'excel';
+            }
+            if (id.includes('node_modules/pdfjs-dist')) {
+              return 'pdfjs';
             }
             if (id.includes('node_modules/@supabase/')) {
               return 'supabase-sdk';
@@ -85,14 +65,6 @@ export default defineConfig(({ mode }) => {
       port: frontendPort,
       open: false,
       host: true,
-      // Panaskan modul jalur-kritis saat server start.
-      //
-      // Tanpa ini, MUAT PERTAMA setelah server dinyalakan memakan ~5 detik:
-      // Vite baru meng-optimasi dependensi dan mentransformasi modul ketika ada
-      // permintaan masuk, sehingga peramban menampilkan halaman kosong selama
-      // itu — terasa seperti "macet" padahal hanya belum siap. Dengan pemanasan,
-      // transformasi dikerjakan lebih dulu di latar belakang dan muat pertama
-      // jauh lebih cepat.
       warmup: {
         clientFiles: [
           './src/main.jsx',
