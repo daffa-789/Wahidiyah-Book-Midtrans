@@ -48,26 +48,14 @@ export const LogsTab = ({ sessionToken }) => {
 
   return (
     <section className="space-y-5 animate-in fade-in duration-200">
-
-      <div className="flex items-center justify-end pb-1">
-        <button
-          type="button"
-          onClick={() => { setLoading(true); loadLogs(); }}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-50 px-3.5 py-2 text-small font-bold text-ink-700 hover:bg-cream-100 transition shadow-xs self-start sm:self-auto"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 text-ink-400 ${loading ? 'animate-spin' : ''}`} />
-          Segarkan Log
-        </button>
-      </div>
-
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-cream-50 rounded-2xl border border-cream-300 shadow-xs">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-ink-300 ml-1" />
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 items-center">
             <button
               type="button"
               onClick={() => setFilterType('all')}
-              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition ${
+              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition cursor-pointer ${
                 filterType === 'all'
                   ? 'bg-ink-800 text-cream-50 shadow-xs'
                   : 'bg-cream-200 text-ink-500 hover:bg-cream-300'
@@ -78,7 +66,7 @@ export const LogsTab = ({ sessionToken }) => {
             <button
               type="button"
               onClick={() => setFilterType('subscription')}
-              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition ${
+              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition cursor-pointer ${
                 filterType === 'subscription'
                   ? 'bg-brand-700 text-cream-50 shadow-xs'
                   : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
@@ -89,13 +77,22 @@ export const LogsTab = ({ sessionToken }) => {
             <button
               type="button"
               onClick={() => setFilterType('user')}
-              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition ${
+              className={`px-3 py-1.5 rounded-xl text-caption font-bold transition cursor-pointer ${
                 filterType === 'user'
                   ? 'bg-ink-700 text-cream-50 shadow-xs'
                   : 'bg-cream-100 text-ink-700 hover:bg-cream-200'
               }`}
             >
               Pendaftaran ({logs.filter(l => l.type === 'user').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => { setLoading(true); loadLogs(); }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-100 px-3 py-1.5 text-caption font-bold text-ink-700 hover:bg-cream-200 transition shadow-xs cursor-pointer active:scale-95 ml-1"
+              title="Segarkan data log aktivitas"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 text-ink-400 ${loading ? 'animate-spin' : ''}`} />
+              <span>Segarkan Log</span>
             </button>
           </div>
         </div>
