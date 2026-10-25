@@ -1,39 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip
-} from 'recharts';
-import {
-  BookOpen,
-  CheckCircle2,
-  FileSpreadsheet,
-  Pencil,
-  Plus,
-  ShieldCheck,
-  Trash2,
-  UserCog,
-  Users
-} from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
 import { apiJson, authHeaders } from '@lib/api';
 
 import { ADMIN_DEFAULT_TAB, ADMIN_TAB_SLUGS, tabIdFromPath } from '@lib/navigation';
 import { normalizeEvent, normalizeTransaction, normalizeUser } from '@lib/normalizers';
-import { formatWIB, getTodayStr } from '@lib/date';
-import { formatRupiah } from '@lib/formatUtils';
+import { getTodayStr } from '@lib/date';
 import { withToast, withToastSync } from '@lib/withToast';
+import { OverviewTab } from './OverviewTab';
+import { BooksTab } from './BooksTab';
+import { UsersTab } from './UsersTab';
 import { EventsTab } from './EventsTab';
 import { CarouselTab } from './CarouselTab';
 import { LogsTab } from './LogsTab';
 import { BookModal } from './BookModal';
-import { TxStatusBadge } from './TxStatusBadge';
 import { AdminSkeleton } from '@ui/Skeleton';
-import { layout, typography, surfaces, controls } from '@lib/styles';
 
 const isValidTabSlug = (slug) => slug === undefined || ADMIN_TAB_SLUGS.has(slug);
 
@@ -90,8 +72,6 @@ const toEventForm = (event) => {
   };
 };
 
-const formatCurrency = formatRupiah;
-
 export const AdminDashboard = () => {
   const {
     user,
@@ -142,11 +122,9 @@ export const AdminDashboard = () => {
         apiJson('/api/users', { headers }),
         apiJson('/api/transactions', { headers }),
         apiJson('/api/events'),
-
         apiJson('/api/carousel/all', { headers })
       ]);
       setStats(statsPayload.stats);
-
       setUsers((userPayload.users || []).map(normalizeUser));
       setTransactions((transactionPayload.transactions || []).map(normalizeTransaction));
       setEvents((eventPayload.events || []).map(normalizeEvent));
@@ -160,16 +138,6 @@ export const AdminDashboard = () => {
   }, [headers, refreshBooks, refreshEvents, refreshCarousel, sessionToken]);
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
-
-  
-  const subscriptionShare = useMemo(() => {
-    const pro = users.filter((item) => Boolean(item.isPro)).length;
-    const regular = Math.max(users.length - pro, 0);
-    return [
-      { name: 'Pro', value: pro, color: '#14523A' },
-      { name: 'Reguler', value: regular, color: '#B9DBC9' }
-    ].filter((item) => item.value > 0);
-  }, [users]);
 
   const updateUser = (id, body, successMessage) => withToast(
     async () => {
@@ -274,9 +242,6 @@ export const AdminDashboard = () => {
   const submitEvent = async (event) => {
     event.preventDefault();
     setIsSavingEvent(true);
-    // Pesan sukses berbeda untuk tambah vs perbarui, jadi `withToast` dipanggil
-    // tanpa pesan sukses dan toast-nya dipasang di dalam aksi — pola galatnya
-    // tetap terpusat di helper.
     return withToast(
       async () => {
         if (editingEventId) {
@@ -370,22 +335,11 @@ export const AdminDashboard = () => {
     );
   };
 
-  // R57 — pola try/catch/toast.error dirampingkan lewat `withToast`, tetapi
-  // pesan SUKSES di sini menyertakan jumlah baris & nama berkas, jadi tetap
-  // ditulis eksplisit lewat `onSuccess`. `withToastSync` dipakai karena
-  // pembuatan berkas Excel berjalan sinkron (unduhan memicu di memori).
   const handleExportFull = () => withToastSync(
     () => import('@lib/excelExport').then((m) => m.exportFullReportToExcel({ users, transactions, books, events, stats })),
     'Gagal mengekspor laporan.',
     (res) => `Laporan lengkap berhasil diunduh (${res.fileName})`
   );
-
-
-  const kpis = [
-    { label: 'Total pengguna', value: stats?.totalUsers ?? 0, icon: Users, tone: 'text-ink-700 bg-cream-100 border-cream-200' },
-    { label: 'Koleksi aktif', value: stats?.totalBooks ?? books.length, icon: BookOpen, tone: 'text-brand-700 bg-brand-50 border-brand-200' },
-    { label: 'Langganan aktif', value: stats?.activeSubscriptions ?? 0, icon: ShieldCheck, tone: 'text-brand-700 bg-brand-50 border-brand-200' }
-  ];
 
   if (!isValidTabSlug(tabParam)) {
     return <Navigate to="/admin/beranda" replace />;
@@ -403,368 +357,78 @@ export const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-cream-50 text-ink-900">
-
       <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
+        {error && (
+          <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-semantic-danger/30 bg-semantic-dangerLight px-4 py-3 text-body font-medium text-semantic-danger">
+            <span>{error}</span>
+            <button type="button" onClick={loadDashboard} className="min-h-6 rounded-xl border border-semantic-danger/40 bg-cream-50 px-3 py-1.5 text-small font-bold text-semantic-danger transition hover:bg-semantic-dangerLight">
+              Coba muat ulang
+            </button>
+          </div>
+        )}
 
-          {error && (
-            <div role="alert" className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-semantic-danger/30 bg-semantic-dangerLight px-4 py-3 text-body font-medium text-semantic-danger">
-              <span>{error}</span>
-              <button type="button" onClick={loadDashboard} className="min-h-6 rounded-xl border border-semantic-danger/40 bg-cream-50 px-3 py-1.5 text-small font-bold text-semantic-danger transition hover:bg-semantic-dangerLight">
-                Coba muat ulang
-              </button>
-            </div>
-          )}
+        {activeTab === 'overview' && (
+          <OverviewTab
+            stats={stats}
+            books={books}
+            users={users}
+            transactions={transactions}
+            onExportFull={handleExportFull}
+          />
+        )}
 
-          {activeTab === 'overview' && (
-            <section className="space-y-6">
-              <div className="flex items-center justify-end pb-1">
-                <button
-                  type="button"
-                  onClick={handleExportFull}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-700 px-4 py-2.5 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 cursor-pointer"
-                  title="Ekspor buku kerja lengkap (Semua sheet: KPI, Transaksi, Pengguna, Buku, Agenda)"
-                >
-                  <FileSpreadsheet className="h-4 w-4 text-brand-100" />
-                  Export Laporan Lengkap (.xlsx)
-                </button>
-              </div>
+        {activeTab === 'books' && (
+          <BooksTab
+            books={books}
+            onAddBook={() => setIsBookModalOpen(true)}
+            onEditBook={startEditBook}
+            onDeleteBook={deleteBook}
+          />
+        )}
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                {kpis.map((kpi) => {
-                  const Icon = kpi.icon;
-                  return (
-                    <div key={kpi.label} className="rounded-3xl border border-cream-300 bg-cream-50 p-4 sm:p-5 shadow-sm">
-                      <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-2xl border ${kpi.tone}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <p className="text-2xl font-black tracking-tight">{kpi.value}</p>
-                      <p className="mt-1 text-caption font-medium text-ink-500">{kpi.label}</p>
-                    </div>
-                  );
-                })}
-              </div>
+        {activeTab === 'users' && (
+          <UsersTab
+            users={users}
+            onUpdateRole={(id, nextRole) =>
+              updateUser(id, { role: nextRole }, 'Role pengguna diperbarui.')
+            }
+          />
+        )}
 
-              <div className="grid gap-5 lg:grid-cols-2 items-stretch">
-                {/* Kolom Kiri: Status Langganan (PieChart) */}
-                <div className={`${surfaces.panel} flex flex-col justify-between`}>
-                  <div>
-                    <h3 className="font-bold text-body text-ink-900">Status langganan</h3>
-                    <div className="mt-4 h-52">
-                      {subscriptionShare.length ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={subscriptionShare}
-                              dataKey="value"
-                              innerRadius={50}
-                              outerRadius={76}
-                              paddingAngle={3}
-                            >
-                              {subscriptionShare.map((entry) => (
-                                <Cell key={entry.name} fill={entry.color} />
-                              ))}
-                            </Pie>
-                            <Tooltip />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-cream-300 bg-cream-100 text-center text-caption text-ink-500">
-                          Belum ada pengguna.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-around border-t border-cream-200/60 pt-3">
-                    {subscriptionShare.map((entry) => (
-                      <div key={entry.name} className="flex items-center gap-2 text-caption">
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.color }} />
-                        <span className="text-ink-500 font-medium">{entry.name}:</span>
-                        <strong className="text-ink-900">{entry.value}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        {activeTab === 'events' && (
+          <EventsTab
+            events={events}
+            eventForm={eventForm}
+            setEventForm={setEventForm}
+            isSavingEvent={isSavingEvent}
+            submitEvent={submitEvent}
+            deleteEvent={deleteEvent}
+            currentCalDate={currentCalDate}
+            setCurrentCalDate={setCurrentCalDate}
+            selectedCalDate={selectedCalDate}
+            setSelectedCalDate={setSelectedCalDate}
+            agendaFilter={agendaFilter}
+            setAgendaFilter={setAgendaFilter}
+            editingEventId={editingEventId}
+            editEvent={editEvent}
+            cancelEditEvent={cancelEditEvent}
+            toggleEventCarousel={toggleEventCarousel}
+          />
+        )}
 
-                {/* Kolom Kanan: Pendapatan Tervalidasi */}
-                <div className={`${surfaces.panel} flex flex-col justify-center`}>
-                  <div>
-                    <h3 className="font-bold text-body text-ink-900">Pendapatan tervalidasi</h3>
-                    <p className="mt-4 text-3xl font-black tracking-tight text-brand-800">
-                      {formatCurrency(stats?.totalRevenue)}
-                    </p>
-                  </div>
-                </div>
-              </div>
+        {activeTab === 'carousel' && (
+          <CarouselTab
+            slides={carouselSlides}
+            carouselReady={carouselReady}
+            refreshCarousel={refreshCarousel}
+            sessionToken={sessionToken}
+          />
+        )}
 
-              <div className={surfaces.panelSpaced}>
-                <div className={layout.toolbarRow}>
-                  <div>
-                    <h3 className="font-bold text-ink-900">Riwayat Transaksi Langganan</h3>
-                    <p className={typography.helperTight}>Daftar transaksi pembayaran Pro melalui QRIS Midtrans ({transactions.length} total).</p>
-                  </div>
-                </div>
-                {/* Mobile Transaction Cards (< sm) */}
-                <div className="space-y-2.5 sm:hidden">
-                  {transactions.slice(0, 10).map((tx) => (
-                    <div key={tx.id || tx.refNo} className="rounded-2xl border border-cream-200 bg-cream-50 p-3.5 shadow-sm space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-caption font-bold text-ink-700">{tx.refNo}</span>
-                        <TxStatusBadge status={tx.status} />
-                      </div>
-                      <div className="flex items-start justify-between text-caption">
-                        <div>
-                          <p className="font-bold text-ink-900">{tx.userName || '-'}</p>
-                          <p className={typography.helperInline}>{tx.userEmail || ''}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-ink-900">{formatCurrency(tx.totalPaid)}</p>
-                          <p className="text-caption text-ink-500">{tx.planName || 'Paket Bulanan'}</p>
-                        </div>
-                      </div>
-                      <p className="text-micro text-ink-400 pt-1.5 border-t border-cream-100">
-                        {formatWIB(tx.createdAt, { withSeconds: false })}
-                      </p>
-                    </div>
-                  ))}
-                  {transactions.length === 0 && (
-                    <div className="p-6 text-center text-caption text-ink-500">
-                      Belum ada riwayat transaksi pembayaran.
-                    </div>
-                  )}
-                </div>
-
-                {/* Desktop Table (sm and up) */}
-                <div className="hidden sm:block overflow-x-auto rounded-2xl border border-cream-200">
-                  <table className="min-w-full text-left text-caption">
-                    <thead className="bg-cream-100 uppercase tracking-wider text-ink-400">
-                      <tr>
-                        <th className="px-3.5 py-2.5">No. Referensi</th>
-                        <th className="px-3.5 py-2.5">Pelanggan</th>
-                        <th className="px-3.5 py-2.5">Paket</th>
-                        <th className="px-3.5 py-2.5">Total Bayar</th>
-                        <th className="px-3.5 py-2.5">Status</th>
-                        <th className="px-3.5 py-2.5">Waktu</th>
-                      </tr>
-                    </thead>
-                    <tbody className={layout.divider}>
-                      {transactions.slice(0, 10).map((tx) => (
-                        <tr key={tx.id || tx.refNo}>
-                          <td className="px-3.5 py-2.5 font-mono font-bold text-ink-700">{tx.refNo}</td>
-                          <td className="px-3.5 py-2.5">
-                            <p className="font-bold text-ink-900">{tx.userName || '-'}</p>
-                            <p className={typography.helperInline}>{tx.userEmail || ''}</p>
-                          </td>
-                          <td className="px-3.5 py-2.5">{tx.planName || 'Paket Bulanan'}</td>
-                          <td className="px-3.5 py-2.5 font-bold text-ink-900">{formatCurrency(tx.totalPaid)}</td>
-                          <td className="px-3.5 py-2.5">
-                            <TxStatusBadge status={tx.status} />
-                          </td>
-                          <td className="px-3.5 py-2.5 text-ink-400">{formatWIB(tx.createdAt, { withSeconds: false })}</td>
-                        </tr>
-                      ))}
-                      {transactions.length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-ink-400">
-                            Belum ada riwayat transaksi pembayaran.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {activeTab === 'books' && (
-            <section className="space-y-5">
-              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-                <div></div>
-                <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => setIsBookModalOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800">
-                    <Plus className="h-4 w-4" /> Tambah buku
-                  </button>
-                </div>
-              </div>
-              <div className="overflow-hidden rounded-3xl border border-cream-300 bg-cream-50 shadow-sm">
-                {books.length === 0 ? <div className="p-12 text-center"><BookOpen className={controls.emptyIcon} /><p className="mt-3 font-bold text-ink-700">Koleksi masih kosong</p><p className={typography.helper}>Tambahkan buku pertama beserta thumbnail dan lampirannya.</p></div> : <div className={layout.divider}>{books.map((book) => <div key={book.id} className="flex flex-wrap items-center gap-4 p-4"><div className="h-14 w-11 overflow-hidden rounded-xl bg-gradient-to-tr from-brand-800 to-brand-800 flex items-center justify-center text-cream-50 shrink-0 shadow-sm">{book.coverUrl ? <img src={book.coverUrl} alt={book.title} className={layout.media} onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <BookOpen className="h-5 w-5 text-cream-50/80" />}</div><div className="min-w-[180px] flex-1"><p className="font-bold text-ink-900">{book.title}</p><p className={typography.helperTight}>{book.pages ? `${book.pages} halaman • ` : ''}{book.contentName || 'Tanpa lampiran'} {book.isLocked ? '• Pro' : ''}</p></div><div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => startEditBook(book)}
-                        className="rounded-xl border border-cream-300 p-2 text-ink-700 hover:bg-cream-100 transition cursor-pointer"
-                        title="Ubah buku"
-                      >
-                        <Pencil className="h-4 w-4 text-brand-700" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteBook(book)}
-                        className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight cursor-pointer"
-                        title="Hapus buku"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div></div>)}</div>}
-              </div>
-            </section>
-          )}
-
-          {activeTab === 'users' && (
-            <section className="space-y-5">
-              {/* Mobile User Cards (< sm) */}
-              <div className="space-y-3 sm:hidden">
-                {users.map((item) => (
-                  <div key={item.id} className="rounded-2xl border border-cream-300 bg-cream-50 p-4 shadow-sm space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-10 w-10 rounded-full bg-brand-100 border border-brand-200 text-brand-800 flex items-center justify-center font-bold text-caption shrink-0">
-                          {(item.name || 'U').slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-bold text-ink-900 truncate text-body">{item.name}</p>
-                          <p className="text-caption text-ink-500 truncate">{item.email}</p>
-                        </div>
-                      </div>
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-caption font-bold ${
-                        item.role === 'admin' ? 'bg-brand-50 text-brand-800 border border-brand-200' : 'bg-cream-200 text-ink-600'
-                      }`}>
-                        {item.role}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-caption pt-2.5 border-t border-cream-200/80">
-                      <div className="flex items-center gap-2">
-                        {item.loginMethod === 'google' ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-semantic-infoLight px-2 py-0.5 text-micro font-bold text-semantic-info border border-semantic-info/30">
-                            <span className="h-1.5 w-1.5 rounded-full bg-semantic-info" /> Google
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-cream-200 px-2 py-0.5 text-micro font-bold text-ink-600 border border-cream-300/60">
-                            <span className="h-1.5 w-1.5 rounded-full bg-ink-400" /> Email
-                          </span>
-                        )}
-                        <span className={`text-caption font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-500'}`}>
-                          {item.isPro ? 'Pro' : 'Reguler'}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => updateUser(item.id, { role: item.role === 'admin' ? 'user' : 'admin' }, 'Role pengguna diperbarui.')}
-                        className="inline-flex items-center gap-1 rounded-xl border border-cream-300 bg-cream-50 px-2.5 py-1.5 text-caption font-bold text-ink-700 hover:bg-cream-100 active:scale-95 transition"
-                      >
-                        <UserCog className="h-3.5 w-3.5 text-brand-700" />
-                        {item.role === 'admin' ? 'Jadikan user' : 'Jadikan admin'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {users.length === 0 && (
-                  <div className="p-8 text-center text-ink-400 rounded-2xl bg-cream-50 border border-cream-300">
-                    <p className="font-bold text-ink-700">Belum ada pengguna</p>
-                    <p className={typography.helper}>Akun yang mendaftar atau masuk lewat Google akan muncul di daftar ini.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Desktop Table (sm and up) */}
-              <div className="hidden sm:block overflow-x-auto rounded-3xl border border-cream-300 bg-cream-50 shadow-sm">
-                <table className="min-w-full text-left text-body">
-                  <thead className="bg-cream-100 text-caption uppercase tracking-wider text-ink-500">
-                    <tr>
-                      <th className="px-4 py-3">Pengguna</th>
-                      <th className="px-4 py-3">Metode</th>
-                      <th className="px-4 py-3">Role</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className={layout.divider}>
-                    {users.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-4 py-3">
-                          <p className="font-bold">{item.name}</p>
-                          <p className="text-caption text-ink-500">{item.email}</p>
-                        </td>
-                        <td className="px-4 py-3">
-                          {item.loginMethod === 'google' ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-semantic-infoLight px-2.5 py-1 text-caption font-bold text-semantic-info border border-semantic-info/30">
-                              <span className="h-1.5 w-1.5 rounded-full bg-semantic-info" />
-                              Google
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-cream-200 px-2.5 py-1 text-caption font-bold text-ink-500 border border-cream-300/60">
-                              <span className="h-1.5 w-1.5 rounded-full bg-ink-300" />
-                              Email
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-1 text-caption font-bold ${item.role === 'admin' ? 'bg-brand-50 text-brand-800 border border-brand-200' : 'bg-cream-200 text-ink-500'}`}>
-                            {item.role}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`text-caption font-bold ${item.isPro ? 'text-brand-800' : 'text-ink-500'}`}>
-                            {item.isPro ? 'Pro' : 'Reguler'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            onClick={() => updateUser(item.id, { role: item.role === 'admin' ? 'user' : 'admin' }, 'Role pengguna diperbarui.')}
-                            className="rounded-xl border border-cream-300 px-2.5 py-1.5 text-small font-bold text-ink-700 hover:bg-cream-100"
-                          >
-                            <UserCog className="mr-1 inline h-3.5 w-3.5" />
-                            {item.role === 'admin' ? 'Jadikan user' : 'Jadikan admin'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {users.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-10 text-center">
-                          <p className="font-bold text-ink-700">Belum ada pengguna</p>
-                          <p className={typography.helper}>Akun yang mendaftar atau masuk lewat Google akan muncul di daftar ini.</p>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
-
-          {activeTab === 'events' && (
-            <EventsTab
-              events={events}
-              eventForm={eventForm}
-              setEventForm={setEventForm}
-              isSavingEvent={isSavingEvent}
-              submitEvent={submitEvent}
-              deleteEvent={deleteEvent}
-              currentCalDate={currentCalDate}
-              setCurrentCalDate={setCurrentCalDate}
-              selectedCalDate={selectedCalDate}
-              setSelectedCalDate={setSelectedCalDate}
-              agendaFilter={agendaFilter}
-              setAgendaFilter={setAgendaFilter}
-              editingEventId={editingEventId}
-              editEvent={editEvent}
-              cancelEditEvent={cancelEditEvent}
-              toggleEventCarousel={toggleEventCarousel}
-            />
-          )}
-          {activeTab === 'carousel' && (
-            <CarouselTab
-              slides={carouselSlides}
-              carouselReady={carouselReady}
-              refreshCarousel={refreshCarousel}
-              sessionToken={sessionToken}
-            />
-          )}
-          {activeTab === 'logs' && (
-            <LogsTab sessionToken={sessionToken} />
-          )}
-        </main>
+        {activeTab === 'logs' && (
+          <LogsTab sessionToken={sessionToken} />
+        )}
+      </main>
 
       {isBookModalOpen && (
         <BookModal

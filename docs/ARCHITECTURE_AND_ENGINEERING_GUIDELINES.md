@@ -343,7 +343,7 @@ Bagi model AI (Claude, GPT, Gemini, dsb.) yang melanjutkan pekerjaan pada reposi
 | **Fase 2** | Pemisahan Service Layer untuk Modul Pembayaran (`payments`) & Webhook Idempotency | *Separation of Concerns, Idempotency, Robustness* | **SELESAI** |
 | **Fase 3** | Pemisahan Service Layer untuk Modul Otentikasi (`auth`) & Standardisasi Respon | *High Cohesion, Maintainability, Security* | **SELESAI** |
 | **Fase 4** | Pemasangan Unit Test Harness (Vitest) untuk Logika Membership & Payment Parsing | *Testability, Reliability, Deterministic* | **SELESAI** |
-| **Fase 5** | Pemecahan Komponen Inline pada `AdminDashboard.jsx` ke Sub-tab Terisolasi | *Composability, Loose Coupling, Readability* | Siap Dikerjakan |
+| **Fase 5** | Pemecahan Komponen Inline pada `AdminDashboard.jsx` ke Sub-tab Terisolasi | *Composability, Loose Coupling, Readability* | **SELESAI** |
 
 ---
 *Dokumen ini adalah aset panduan resmi proyek skripsi Aplikasi Perpustakaan Digital Wahidiyah.*
