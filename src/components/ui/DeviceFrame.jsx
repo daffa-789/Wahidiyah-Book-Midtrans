@@ -14,7 +14,9 @@ const SUBPAGE_TITLES = {
   help: 'Pusat Bantuan',
   'subscription-history': 'Riwayat Langganan',
   riwayat: 'Riwayat Langganan',
-  about: 'Tentang Aplikasi'
+  about: 'Tentang Aplikasi',
+  'profile-edit': 'Profil',
+  profile: 'Profil'
 };
 
 const DeviceFrameBase = ({ children }) => {
@@ -107,7 +109,7 @@ const DeviceFrameBase = ({ children }) => {
               if (window.history.length > 1) {
                 window.history.back();
               } else {
-                navigateTo('profile-edit');
+                navigateTo(currentScreen === 'profile-edit' || currentScreen === 'profile' ? 'home' : 'profile-edit');
               }
             }}
             className="flex items-center gap-2 text-ink-800 hover:text-ink-900 active:opacity-75 cursor-pointer -ml-1 py-1 px-2 rounded-xl transition"
