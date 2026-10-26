@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, Mail, MessageCircleQuestion, Clock } from 'lucide-react';
+import { ChevronDown, Mail, Clock } from 'lucide-react';
 import { FAQ_ITEMS } from '@data/mockData';
-import { layout, typography } from '@lib/styles';
+import { layout } from '@lib/styles';
 
 const CONTACT_EMAIL = 'support@bukuku.id';
 
@@ -13,17 +13,7 @@ export const HelpCenterScreen = () => {
   return (
     <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
       <div className={layout.contentCenter}>
-
-        <div className="flex items-start gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-brand-50 text-brand-800 flex items-center justify-center shrink-0">
-            <MessageCircleQuestion className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <h1 className={typography.sectionTitle}>Pusat Bantuan</h1>
-          </div>
-        </div>
-
-        <section className="mt-6">
+        <section>
           <div className="space-y-2.5">
             {FAQ_ITEMS.map((item, index) => {
               const isExpanded = expandedId === item.id;
