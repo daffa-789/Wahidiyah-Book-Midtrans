@@ -3,10 +3,9 @@ import { pdfjsLib } from './pdfWorkerSetup';
 
 /**
  * ContinuousPdfViewer
- * Penampil PDF dengan model gulir vertikal alami (Continuous Vertical Scroll),
- * pelacakan halaman aktif otomatis (Scroll-Spy), serta perbesaran proporsional
- * yang 100% responsif pada layar Mobile maupun Desktop dengan zoom anchor
- * yang mengunci posisi teks saat zoom in maupun zoom out.
+ * Penampil PDF dengan model kanvas lembar halaman tetap (Fixed Sheet Canvas),
+ * menjaga rasio asli PDF secara presisi seperti Acrobat / Chrome PDF Viewer.
+ * Posisi teks dan baris bacaan terkunci 100% stabil (Reading Anchor Lock) saat zoom in / zoom out.
  */
 export const ContinuousPdfViewer = ({
   pdfBuffer,
@@ -21,7 +20,8 @@ export const ContinuousPdfViewer = ({
   const containerRef = useRef(null);
   const [pdfDoc, setPdfDoc] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
-  const [pageAspect, setPageAspect] = useState(1.414); // Rasio default A4 (tinggi / lebar)
+  // Dimensi dasar halaman PDF dalam point (default A4: 595.28 x 841.89)
+  const [pageDimensions, setPageDimensions] = useState({ width: 595.28, height: 841.89 });
   const [containerWidth, setContainerWidth] = useState(800);
   const [renderedPages, setRenderedPages] = useState({});
   const [loadError, setLoadError] = useState(null);
@@ -31,11 +31,10 @@ export const ContinuousPdfViewer = ({
   const canvasRefs = useRef({});
   const pageContainerRefs = useRef({});
 
-  // Ref untuk melacak dimensi sebelumnya & anchor fokus scroll saat perbesaran berubah
+  // Pelacak posisi bacaan aktif secara riil ({ page: nomor halaman, ratio: offset vertikal dalam halaman })
+  const currentViewRef = useRef({ page: currentPage || 1, ratio: 0 });
   const prevZoomRef = useRef(zoom);
-  const prevHeightRef = useRef(0);
-  const prevWidthRef = useRef(0);
-  const customAnchorRef = useRef(null);
+  const customFocalYRef = useRef(null);
 
   // Ref untuk mendeteksi Pinch-to-zoom (2 jari di mobile)
   const touchStartDistRef = useRef(0);
@@ -61,15 +60,15 @@ export const ContinuousPdfViewer = ({
         setTotalPages(doc.numPages);
         onPageChange?.(1, doc.numPages);
 
-        // Ambil ukuran halaman pertama untuk menghitung rasio aspek
+        // Ambil ukuran native halaman pertama dari berkas PDF
         try {
           const firstPage = await doc.getPage(1);
           const vp = firstPage.getViewport({ scale: 1.0 });
           if (vp.width > 0 && vp.height > 0) {
-            setPageAspect(vp.height / vp.width);
+            setPageDimensions({ width: vp.width, height: vp.height });
           }
         } catch (e) {
-          console.warn('[ContinuousPdfViewer] Gagal membaca rasio halaman pertama:', e);
+          console.warn('[ContinuousPdfViewer] Gagal membaca dimensi halaman pertama:', e);
         }
       })
       .catch((err) => {
@@ -100,23 +99,106 @@ export const ContinuousPdfViewer = ({
     return () => ro.disconnect();
   }, []);
 
-  // 3. Hitung Dimensi Halaman yang Pas (Fit-to-Width)
-  // Di layar ponsel (misal lebar 440px): halaman selebar layar minus margin 16px.
-  // Di layar desktop: batas kenyamanan membaca maks ~850px pada zoom 100%.
+  // 3. Hitung Dimensi Halaman Kanvas Tetap (Fixed Canvas Dimensions)
+  // Menjaga rasio aspek presisi native PDF tanpa distorsi atau peregangan teks
   const isMobile = containerWidth < 640;
+  const basePdfWidth = pageDimensions.width || 595.28;
+  const basePdfHeight = pageDimensions.height || 841.89;
+  const naturalAspect = basePdfHeight / basePdfWidth;
+
   const baseFitWidth = isMobile
     ? Math.max(280, containerWidth - 16)
     : Math.min(Math.max(480, containerWidth - 48), 850);
 
+  // Lebar dan tinggi halaman yang tepat mengikuti skala perbesaran
   const displayPageWidth = Math.round(baseFitWidth * (zoom / 100));
-  const displayPageHeight = Math.round(displayPageWidth * pageAspect);
+  const displayPageHeight = Math.round(displayPageWidth * naturalAspect);
 
-  const displayPageHeightRef = useRef(displayPageHeight);
-  displayPageHeightRef.current = displayPageHeight;
-  const displayPageWidthRef = useRef(displayPageWidth);
-  displayPageWidthRef.current = displayPageWidth;
+  // 4. Deteksi Posisi Bacaan Terkini saat Menggulir (Scroll-Spy & Anchor Tracker)
+  const updateReadingPosition = useCallback(() => {
+    const el = containerRef.current;
+    if (!el || !pdfDoc || totalPages === 0) return;
 
-  // 4. Deteksi Zoom Manual: Pinch 2 Jari (Mobile) & Ctrl + Wheel (Desktop)
+    const containerRect = el.getBoundingClientRect();
+    const eyelineY = containerRect.top + el.clientHeight * 0.35;
+
+    let closestPage = 1;
+    let minDistance = Infinity;
+
+    for (let p = 1; p <= totalPages; p++) {
+      const pageEl = pageContainerRefs.current[p];
+      if (!pageEl) continue;
+
+      const rect = pageEl.getBoundingClientRect();
+      if (rect.top <= eyelineY && rect.bottom >= eyelineY) {
+        closestPage = p;
+        const ratio = rect.height > 0 ? (eyelineY - rect.top) / rect.height : 0;
+        currentViewRef.current = { page: p, ratio: Math.max(0, Math.min(1, ratio)) };
+        minDistance = 0;
+        break;
+      }
+
+      const dist = Math.abs(rect.top - eyelineY);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestPage = p;
+        currentViewRef.current = { page: p, ratio: 0 };
+      }
+    }
+
+    if (closestPage !== currentPage) {
+      onPageChange?.(closestPage, totalPages);
+    }
+  }, [pdfDoc, totalPages, currentPage, onPageChange]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateReadingPosition();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [updateReadingPosition]);
+
+  // 5. Kunci Posisi Fokus Membaca saat Zoom Berubah (Reading Anchor Lock)
+  // Menjamin teks yang sedang dilihat TIDAK BERGESER ATAU MELONCAT KE HALAMAN LAIN
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container || prevZoomRef.current === zoom) {
+      prevZoomRef.current = zoom;
+      return;
+    }
+
+    const { page, ratio } = currentViewRef.current;
+    if (page >= 1 && page <= totalPages) {
+      const GAP = 16;
+      const eyelineY = customFocalYRef.current !== null
+        ? customFocalYRef.current
+        : container.clientHeight * 0.35;
+      customFocalYRef.current = null;
+
+      // Hitung koordinat dokumen baru untuk baris teks yang sedang dibaca
+      const newPageStride = displayPageHeight + GAP;
+      const targetYInDoc = (page - 1) * newPageStride + (ratio * displayPageHeight);
+      const newScrollTop = Math.max(0, targetYInDoc - eyelineY);
+
+      container.scrollTop = newScrollTop;
+    }
+
+    prevZoomRef.current = zoom;
+  }, [zoom, displayPageHeight, totalPages]);
+
+  // 6. Deteksi Zoom Manual: Pinch 2 Jari (Mobile) & Ctrl + Wheel (Desktop)
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
       const dist = Math.hypot(
@@ -143,16 +225,7 @@ export const ContinuousPdfViewer = ({
           if (el) {
             const rect = el.getBoundingClientRect();
             const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-
-            customAnchorRef.current = {
-              scrollY: el.scrollTop + midY,
-              scrollX: el.scrollLeft + midX,
-              fy: midY,
-              fx: midX,
-              oldHeight: displayPageHeightRef.current,
-              oldWidth: displayPageWidthRef.current
-            };
+            customFocalYRef.current = midY;
           }
 
           const factor = currentDist / touchStartDistRef.current;
@@ -179,18 +252,9 @@ export const ContinuousPdfViewer = ({
         e.preventDefault();
         const rect = el.getBoundingClientRect();
         const cursorY = e.clientY - rect.top;
-        const cursorX = e.clientX - rect.left;
+        customFocalYRef.current = cursorY;
 
-        customAnchorRef.current = {
-          scrollY: el.scrollTop + cursorY,
-          scrollX: el.scrollLeft + cursorX,
-          fy: cursorY,
-          fx: cursorX,
-          oldHeight: displayPageHeightRef.current,
-          oldWidth: displayPageWidthRef.current
-        };
-
-        // Perbesaran berkelanjutan (seamless) tanpa batas kelipatan 5%
+        // Perbesaran seamless berkelanjutan tanpa batasan kelipatan 5%
         const delta = -e.deltaY;
         const deltaZoom = delta * 0.15;
         setZoom((prev) => Math.min(300, Math.max(40, Math.round(prev + deltaZoom))));
@@ -201,156 +265,10 @@ export const ContinuousPdfViewer = ({
     return () => el.removeEventListener('wheel', handleWheel);
   }, [setZoom]);
 
-  // 5. Kunci Posisi Fokus Membaca (Zoom Anchor) saat Zoom Berubah
-  // Menjaga agar teks/paragraf yang sedang dilihat pengguna tidak bergeser atau loncat ke halaman lain
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container || !prevHeightRef.current || prevHeightRef.current === displayPageHeight) {
-      prevHeightRef.current = displayPageHeight;
-      prevWidthRef.current = displayPageWidth;
-      prevZoomRef.current = zoom;
-      return;
-    }
-
-    const oldH = prevHeightRef.current;
-    const oldW = prevWidthRef.current;
-    const newH = displayPageHeight;
-    const newW = displayPageWidth;
-
-    // Ambil koordinat anchor (dari gesture kursor mouse/pinch, atau default ke tengah layar baca)
-    const anchor = customAnchorRef.current || {
-      scrollY: container.scrollTop + container.clientHeight / 2,
-      scrollX: container.scrollLeft + container.clientWidth / 2,
-      fy: container.clientHeight / 2,
-      fx: container.clientWidth / 2,
-      oldHeight: oldH,
-      oldWidth: oldW
-    };
-    customAnchorRef.current = null;
-
-    const oldStride = (anchor.oldHeight || oldH) + 16;
-    const pageIndex = Math.max(0, Math.min(Math.max(0, totalPages - 1), Math.floor(anchor.scrollY / oldStride)));
-    const offsetInPage = anchor.scrollY - (pageIndex * oldStride);
-    const ratioInPage = (anchor.oldHeight || oldH) > 0 ? Math.min(1, Math.max(0, offsetInPage / (anchor.oldHeight || oldH))) : 0;
-
-    const newStride = newH + 16;
-    const newScrollY = (pageIndex * newStride) + (ratioInPage * newH);
-    container.scrollTop = Math.max(0, newScrollY - anchor.fy);
-
-    // Pertahankan posisi horizontal jika dokumen lebih lebar dari viewport
-    if (newW > container.clientWidth && (anchor.oldWidth || oldW) > 0) {
-      const ratioX = newW / (anchor.oldWidth || oldW);
-      container.scrollLeft = Math.max(0, (anchor.scrollX * ratioX) - anchor.fx);
-    }
-
-    prevHeightRef.current = newH;
-    prevWidthRef.current = newW;
-    prevZoomRef.current = zoom;
-  }, [zoom, displayPageHeight, displayPageWidth, totalPages]);
-
-  // 5. Scroll-Spy: Otomatis deteksi halaman yang sedang dibaca saat scroll ke bawah
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || !pdfDoc || totalPages === 0) return;
-
-    let ticking = false;
-
-    const checkVisiblePage = () => {
-      const containerRect = el.getBoundingClientRect();
-      const containerCenterY = containerRect.top + containerRect.height / 3;
-
-      let closestPage = 1;
-      let minDistance = Infinity;
-
-      for (let p = 1; p <= totalPages; p++) {
-        const pageEl = pageContainerRefs.current[p];
-        if (!pageEl) continue;
-
-        const rect = pageEl.getBoundingClientRect();
-        // Cek jika halaman ini melintasi garis baca atas/tengah
-        if (rect.top <= containerCenterY && rect.bottom >= containerCenterY) {
-          closestPage = p;
-          minDistance = 0;
-          break;
-        }
-
-        const distance = Math.abs(rect.top - containerCenterY);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestPage = p;
-        }
-      }
-
-      if (closestPage !== currentPage) {
-        onPageChange?.(closestPage, totalPages);
-      }
-      ticking = false;
-    };
-
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(checkVisiblePage);
-        ticking = true;
-      }
-    };
-
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, [pdfDoc, totalPages, currentPage, onPageChange]);
-
-  // 6. IntersectionObserver untuk Lazy Rendering Canvas Halaman
-  // Hanya me-render halaman yang terlihat atau berdekatan (rootMargin 400px)
-  useEffect(() => {
-    if (!pdfDoc || totalPages === 0) return;
-
-    const visiblePages = new Set();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const pageNum = Number(entry.target.getAttribute('data-page-number'));
-          if (!pageNum) return;
-
-          if (entry.isIntersecting) {
-            visiblePages.add(pageNum);
-          } else {
-            visiblePages.delete(pageNum);
-          }
-        });
-
-        // Update state halaman yang perlu dirender
-        setRenderedPages((prev) => {
-          const next = { ...prev };
-          let changed = false;
-
-          visiblePages.forEach((p) => {
-            if (!next[p]) {
-              next[p] = true;
-              changed = true;
-            }
-          });
-
-          return changed ? next : prev;
-        });
-      },
-      {
-        root: containerRef.current,
-        rootMargin: '400px 0px 400px 0px',
-        threshold: 0.01
-      }
-    );
-
-    for (let p = 1; p <= totalPages; p++) {
-      const el = pageContainerRefs.current[p];
-      if (el) observer.observe(el);
-    }
-
-    return () => observer.disconnect();
-  }, [pdfDoc, totalPages]);
-
   // 7. Render Halaman ke Canvas HTML5 Menggunakan PDF.js
   const renderPageCanvas = useCallback(
     async (pageNumber) => {
-      if (!pdfDoc || !renderedPages[pageNumber]) return;
+      if (!pdfDoc || pageNumber < 1 || pageNumber > totalPages) return;
       const canvas = canvasRefs.current[pageNumber];
       if (!canvas) return;
 
@@ -367,15 +285,13 @@ export const ContinuousPdfViewer = ({
         const page = await pdfDoc.getPage(pageNumber);
         const unscaledViewport = page.getViewport({ scale: 1.0 });
 
-        // Hitung skala rendering beresolusi tinggi (Retina / Sharpness)
-        const dpr = window.devicePixelRatio || 1;
+        // Hitung skala rendering beresolusi tinggi (Retina / Sharpness, dibatasi maks 2 agar hemat memori)
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const scale = (displayPageWidth / unscaledViewport.width) * dpr;
         const viewport = page.getViewport({ scale });
 
         canvas.width = Math.round(viewport.width);
         canvas.height = Math.round(viewport.height);
-        canvas.style.width = `${displayPageWidth}px`;
-        canvas.style.height = `${displayPageHeight}px`;
 
         const ctx = canvas.getContext('2d');
         const renderContext = {
@@ -394,25 +310,60 @@ export const ContinuousPdfViewer = ({
         delete renderTasksRef.current[pageNumber];
       }
     },
-    [pdfDoc, renderedPages, displayPageWidth, displayPageHeight]
+    [pdfDoc, totalPages, displayPageWidth]
   );
 
-  // Trigger render canvas saat renderedPages atau displayPageWidth berubah
-  // Debounce 120ms agar render berjalan cepat tanpa lag saat zooming aktif
+  // 8. IntersectionObserver untuk Lazy Rendering Canvas Halaman
+  useEffect(() => {
+    if (!pdfDoc || totalPages === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const pageNum = Number(entry.target.getAttribute('data-page-number'));
+          if (!pageNum) return;
+
+          if (entry.isIntersecting) {
+            setRenderedPages((prev) => {
+              if (prev[pageNum]) return prev;
+              return { ...prev, [pageNum]: true };
+            });
+            renderPageCanvas(pageNum);
+          }
+        });
+      },
+      {
+        root: containerRef.current,
+        rootMargin: '400px 0px 400px 0px',
+        threshold: 0.01
+      }
+    );
+
+    for (let p = 1; p <= totalPages; p++) {
+      const el = pageContainerRefs.current[p];
+      if (el) observer.observe(el);
+    }
+
+    return () => observer.disconnect();
+  }, [pdfDoc, totalPages, renderPageCanvas]);
+
+  // 9. Re-render Halaman Aktif saat Zoom Berubah (Cepat & Ringan)
   useEffect(() => {
     const timer = setTimeout(() => {
-      Object.keys(renderedPages).forEach((pageStr) => {
-        const pageNum = Number(pageStr);
-        if (renderedPages[pageNum]) {
-          renderPageCanvas(pageNum);
-        }
+      const activeP = currentViewRef.current.page || currentPage || 1;
+      const pagesToPrioritize = [activeP - 1, activeP, activeP + 1].filter(
+        (p) => p >= 1 && p <= totalPages
+      );
+
+      pagesToPrioritize.forEach((p) => {
+        renderPageCanvas(p);
       });
-    }, 120);
+    }, 80);
 
     return () => clearTimeout(timer);
-  }, [renderedPages, displayPageWidth, renderPageCanvas]);
+  }, [zoom, displayPageWidth, totalPages, currentPage, renderPageCanvas]);
 
-  // 8. Loncat ke Halaman yang Diminta (Smooth Scroll ke Halaman Tertentu)
+  // 10. Loncat ke Halaman Tertentu (Target Scroll Page)
   useEffect(() => {
     if (!pdfDoc || totalPages === 0 || !targetScrollPage) return;
     const timer = setTimeout(() => {
@@ -420,10 +371,11 @@ export const ContinuousPdfViewer = ({
         const pageEl = pageContainerRefs.current[targetScrollPage];
         if (pageEl) {
           pageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          currentViewRef.current = { page: targetScrollPage, ratio: 0 };
           onTargetScrollHandled?.();
         }
       }
-    }, 120);
+    }, 100);
     return () => clearTimeout(timer);
   }, [pdfDoc, targetScrollPage, totalPages, onTargetScrollHandled]);
 
@@ -450,42 +402,35 @@ export const ContinuousPdfViewer = ({
         touchAction: zoom > 100 ? 'pan-x pan-y' : 'pan-y pinch-zoom'
       }}
     >
-      {/* Tampilan Daftar Halaman yang Mengalir Vertikal (Continuous Scroll) */}
+      {/* Tampilan Lembar Dokumen Kanvas Tetap (Fixed Sheet Canvas) */}
       <div
         className="mx-auto flex flex-col items-center gap-4"
         style={{
           width: `${displayPageWidth}px`
         }}
       >
-        {pageNumbers.map((pageNum) => {
-          const isVisible = Boolean(renderedPages[pageNum]);
-
-          return (
-            <div
-              key={pageNum}
-              id={`pdf-page-${pageNum}`}
-              data-page-number={pageNum}
-              ref={(el) => (pageContainerRefs.current[pageNum] = el)}
-              className="relative shadow-md md:shadow-lg rounded-sm sm:rounded-md overflow-hidden bg-ui-card border border-ink-200/50 dark:border-ink-700/50"
+        {pageNumbers.map((pageNum) => (
+          <div
+            key={pageNum}
+            id={`pdf-page-${pageNum}`}
+            data-page-number={pageNum}
+            ref={(el) => (pageContainerRefs.current[pageNum] = el)}
+            className="relative shadow-md md:shadow-lg rounded-sm sm:rounded-md overflow-hidden bg-ui-card border border-ink-200/50 dark:border-ink-700/50"
+            style={{
+              width: `${displayPageWidth}px`,
+              height: `${displayPageHeight}px`
+            }}
+          >
+            <canvas
+              ref={(el) => (canvasRefs.current[pageNum] = el)}
+              className="block w-full h-full"
               style={{
                 width: `${displayPageWidth}px`,
                 height: `${displayPageHeight}px`
               }}
-            >
-              {isVisible ? (
-                <canvas
-                  ref={(el) => (canvasRefs.current[pageNum] = el)}
-                  className="block w-full h-full"
-                />
-              ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center bg-ink-50/60 dark:bg-ink-900/40 text-caption text-ink-400">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-600 border-t-transparent mb-2" />
-                  <span>Halaman {pageNum}</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
