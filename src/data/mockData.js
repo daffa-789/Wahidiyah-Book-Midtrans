@@ -1,72 +1,13 @@
-
-
 export const PAYMENT_METHODS = [
   {
-    category: "Bank Transfer",
-    options: [
-      {
-        id: "bri",
-        name: "Bank BRI",
-        icon: "bank",
-        logoUrl: "/payments/bri.svg",
-        color: "#00529C",
-        accountNo: "0021-01-082377-50-2",
-        accountName: "Yayasan Perjuangan Wahidiyah"
-      },
-      {
-        id: "seabank",
-        name: "SeaBank",
-        icon: "bank",
-        logoUrl: "/payments/seabank.svg",
-        color: "#F15A24",
-        accountNo: "9012-8823-7746-4017",
-        accountName: "Yayasan Perjuangan Wahidiyah"
-      },
-      {
-        id: "bca",
-        name: "Bank BCA",
-        icon: "bank",
-        logoUrl: "/payments/bca.svg",
-        color: "#003688",
-        accountNo: "822-019-2811",
-        accountName: "Yayasan Perjuangan Wahidiyah"
-      }
-    ]
-  },
-  {
-    category: "E-Wallet & QRIS",
+    category: "QRIS",
     options: [
       {
         id: "qris",
         name: "QRIS Midtrans",
         icon: "wallet",
         logoUrl: "/payments/qris.svg",
-        color: "#EA2127",
-
-      },
-      {
-        id: "gopay",
-        name: "GoPay",
-        icon: "wallet",
-        logoUrl: "/payments/gopay.svg",
-        color: "#00AED6",
-
-      },
-      {
-        id: "dana",
-        name: "DANA",
-        icon: "wallet",
-        logoUrl: "/payments/dana.svg",
-        color: "#118EEA",
-
-      },
-      {
-        id: "ovo",
-        name: "OVO",
-        icon: "wallet",
-        logoUrl: "/payments/ovo.svg",
-        color: "#4C3494",
-
+        color: "#EA2127"
       }
     ]
   }
@@ -94,4 +35,3 @@ export const FAQ_ITEMS = [
     answer: "Jika Anda mengalami kendala pada akun atau transaksi langganan, Anda dapat menghubungi tim kami melalui email support@bukuku.id atau WhatsApp Layanan Bantuan resmi. Tim kami siap membantu pada hari kerja pukul 08.00 - 17.00 WIB."
   }
 ];
-

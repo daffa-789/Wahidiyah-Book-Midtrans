@@ -26,7 +26,7 @@ export const usePaymentSlice = ({ patchUser }) => {
     period: '/bulan'
   });
 
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(PAYMENT_METHODS[1].options[0]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(PAYMENT_METHODS[0].options[0]);
   const [paymentPhone, setPaymentPhone] = useState('');
   const [paymentAgreed, setPaymentAgreed] = useState(false);
   const [lastPaymentResult, setLastPaymentResult] = useState(() => getStoredLastPayment());

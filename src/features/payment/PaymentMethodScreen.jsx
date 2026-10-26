@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Building2, Wallet } from 'lucide-react';
+import { CheckCircle2, Circle, Wallet } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { PAYMENT_METHODS } from '@data/mockData';
 import { AlreadySubscribedNotice } from './AlreadySubscribedNotice';
@@ -56,7 +56,7 @@ export const PaymentMethodScreen = () => {
           {PAYMENT_METHODS.map((cat, catIdx) => (
             <div key={catIdx}>
               <h3 className="text-xs font-bold text-ink-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                {cat.category === 'Bank Transfer' ? <Building2 className={controls.iconSm} /> : <Wallet className={controls.iconSm} />}
+                <Wallet className={controls.iconSm} />
                 <span>{cat.category}</span>
               </h3>
 
@@ -100,7 +100,7 @@ export const PaymentMethodScreen = () => {
                         <div>
                           <p className={`text-sm font-bold transition ${isSelected ? 'text-brand-800' : 'text-ink-900 group-hover:text-brand-800'}`}>{opt.name}</p>
                           <p className={typography.metaTight}>
-                            {cat.category === 'Bank Transfer' ? 'Transfer Otomatis' : 'Konfirmasi Instan'}
+                            Konfirmasi Instan via QRIS Midtrans
                           </p>
                         </div>
                       </div>
