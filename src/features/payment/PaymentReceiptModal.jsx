@@ -1,5 +1,6 @@
-import { X, Printer, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, Download, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { formatRupiah } from '@lib/formatUtils';
+import { downloadReceiptPdf } from '@lib/receiptPdf';
 
 export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
   if (!isOpen) return null;
@@ -13,15 +14,15 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
   const userName = user?.name || user?.fullName || 'Pengguna Wahidiyah';
   const userEmail = user?.email || '-';
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadPdf = () => {
+    downloadReceiptPdf(details, user);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg bg-ui-card rounded-3xl shadow-2xl border border-cream-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-cream-200 bg-cream-50 print:hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-cream-200 bg-cream-50">
           <div className="flex items-center gap-2 text-brand-900 font-bold text-sm">
             <ShieldCheck className="w-5 h-5 text-brand-700" />
             <span>Kwitansi Pembayaran Resmi</span>
@@ -36,7 +37,7 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
           </button>
         </div>
 
-        {/* Printable Receipt Body */}
+        {/* Receipt Body */}
         <div id="printable-receipt" className="p-6 sm:p-8 space-y-6 overflow-y-auto bg-ui-card text-ink-900">
           {/* Header Branding */}
           <div className="text-center pb-5 border-b-2 border-brand-800/20 space-y-1">
@@ -120,7 +121,7 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
         </div>
 
         {/* Modal Action Footer */}
-        <div className="p-4 bg-cream-50 border-t border-cream-200 flex items-center justify-between gap-3 print:hidden">
+        <div className="p-4 bg-cream-50 border-t border-cream-200 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={onClose}
@@ -130,11 +131,11 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
           </button>
           <button
             type="button"
-            onClick={handlePrint}
+            onClick={handleDownloadPdf}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-cream-50 text-xs font-bold shadow transition cursor-pointer"
           >
-            <Printer className="w-4 h-4" />
-            <span>Cetak Kwitansi / Simpan PDF</span>
+            <Download className="w-4 h-4" />
+            <span>Simpan Kwitansi PDF</span>
           </button>
         </div>
       </div>
