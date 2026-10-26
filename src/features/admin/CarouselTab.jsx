@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiJson, authHeaders } from '@lib/api';
-import { dateLabel, getTodayStr } from '@lib/date';
+import { dateLabel } from '@lib/date';
 import { withToast } from '@lib/withToast';
 import { layout, typography, controls } from '@lib/styles';
 
@@ -31,13 +31,6 @@ const periodLabel = (slide) => {
   return `Sampai ${dateLabel(slide.endsAt)}`;
 };
 
-const isCurrentlyShowing = (slide) => {
-  const today = getTodayStr();
-  if (!slide.isActive) return false;
-  if (slide.startsAt && slide.startsAt > today) return false;
-  if (slide.endsAt && slide.endsAt < today) return false;
-  return true;
-};
 
 export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionToken }) => {
   const [form, setForm] = useState(EMPTY_SLIDE_FORM);
@@ -133,45 +126,6 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
     ).finally(() => setIsSaving(false));
   };
 
-  const toggleActive = (slide) => {
-    setBusyId(slide.id);
-    return withToast(
-      async () => {
-        await apiJson(`/api/carousel/${encodeURIComponent(slide.id)}`, {
-          method: 'PUT',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ is_active: !slide.isActive })
-        });
-        await refreshCarousel();
-      },
-      'Status banner gagal diubah.',
-      slide.isActive ? 'Banner dinonaktifkan.' : 'Banner diaktifkan.'
-    ).finally(() => setBusyId(null));
-  };
-
-  const moveSlide = (slide, direction) => {
-    const ordered = [...slides].sort((a, b) => a.sortOrder - b.sortOrder);
-    const position = ordered.findIndex((item) => item.id === slide.id);
-    const neighbour = ordered[position + direction];
-    if (!neighbour) return undefined;
-
-    setBusyId(slide.id);
-    return withToast(
-      async () => {
-        const patch = (id, sortOrder) => apiJson(`/api/carousel/${encodeURIComponent(id)}`, {
-          method: 'PUT',
-          headers: { ...headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sort_order: sortOrder })
-        });
-        await Promise.all([
-          patch(slide.id, neighbour.sortOrder),
-          patch(neighbour.id, slide.sortOrder)
-        ]);
-        await refreshCarousel();
-      },
-      'Urutan banner gagal diubah.'
-    ).finally(() => setBusyId(null));
-  };
 
   const deleteSlide = (slide) => {
     if (!window.confirm(`Hapus banner “${slide.title}”?`)) return undefined;

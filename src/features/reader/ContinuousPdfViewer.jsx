@@ -23,7 +23,6 @@ export const ContinuousPdfViewer = ({
   // Dimensi dasar halaman PDF dalam point (default A4: 595.28 x 841.89)
   const [pageDimensions, setPageDimensions] = useState({ width: 595.28, height: 841.89 });
   const [containerWidth, setContainerWidth] = useState(800);
-  const [renderedPages, setRenderedPages] = useState({});
   const [loadError, setLoadError] = useState(null);
 
   // Status Render Task aktif untuk mencegah tabrakan render di canvas yang sama
@@ -324,10 +323,6 @@ export const ContinuousPdfViewer = ({
           if (!pageNum) return;
 
           if (entry.isIntersecting) {
-            setRenderedPages((prev) => {
-              if (prev[pageNum]) return prev;
-              return { ...prev, [pageNum]: true };
-            });
             renderPageCanvas(pageNum);
           }
         });

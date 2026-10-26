@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { AlertCircle, Eye, EyeOff, FileText, Lock, Mail, Phone, UserRound, X } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, FileText, Lock, Mail, UserRound, X } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';
 import { apiJson } from '@lib/api';

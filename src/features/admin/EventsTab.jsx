@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   BellRing,
   Calendar,
-  CalendarCheck,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -25,7 +24,7 @@ import {
 // R57 — `toast` dari sonner juga sudah tidak dipakai di sini; pelaporan
 // galat kini terpusat lewat `withToast`/`withToastSync`.
 import { apiJson, authHeaders, getStoredSession } from '@lib/api';
-import { withToast, withToastSync } from '@lib/withToast';
+import { withToast } from '@lib/withToast';
 import {
   MONTH_NAMES,
   DAY_NAMES,

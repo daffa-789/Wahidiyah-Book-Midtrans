@@ -104,7 +104,7 @@ export const loadMembershipUser = async (userId) => {
       .eq('id', userId)
       .maybeSingle();
     return supaUser || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };

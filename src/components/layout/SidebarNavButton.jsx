@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
   const Icon = item.icon;
   const isDanger = Boolean(item.danger);

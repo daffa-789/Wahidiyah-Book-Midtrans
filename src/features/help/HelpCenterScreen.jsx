@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { ChevronDown, Mail, MessageCircleQuestion, Clock } from 'lucide-react';
-import { useApp } from '@context/AppContext';
 import { FAQ_ITEMS } from '@data/mockData';
 import { layout, typography } from '@lib/styles';
 
 const CONTACT_EMAIL = 'support@bukuku.id';
 
 export const HelpCenterScreen = () => {
-  const { navigateTo } = useApp();
   const [expandedId, setExpandedId] = useState(FAQ_ITEMS[0]?.id ?? null);
 
   const toggleAccordion = (id) => setExpandedId((prev) => (prev === id ? null : id));

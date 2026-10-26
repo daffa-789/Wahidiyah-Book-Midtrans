@@ -34,7 +34,7 @@ const toBookResponse = (book) => ({
 
 booksRouter.get('/books', async (req, res) => {
   try {
-    const { search, category, sort } = req.query;
+    const { search, sort } = req.query;
     let query = supabaseServer.from('books').select(BOOK_FIELDS);
 
     if (search && typeof search === 'string') {
@@ -105,7 +105,7 @@ booksRouter.post('/books', requireAuth, requireAdmin, wrap(async (req, res) => {
 
 
 booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wrap(async (req, res) => {
-  const { title, subtitle, author, category, pages, is_locked, description } = req.body;
+  const { title, pages, is_locked } = req.body;
   const thumbnail = req.files?.thumbnail?.[0];
   const content = req.files?.content?.[0];
   const contentExtension = content ? path.extname(content.originalname).toLowerCase() : '';

@@ -85,9 +85,6 @@ const RequireAuth = ({ children }) => {
   return children;
 };
 
-// Alias untuk kompatibilitas
-const GuestOnly = RequireAuth;
-
 
 
 

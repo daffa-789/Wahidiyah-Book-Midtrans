@@ -2279,7 +2279,7 @@ export function parsePhoneNumber(rawPhone, fallbackCountry = DEFAULT_COUNTRY) {
         isValid: parsed.isValid()
       };
     }
-  } catch (err) {
+  } catch {
     // Lanjutkan ke heuristic fallback jika libphonenumber gagal
   }
 

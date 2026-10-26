@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { BookOpen, Lock, Sparkles } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';

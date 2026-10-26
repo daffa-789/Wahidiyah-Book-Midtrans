@@ -3,7 +3,6 @@ import { Menu, ArrowLeft } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 import { useApp } from '@context/AppContext';
 import { ThemeToggle } from '@ui/ThemeToggle';
-import { BrandMark } from '@ui/BrandMark';
 import { tabIdFromPath } from '@lib/navigation';
 import { SidebarContent } from '../layout/SidebarContent';
 import { LogoutConfirmDialog } from '../layout/LogoutConfirmDialog';

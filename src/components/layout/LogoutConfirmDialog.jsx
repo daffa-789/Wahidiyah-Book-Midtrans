@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import { Fragment } from 'react';
 import { LogOut } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 
