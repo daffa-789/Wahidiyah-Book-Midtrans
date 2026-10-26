@@ -35,7 +35,7 @@ import {
   resendVerificationOtp,
   verifyGoogleOAuthCode,
   findOrCreateGoogleUser
-} from '../services/auth.service.js';
+} from '../services/auth_service.js';
 
 /** Pemetaan seragam kegagalan tak terduga (database mati → 503, lainnya 500). */
 const replyAuthFailure = (res, error, { dbMessage = DB_DOWN_MESSAGE } = {}) => {

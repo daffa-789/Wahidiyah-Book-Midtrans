@@ -1,17 +1,14 @@
-
-
-import { healthRouter } from './health.routes.js';
-import { authRouter } from './auth.routes.js';
-import { booksRouter } from './books.routes.js';
-import { usersRouter } from './users.routes.js';
-import { transactionsRouter } from './transactions.routes.js';
-import { paymentsRouter } from './payments.routes.js';
-import { subscriptionsRouter } from './subscriptions.routes.js';
-import { eventsRouter } from './events.routes.js';
-import { carouselRouter } from './carousel.routes.js';
-import { adminRouter } from './admin.routes.js';
-import { notificationsRouter } from './notifications.routes.js';
-
+import { healthRouter } from './health_routes.js';
+import { authRouter } from './auth_routes.js';
+import { booksRouter } from './books_routes.js';
+import { usersRouter } from './users_routes.js';
+import { transactionsRouter } from './transactions_routes.js';
+import { paymentsRouter } from './payments_routes.js';
+import { subscriptionsRouter } from './subscriptions_routes.js';
+import { eventsRouter } from './events_routes.js';
+import { carouselRouter } from './carousel_routes.js';
+import { adminRouter } from './admin_routes.js';
+import { notificationsRouter } from './notifications_routes.js';
 
 const ROUTERS = [
   { path: '/api', router: healthRouter },       
@@ -26,7 +23,6 @@ const ROUTERS = [
   { path: '/api', router: notificationsRouter },
   { path: '/api', router: adminRouter }         
 ];
-
 
 export const mountRoutes = (app) => {
   for (const { path, router } of ROUTERS) {

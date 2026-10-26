@@ -20,7 +20,7 @@ import {
   getQrisStatus,
   midtransNotification,
   simulatePaid
-} from '../controllers/payment.controller.js';
+} from '../controllers/payment_controller.js';
 
 export const paymentsRouter = Router();
 

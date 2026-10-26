@@ -26,7 +26,7 @@ import {
   loadTransactionForViewer,
   resolveQrisStatus,
   simulateQrisSettlement
-} from '../services/payment.service.js';
+} from '../services/payment_service.js';
 import { TRANSACTION_PENDING_STATUS } from '../auth.js';
 
 

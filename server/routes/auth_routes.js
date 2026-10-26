@@ -23,7 +23,7 @@ import {
   resendVerification,
   resetPassword,
   verifyRegistration
-} from '../controllers/auth.controller.js';
+} from '../controllers/auth_controller.js';
 
 export const authRouter = Router();
 

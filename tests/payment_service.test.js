@@ -44,7 +44,7 @@ import {
   rejectTransaction,
   resolveQrisStatus,
   settleTransaction
-} from '../server/services/payment.service.js';
+} from '../server/services/payment_service.js';
 
 const stub = () => h.stub;
 

@@ -50,7 +50,7 @@ import {
   requestPasswordReset,
   resetPassword,
   resendVerificationOtp
-} from '../server/services/auth.service.js';
+} from '../server/services/auth_service.js';
 import { createOneTimeCode } from '../server/lib/oneTimeCode.js';
 
 const stub = () => h.stub;
