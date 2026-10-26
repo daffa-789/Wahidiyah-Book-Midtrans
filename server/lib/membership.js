@@ -80,7 +80,6 @@ export async function activatePaidMembership({
     plan_name: planName || 'Pro',
     price: Number(price) || 0,
     status: ACTIVE_SUBSCRIPTION_STATUS,
-    period,
     expires_at: expiresAt,
     ref_code: refCode,
     created_at: new Date().toISOString()

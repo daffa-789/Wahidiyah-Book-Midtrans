@@ -99,9 +99,10 @@ export const SubscriptionHistoryScreen = () => {
           refNo: selectedSub.ref || selectedSub.orderId,
           dateStr: formatWIB(selectedSub.createdAt),
           planName: selectedSub.planName || 'Paket Bulanan Pro',
-          amount: 25000,
-          adminFee: 0,
-          totalPaid: 25000
+          amount: selectedSub.rawPrice || 25000,
+          adminFee: selectedSub.adminFee || 0,
+          totalPaid: selectedSub.totalPaid || 25000,
+          periodStr: selectedSub.period || '1 Bulan Langganan Pro'
         } : null}
         user={user}
       />
