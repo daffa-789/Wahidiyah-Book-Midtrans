@@ -1,4 +1,4 @@
-import { BookOpen, Shield, Award } from 'lucide-react';
+import { Shield, Award } from 'lucide-react';
 import { layout } from '@lib/styles';
 
 export const AboutScreen = () => {
@@ -7,9 +7,6 @@ export const AboutScreen = () => {
       <div className={layout.contentCenter}>
 
         <div className="text-center my-4">
-          <div className="w-20 h-20 bg-gradient-to-tr from-brand-800 to-brand-900 rounded-3xl mx-auto flex items-center justify-center text-cream-50 shadow-lg shadow-brand-700/20 mb-3">
-            <BookOpen className="w-10 h-10 stroke-[2]" />
-          </div>
           <h3 className="text-xl font-bold text-ink-900">Buku Wahidiyah</h3>
           <p className="text-xs text-brand-800 font-semibold mt-0.5">Perpustakaan Digital Sholawat Wahidiyah</p>
         </div>

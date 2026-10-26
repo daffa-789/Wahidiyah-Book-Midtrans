@@ -19,7 +19,7 @@ export const SIDEBAR_SECTIONS = [
   {
     id: 'utama',
     title: 'Utama',
-    keys: ['home', 'calendar', 'subscription-history', 'pro', 'help-center', 'about']
+    keys: ['home', 'calendar', 'pro']
   },
   { id: 'akun', title: 'Akun', keys: ['profile', 'logout'] }
 ];

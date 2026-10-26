@@ -40,6 +40,10 @@ import {
 /** Pemetaan seragam kegagalan tak terduga (database mati → 503, lainnya 500). */
 const replyAuthFailure = (res, error, { dbMessage = DB_DOWN_MESSAGE } = {}) => {
   const isDbError = isDbDown(error);
+  logger.error('AUTH', 'Terjadi kegagalan proses otentikasi', {
+    pesan: error?.message,
+    code: error?.code
+  });
   return res.status(isDbError ? 503 : 500).json({
     success: false,
     message: isDbError ? dbMessage : authFailureMessage(error),

@@ -136,7 +136,7 @@ export const RegisterScreen = () => {
           </label>
 
           {error && <div role="alert" className="auth-alert"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
-          <button type="submit" disabled={isSubmitting} className="auth-primary-button">{isSubmitting ? <><span className="auth-spinner" />Mengirim kode…</> : 'Daftar & verifikasi email'}</button>
+          <button type="submit" disabled={isSubmitting} className="auth-primary-button">{isSubmitting ? <><span className="auth-spinner" />Mendaftar…</> : 'Daftar'}</button>
         </form>
 
         <div className="mt-6 border-t border-cream-200 pt-5 text-center text-sm text-ink-500">Sudah punya akun? <button type="button" onClick={() => navigateTo('login')} className="auth-link font-bold">Masuk</button></div>

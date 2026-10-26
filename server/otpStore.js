@@ -1,23 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,31 +6,16 @@ import { logger } from './logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 const FILE_STORE_PATH = path.resolve(__dirname, '..', '.otp-dev-store.json');
 
 let mode = 'unknown'; 
-
+let initPromise = null;
 
 const readFileStore = () => {
   try {
     const parsed = JSON.parse(fs.readFileSync(FILE_STORE_PATH, 'utf8'));
     return Array.isArray(parsed) ? parsed : [];
   } catch {
-    
-    
     return [];
   }
 };
@@ -58,7 +23,6 @@ const readFileStore = () => {
 const writeFileStore = (rows) => {
   fs.writeFileSync(FILE_STORE_PATH, JSON.stringify(rows, null, 2), 'utf8');
 };
-
 
 const isMissingTableError = (error) => {
   const text = `${error?.code || ''} ${error?.message || ''}`.toLowerCase();
@@ -72,46 +36,51 @@ const isMissingTableError = (error) => {
 
 export const initOtpStore = async () => {
   if (mode !== 'unknown') return mode;
+  if (initPromise) return initPromise;
 
-  const { error } = await supabaseServer.from('email_verifications').select('id').limit(1);
+  initPromise = (async () => {
+    try {
+      const { error } = await supabaseServer.from('email_verifications').select('id').limit(1);
 
-  if (!error) {
-    mode = 'table';
-    logger.ok('OTP', 'Penyimpanan kode OTP siap (tabel email_verifications)');
-    return mode;
-  }
+      if (!error) {
+        mode = 'table';
+        logger.ok('OTP', 'Penyimpanan kode OTP siap (tabel email_verifications)');
+        return mode;
+      }
 
-  if (!isMissingTableError(error)) {
-    
-    
-    throw new Error(`Gagal memeriksa tabel email_verifications: ${error.message}`);
-  }
+      if (!isMissingTableError(error)) {
+        throw new Error(`Gagal memeriksa tabel email_verifications: ${error.message}`);
+      }
 
-  
-  
-  
-  
-  
-  
-  
-  if (process.env.NODE_ENV !== 'development') {
-    throw new Error(
-      'Tabel email_verifications belum ada. Jalankan supabase_database/full_setup.sql ' +
-      'di Supabase SQL Editor. (Cadangan berkas hanya aktif saat NODE_ENV=development, ' +
-      'yaitu lewat `npm run dev`.)'
-    );
-  }
+      if (process.env.NODE_ENV !== 'development') {
+        throw new Error(
+          'Tabel email_verifications belum ada. Jalankan supabase_database/full_setup.sql ' +
+          'di Supabase SQL Editor. (Cadangan berkas hanya aktif saat NODE_ENV=development, ' +
+          'yaitu lewat `npm run dev`.)'
+        );
+      }
 
-  mode = 'file';
-  logger.warn('OTP', 'Tabel email_verifications belum ada — memakai penyimpanan berkas SEMENTARA', {
-    berkas: '.otp-dev-store.json',
-    catatan: 'Hanya untuk pengembangan. Jalankan supabase_database/full_setup.sql agar permanen.'
-  });
-  return mode;
+      mode = 'file';
+      logger.warn('OTP', 'Tabel email_verifications belum ada — memakai penyimpanan berkas SEMENTARA', {
+        berkas: '.otp-dev-store.json',
+        catatan: 'Hanya untuk pengembangan. Jalankan supabase_database/full_setup.sql agar permanen.'
+      });
+      return mode;
+    } finally {
+      initPromise = null;
+    }
+  })();
+
+  return initPromise;
 };
 
+export const ensureOtpStore = async () => {
+  if (mode !== 'unknown') return mode;
+  return await initOtpStore();
+};
 
 export const deleteOtpByEmailPurpose = async (email, purpose) => {
+  await ensureOtpStore();
   if (mode === 'table') {
     await supabaseServer.from('email_verifications').delete().eq('email', email).eq('purpose', purpose);
     return;
@@ -120,6 +89,7 @@ export const deleteOtpByEmailPurpose = async (email, purpose) => {
 };
 
 export const insertOtp = async ({ email, purpose, codeHash, payload, expiresAt }) => {
+  await ensureOtpStore();
   if (mode === 'table') {
     const { error } = await supabaseServer.from('email_verifications').insert({
       email, purpose, code_hash: codeHash, payload, expires_at: expiresAt
@@ -144,6 +114,7 @@ export const insertOtp = async ({ email, purpose, codeHash, payload, expiresAt }
 };
 
 export const findLatestOtp = async (email, purpose) => {
+  await ensureOtpStore();
   if (mode === 'table') {
     const { data } = await supabaseServer
       .from('email_verifications')
@@ -163,6 +134,7 @@ export const findLatestOtp = async (email, purpose) => {
 };
 
 export const incrementOtpAttempts = async (id) => {
+  await ensureOtpStore();
   if (mode === 'table') {
     const { data } = await supabaseServer
       .from('email_verifications')
@@ -185,6 +157,7 @@ export const incrementOtpAttempts = async (id) => {
 };
 
 export const deleteOtpById = async (id) => {
+  await ensureOtpStore();
   if (mode === 'table') {
     await supabaseServer.from('email_verifications').delete().eq('id', id);
     return;

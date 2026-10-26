@@ -13,6 +13,10 @@ import {
 import { apiNotFound, errorHandler } from '../server/middleware/errors.js';
 import { requestContext } from '../server/middleware/requestLog.js';
 import { mountRoutes } from '../server/routes/index.js';
+import { initOtpStore } from '../server/otpStore.js';
+
+// Pre-initialize OTP store in serverless environment
+initOtpStore().catch(() => {});
 
 const app = express();
 
