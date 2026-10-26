@@ -13,19 +13,24 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
   const totalPaid = Number(details?.totalPaid || (amount + adminFee));
   const userName = user?.name || user?.fullName || 'Pengguna Wahidiyah';
   const userEmail = user?.email || '-';
+  const userPhone = user?.phone || details?.phone || '';
 
   const handleDownloadPdf = () => {
     downloadReceiptPdf(details, user);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-ui-card rounded-3xl shadow-2xl border border-cream-200 overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-cream-200 bg-cream-50">
-          <div className="flex items-center gap-2 text-brand-900 font-bold text-sm">
-            <ShieldCheck className="w-5 h-5 text-brand-700" />
-            <span>Kwitansi Pembayaran Resmi</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-ink-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-ui-card rounded-3xl shadow-2xl border border-cream-200 overflow-hidden flex flex-col max-h-[92vh]">
+        {/* Top Brand Stripe */}
+        <div className="h-1.5 w-full bg-brand-800" />
+        <div className="h-0.5 w-full bg-gold-500" />
+
+        {/* Modal Topbar Controls */}
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-cream-200 bg-cream-50">
+          <div className="flex items-center gap-2 text-brand-900 font-bold text-xs sm:text-sm">
+            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-brand-700 shrink-0" />
+            <span>Kwitansi Pembayaran Resmi (Pratinjau)</span>
           </div>
           <button
             type="button"
@@ -37,86 +42,134 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
           </button>
         </div>
 
-        {/* Receipt Body */}
-        <div id="printable-receipt" className="p-6 sm:p-8 space-y-6 overflow-y-auto bg-ui-card text-ink-900">
-          {/* Header Branding */}
-          <div className="text-center pb-5 border-b-2 border-brand-800/20 space-y-1">
-            <div className="inline-flex items-center justify-center gap-2 text-brand-800 font-black text-xl tracking-tight">
-              <span>WAHIDIYAH BOOK</span>
+        {/* Receipt Content Body */}
+        <div className="p-6 sm:p-8 space-y-6 overflow-y-auto bg-ui-card text-ink-900 thin-scrollbar">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-5 border-b border-cream-200">
+            <div>
+              <h2 className="font-display font-black text-xl sm:text-2xl tracking-tight text-brand-900">
+                WAHIDIYAH BOOK
+              </h2>
+              <p className="text-xs text-ink-600 font-medium mt-0.5">
+                Perpustakaan Digital Ajaran Sholawat Wahidiyah
+              </p>
+              <p className="text-micro text-ink-400 mt-1">
+                https://wahidiyah-book.vercel.app • support@bukuku.id
+              </p>
             </div>
-            <p className="text-xs text-ink-500 font-medium">Perpustakaan Digital & Dokumen Pengamalan Wahidiyah</p>
-            <div className="pt-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-semantic-successLight text-semantic-success text-xs font-black tracking-wide border border-semantic-success/30">
-                <CheckCircle2 className="w-4 h-4 text-semantic-success" />
-                PEMBAYARAN LUNAS (SETTLED)
+
+            <div className="sm:text-right space-y-1.5">
+              <span className="inline-block font-display text-sm sm:text-base font-extrabold uppercase tracking-wider text-ink-800">
+                Kwitansi Resmi
               </span>
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-semantic-successLight text-semantic-success text-micro font-black tracking-wide border border-semantic-success/30">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-semantic-success shrink-0" />
+                  PEMBAYARAN LUNAS (SETTLED)
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Meta Information */}
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <p className="text-ink-500 font-medium">Nomor Kwitansi</p>
-              <p className="font-mono font-bold text-ink-800 text-sm mt-0.5">{refNo}</p>
+          {/* Metadata Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+            {/* Customer Box */}
+            <div className="p-4 rounded-2xl bg-cream-50/80 border border-cream-200 space-y-1.5">
+              <p className="text-micro font-bold uppercase tracking-wider text-ink-400">Diterbitkan Kepada:</p>
+              <p className="font-bold text-ink-900 text-sm">{userName}</p>
+              <p className="text-ink-600 text-xs">{userEmail}</p>
+              {userPhone && <p className="text-ink-500 text-micro">No. WhatsApp: {userPhone}</p>}
+              <p className="text-micro font-semibold text-brand-700 pt-0.5">Status Akun: Member Pro (Aktif)</p>
             </div>
-            <div className="text-right">
-              <p className="text-ink-500 font-medium">Waktu Transaksi</p>
-              <p className="font-bold text-ink-800 mt-0.5">{dateStr}</p>
-            </div>
-            <div>
-              <p className="text-ink-500 font-medium">Diterbitkan Untuk</p>
-              <p className="font-bold text-ink-800 mt-0.5">{userName}</p>
-              <p className="text-ink-500 text-micro">{userEmail}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-ink-500 font-medium">Metode Pembayaran</p>
-              <p className="font-bold text-brand-800 mt-0.5">QRIS Midtrans Core API</p>
+
+            {/* Transaction Box */}
+            <div className="p-4 rounded-2xl bg-cream-50/80 border border-cream-200 space-y-1.5">
+              <p className="text-micro font-bold uppercase tracking-wider text-ink-400">Informasi Transaksi:</p>
+              <div className="flex justify-between">
+                <span className="text-ink-500">Nomor Kwitansi:</span>
+                <span className="font-mono font-bold text-ink-800">{refNo}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-ink-500">Waktu Pembayaran:</span>
+                <span className="font-medium text-ink-800">{dateStr}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-ink-500">Metode Pembayaran:</span>
+                <span className="font-bold text-brand-800">QRIS Midtrans Core API</span>
+              </div>
             </div>
           </div>
 
           {/* Item Breakdown Table */}
-          <div className="border border-cream-300 rounded-2xl overflow-hidden">
+          <div className="border border-cream-300 rounded-2xl overflow-hidden shadow-xs">
             <table className="w-full text-xs">
-              <thead className="bg-cream-100 border-b border-cream-300 text-ink-600 font-bold">
+              <thead className="bg-brand-900 text-cream-50 font-bold">
                 <tr>
-                  <th className="px-4 py-2.5 text-left">Deskripsi Layanan</th>
-                  <th className="px-4 py-2.5 text-right">Jumlah</th>
+                  <th className="px-4 py-3 text-left w-12">No</th>
+                  <th className="px-4 py-3 text-left">Deskripsi Item / Layanan</th>
+                  <th className="px-4 py-3 text-left hidden sm:table-cell">Masa Aktif</th>
+                  <th className="px-4 py-3 text-right">Harga</th>
+                  <th className="px-4 py-3 text-right">Subtotal</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-cream-200">
+              <tbody className="divide-y divide-cream-200 bg-ui-card">
                 <tr>
-                  <td className="px-4 py-3">
-                    <p className="font-bold text-ink-800">{planName}</p>
-                    <p className="text-micro text-ink-500">Akses Penuh Seluruh Kitab & Dokumen Pro (30 Hari)</p>
+                  <td className="px-4 py-3.5 text-ink-400 font-mono">01</td>
+                  <td className="px-4 py-3.5">
+                    <p className="font-bold text-ink-900 text-sm sm:text-xs">{planName}</p>
+                    <p className="text-micro text-ink-500 mt-0.5">Akses Penuh Seluruh Kitab & Dokumen Pro</p>
                   </td>
-                  <td className="px-4 py-3 text-right font-bold text-ink-800">
-                    {formatRupiah(amount)}
-                  </td>
+                  <td className="px-4 py-3.5 text-ink-600 hidden sm:table-cell">30 Hari</td>
+                  <td className="px-4 py-3.5 text-right font-medium text-ink-700">{formatRupiah(amount)}</td>
+                  <td className="px-4 py-3.5 text-right font-bold text-ink-900">{formatRupiah(amount)}</td>
                 </tr>
+
                 {adminFee > 0 && (
-                  <tr>
-                    <td className="px-4 py-2.5 text-ink-500">Biaya Administrasi & Gateway</td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-ink-700">
-                      {formatRupiah(adminFee)}
+                  <tr className="bg-cream-50/50">
+                    <td className="px-4 py-3 text-ink-400 font-mono">02</td>
+                    <td className="px-4 py-3">
+                      <p className="font-bold text-ink-800">Biaya Administrasi & Gateway QRIS</p>
                     </td>
+                    <td className="px-4 py-3 text-ink-600 hidden sm:table-cell">1x Transaksi</td>
+                    <td className="px-4 py-3 text-right font-medium text-ink-700">{formatRupiah(adminFee)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-ink-900">{formatRupiah(adminFee)}</td>
                   </tr>
                 )}
               </tbody>
-              <tfoot className="bg-brand-50 border-t-2 border-brand-800/20">
-                <tr>
-                  <td className="px-4 py-3 font-black text-brand-900 text-sm">TOTAL PEMBAYARAN</td>
-                  <td className="px-4 py-3 text-right font-black text-brand-900 text-base">
-                    {formatRupiah(totalPaid)}
-                  </td>
-                </tr>
-              </tfoot>
             </table>
           </div>
 
-          {/* Legal / Notes */}
-          <div className="pt-2 text-center text-micro text-ink-500 space-y-1">
-            <p>Bukti pembayaran ini diterbitkan secara elektronik dan sah tanpa tanda tangan basah.</p>
-            <p className="font-mono text-ink-400">ID Transaksi Terverifikasi Real Midtrans</p>
+          {/* Summary Block */}
+          <div className="flex justify-end">
+            <div className="w-full sm:w-72 space-y-2">
+              <div className="flex justify-between text-xs text-ink-600 px-1">
+                <span>Subtotal Layanan:</span>
+                <span className="font-medium text-ink-800">{formatRupiah(amount)}</span>
+              </div>
+              {adminFee > 0 && (
+                <div className="flex justify-between text-xs text-ink-600 px-1">
+                  <span>Biaya Gateway QRIS:</span>
+                  <span className="font-medium text-ink-800">{formatRupiah(adminFee)}</span>
+                </div>
+              )}
+              <div className="p-3.5 rounded-2xl bg-brand-900 text-cream-50 flex items-center justify-between shadow-sm">
+                <span className="text-xs font-bold uppercase tracking-wider">Total Pembayaran:</span>
+                <span className="font-display font-black text-base">{formatRupiah(totalPaid)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Official Verification Stamp Box */}
+          <div className="p-4 rounded-2xl bg-semantic-successLight/60 border border-semantic-success/20 flex items-start gap-3.5 text-xs">
+            <div className="w-8 h-8 rounded-full bg-semantic-success text-cream-50 flex items-center justify-center shrink-0 shadow-xs font-bold text-sm">
+              ✓
+            </div>
+            <div className="min-w-0 space-y-0.5">
+              <p className="font-bold text-brand-950 text-xs">Bukti Pembayaran Sah & Diverifikasi Gateway Resmi</p>
+              <p className="text-ink-600 text-micro leading-relaxed">
+                Dokumen ini merupakan tanda terima digital resmi yang sah menurut UU ITE No. 11/2008 Pasal 5. ID Transaksi: <span className="font-mono font-bold text-ink-800">{refNo}</span>.
+              </p>
+            </div>
           </div>
         </div>
 
