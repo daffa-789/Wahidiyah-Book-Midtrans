@@ -62,3 +62,4 @@ screenshots-verifikasi/
 docs/visual-flows/screenshots-verifikasi/
 __pycache__/
 *.pyc
+.vercel
