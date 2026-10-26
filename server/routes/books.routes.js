@@ -88,17 +88,14 @@ booksRouter.post('/books', requireAuth, requireAdmin, wrap(async (req, res) => {
     return badRequest(res, parsed.error.issues[0]?.message || 'Input buku tidak valid');
   }
 
+  const { title, pages, is_locked, cover_url } = parsed.data;
   const id = generateId('buku');
   const { error } = await supabaseServer.from('books').insert({
     id,
     title: title.trim(),
     pages: Number(pages) || 1,
-    is_locked: is_locked === 'true' || is_locked === true || is_locked === 1,
-    cover_url: coverUrl,
-    content_url: `data:${canonicalContentMime};base64,${content.buffer.toString('base64')}`,
-    content_name: content.originalname,
-    content_extension: extension,
-    content_size: content.size,
+    is_locked: Boolean(is_locked),
+    cover_url: cover_url || null,
   });
   if (error) throw error;
 

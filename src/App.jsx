@@ -60,19 +60,17 @@ const AuthBoot = () => (
 
 
 
-const GuestOnly = ({ children }) => {
+/**
+ * RequireAuth (sebelumnya GuestOnly): Memastikan pengguna sudah terautentikasi (login).
+ * Jika belum login, rute diarahkan ke /login dan lokasi asal disimpan untuk pengalihan pasca-login.
+ */
+const RequireAuth = ({ children }) => {
   const { isLoggedIn, authReady, rememberIntendedLocation } = useApp();
   const location = useLocation();
   const intendedPath = `${location.pathname}${location.search || ''}`;
-  
-  
-  
-  
-  
+
   const wasAuthorizedHereRef = useRef(false);
 
-  
-  
   useEffect(() => {
     if (isLoggedIn) {
       wasAuthorizedHereRef.current = true;
@@ -86,6 +84,9 @@ const GuestOnly = ({ children }) => {
   if (!isLoggedIn) return <Navigate to="/login" replace />;
   return children;
 };
+
+// Alias untuk kompatibilitas
+const GuestOnly = RequireAuth;
 
 
 
@@ -118,9 +119,9 @@ const authPage = (node) => (
 
 
 const Shell = ({ children }) => (
-  <GuestOnly>
+  <RequireAuth>
     <Framed>{children}</Framed>
-  </GuestOnly>
+  </RequireAuth>
 );
 
 
@@ -219,7 +220,7 @@ function App() {
 
         
         
-        <Route path="/reader" element={<UserOnly><GuestOnly><PdfReaderScreen /></GuestOnly></UserOnly>} />
+        <Route path="/reader" element={<UserOnly><RequireAuth><PdfReaderScreen /></RequireAuth></UserOnly>} />
 
         
         <Route path="/pro" element={shellPage(<ProScreen />)} />

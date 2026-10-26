@@ -177,7 +177,6 @@ CREATE POLICY "Public Read Active Carousel" ON public.carousel_slides
         AND (starts_at IS NULL OR starts_at <= CURRENT_DATE)
         AND (ends_at IS NULL OR ends_at >= CURRENT_DATE)
     );
-CREATE POLICY "Public Read Users" ON public.users FOR SELECT USING (true);
 
 DO $$
 BEGIN
