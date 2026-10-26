@@ -1,5 +1,3 @@
-
-
 import { Router } from 'express';
 import { supabaseServer } from '../db.js';
 import {
@@ -27,9 +25,9 @@ import {
   toRefCode
 } from '../lib/membership.js';
 import { isOneOf, toBoundedInt } from '../lib/validate.js';
+import { paymentRateLimiter } from '../middleware/security.js';
 
 export const transactionsRouter = Router();
-
 
 transactionsRouter.get('/transactions', requireAuth, requireAdmin, wrap(async (req, res) => {
   let query = supabaseServer
@@ -52,13 +50,10 @@ transactionsRouter.get('/transactions', requireAuth, requireAdmin, wrap(async (r
   });
 }));
 
-
 transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wrap(async (req, res) => {
   const { id } = req.params;
   const { action } = req.body; 
 
-  
-  
   if (!isOneOf(action, ['approve', 'reject'])) {
     return badRequest(res, 'Aksi harus "approve" atau "reject".');
   }
@@ -120,8 +115,7 @@ transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wr
   });
 }));
 
-
-transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
+transactionsRouter.post('/transactions', paymentRateLimiter, requireAuth, async (req, res) => {
   const body = req.body || {};
 
   /* VULN-06: nominal, nama paket, dan biaya layanan dibaca dari katalog
@@ -136,8 +130,6 @@ transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
     await settleExpiredMembership(req.user.id);
     const membership = (await loadMembershipUser(req.user.id)) || req.user;
 
-    
-    
     const conflict = activeSubscriptionConflict(membership);
     if (conflict) {
       return res.json({
@@ -162,8 +154,6 @@ transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
       status: TRANSACTION_PENDING_STATUS
     });
 
-    
-    
     res.status(202).json({
       success: true,
       pendingVerification: true,
@@ -188,5 +178,3 @@ transactionsRouter.post('/transactions', requireAuth, async (req, res) => {
     });
   }
 });
-
-

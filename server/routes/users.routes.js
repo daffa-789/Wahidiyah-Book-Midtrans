@@ -80,6 +80,10 @@ usersRouter.put('/users/:id/role', requireAuth, requireAdmin, wrap(async (req, r
   const { id } = req.params;
   const { role } = req.body;
 
+  if (id === req.user.id && role !== 'admin') {
+    return badRequest(res, 'Anda tidak dapat mencabut hak akses admin akun sendiri.');
+  }
+
   if (!['user', 'admin'].includes(role)) {
     return badRequest(res, 'Role harus user atau admin');
   }
@@ -125,6 +129,10 @@ usersRouter.post('/users', requireAuth, requireAdmin, wrap(async (req, res) => {
     return badRequest(res, 'Nama dan email wajib diisi');
   }
 
+  if (password && String(password).length < 8) {
+    return badRequest(res, 'Password minimal 8 karakter');
+  }
+
   const normalizedEmail = normalizeEmail(email);
   const { data: existing } = await supabaseServer
     .from('users')
@@ -166,16 +174,15 @@ usersRouter.delete('/users/:id', requireAuth, requireAdmin, wrap(async (req, res
     return badRequest(res, 'Anda tidak dapat menghapus akun sendiri.');
   }
 
-  const { data: existing } = await supabaseServer
+  const { data, error } = await supabaseServer
     .from('users')
-    .select('id')
+    .delete()
     .eq('id', id)
-    .maybeSingle();
-  if (!existing) {
+    .select('id');
+  if (error) throw error;
+  if (!data || data.length === 0) {
     return notFound(res, 'Pengguna tidak ditemukan');
   }
-
-  const { error } = await supabaseServer.from('users').delete().eq('id', id);
   if (error) throw error;
   res.json({ success: true, message: 'Pengguna berhasil dihapus' });
 }));

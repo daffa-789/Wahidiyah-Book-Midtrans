@@ -1,11 +1,8 @@
-
-
 import { Router } from 'express';
 import { supabaseServer } from '../db.js';
 import { requireAdmin, requireAuth } from '../auth.js';
 import { wrap } from '../lib/http.js';
 import { ACTIVE_SUBSCRIPTION_STATUS } from '../lib/membership.js';
-
 
 const MAX_LOG_LIMIT = 200;
 const DEFAULT_LOG_LIMIT = 50;
@@ -14,16 +11,17 @@ export const adminRouter = Router();
 
 const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
 
-
 adminRouter.get('/admin/logs', requireAuth, requireAdmin, wrap(async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || DEFAULT_LOG_LIMIT, MAX_LOG_LIMIT);
   const logs = [];
 
-  const { data: subscriptions } = await supabaseServer
+  const { data: subscriptions, error: subError } = await supabaseServer
     .from('subscriptions')
     .select('id, user_id, plan_name, status, price, created_at')
     .order('created_at', { ascending: false })
     .limit(limit);
+
+  if (subError) throw subError;
 
   (subscriptions || []).forEach((row) => {
     logs.push({
@@ -35,11 +33,13 @@ adminRouter.get('/admin/logs', requireAuth, requireAdmin, wrap(async (req, res) 
     });
   });
 
-  const { data: users } = await supabaseServer
+  const { data: users, error: userError } = await supabaseServer
     .from('users')
     .select('id, name, email, login_method, created_at')
     .order('created_at', { ascending: false })
     .limit(limit);
+
+  if (userError) throw userError;
 
   (users || []).forEach((row) => {
     logs.push({

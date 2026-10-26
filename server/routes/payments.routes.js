@@ -1,4 +1,3 @@
-
 /**
  * Route Layer — Modul Pembayaran (Fase 2 roadmap arsitektur).
  *
@@ -13,7 +12,7 @@ import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../auth.js';
 import { notFound, wrap } from '../lib/http.js';
 import { isPaymentSimulationAllowed } from '../config.js';
-import { qrisStatusRateLimiter } from '../middleware/security.js';
+import { paymentRateLimiter, qrisStatusRateLimiter } from '../middleware/security.js';
 import {
   cancelQris,
   createQrisCharge,
@@ -25,16 +24,6 @@ import {
 
 export const paymentsRouter = Router();
 
-
-const paymentRateLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 20,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { success: false, message: 'Terlalu banyak percobaan pembayaran. Coba lagi dalam 5 menit.' }
-});
-
-
 const qrImageRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
@@ -42,7 +31,6 @@ const qrImageRateLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Terlalu banyak permintaan kode QR. Tunggu sebentar.' }
 });
-
 
 /* Gerbang dievaluate SEBELUM requireAuth supaya rute ini benar-benar tidak
  * ada (404) saat flag opt-in mati — termasuk bagi pengunjung yang belum
@@ -52,7 +40,6 @@ const requirePaymentSimulation = (req, res, next) => {
   if (isPaymentSimulationAllowed(process.env)) return next();
   return notFound(res, 'Rute tidak tersedia.');
 };
-
 
 paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(createQrisCharge));
 

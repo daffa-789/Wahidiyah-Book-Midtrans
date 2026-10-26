@@ -12,6 +12,7 @@ import {
 import { useApp } from '@context/AppContext';
 import { apiJson, apiRequest, authHeaders } from '@lib/api';
 import { ContinuousPdfViewer } from './ContinuousPdfViewer';
+import { sanitizeHtml } from '@lib/sanitizeHtml';
 
 const TEXT_TYPES = new Set(['txt', 'md', 'csv', 'rtf']);
 const PDF_TYPES = new Set(['pdf']);
@@ -140,7 +141,7 @@ export const PdfReaderScreen = () => {
         .then((res) => {
           if (cancelled) return;
           if (res?.html) {
-            setDocHtml(res.html);
+            setDocHtml(sanitizeHtml(res.html));
             setContentStatus('ready');
           } else if (res?.text) {
             setTextContent(res.text);

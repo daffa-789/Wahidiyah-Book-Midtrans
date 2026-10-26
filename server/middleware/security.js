@@ -1,5 +1,3 @@
-
-
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -49,7 +47,6 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: AUTH_RATE_LIMIT.message,
-
   keyGenerator: (req) => ipKeyGenerator(req.ip || 'unknown')
 });
 
@@ -88,4 +85,12 @@ export const qrisStatusRateLimiter = rateLimit({
   legacyHeaders: false,
   message: QRIS_STATUS_RATE_LIMIT.message,
   keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip || 'unknown')
+});
+
+export const paymentRateLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak percobaan transaksi atau pembayaran. Coba lagi dalam 5 menit.' }
 });

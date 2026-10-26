@@ -18,6 +18,7 @@ import { toDataUrl, toWebp } from '../lib/images.js';
 import { matchesContentExtension, sniffDataUrlImage, sniffImageMime } from '../lib/sniff.js';
 import { BOOK_FIELDS, CONTENT_EXTENSIONS, CONTENT_MIME_BY_EXTENSION } from '../lib/constants.js';
 import { bookInputSchema, parseBooleanFlag } from '../lib/validate.js';
+import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 import { uploadBookFiles } from '../middleware/uploads.js';
 
 export const booksRouter = Router();
@@ -226,7 +227,8 @@ booksRouter.get('/books/:id/html', requireAuth, wrap(async (req, res) => {
   if (ext === 'docx' || ext === 'doc') {
     try {
       const conversion = await mammoth.convertToHtml({ buffer });
-      return res.json({ success: true, html: conversion.value, type: 'docx' });
+      const safeHtml = sanitizeHtml(conversion.value);
+      return res.json({ success: true, html: safeHtml, type: 'docx' });
     } catch {
       return res.status(500).json({ success: false, message: 'Gagal mengonversi dokumen Word' });
     }
@@ -326,18 +328,11 @@ booksRouter.put('/books/:id', requireAuth, requireAdmin, uploadBookFiles, wrap(a
 booksRouter.delete('/books/:id', requireAuth, requireAdmin, wrap(async (req, res) => {
   const { id } = req.params;
 
-  
-  
-  const { data: existing } = await supabaseServer
-    .from('books')
-    .select('id')
-    .eq('id', id)
-    .maybeSingle();
-  if (!existing) {
+  const { data, error } = await supabaseServer.from('books').delete().eq('id', id).select('id');
+  if (error) throw error;
+  if (!data?.length) {
     return notFound(res, 'Buku tidak ditemukan');
   }
 
-  const { error } = await supabaseServer.from('books').delete().eq('id', id);
-  if (error) throw error;
   res.json({ success: true, message: 'Buku berhasil dihapus' });
 }));
