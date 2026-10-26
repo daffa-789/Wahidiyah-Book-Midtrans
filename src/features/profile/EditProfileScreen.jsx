@@ -96,27 +96,6 @@ export const EditProfileScreen = () => {
     <div className="min-h-[640px] flex flex-col px-4 sm:px-6 py-6 sm:py-8 bg-cream-50 page-transition pb-24 md:pb-12">
       <div className="mx-auto w-full max-w-content-narrow space-y-6">
 
-        {/* Tombol Back Desktop (pada mobile sudah ada di sticky header) */}
-        <div className="hidden md:flex items-center -mb-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                navigateTo('home');
-              }
-            }}
-            className="inline-flex items-center gap-2 text-ink-800 hover:text-ink-900 active:opacity-75 cursor-pointer -ml-1 py-1 px-2.5 rounded-xl transition hover:bg-cream-200"
-            aria-label="Kembali ke Beranda"
-          >
-            <ArrowLeft className="w-5 h-5 text-ink-700" strokeWidth={2.2} />
-            <span className="text-body font-bold text-ink-900">
-              Profil
-            </span>
-          </button>
-        </div>
-
         {/* 1. Data Akun (Paling Atas) */}
         <div className="space-y-2">
           <h2 className="text-caption font-bold uppercase tracking-wider text-ink-400 px-1">

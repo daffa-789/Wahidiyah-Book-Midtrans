@@ -80,48 +80,7 @@ const DeviceFrameBase = ({ children }) => {
         </div>
       </aside>
 
-      {/* Header Mobile */}
-      {isAdmin ? (
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 py-2.5 backdrop-blur-md md:hidden">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              className="flex h-11 w-11 items-center justify-center rounded-md text-ink-700 transition-colors duration-200 hover:bg-cream-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer"
-              aria-label="Buka menu navigasi"
-            >
-              <Menu className="h-5 w-5" strokeWidth={2} />
-            </button>
-            <span className="font-display text-lead font-bold tracking-tight text-ink-900">
-              Panel Admin
-            </span>
-          </div>
 
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-          </div>
-        </header>
-      ) : SUBPAGE_TITLES[currentScreen] ? (
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 py-2.5 backdrop-blur-md md:hidden">
-          <button
-            type="button"
-            onClick={() => {
-              if (window.history.length > 1) {
-                window.history.back();
-              } else {
-                navigateTo(currentScreen === 'profile-edit' || currentScreen === 'profile' ? 'home' : 'profile-edit');
-              }
-            }}
-            className="flex items-center gap-2 text-ink-800 hover:text-ink-900 active:opacity-75 cursor-pointer -ml-1 py-1 px-2 rounded-xl transition"
-            aria-label="Kembali"
-          >
-            <ArrowLeft className="w-5 h-5 text-ink-700" strokeWidth={2.2} />
-            <span className="text-body font-bold text-ink-900">
-              {SUBPAGE_TITLES[currentScreen]}
-            </span>
-          </button>
-        </header>
-      ) : null}
 
       {/* Drawer Menu Mobile */}
       <Transition show={mobileMenuOpen} as={Fragment}>
@@ -179,6 +138,52 @@ const DeviceFrameBase = ({ children }) => {
           sidebarCollapsed ? 'md:ml-[68px]' : 'md:ml-[218px]'
         }`}
       >
+        {/* Header Admin (khusus mobile) */}
+        {isAdmin && (
+          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 py-2.5 backdrop-blur-md md:hidden">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="flex h-11 w-11 items-center justify-center rounded-md text-ink-700 transition-colors duration-200 hover:bg-cream-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer"
+                aria-label="Buka menu navigasi"
+              >
+                <Menu className="h-5 w-5" strokeWidth={2} />
+              </button>
+              <span className="font-display text-lead font-bold tracking-tight text-ink-900">
+                Panel Admin
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+            </div>
+          </header>
+        )}
+
+        {/* Header Subpage dengan Tombol Kembali (Mobile, Tablet, & Desktop) */}
+        {!isAdmin && SUBPAGE_TITLES[currentScreen] && (
+          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-cream-300 bg-cream-50/95 px-4 sm:px-6 py-2.5 sm:py-3.5 backdrop-blur-md">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  navigateTo(currentScreen === 'profile-edit' || currentScreen === 'profile' ? 'home' : 'profile-edit');
+                }
+              }}
+              className="flex items-center gap-2 text-ink-800 hover:text-ink-900 active:opacity-75 cursor-pointer -ml-1 py-1 px-2.5 rounded-xl transition hover:bg-cream-200/60"
+              aria-label="Kembali"
+            >
+              <ArrowLeft className="w-5 h-5 text-ink-700" strokeWidth={2.2} />
+              <span className="text-body font-bold text-ink-900">
+                {SUBPAGE_TITLES[currentScreen]}
+              </span>
+            </button>
+          </header>
+        )}
+
         <main className="flex w-full flex-1 flex-col">
           <div className="relative flex w-full flex-1 flex-col bg-cream-50 pb-20 md:pb-0">{children}</div>
         </main>
