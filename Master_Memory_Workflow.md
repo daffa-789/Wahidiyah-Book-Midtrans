@@ -22,20 +22,21 @@
 ## 📑 Daftar Isi
 1. [Ringkasan Eksekutif & Tech Stack](#1-ringkasan-eksekutif--tech-stack)
 2. [Fitur Unggulan Sistem](#2-fitur-unggulan-sistem)
-3. [Arsitektur Sistem (Modular Layered Monolith & Single-Port Architecture)](#3-arsitektur-sistem-modular-layered-monolith--single-port-architecture)
-4. [Spesifikasi Lengkap REST API (/api/*)](#4-spesifikasi-lengkap-rest-api-api)
-5. [Mekanisme & Alur Pembayaran Real Midtrans QRIS](#5-mekanisme--alur-pembayaran-real-midtrans-qris)
-6. [Arsitektur Multi-Provider WhatsApp Gateway](#6-arsitektur-multi-provider-whatsapp-gateway)
-7. [Panduan Setup & Skema Database Supabase Cloud](#7-panduan-setup--skema-database-supabase-cloud)
-8. [Standar Keamanan Sistem (30 Indikator Software Quality & Security Hardening)](#8-standar-keamanan-sistem-30-indikator-software-quality--security-hardening)
-9. [Panduan Pengembangan & Penambahan Fitur Baru](#9-panduan-pengembangan--penambahan-fitur-baru)
-10: [Panduan Akademik & Integrasi Sitasi Zotero SINTA](#10-panduan-akademik--integrasi-sitasi-zotero-sinta)
-11. [Prasyarat & Konfigurasi Lingkungan (.env)](#11-prasyarat--konfigurasi-lingkungan-env)
-12. [Panduan Instalasi & Katalog NPM Scripts](#12-panduan-instalasi--katalog-npm-scripts)
-13. [Struktur Direktori Repositori Terpadu](#13-struktur-direktori-repositori-terpadu)
-14. [Histori Rilis & Rekam Jejak Kerja (R40–R70)](#14-histori-rilis--rekam-jejak-kerja-r40r70)
-15. [Roadmap & Rencana Pengembangan Mendatang](#15-roadmap--rencana-pengembangan-mendatang)
-16. [Informasi Pengembang & Identitas Skripsi](#16-informasi-pengembang--identitas-skripsi)
+3. [Arsitektur Sistem & Rekayasa Perangkat Lunak (Modular Layered Monolith)](#3-arsitektur-sistem--rekayasa-perangkat-lunak-modular-layered-monolith)
+4. [Spesifikasi Lengkap Design System & Standar Visual UI](#4-spesifikasi-lengkap-design-system--standar-visual-ui)
+5. [Spesifikasi Lengkap REST API (/api/*)](#5-spesifikasi-lengkap-rest-api-api)
+6. [Mekanisme & Alur Pembayaran Real Midtrans QRIS](#6-mekanisme--alur-pembayaran-real-midtrans-qris)
+7. [Arsitektur Multi-Provider WhatsApp Gateway](#7-arsitektur-multi-provider-whatsapp-gateway)
+8. [Panduan Setup & Skema Database Supabase Cloud](#8-panduan-setup--skema-database-supabase-cloud)
+9. [Standar Keamanan Sistem (30 Indikator Software Quality & Security Hardening)](#9-standar-keamanan-sistem-30-indikator-software-quality--security-hardening)
+10. [Panduan Pengembangan & Penambahan Fitur Baru](#10-panduan-pengembangan--penambahan-fitur-baru)
+11. [Panduan Akademik & Integrasi Sitasi Zotero SINTA](#11-panduan-akademik--integrasi-sitasi-zotero-sinta)
+12. [Prasyarat & Konfigurasi Lingkungan (.env)](#12-prasyarat--konfigurasi-lingkungan-env)
+13. [Panduan Instalasi & Katalog NPM Scripts](#13-panduan-instalasi--katalog-npm-scripts)
+14. [Struktur Direktori Repositori Terpadu](#14-struktur-direktori-repositori-terpadu)
+15. [Histori Rilis & Rekam Jejak Kerja (R40–R70)](#15-histori-rilis--rekam-jejak-kerja-r40r70)
+16. [Roadmap & Rencana Pengembangan Mendatang](#16-roadmap--rencana-pengembangan-mendatang)
+17. [Informasi Pengembang & Identitas Skripsi](#17-informasi-pengembang--identitas-skripsi)
 
 ---
 
@@ -115,7 +116,7 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Modular Layered Mo
 
 ---
 
-## 3. Arsitektur Sistem (Modular Layered Monolith & Single-Port Architecture)
+## 3. Arsitektur Sistem & Rekayasa Perangkat Lunak (Modular Layered Monolith)
 
 Aplikasi dibangun menggunakan prinsip **Modular Layered Monolith (Unified Single-Port & Service-Decoupled Architecture)**:
 
@@ -131,15 +132,15 @@ graph TD
     end
 
     subgraph Backend ["Backend Layered Architecture (Express.js)"]
-        Routes["Routes (auth, books, payments, admin, users)"]
-        Controllers["Controllers (auth.controller, payment.controller)"]
+        Routes["Routes Layer (auth, books, payments, admin, users)"]
+        Controllers["Controllers Layer (auth.controller, payment.controller)"]
         Services["Services Layer Murni (auth.service.js, payment.service.js)"]
         WAProviders["server/providers/ - Multi-Provider Strategy Pattern"]
     end
 
     subgraph External ["Layanan Cloud & Gateway"]
-        Supa[("Supabase PostgreSQL Cloud")]
-        Midtrans["Midtrans Payment Gateway Core API"]
+        Supa[("Supabase PostgreSQL Cloud (7 Tabel Inti)")]
+        Midtrans["Midtrans Payment Gateway Core API (QRIS Sandbox)"]
         Gmail["Google Gmail API OAuth2"]
         WAGateway["WhatsApp Gateway (Fonnte / Wablas / Twilio / Webhook)"]
     end
@@ -154,28 +155,169 @@ graph TD
     WAProviders --> WAGateway
 ```
 
-### Konvensi Kode & Pembagian Tanggung Jawab Modul:
-1. **Pemisahan Lapisan (Modular Layered Pattern):**
-   - **Routes (`server/routes/`):** Tipis (*thin routes*), hanya mendefinisikan URL, metode HTTP, dan middleware otentikasi/rate-limiting.
-   - **Controllers (`server/controllers/`):** Mengekstrak data request (`req.body`, `req.params`, `req.user`), memvalidasi dengan skema Zod, memanggil service layer, dan mengembalikan respons HTTP seragam (`200 OK`, `400 Bad Request`, `500 Internal Server Error`).
-   - **Services Layer Murni (`server/services/`):** Menampung seluruh aturan bisnis (*business logic*) inti (misal: verifikasi token, alur klaim pembayaran idempoten, kalkulasi durasi keanggotaan Pro). **Bebas dari objek `req` dan `res` Express** sehingga 100% dapat diuji secara terisolasi via pengujian otomatis (*unit test* Vitest).
-2. **Helper Murni (`server/lib/`):**
+### 3.1 Konvensi Kode & Pembagian Tanggung Jawab 4 Lapisan:
+Pemisahan lapisan (*Separation of Concerns*) dilakukan secara ketat untuk menjamin *loose coupling*, *high cohesion*, dan kemampuan uji unit (*testability*):
+1. **Routes Layer (`server/routes/`):**
+   - Tipis (*thin routes*), hanya bertugas mendefinisikan URL rute, metode HTTP (`GET`, `POST`, `PUT`, `DELETE`), dan menyematkan middleware terkait (`requireAuth`, `requireAdmin`, `authRateLimiter`, `transactionsRateLimiter`).
+   - Tidak memuat logika bisnis atau query SQL langsung.
+2. **Controllers Layer (`server/controllers/`):**
+   - Mengambil data dari objek request Express (`req.body`, `req.params`, `req.user`).
+   - Memvalidasi struktur data menggunakan skema `zod`.
+   - Meneruskan DTO bersih ke Service Layer.
+   - Mengembalikan HTTP Response seragam (`res.status().json()`).
+3. **Services Layer Murni (`server/services/`):**
+   - Menampung seluruh aturan bisnis (*business rules*) inti (misal: verifikasi token, alur klaim pembayaran idempoten, kalkulasi durasi keanggotaan Pro).
+   - **Bebas mutlak dari objek `req` dan `res` Express** sehingga 100% dapat diuji secara terisolasi via pengujian otomatis (*unit test* Vitest) tanpa mock HTTP server.
+4. **Helper & Database Layer (`server/lib/` & `server/db.js`):**
    - `midtrans.js`: Integrasi API Midtrans Core (charge QRIS, status polling, verifikasi signature SHA512, unwrap payload, `isTransactionSettled`).
    - `time.js`: Penanggalan WIB tunggal terstandarisasi dengan `dayjs` (zona waktu `Asia/Jakarta`).
    - `validate.js`: Skema validasi terstruktur dengan `zod`.
    - `images.js`: Pengolahan kompresi gambar WebP dengan `sharp`.
    - `http.js`: Helper pembungkus respons HTTP (`wrap`, `fail`, `safeUrl`).
    - `otp.js`: Manajemen pembuatan kode OTP terenkripsi dan jeda cooldown kirim ulang.
-3. **Frontend Modular (`src/context/slices/`):**
-   - `useCatalogSlice.js`: Mengelola state buku, kategori, pencarian, dan katalog.
-   - `usePaymentSlice.js`: Mengelola alur pembayaran QRIS, polling status, dan pembaharuan sesi Pro.
-   - `useNavigationSlice.js`: Mengelola perutean, deep-linking, dan status sidebar/drawer.
-4. **Utilitas Styling `cn(...inputs)` (`src/lib/utils.js`):** Menggabungkan `clsx` dan `tailwind-merge` untuk menangani conditional class dan resolusi konflik kelas Tailwind.
-5. **Dukungan Vercel Serverless (`api/index.js` + `vercel.json`):** Server Express dapat dijalankan baik sebagai proses Node.js jangka panjang (pada development & server VM) maupun sebagai fungsi *serverless* terkelola di Vercel dengan *wildcard rewrite* `/api/*`.
+   - `db.js`: Klien `supabaseServer` ber-role service dengan Row Level Security fail-closed.
+
+### 3.2 Evaluasi Kritis 30 Prinsip Kualitas Perangkat Lunak (Software Quality):
+Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
+- **Tier 1: Pondasi Kritis & Mutlak (P1)**
+  1. *Separation of Concerns (SoC):* Pemisahan tegas Routes $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Repositories.
+  2. *Idempotency (Operasi Bayar & Webhook):* Webhook Midtrans dan aktivasi keanggotaan menggunakan klaim UPDATE bersyarat atomik untuk mencegah aktivasi ganda (*prevent double fulfillment*).
+  3. *Security by Design:* Row Level Security fail-closed, parameter query anti-SQLi, enkripsi kata sandi `bcryptjs` 12 rounds, rate limiting berlapis, dan proteksi hak cipta e-reader.
+  4. *Testability:* Seluruh logika bisnis diuji otomatis melalui Vitest harness (102 tests lulus).
+  5. *KISS & YAGNI:* Menghindari abstraksi dinamis berlebih yang tidak dibutuhkan skripsi.
+  6. *High Cohesion & Loose Coupling:* Modul mandiri yang hanya berkomunikasi via antarmuka fungsi terdefinisi.
+- **Tier 2: Standar Clean Code & Operasional (P2)**
+  7. *Maintainability & Readability:* Penamaan fungsi deklaratif, konsistensi ES Module, dan dokumentasi single source of truth.
+  8. *DRY (Don't Repeat Yourself):* Penggunaan helper terpusat (`http.js`, `time.js`, `validate.js`, `cn()`).
+  9. *Extensibility (Strategy Pattern):* WhatsApp Gateway menggunakan pola strategi multi-provider yang fleksibel.
+  10. *Robustness & Fault Tolerance:* Polling status QRIS tetap berjalan aman meskipun ada fluktuasi jaringan; global error handler mencegah crash proses server.
+  11. *Performance & Lazy Loading:* Pemisahan bundel manual (*manual chunks*) pada Vite untuk library berat (`pdfjs`, `exceljs`, `recharts`).
+  12. *Observability & Structured Logging:* Logger performa tinggi berbasis `picocolors` dengan penanda waktu WIB dan prefix modul.
+- **Tier 3: Anti-Pattern yang Dihindari (P3)**
+  - ❌ *Microservices:* Diabaikan karena overhead latensi dan kompleksitas deployment tidak proporsional untuk sistem perpustakaan.
+  - ❌ *Event Sourcing & CQRS:* Diabaikan karena integritas transaksional PostgreSQL Supabase sudah mencukupi.
+  - ❌ *Distributed Message Broker (Kafka/RabbitMQ):* Diabaikan karena volume antrean webhook dapat ditangani secara asinkron oleh Express.
+
+### 3.3 Dukungan Lingkungan & Vercel Serverless:
+- **Development & Bare-Metal:** Berjalan dalam satu port terpadu (`http://localhost:5000`) dengan Vite HMR middleware.
+- **Vercel Serverless (`api/index.js` + `vercel.json`):** Server Express dibungkus menjadi serverless handler yang kompatibel dengan runtime Node 24 Vercel, dengan rewrite `/api/(.*)` ke serverless function dan aset statis disajikan via CDN edge Vercel.
 
 ---
 
-## 4. Spesifikasi Lengkap REST API (`/api/*`)
+## 4. Spesifikasi Lengkap Design System & Standar Visual UI
+
+### 4.1 Visual Atmosphere & Design POV
+Wahidiyah Book adalah platform perpustakaan digital dan komunitas spiritual untuk pengamal Sholawat Wahidiyah. Antarmukanya mencerminkan nilai-nilai:
+* **Berwibawa & Teduh (Sacred & Serene):** Tidak berisik seperti SaaS modern generik, melainkan memiliki ketenangan manuskrip klasik dan kehangatan ruang baca perpustakaan pesantren.
+* **Presisi Akademis (Academic Rigor):** Tipografi teks dan sitasi yang rapi, layout hierarkis terstruktur, keterbacaan tinggi untuk membaca PDF kitab tebal berjam-jam tanpa kelelahan mata.
+* **Kepercayaan Transaksi Finansial (Midtrans Trust):** Alur checkout QRIS dan keanggotaan Pro yang transparan, aman, responsif, dan memberikan umpan balik instan.
+
+### 4.2 Tiga Dial Desain (Core Configuration)
+* **`DESIGN_VARIANCE: 6`** — Keseimbangan antara keteraturan editorial katalog buku dan dinamika kartu asimetris pada hero section.
+* **`MOTION_INTENSITY: 4`** — Gerakan halus, berpijak pada spring physics alami (`stiffness: 120, damping: 20`). Tanpa animasi berulang yang mengganggu kekhusyukan membaca.
+* **`VISUAL_DENSITY: 5`** — Ruang bernapas yang cukup pada halaman bacaan dan katalog, namun ringkas dan efisien pada tabel administrasi dan data transaksi.
+
+### 4.3 3 Color Key & Prinsip 60-30-10 (Wajib Semua Route)
+Seluruh rute antarmuka wajib menerapkan TIGA color key dari Tema 1 "Editorial Elegan" dengan proporsi **60-30-10**:
+
+| Peran | Proporsi | Warna | Token Tailwind | Pemakaian |
+|---|---|---|---|---|
+| **Dominan** | ±60% | Krem Hangat `#FBF8F3` | `cream-*`, `ui-bg/surface/card`, `ink-*` | Latar kanvas, kartu, panel, teks, border |
+| **Sekunder** | ±30% | Hijau Zamrud Tua `#14523A` | `brand-*`, `primary` | Sidebar, tombol aksi, header, ikon, state aktif |
+| **Aksen** | ±10% | Emas Antik `#B8860B` | `gold-*`, `accent-gold` | Lencana PRO, highlight, ornamen, detail premium |
+
+**Aturan Penerapan:**
+1. **Status Fungsional:** Menggunakan token semantik `semantic-success/warning/danger/info` (bukan warna dekoratif, tidak dihitung dalam 60-30-10).
+2. **Larangan Palet Mentah:** Dilarang keras memakai kelas warna Tailwind mentah (`slate-*`, `gray-*`, `zinc-*`, `indigo-*`, `rose-*`, `emerald-*`, dll.) untuk elemen struktural. Seluruh warna wajib melalui CSS variable token.
+3. **Pengecualian Resmi:** Logo Google multicolor pada tombol OAuth, logo resmi metode pembayaran (`public/payments/`), bendera SVG 271 negara, serta token merah resmi QRIS `qris-600/700` (`#E30613`/`#C00511` — kemasan merah baku QRIS Indonesia).
+4. **Mode Malam (Dark Mode):** Tetap mengikuti proporsi 60-30-10 via CSS variable (charcoal hangat menggantikan krem, zamrud dinaikkan terangnya agar terbaca kontras).
+
+### 4.4 6 Koleksi Tema Terkalibrasi (Theme Palettes)
+1. **Tema 1: Editorial Elegan (Default Skripsi — Emerald Heritage):**
+   - Brand: Hijau Zamrud Tua (`#14523A`, hover `#0E3D2C`)
+   - Background: Krem Hangat Alami (`#FBF8F3`, surface `#F7F2E9`, card `#FFFDFA`)
+   - Accent: Emas Antik Halus (`#B8860B`, highlight `#D4AF4F`)
+   - Text/Ink: Tinta Arang Hangat (`#1D1B17`, secondary `#5A544C`, muted `#7C756C`)
+   - Border: Garis Krem Lembut (`#E4D9C6`)
+2. **Tema 2: Modern Sage Islamic (Clean Contemporary Sand):** Sage green teduh (`#2D5A46`) di atas warm sand (`#F8F7F4`) dengan aksen perunggu muted (`#A37D45`).
+3. **Tema 3: Royal Islamic Blue & Amber (Lapis Lazuli Heritage):** Biru safir Persia (`#1E3A5F`) di atas pualam putih (`#F9F9F6`) dengan aksen amber ochre (`#C88A2C`).
+4. **Tema 4: Spiritual Twilight (Midnight Obsidian Oasis - Khusus Malam):** Giok luminesen (`#34D399`) di atas obsidian hutan malam (`#0C1612`) dengan aksen lilin emas (`#F3C766`).
+5. **Tema 5: Monochrome Academic Litho (Warm Paper & Carbon):** Karbon linotype (`#181818`) di atas kertas cetak litografi (`#F5F3EF`) dengan aksen tinta stempel kayu (`#8C6239`).
+6. **Tema 6: Terracotta & Olive Nusantara (Tradisional Kontemporer):** Zaitun hutan pesantren (`#3B4E3E`) di atas kertas beras krem (`#FAF7F2`) dengan aksen tanah liat terracotta (`#B4533C`).
+
+### 4.5 Tipografi & Hirarki Skala
+* **Display / Judul:** Serif bermartabat (*Newsreader*, *Cinzel*, *Playfair*) dipadu dengan *Plus Jakarta Sans* untuk keterbacaan modern.
+* **Body / Teks Bacaan:** *Plus Jakarta Sans* (400 Regular / 500 Medium / 600 SemiBold), `line-height: 1.65`, batas maksimal paragraf `65ch`.
+* **Ayat & Kaligrafi Arab:** Font *Amiri* atau *Scheherazade New*, ukuran proporsional 1.3x lebih besar dibanding teks latin dengan ruang vertikal harakat yang lapang.
+* **Monospace / Angka Finansial:** *JetBrains Mono* untuk nomor referensi Midtrans, nominal QRIS (tabular numbers), kode transaksi, dan nomor halaman.
+
+### 4.6 Arsitektur Navigasi Terpadu (Responsive Design)
+* **Desktop Sidebar (Ramping & Fokus):**
+  - Lebar Terbuka: `218px` (proporsional dengan kanvas konten)
+  - Lebar Ciut (Collapsed): `68px` (ikon + tooltip cerdas)
+  - Menu Utama: Beranda, Kalender Mujahadah, Langganan Pro.
+  - Menu Akun: Hub Profil Pengamal (memuat akses ke Riwayat, Bantuan, dan Tentang).
+  - Menu Admin: 6 Sub-Tab manajemen sistem.
+  - Tombol badge EB yang mengganggu telah dihilangkan dari header sidebar ciut.
+* **Universal Sticky Top Back Button Header (`DeviceFrame.jsx`):**
+  - Hadir seragam di **Desktop, Tablet, dan Mobile** (`← [Judul]`) untuk sub-halaman: `/about` (Tentang Aplikasi), `/help` (Pusat Bantuan), `/riwayat` (Riwayat Langganan), dan `/profile` (Profil).
+  - Margin dinamis terhadap sidebar desktop (`md:ml-[218px]` saat terbuka, `md:ml-[68px]` saat ciut) sehingga tidak saling bertumpuk.
+  - *Smart Fallback Navigation:* Mengutamakan `window.history.back()`, jika riwayat kosong otomatis kembali ke Hub Profil atau Beranda.
+* **Mobile Bottom Dock Bar:**
+  - Bar melayang di bagian bawah dengan radius `20px` dan bayangan lembut.
+  - 4 tombol utama: Beranda, Kalender, Pro (dengan lencana bintang emas), dan Profil.
+  - Target sentuh minimal `44px × 44px` memenuhi standar aksesibilitas mobile WCAG.
+
+### 4.7 Spesifikasi Wireframe & Layout Layar Inti
+1. **Katalog & Beranda (Home):**
+   - Hero Carousel banner dinamis tanpa tombol navigasi yang berisik.
+   - Kartu buku minimalis Moco-style (sampul jilid dominan, judul kitab tegas, tanpa nama penulis generik, badge status Pro emas).
+   - Pencarian instan dan filter akses (Semua / Gratis / Pro).
+2. **Universal Document Reader (Continuous Vertical Scroll):**
+   - Penampil PDF multi-halaman berbasis canvas Mozilla PDF.js murni (`ContinuousPdfViewer.jsx`).
+   - Auto scroll-spy untuk sinkronisasi halaman aktif secara otomatis saat digulir.
+   - Kanvas berasio aspek tetap (*fixed-aspect*) dan *reading anchor* penahan posisi teks saat perbesaran zoom in/out.
+   - Tombol kontrol zoom diletakkan ringkas berdampingan dengan tombol layar penuh (*fullscreen*).
+   - Pembaca Word DOCX berbasis HTML semantik terproteksi via Mammoth engine dan sanitasi anti-XSS (`DOMPurify`).
+   - Proteksi hak cipta: tanda air dinamis identitas pembaca, pelarangan klik kanan (`contextmenu`), dan larangan seleksi teks (`select-none`).
+3. **Membership Pro & Real Midtrans QRIS:**
+   - Paket Pro tunggal terstandarisasi Rp 25.000/bulan.
+   - Tampilan scan QRIS EMVCo dinamis dengan timer 15 menit, tombol unduh QR PNG ke galeri ponsel, tombol salin kode QR string, dan link simulator Midtrans Sandbox.
+   - Tombol *"▶ Bayar Sekarang (Mode Simulasi)"* langsung di UI via flag `ALLOW_PAYMENT_SIMULATION=1`.
+   - **Faktur Kwitansi Digital Resmi A4 (jsPDF):** Dibuat instan di sisi klien via pustaka `jspdf` tanpa dialog print peramban, memuat kop hijau zamrud resmi, 2 kolom metadata, rincian biaya, dan stempel verifikasi digital. Riwayat langganan terhubung otomatis ke tabel transaksi agar histori pembayaran tidak pernah kosong.
+4. **Kalender Kegiatan Mujahadah:**
+   - Matriks kalender bulanan interaktif dengan zona waktu `Asia/Jakarta`.
+   - Pemisahan jelas antara teks nama lokasi dan tombol navigasi rute presisi Google Maps.
+5. **Admin Management Dashboard (6 Sub-Tabs Modular):**
+   - `OverviewTab.jsx`: Metrik ringkasan 3+2, grafik analitik pendapatan Recharts, ekspor Excel terpusat.
+   - `BooksTab.jsx`: Manajemen katalog buku dan kompresi WebP otomatis.
+   - `UsersTab.jsx`: Manajemen akun anggota dan penugasan peran admin.
+   - `EventsTab.jsx`: Manajemen jadwal majelis mujahadah.
+   - `CarouselTab.jsx`: Pengelolaan banner beranda dinamis.
+   - `LogsTab.jsx`: Pemantauan log aktivitas sistem real-time dengan tombol refresh di samping filter.
+6. **Cupertino Inset Grouped Profile Hub (`EditProfileScreen.jsx`):**
+   - Desain modern iOS Cupertino inset grouped card dengan Data Akun di posisi paling atas dan kartu profil taktil yang elegan.
+   - Tombol ganti kata sandi dan switch slider tema gelap/terang.
+   - Menu sub-halaman terintegrasi: Riwayat Langganan, Pusat Bantuan (bersih tanpa judul ganda), dan Tentang Aplikasi (bersih tanpa logo besar).
+   - Tombol logout dengan label yang jelas dan penanganan sesi aman.
+7. **Autentikasi Pengguna:**
+   - Formulir login, pendaftaran, dan pemulihan kata sandi yang bersih dan proporsional.
+   - Tombol registrasi sederhana dengan label tunggal *"Daftar"*.
+   - Verifikasi OTP registrasi via email terverifikasi, serta alokasi WhatsApp sebagai fallback pemulihan lupa sandi.
+
+### 4.8 Anti-Patterns & Banned Clichés
+* **DILARANG:** Gradien ungu-neon atau biru AI (`linear-gradient(to right, #8B5CF6, #EC4899)`).
+* **DILARANG:** Hitam pekat murni `#000000` atau putih silau `#FFFFFF` sebagai kanvas utama.
+* **DILARANG:** Baris 3 kartu identik tanpa ritme komposisi.
+* **DILARANG:** Teks placeholder generik seperti *Lorem Ipsum*, nama palsu *John Doe* atau *Acme Corp*.
+* **DILARANG:** Animasi tak beralasan yang memakan beban prosesor.
+* **DILARANG:** Kelas warna palet Tailwind mentah di luar token design system.
+* **WAJIB:** Rasio kontras teks minimal 4.5:1 untuk teks normal dan 3:1 untuk teks besar (17 pasangan WCAG AA lulus).
+* **WAJIB:** Penggunaan tripel RGB CSS variables yang kompatibel langsung dengan Tailwind CSS `rgb(var(--brand-700) / <alpha>)`.
+
+---
+
+## 5. Spesifikasi Lengkap REST API (`/api/*`)
 
 * **Base URL:** `http://localhost:5000/api` (Development) / `/api` (Production)
 * **Format Request/Response:** `application/json` (kecuali upload multipart)
@@ -387,7 +529,7 @@ Webhook endpoint untuk menerima HTTP Notification dari server Midtrans.
 
 ---
 
-## 5. Mekanisme & Alur Pembayaran Real Midtrans QRIS
+## 6. Mekanisme & Alur Pembayaran Real Midtrans QRIS
 
 ### 5.1. Alur Transaksi Lengkap
 ```
@@ -464,7 +606,7 @@ curl -X POST http://localhost:5000/api/payments/midtrans/notification \
 
 ---
 
-## 6. Arsitektur Multi-Provider WhatsApp Gateway
+## 7. Arsitektur Multi-Provider WhatsApp Gateway
 
 Gateway WhatsApp menggunakan arsitektur **Strategy / Provider Pattern** di folder `server/providers/`:
 
@@ -519,7 +661,7 @@ server/providers/
 
 ---
 
-## 7. Panduan Setup & Skema Database Supabase Cloud
+## 8. Panduan Setup & Skema Database Supabase Cloud
 
 Informasi Project Database Supabase:
 | Item | Nilai Resmi |
@@ -580,7 +722,7 @@ SELECT
 
 ---
 
-## 8. Standar Keamanan Sistem (30 Indikator Software Quality & Security Hardening)
+## 9. Standar Keamanan Sistem (30 Indikator Software Quality & Security Hardening)
 
 Sistem telah diaudit dan mengimplementasikan **30 Indikator Standar Kualitas Perangkat Lunak & Keamanan Siber**:
 
@@ -619,7 +761,7 @@ Sistem telah diaudit dan mengimplementasikan **30 Indikator Standar Kualitas Per
 
 ---
 
-## 9. Panduan Pengembangan & Penambahan Fitur Baru
+## 10. Panduan Pengembangan & Penambahan Fitur Baru
 
 Untuk menambah fitur baru secara rapi mengikuti standar Express + React:
 
@@ -700,7 +842,7 @@ export function BookmarkList() {
 
 ---
 
-## 10. Panduan Akademik & Integrasi Sitasi Zotero SINTA
+## 11. Panduan Akademik & Integrasi Sitasi Zotero SINTA
 
 ### 10.1. Status Integrasi Zotero
 * **Zotero Desktop**: Local API aktif di `127.0.0.1:23119`.
@@ -738,7 +880,7 @@ zotero-cli export \
 
 ---
 
-## 11. Prasyarat & Konfigurasi Lingkungan (.env)
+## 12. Prasyarat & Konfigurasi Lingkungan (.env)
 
 ### 11.1. Prasyarat Sistem
 - **Node.js:** Versi `>= 22.0.0`
@@ -789,7 +931,7 @@ FONNTE_TOKEN=your_fonnte_token_here
 
 ---
 
-## 12. Panduan Instalasi & Katalog NPM Scripts
+## 13. Panduan Instalasi & Katalog NPM Scripts
 
 ### 12.1. Pemasangan Dependensi
 ```bash
@@ -814,7 +956,7 @@ npm install
 
 ---
 
-## 13. Struktur Direktori Repositori Terpadu
+## 14. Struktur Direktori Repositori Terpadu
 
 ```text
 Wahidiyah Book + Real Midtrans Skripsi/
@@ -899,7 +1041,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 
 ---
 
-## 14. Histori Rilis & Rekam Jejak Kerja (R40–R70)
+## 15. Histori Rilis & Rekam Jejak Kerja (R40–R70)
 
 | Rilis | Tanggal | Ruang Lingkup & Pencapaian Utama | Status |
 | :---: | :---: | :--- | :---: |
@@ -937,7 +1079,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 
 ---
 
-## 15. Roadmap & Rencana Pengembangan Mendatang
+## 16. Roadmap & Rencana Pengembangan Mendatang
 
 ### 15.1. Rencana & Agenda Kerja Mendatang (Active & Future Milestones)
 Seluruh fitur inti aplikasi (Web frontend, Backend Express, Real Midtrans QRIS, WhatsApp Gateway 245 negara, Database Supabase, E-Reader read-only, PWA, sistem tema, keamanan CSP, aksesibilitas WCAG AA, skeleton loader, pencarian/filter katalog, penanda buku, progres membaca server, dan Mode Teks Besar untuk lansia) telah **100% selesai diimplementasikan dan terverifikasi penuh** (102/102 unit tests lulus, npm test 100% hijau). Fokus pengembangan dan tugas saat ini diarahkan pada agenda penyelesaian skripsi akademik dan kesiapan produksi:
@@ -968,7 +1110,7 @@ Seluruh fitur inti aplikasi (Web frontend, Backend Express, Real Midtrans QRIS, 
 
 ---
 
-## 16. Informasi Pengembang & Identitas Skripsi
+## 17. Informasi Pengembang & Identitas Skripsi
 
 - **Nama Mahasiswa / Pengembang:** Ghazalah Ramadhan Daffa Firjatullah
 - **NIM:** 20232210156
