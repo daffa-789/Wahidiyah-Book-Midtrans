@@ -1081,7 +1081,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 
 ## 16. Roadmap & Rencana Pengembangan Mendatang
 
-### 15.1. Rencana & Agenda Kerja Mendatang (Active & Future Milestones)
+### 16.1. Rencana & Agenda Kerja Mendatang (Active & Future Milestones)
 Seluruh fitur inti aplikasi (Web frontend, Backend Express, Real Midtrans QRIS, WhatsApp Gateway 245 negara, Database Supabase, E-Reader read-only, PWA, sistem tema, keamanan CSP, aksesibilitas WCAG AA, skeleton loader, pencarian/filter katalog, penanda buku, progres membaca server, dan Mode Teks Besar untuk lansia) telah **100% selesai diimplementasikan dan terverifikasi penuh** (102/102 unit tests lulus, npm test 100% hijau). Fokus pengembangan dan tugas saat ini diarahkan pada agenda penyelesaian skripsi akademik dan kesiapan produksi:
 
 1. **Penyusunan Naskah & Dokumentasi Skripsi Akademik:**
@@ -1095,13 +1095,38 @@ Seluruh fitur inti aplikasi (Web frontend, Backend Express, Real Midtrans QRIS, 
    - Mengajukan akun produksi Midtrans Merchant ID (`Mid-server-...`) dan mengaktifkan QRIS Production (`MIDTRANS_IS_PRODUCTION=true`).
    - Mendaftarkan nomor WhatsApp resmi lembaga ke provider Fonnte/Wablas/Twilio production untuk alokasi kuota OTP massal.
    - Pemasangan domain resmi publik (mis. `buku.wahidiyah.org`) dengan sertifikat SSL/TLS HTTPS otomatis.
-4. **Distribusi Aplikasi Mobile (TWA / Google Play Store):**
-   - Memaketkan aplikasi PWA ke dalam berkas Android Application Bundle (`.aab`) menggunakan Bubblewrap CLI (Trusted Web Activity).
-   - Mengunggah aplikasi ke Google Play Console untuk memudahkan akses jamaah Android di seluruh dunia.
-5. **Optimalisasi Lanjutan E-Reader Offline:**
-   - Mengimplementasikan caching offline cerdas via CacheStorage API agar bab atau kitab pilihan dapat dibaca tanpa kuota internet saat berada di majelis.
 
-### 15.2. Tips Penting Untuk Pengembang / Mahasiswa Penerus:
+---
+
+### 16.2. Cetak Biru Pengembangan Aplikasi Mobile Native (React Native / Expo) — Fase Pasca-Skripsi
+
+Rencana pengembangan aplikasi mobile mandiri dirancang menggunakan ekosistem **React Native + Expo** dengan pembagian tonggak capaian (*Milestones* M1–M5):
+
+1. **M1 — Proteksi Hak Cipta Konten (Web Layer) [✅ 100% SELESAI]:**
+   - Tanda air dinamis identitas pembaca (nama pengguna & ID transaksi) dibakar langsung di kanvas.
+   - Penonaktifan menu klik kanan (`onContextMenu preventDefault`) dan seleksi teks (`select-none`).
+2. **M2 — Mobile Hardening & Anti-Screenshot / Screen Recording [⏳ Rencana Pasca-Skripsi]:**
+   - **Android:** Mengaktifkan proteksi `FLAG_SECURE` via modul native Expo (`expo-screen-capture`) atau konfigurasi native Android (`getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)`). Langkah ini memblokir tangkapan layar (screenshot), perekaman layar (screen recorder), dan menyamarkan tampilan aplikasi pada menu Recent Apps.
+   - **iOS:** Menyembunyikan kanvas naskah saat aplikasi beralih ke background atau multitasking view guna mencegah pencurian konten.
+3. **M3 — Native Document Viewer & Cache Terenkripsi Offline [⏳ Rencana Pasca-Skripsi]:**
+   - **Penyimpanan Offline Terenkripsi:** Menggunakan `expo-file-system` dan `expo-secure-store` / SQLCipher dengan enkripsi simetris AES-256. Naskah kitab berbayar yang diunduh disimpan dalam bentuk byte terenkripsi yang hanya dapat didekripsi di dalam memori saat sesi aktif pengguna terverifikasi.
+   - **Isolasi Naskah:** Menghindari penyimpanan PDF polos di galeri/file manager publik Android (`/Download` atau `/Documents`).
+4. **M4 — Pemaketan & Distribusi Resmi Google Play Store (EAS Build) [⏳ Rencana Pasca-Skripsi]:**
+   - Pembuatan konfigurasi `app.json` terintegrasi Expo Application Services (EAS).
+   - Pemaketan Android Application Bundle (`.aab`) untuk distribusi resmi melalui Google Play Console dan iOS App Store.
+   - Opsi transisi cepat: Pemaketan PWA menjadi aplikasi Android Trusted Web Activity (TWA) via Bubblewrap CLI.
+5. **M5 — Keamanan Akses Tingkat Lanjut & 2FA Admin [⏳ Rencana Pasca-Skripsi]:**
+   - Integrasi autentikasi biometrik (`expo-local-authentication` untuk Fingerprint / Face ID) saat membuka aplikasi.
+   - Implementasi Time-based One-Time Password (TOTP via Google Authenticator) untuk otorisasi tindakan sensitif pada akun administrator.
+6. **Kandidat Fitur Lanjutan (Materi Rekomendasi Bab V Skripsi):**
+   - **Dukungan Format EPUB:** Parser dan penampil berkas EPUB untuk pengalaman membaca dengan tata letak teks adaptif (*reflowable text*).
+   - **Text-to-Speech (TTS):** Pembacaan audio naskah otomatis dengan Web Speech API / modul audio native untuk membantu jamaah lansia atau tunanetra.
+   - **Kuis & Evaluasi Kajian:** Modul kuis pemahaman isi kitab dengan sertifikat digital kelulusan kajian.
+   - **Voucher Promo & Referral:** Sistem kode kupon dan referral pengamal untuk memperluas akses perpustakaan digital yayasan.
+
+---
+
+### 16.3. Tips Penting Untuk Pengembang / Mahasiswa Penerus:
 1. **Menjalankan Proyek:** Cukup jalankan `npm install` dan pastikan file `.env` telah terisi di akar proyek. Jalankan `npm run dev` dan buka browser di `http://localhost:5000`.
 2. **Jika Port Terganjal di Windows:** Jalankan `npm run clean:ports` di terminal, skrip akan otomatis membebaskan port 5000/3000.
 3. **Menguji Kode Sebelum Commit:** Jalankan `npm run check`. Perintah ini menguji sintaks seluruh 50 berkas backend dan kompilasi bundling Vite sekaligus (wajib 0 error).
