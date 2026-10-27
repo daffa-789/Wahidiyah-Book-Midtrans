@@ -1,14 +1,14 @@
 # Design System Specification — Wahidiyah Book & Digital Library
-**Document Version:** 2.6.0  
-**Status:** Living Design System & Theme Research Suite  
+**Document Version:** 3.0.0  
+**Status:** Living Design System & Production Architecture  
 **Target:** Skripsi Perpustakaan Digital Wahidiyah + Integrasi Pembayaran Real Midtrans Core API  
-**Path:** `Research Design/`
+**Single Source of Truth:** [`Master_Memory_Workflow.md`](./Master_Memory_Workflow.md)
 
 ---
 
 ## 1. Visual Atmosphere & Design POV
 
-Wahidiyah Book adalah platform perpustakaan digital dan komunitas spiritual untuk pengamal Sholawat Wahidiyah. Antarmukanya harus mencerminkan nilai-nilai:
+Wahidiyah Book adalah platform perpustakaan digital dan komunitas spiritual untuk pengamal Sholawat Wahidiyah. Antarmukanya mencerminkan nilai-nilai:
 * **Berwibawa & Teduh (Sacred & Serene):** Tidak berisik seperti SaaS modern generik, melainkan memiliki ketenangan manuskrip klasik dan kehangatan ruang baca perpustakaan pesantren.
 * **Presisi Akademis (Academic Rigor):** Tipografi teks dan sitasi yang rapi, layout hierarkis terstruktur, keterbacaan tinggi untuk membaca PDF kitab tebal berjam-jam tanpa kelelahan mata.
 * **Kepercayaan Transaksi Finansial (Midtrans Trust):** Alur checkout QRIS dan keanggotaan Pro yang transparan, aman, responsif, dan memberikan umpan balik instan.
@@ -97,28 +97,30 @@ Semua tema dirancang anti-slop (bebas dari gradien neon ungu/biru AI, bebas dari
 * **Display / Judul:** Serif bermartabat (*Newsreader*, *Cinzel*, atau *Playfair*) dipadu dengan *Plus Jakarta Sans* untuk keterbacaan modern.
 * **Body / Teks Bacaan:** *Plus Jakarta Sans* (400 Regular / 500 Medium / 600 SemiBold), `line-height: 1.65`, batas maksimal paragraf `65ch`.
 * **Ayat & Kaligrafi Arab:** Font *Amiri* atau *Scheherazade New*, ukuran proporsional 1.3x lebih besar dibanding teks latin dengan ruang vertikal yang lapang untuk harakat.
-* **Monospace / Angka Finansial:** *JetBrains Mono* untuk nomor rekening VA Midtrans, nominal QRIS (tabular numbers), kode transaksi, dan indeks halaman buku.
+* **Monospace / Angka Finansial:** *JetBrains Mono* untuk nomor referensi Midtrans, nominal QRIS (tabular numbers), kode transaksi, dan indeks halaman buku.
 
 ---
 
-## 4. Arsitektur Navigasi Terpadu
+## 4. Arsitektur Navigasi Terpadu (Responsive Design)
 
-### 4.1 Navigasi Desktop (Sidebar)
-* **Lebar Terbuka:** `248px`
+### 4.1 Navigasi Desktop (Sidebar Ramping)
+* **Lebar Terbuka:** `218px` (ringkas dan pas dengan kanvas konten)
 * **Lebar Terlipat (Collapsed):** `68px` (hanya menampilkan ikon + tooltip cerdas)
 * **Grup Menu:**
-  1. **Utama:** Beranda (Home), Kalender Mujahadah, Langganan Pro, Pusat Bantuan, Tentang.
-  2. **Akun:** Profil Pengamal, Riwayat Langganan & Transaksi, Logout.
+  1. **Utama:** Beranda (Home), Kalender Mujahadah, Langganan Pro.
+  2. **Akun & Profil:** Profil Pengamal (Hub Akun terpadu yang memuat Riwayat, Bantuan, dan Tentang).
   3. **Administrasi:** Overview Metrik, Manajemen Kitab, Data Anggota, Kalender Acara, Banner Carousel, Log Sistem.
+* **Penyederhanaan UI:** Menu sekunder (Tentang, Pusat Bantuan, Riwayat Langganan) serta badge tombol EB yang redundan telah dihilangkan dari sidebar, dikoordinasikan secara rapi di dalam Hub Profil.
 * **Indikator Aktif:** Bar vertikal 3px di sisi kiri + latar belakang tinted brand dengan transisi 200ms.
 
-### 4.2 Navigasi Atas (Top Header Bar)
-* Menampilkan BrandMark SVG inline resmi Wahidiyah Book.
-* Breadcrumbs dinamis sesuai halaman aktif.
-* Global search trigger dengan shortcut keyboard `Ctrl + K`.
-* Pill status sinkronisasi backend: `Midtrans Sandbox Connected` & `Supabase Database Online`.
-* Audio player widget mini untuk melantunkan Sholawat Wahidiyah secara kontinyu saat membaca.
-* Theme quick switcher & Device View Switcher (Desktop vs Mobile Preview).
+### 4.2 Universal Sticky Top Back Button Header (`DeviceFrame.jsx`)
+* Header navigasi sub-halaman hadir seragam di **Desktop, Tablet, dan Mobile** (`← [Judul]`) untuk rute:
+  - `/about`: `← Tentang Aplikasi`
+  - `/help`: `← Pusat Bantuan`
+  - `/riwayat`: `← Riwayat Langganan`
+  - `/profile`: `← Profil`
+* **Penempatan & Margin Responsif:** Terletak di bagian atas konten dengan penyesuaian margin kiri terhadap sidebar (`md:ml-[218px]` terbuka, `md:ml-[68px]` ciut), menjamin posisi yang selalu sejajar dan tidak tumpang tindih.
+* **Smart Navigation Fallback:** Memanfaatkan `window.history.back()` jika terdapat riwayat jelajah sebelumnya, atau otomatis fallback ke Hub Profil / Beranda.
 
 ### 4.3 Navigasi Mobile (Bottom Dock Bar)
 * Bar melayang di bagian bawah dengan radius `20px` dan bayangan lembut.
@@ -130,28 +132,40 @@ Semua tema dirancang anti-slop (bebas dari gradien neon ungu/biru AI, bebas dari
 ## 5. Layar Wireframe Inti
 
 1. **Katalog & Beranda (Home):**
-   * Banner pahlawan (Hero) dengan pengumuman Mujahadah dan visual elegan.
+   * Banner pahlawan (Hero Carousel) dinamis dan minimalis.
    * Kartu buku minimalis ala e-reader modern (Moco-style): rasio proporsional, sampul jilid dominan, judul kitab tegas, tanpa label penulis generik, badge status PRO emas, dan status keterbacaan.
    * Navigasi pencarian instan yang cepat dan terfokus.
 2. **Universal Document Reader (PDF & DOCX):**
-   * Bilah kontrol atas: nomor halaman, zoom in/out, tema kertas (Terang, Sepia Hangat, dan Malam), serta tombol kembali yang intuitif.
-   * Mesin render ganda: PDF.js untuk naskah .pdf dan Mammoth engine untuk konversi instan berkas Word .docx ke HTML semantik.
+   * **Continuous Vertical Scroll Canvas:** Menggunakan Mozilla PDF.js murni dengan gulir vertikal kontinyu, auto scroll-spy sinkronisasi halaman, kanvas berasio aspek tetap, pelacak persentase zoom real-time, dan titik jangkar baca (*reading anchor*) yang menjaga posisi teks saat perbesaran.
+   * Bilah kontrol atas: nomor halaman, zoom in/out berdampingan dengan layar penuh (*fullscreen*), tema kertas (Terang, Sepia Hangat, dan Malam).
+   * Mesin render ganda: PDF.js untuk naskah .pdf dan Mammoth engine untuk konversi instan berkas Word .docx ke HTML semantik terproteksi.
    * Lapisan proteksi hak cipta: tanda air dinamis nama pembaca & ID transaksi, pelarangan klik kanan (`contextmenu`), dan penonaktifan seleksi teks (`user-select: none`).
 3. **Membership Pro & Alur Midtrans QRIS:**
    * Paket Pro tunggal terstandarisasi (Rp 25.000/bulan) tanpa tiering membingungkan.
    * Tampilan scan QRIS EMVCo dinamis dengan timer hitung mundur 15 menit, tombol unduh PNG resolusi tinggi untuk pemindaian via galeri perbankan (BCA, Mandiri, DANA, GoPay).
+   * Fitur kemudahan pengujian: Tombol *"Salin Kode QR String"* dan link langsung ke *Midtrans QRIS Simulator*.
    * Tombol *"▶ Bayar Sekarang (Mode Simulasi)"* langsung di UI (`ALLOW_PAYMENT_SIMULATION=1`) untuk demo sidang skripsi yang lancar dan terkontrol.
-   * Kuitansi digital otomatis saat transaksi sukses yang siap diunduh/dicetak ke PDF.
+   * **Faktur Kwitansi Pembayaran Resmi (A4 Client-Side PDF):**
+     - Dibuat instan di sisi klien via pustaka `jspdf` tanpa dialog print peramban.
+     - Desain elegan A4 resmi ber-branding hijau zamrud tua, metadata 2 kolom rapi, rincian pembayaran, dan stempel verifikasi digital resmi.
+     - Riwayat langganan dilengkapi fallback otomatis ke tabel transaksi sehingga riwayat transaksi tidak pernah kosong.
 4. **Kalender Kegiatan Mujahadah:**
    * Matriks kalender bulanan interaktif dengan agenda majelis dan sinkronisasi zona waktu `Asia/Jakarta`.
-   * Daftar kegiatan majelis mujahadah dengan indikator waktu yang jelas.
-5. **Admin Management Dashboard:**
+   * Pemisahan teks nama lokasi dengan tautan navigasi presisi Google Maps.
+5. **Admin Management Dashboard (Modular Sub-Tabs):**
+   * Dekomposisi 6 sub-tab terisolasi: `OverviewTab`, `BooksTab`, `UsersTab`, `EventsTab`, `CarouselTab`, `LogsTab`.
    * Formasi metrik 3+2: 3 kartu baris atas (Anggota Terdaftar, Total Pendapatan, Kitab Digital) dan 2 kartu baris bawah (Transaksi Sukses, Pembaca Aktif).
    * Grafik visual analitik tren pendapatan dan pertumbuhan anggota berbasis Recharts.
-   * Tabel manajemen buku (tambah, edit, hapus berkas PDF/DOCX) dan tabel riwayat transaksi Midtrans terverifikasi.
-   * Ekspor 1-klik ke Microsoft Excel (`.xlsx`).
-6. **Profil Pengamal:**
-   * Kartu identitas pengamal dengan lencana Pro aktif, tanggal kedaluwarsa langganan, riwayat transaksi sukses, dan preferensi akun.
+   * Ekspor 1-klik ke Microsoft Excel (`.xlsx`) terpusat pada tab Overview.
+6. **Cupertino Inset Grouped Profile Hub (`EditProfileScreen.jsx`):**
+   * Tata letak modern terinspirasi iOS/Cupertino Inset Grouped design.
+   * Seksi Data Akun di paling atas dengan kartu profil taktil yang elegan, tombol ubah kata sandi, dan switch slider tema gelap/terang.
+   * Menu navigasi sub-halaman: Riwayat Langganan & Transaksi, Pusat Bantuan (bersih tanpa judul ganda), dan Tentang Aplikasi (bersih tanpa logo besar).
+   * Tombol Keluar dengan label yang jelas dan penanganan sesi aman.
+7. **Autentikasi Pengguna:**
+   * Formulir login, pendaftaran, dan pemulihan kata sandi yang bersih dan proporsional.
+   * Tombol registrasi sederhana dengan label tunggal *"Daftar"*.
+   * Verifikasi OTP registrasi via email terverifikasi, serta alokasi WhatsApp sebagai fallback pemulihan lupa sandi.
 
 ---
 
@@ -163,5 +177,5 @@ Semua tema dirancang anti-slop (bebas dari gradien neon ungu/biru AI, bebas dari
 * **DILARANG:** Teks placeholder generik seperti *Lorem Ipsum*, nama palsu *John Doe* atau *Acme Corp*.
 * **DILARANG:** Animasi tak beralasan yang memakan beban prosesor.
 * **DILARANG:** Kelas warna palet Tailwind mentah di luar token design system (mis. `bg-gray-100`, `text-slate-600`, `bg-indigo-50`, `text-emerald-700`); gunakan token `brand/cream/ink/ui/gold/semantic` sesuai seksi 1.5.
-* **WAJIB:** Rasio kontras teks minimal 4.5:1 untuk teks normal dan 3:1 untuk teks besar (WCAG AA).
+* **WAJIB:** Rasio kontras teks minimal 4.5:1 untuk teks normal dan 3:1 untuk teks besar (17 pasangan WCAG AA lulus).
 * **WAJIB:** Penggunaan tripel RGB CSS variables yang kompatibel langsung dengan Tailwind CSS `rgb(var(--brand-700) / <alpha>)`.
