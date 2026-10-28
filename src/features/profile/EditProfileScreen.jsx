@@ -93,7 +93,7 @@ export const EditProfileScreen = () => {
   }, [logout]);
 
   return (
-    <div className="min-h-[640px] flex flex-col px-4 sm:px-6 py-6 sm:py-8 bg-cream-50 page-transition pb-24 md:pb-12">
+    <div className="min-h-[640px] flex flex-col px-4 sm:px-6 py-6 sm:py-8 bg-cream-50 pb-24 md:pb-12">
       <div className="mx-auto w-full max-w-content-narrow space-y-6">
 
         {/* 1. Data Akun (Paling Atas) */}

@@ -23,7 +23,7 @@ export const SubscriptionHistoryScreen = () => {
   };
 
   return (
-    <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
+    <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50">
       <div className={layout.contentCenter}>
         {subscriptions.length === 0 ? (
           <div className="min-h-[460px] flex flex-col items-center justify-center py-12 px-4 text-center space-y-3">

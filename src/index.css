@@ -191,7 +191,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -319,7 +319,7 @@ body,
   letter-spacing: -0.02em;
 }
 
-/* Smooth transitions */
+/* Small transitions for inline notices and dialogs. */
 .page-transition {
   animation: fadeIn 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }

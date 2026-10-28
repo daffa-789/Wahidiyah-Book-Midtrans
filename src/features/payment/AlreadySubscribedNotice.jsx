@@ -9,7 +9,7 @@ import { typography } from '@lib/styles';
  */
 export const AlreadySubscribedNotice = ({ minHeight = '640px', reason, onPro, onHistory }) => (
   <div
-    className={`min-h-[${minHeight}] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-8 bg-cream-50 page-transition`}
+    className={`min-h-[${minHeight}] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-8 bg-cream-50`}
   >
     <div className="max-w-xl mx-auto w-full text-center py-16 space-y-4">
       <div className="w-16 h-16 rounded-3xl bg-brand-100 text-brand-700 mx-auto flex items-center justify-center shadow-md">

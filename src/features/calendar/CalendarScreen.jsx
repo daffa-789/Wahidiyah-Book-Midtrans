@@ -62,14 +62,14 @@ export const CalendarScreen = () => {
 
   if (loadingAgenda) {
     return (
-      <div className="min-h-[640px] flex flex-col justify-between bg-cream-50 page-transition pb-6 font-sans">
+      <div className="min-h-[640px] flex flex-col justify-between bg-cream-50 pb-6 font-sans">
         <CalendarSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="min-h-[640px] flex flex-col justify-between bg-cream-50 page-transition pb-6 font-sans">
+    <div className="min-h-[640px] flex flex-col justify-between bg-cream-50 pb-6 font-sans">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">

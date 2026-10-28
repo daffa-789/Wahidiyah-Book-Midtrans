@@ -39,7 +39,7 @@ export const HomeScreen = () => {
   useDialogFocusTrap(paywallPanelRef, { isOpen: Boolean(paywallBook), onClose: () => setPaywallBook(null) });
 
   return (
-    <div className="flex-1 flex flex-col justify-between bg-cream-50 page-transition min-h-[calc(100vh-2rem)]">
+    <div className="flex-1 flex flex-col justify-between bg-cream-50 min-h-[calc(100vh-2rem)]">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 flex-1 flex flex-col justify-between items-center">
         {loadingCatalog ? (
           <div className="w-full">

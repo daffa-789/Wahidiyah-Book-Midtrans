@@ -24,7 +24,7 @@ export const ProScreen = () => {
   }, [isSubscribed, setSelectedPlan, navigateTo, clearLastPaymentResult]);
 
   return (
-    <div className="flex-1 flex flex-col justify-center items-center bg-cream-50 page-transition px-4 py-8 sm:px-6 lg:px-8">
+    <div className="flex-1 flex flex-col justify-center items-center bg-cream-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="w-full max-w-lg">
         <div className="w-full bg-cream-50 rounded-3xl p-6 sm:p-7 border border-cream-300 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between relative group hover:border-brand-200">
             <div>

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { useApp } from '@context/AppContext';
 import { DeviceFrame } from '@ui/DeviceFrame';
 import { InAppReminders } from '@ui/InAppReminders';
+import { ScrollRestoration } from '@ui/ScrollRestoration';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 
 
@@ -24,10 +25,14 @@ const ForgotPasswordScreen = lazy(() => import('@features/auth/ForgotPasswordScr
 const PdfReaderScreen = lazy(() => import('@features/reader/PdfReaderScreen').then(m => ({ default: m.PdfReaderScreen })));
 const PaymentConfirmScreen = lazy(() => import('@features/payment/PaymentConfirmScreen').then(m => ({ default: m.PaymentConfirmScreen })));
 const PaymentSuccessScreen = lazy(() => import('@features/payment/PaymentSuccessScreen').then(m => ({ default: m.PaymentSuccessScreen })));
-const EditProfileScreen = lazy(() => import('@features/profile/EditProfileScreen').then(m => ({ default: m.EditProfileScreen })));
-const SubscriptionHistoryScreen = lazy(() => import('@features/profile/SubscriptionHistoryScreen').then(m => ({ default: m.SubscriptionHistoryScreen })));
-const HelpCenterScreen = lazy(() => import('@features/help/HelpCenterScreen').then(m => ({ default: m.HelpCenterScreen })));
-const AboutScreen = lazy(() => import('@features/about/AboutScreen').then(m => ({ default: m.AboutScreen })));
+const loadEditProfileScreen = () => import('@features/profile/EditProfileScreen').then(m => ({ default: m.EditProfileScreen }));
+const loadSubscriptionHistoryScreen = () => import('@features/profile/SubscriptionHistoryScreen').then(m => ({ default: m.SubscriptionHistoryScreen }));
+const loadHelpCenterScreen = () => import('@features/help/HelpCenterScreen').then(m => ({ default: m.HelpCenterScreen }));
+const loadAboutScreen = () => import('@features/about/AboutScreen').then(m => ({ default: m.AboutScreen }));
+const EditProfileScreen = lazy(loadEditProfileScreen);
+const SubscriptionHistoryScreen = lazy(loadSubscriptionHistoryScreen);
+const HelpCenterScreen = lazy(loadHelpCenterScreen);
+const AboutScreen = lazy(loadAboutScreen);
 const AdminDashboard = lazy(() => import('@features/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 
 const ScreenLoading = () => (
@@ -203,10 +208,47 @@ const RouterBridge = () => {
   return null;
 };
 
+const ProfileRoutePreloader = () => {
+  const { authReady, isLoggedIn, user } = useApp();
+
+  useEffect(() => {
+    if (!authReady || !isLoggedIn || user?.role === 'admin') return undefined;
+
+    let cancelled = false;
+    const preloadRoutes = () => {
+      if (cancelled) return;
+      void Promise.allSettled([
+        loadEditProfileScreen(),
+        loadSubscriptionHistoryScreen(),
+        loadHelpCenterScreen(),
+        loadAboutScreen()
+      ]);
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      const idleCallbackId = window.requestIdleCallback(preloadRoutes, { timeout: 1500 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback?.(idleCallbackId);
+      };
+    }
+
+    const timeoutId = window.setTimeout(preloadRoutes, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [authReady, isLoggedIn, user?.role]);
+
+  return null;
+};
+
 function App() {
   return (
     <>
       <RouterBridge />
+      <ScrollRestoration />
+      <ProfileRoutePreloader />
       <PwaInstallBanner />
       <Suspense fallback={<ScreenLoading />}>
       <Routes>

@@ -59,7 +59,7 @@ export const PaymentSuccessScreen = () => {
   ];
 
   return (
-    <div className="min-h-[640px] bg-cream-50 px-4 py-8 page-transition sm:px-6">
+    <div className="min-h-[640px] bg-cream-50 px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-xl">
         <div className="mb-6 text-center space-y-2">
           <div className="w-16 h-16 rounded-full bg-brand-100 text-brand-700 mx-auto flex items-center justify-center shadow-md animate-in zoom-in-95">

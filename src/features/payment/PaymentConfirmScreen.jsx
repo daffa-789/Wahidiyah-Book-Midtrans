@@ -152,7 +152,7 @@ export const PaymentConfirmScreen = () => {
   }
 
   return (
-    <div className="relative min-h-[640px] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-6 bg-cream-50 page-transition">
+    <div className="relative min-h-[640px] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-6 bg-cream-50">
       <div className={layout.contentCenter}>
 
         <div className="mb-6">

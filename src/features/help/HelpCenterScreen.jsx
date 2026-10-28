@@ -11,7 +11,7 @@ export const HelpCenterScreen = () => {
   const toggleAccordion = (id) => setExpandedId((prev) => (prev === id ? null : id));
 
   return (
-    <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
+    <div className="min-h-[640px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50">
       <div className={layout.contentCenter}>
         <section>
           <div className="space-y-2.5">

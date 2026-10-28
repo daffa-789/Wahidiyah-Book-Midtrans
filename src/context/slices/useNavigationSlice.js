@@ -100,9 +100,6 @@ export const useNavigationSlice = ({ initialScreen, userRole }) => {
       targetPath = adminPathForTab(adminTab);
     }
 
-    const fromScreen = screenRef.current;
-    const involvesReader = destScreen === 'reader' || fromScreen === 'reader';
-
     screenRef.current = destScreen;
     setCurrentScreen(destScreen);
     setCurrentPath(targetPath);
@@ -116,9 +113,6 @@ export const useNavigationSlice = ({ initialScreen, userRole }) => {
       }
     }
 
-    if (!involvesReader) {
-      window.scrollTo?.({ top: 0, behavior: 'smooth' });
-    }
   }, [userRole]);
 
   return {

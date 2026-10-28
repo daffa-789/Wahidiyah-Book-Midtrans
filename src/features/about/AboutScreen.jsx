@@ -3,7 +3,7 @@ import { layout } from '@lib/styles';
 
 export const AboutScreen = () => {
   return (
-    <div className="min-h-[700px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50 page-transition">
+    <div className="min-h-[700px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50">
       <div className={layout.contentCenter}>
 
         <div className="text-center my-4">

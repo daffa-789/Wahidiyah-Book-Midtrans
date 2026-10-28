@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { X, Download, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatRupiah } from '@lib/formatUtils';
-import { downloadReceiptPdf } from '@lib/receiptPdf';
 
 export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
+  const [isPreparingPdf, setIsPreparingPdf] = useState(false);
+
   if (!isOpen) return null;
 
   const refNo = details?.refNo || details?.ref || `WB-${Date.now().toString(36).toUpperCase()}`;
@@ -15,8 +18,18 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
   const userEmail = user?.email || '-';
   const userPhone = user?.phone || details?.phone || '';
 
-  const handleDownloadPdf = () => {
-    downloadReceiptPdf(details, user);
+  const handleDownloadPdf = async () => {
+    if (isPreparingPdf) return;
+
+    setIsPreparingPdf(true);
+    try {
+      const { downloadReceiptPdf } = await import('@lib/receiptPdf');
+      downloadReceiptPdf(details, user);
+    } catch {
+      toast.error('Kwitansi PDF gagal disiapkan. Silakan coba lagi.');
+    } finally {
+      setIsPreparingPdf(false);
+    }
   };
 
   return (
@@ -185,10 +198,12 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
           <button
             type="button"
             onClick={handleDownloadPdf}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-cream-50 text-xs font-bold shadow transition cursor-pointer"
+            disabled={isPreparingPdf}
+            aria-busy={isPreparingPdf}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-cream-50 text-xs font-bold shadow transition cursor-pointer disabled:cursor-wait disabled:opacity-70"
           >
             <Download className="w-4 h-4" />
-            <span>Simpan Kwitansi PDF</span>
+            <span>{isPreparingPdf ? 'Menyiapkan PDF…' : 'Simpan Kwitansi PDF'}</span>
           </button>
         </div>
       </div>
