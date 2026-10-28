@@ -16,7 +16,7 @@ export const USE_VITE_MIDDLEWARE = process.env.VITE_MIDDLEWARE === '1';
 export const LISTEN_PORT = USE_VITE_MIDDLEWARE ? FRONTEND_PORT : Number(PORT);
 
 export const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS ||
-  'http://localhost:3000,http://127.0.0.1:3000,http://localhost:4173,http://127.0.0.1:4173')
+  'http://localhost:3000,http://127.0.0.1:3000,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5000,http://127.0.0.1:5000')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
