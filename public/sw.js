@@ -9,7 +9,8 @@
 // v11 (VULN-21): /api/payments/ masuk deny-list, respons Cache-Control
 //      private/no-store tidak pernah disimpan, blok cache-first dibatasi
 //      aset internal, dan cache dibuang saat pengguna keluar akun.
-const CACHE_NAME = 'wahidiyah-app-shell-v11';
+// v12: perubahan navigasi dan pemulihan scroll dirilis ke PWA.
+const CACHE_NAME = 'wahidiyah-app-shell-v12';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
