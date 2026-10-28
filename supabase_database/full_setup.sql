@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS public.events CASCADE;
 DROP TABLE IF EXISTS public.books CASCADE;
 DROP TABLE IF EXISTS public.password_resets CASCADE;
 DROP TABLE IF EXISTS public.email_verifications CASCADE;
+DROP TABLE IF EXISTS public.api_rate_limit_buckets CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
 DROP TYPE IF EXISTS public.user_role CASCADE;
@@ -155,6 +156,7 @@ CREATE INDEX idx_email_verifications_expires
 
 CREATE INDEX idx_carousel_order ON public.carousel_slides(sort_order, id);
 CREATE INDEX idx_carousel_active ON public.carousel_slides(is_active, starts_at, ends_at);
+CREATE INDEX IF NOT EXISTS idx_carousel_slides_event_id ON public.carousel_slides(event_id);
 
 
 ALTER TABLE public.books ENABLE ROW LEVEL SECURITY;
@@ -270,6 +272,7 @@ CREATE TABLE IF NOT EXISTS public.carousel_slides (
 
 CREATE INDEX IF NOT EXISTS idx_carousel_order ON public.carousel_slides(sort_order, id);
 CREATE INDEX IF NOT EXISTS idx_carousel_active ON public.carousel_slides(is_active, starts_at, ends_at);
+CREATE INDEX IF NOT EXISTS idx_carousel_slides_event_id ON public.carousel_slides(event_id);
 
 ALTER TABLE public.carousel_slides ENABLE ROW LEVEL SECURITY;
 
@@ -353,4 +356,147 @@ ALTER TABLE public.events ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ 
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS reminder_hour VARCHAR(5) DEFAULT '08:00';
 
 -- Paksa PostgREST memuat ulang skema cache.
+NOTIFY pgrst, 'reload schema';
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- PATCH Distributed Rate Limits — idempoten, hanya untuk deployment server.
+--
+-- Rate-limit counters dibagi antar-instance Vercel lewat Supabase RPC.
+-- Key yang tersimpan berupa HMAC, bukan IP/email mentah. Tabel tidak memiliki
+-- policy RLS: hanya service_role yang mendapat hak melalui API server.
+-- Blok ini aman dijalankan sendiri pada database berisi data.
+-- ════════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS public.api_rate_limit_buckets (
+    bucket_key VARCHAR(64) NOT NULL,
+    window_start TIMESTAMPTZ NOT NULL,
+    hit_count BIGINT NOT NULL DEFAULT 0 CHECK (hit_count >= 0),
+    PRIMARY KEY (bucket_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_rate_limit_buckets_window
+    ON public.api_rate_limit_buckets (window_start);
+
+-- Menutup temuan advisor Supabase tanpa mengasumsikan tabel carousel ada pada
+-- setiap instalasi lama yang hanya mengambil patch rate-limit ini.
+DO $$
+BEGIN
+    IF to_regclass('public.carousel_slides') IS NOT NULL THEN
+        CREATE INDEX IF NOT EXISTS idx_carousel_slides_event_id
+            ON public.carousel_slides (event_id);
+    END IF;
+END;
+$$;
+
+ALTER TABLE public.api_rate_limit_buckets ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.api_rate_limit_buckets FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.api_rate_limit_buckets TO service_role;
+
+CREATE OR REPLACE FUNCTION public.increment_api_rate_limit(
+    p_bucket_key TEXT,
+    p_window_ms INTEGER
+)
+RETURNS TABLE(total_hits BIGINT, reset_time TIMESTAMPTZ)
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_now TIMESTAMPTZ := clock_timestamp();
+    v_window_ms INTEGER := LEAST(GREATEST(p_window_ms, 1), 86400000);
+    v_window_start TIMESTAMPTZ;
+    v_hits BIGINT;
+BEGIN
+    IF p_bucket_key !~ '^[a-f0-9]{64}$' THEN
+        RAISE EXCEPTION 'Invalid rate-limit key';
+    END IF;
+
+    INSERT INTO public.api_rate_limit_buckets AS buckets (bucket_key, window_start, hit_count)
+    VALUES (p_bucket_key, v_now, 1)
+    ON CONFLICT (bucket_key)
+    DO UPDATE SET
+        window_start = CASE
+            WHEN buckets.window_start + v_window_ms * INTERVAL '1 millisecond' <= v_now
+                THEN v_now
+            ELSE buckets.window_start
+        END,
+        hit_count = CASE
+            WHEN buckets.window_start + v_window_ms * INTERVAL '1 millisecond' <= v_now
+                THEN 1
+            ELSE buckets.hit_count + 1
+        END
+    RETURNING hit_count, window_start INTO v_hits, v_window_start;
+
+    -- Incremental cleanup keeps expired buckets bounded without scanning the
+    -- table on every request. A small fraction of calls removes at most 250.
+    IF random() < 0.01 THEN
+        DELETE FROM public.api_rate_limit_buckets
+        WHERE ctid IN (
+            SELECT ctid
+            FROM public.api_rate_limit_buckets
+            WHERE window_start < v_now - INTERVAL '24 hours'
+            ORDER BY window_start
+            LIMIT 250
+        );
+    END IF;
+
+    total_hits := v_hits;
+    reset_time := v_window_start + v_window_ms * INTERVAL '1 millisecond';
+    RETURN NEXT;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.decrement_api_rate_limit(
+    p_bucket_key TEXT,
+    p_window_ms INTEGER
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_window_ms INTEGER := LEAST(GREATEST(p_window_ms, 1), 86400000);
+    v_now TIMESTAMPTZ := clock_timestamp();
+BEGIN
+    IF p_bucket_key !~ '^[a-f0-9]{64}$' THEN
+        RAISE EXCEPTION 'Invalid rate-limit key';
+    END IF;
+
+    UPDATE public.api_rate_limit_buckets
+    SET hit_count = GREATEST(hit_count - 1, 0)
+    WHERE bucket_key = p_bucket_key
+      AND window_start + v_window_ms * INTERVAL '1 millisecond' > v_now
+      AND hit_count > 0;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.reset_api_rate_limit(
+    p_bucket_key TEXT,
+    p_window_ms INTEGER
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_window_ms INTEGER := LEAST(GREATEST(p_window_ms, 1), 86400000);
+BEGIN
+    IF p_bucket_key !~ '^[a-f0-9]{64}$' THEN
+        RAISE EXCEPTION 'Invalid rate-limit key';
+    END IF;
+
+    DELETE FROM public.api_rate_limit_buckets
+    WHERE bucket_key = p_bucket_key;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.increment_api_rate_limit(TEXT, INTEGER) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.decrement_api_rate_limit(TEXT, INTEGER) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.reset_api_rate_limit(TEXT, INTEGER) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.increment_api_rate_limit(TEXT, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION public.decrement_api_rate_limit(TEXT, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION public.reset_api_rate_limit(TEXT, INTEGER) TO service_role;
+
 NOTIFY pgrst, 'reload schema';

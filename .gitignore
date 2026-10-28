@@ -42,7 +42,6 @@ credentials.json
 *.secret
 *.token
 
-
 # Editor & OS files
 .vscode/*
 !.vscode/settings.json

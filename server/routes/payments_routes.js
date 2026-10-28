@@ -9,6 +9,7 @@
 
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
+import { rateLimitStoreFor } from '../lib/supabaseRateLimitStore.js';
 import { requireAuth } from '../auth.js';
 import { notFound, wrap } from '../lib/http.js';
 import { isPaymentSimulationAllowed } from '../config.js';
@@ -29,7 +30,8 @@ const qrImageRateLimiter = rateLimit({
   max: 60,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { success: false, message: 'Terlalu banyak permintaan kode QR. Tunggu sebentar.' }
+  message: { success: false, message: 'Terlalu banyak permintaan kode QR. Tunggu sebentar.' },
+  store: rateLimitStoreFor('qris-image')
 });
 
 /* Gerbang dievaluate SEBELUM requireAuth supaya rute ini benar-benar tidak

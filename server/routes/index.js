@@ -9,6 +9,7 @@ import { eventsRouter } from './events_routes.js';
 import { carouselRouter } from './carousel_routes.js';
 import { adminRouter } from './admin_routes.js';
 import { notificationsRouter } from './notifications_routes.js';
+import { cronRouter } from './cron_routes.js';
 
 const ROUTERS = [
   { path: '/api', router: healthRouter },       
@@ -21,6 +22,7 @@ const ROUTERS = [
   { path: '/api', router: eventsRouter },       
   { path: '/api', router: carouselRouter },     
   { path: '/api', router: notificationsRouter },
+  { path: '/api', router: cronRouter },
   { path: '/api', router: adminRouter }         
 ];
 

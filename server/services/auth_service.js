@@ -591,8 +591,8 @@ export async function findOrCreateGoogleUser({ email, name, source }) {
 
 
 /** Menukar kode sesi sekali-pakai (VULN-03) menjadi token + pengguna. */
-export function exchangeSessionCode(code) {
-  const session = redeemOneTimeCode(code);
+export async function exchangeSessionCode(code) {
+  const session = await redeemOneTimeCode(code);
   if (!session) return null;
 
   logger.ok('AUTH', 'Kode sesi sekali-pakai ditukar', { userId: session.user?.id });

@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import express from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import { rateLimitStoreFor } from '../lib/supabaseRateLimitStore.js';
 import {
   ALLOWED_ORIGINS,
   AUTH_IDENTIFIER_RATE_LIMIT,
@@ -47,7 +48,8 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: AUTH_RATE_LIMIT.message,
-  keyGenerator: (req) => ipKeyGenerator(req.ip || 'unknown')
+  keyGenerator: (req) => ipKeyGenerator(req.ip || 'unknown'),
+  store: rateLimitStoreFor('auth-ip')
 });
 
 export const authRateLimitedPaths = AUTH_RATE_LIMITED_PATHS;
@@ -65,7 +67,8 @@ export const authIdentifierRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: AUTH_IDENTIFIER_RATE_LIMIT.message,
-  keyGenerator: (req) => `${ipKeyGenerator(req.ip || 'unknown')}|${normalizeAuthIdentifier(req)}`
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip || 'unknown')}|${normalizeAuthIdentifier(req)}`,
+  store: rateLimitStoreFor('auth-identifier')
 });
 
 export const AUTH_IDENTIFIER_LIMITED_PATHS = [
@@ -84,7 +87,8 @@ export const qrisStatusRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: QRIS_STATUS_RATE_LIMIT.message,
-  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip || 'unknown')
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip || 'unknown'),
+  store: rateLimitStoreFor('qris-status')
 });
 
 export const paymentRateLimiter = rateLimit({
@@ -92,5 +96,6 @@ export const paymentRateLimiter = rateLimit({
   max: 20,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { success: false, message: 'Terlalu banyak percobaan transaksi atau pembayaran. Coba lagi dalam 5 menit.' }
+  message: { success: false, message: 'Terlalu banyak percobaan transaksi atau pembayaran. Coba lagi dalam 5 menit.' },
+  store: rateLimitStoreFor('payment')
 });

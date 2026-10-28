@@ -1,57 +1,69 @@
 /* Kode sekali-pakai untuk menukar sesi setelah redirect OAuth (VULN-03).
  *
- * Token tidak boleh ikut di URL: URL tercatat di riwayat peramban, header
- * Referer, dan log proxy. Yang masuk URL hanya kode acak 256-bit berumur 60
- * detik, dan kode itu hangus pada penukaran pertama — berhasil maupun tidak.
- *
- * Penyimpanan in-memory disengaja: proses ini satu instance dan kode hanya
- * hidup sepanjang satu redirect. Restart server di antara redirect dan
- * penukaran cukup memaksa pengguna masuk ulang, bukan membocorkan apa pun.
+ * Browser hanya menerima kode acak 256-bit berumur 60 detik. Kode mentah
+ * tidak pernah disimpan; hash dan payload sesi disimpan di tabel Supabase
+ * agar callback dan penukaran tetap bekerja pada instance Vercel berbeda.
+ * DELETE ... RETURNING membuat penukaran atomik: satu permintaan saja yang
+ * dapat mengambil payload, termasuk saat dua permintaan tiba bersamaan.
  */
 
-import crypto from 'crypto';
+import crypto from 'node:crypto';
+import { supabaseServer } from '../db.js';
 
 const DEFAULT_TTL_MS = 60 * 1000;
-const MAX_ENTRIES = 2000;
+const PURPOSE = 'oauth_session';
+const INTERNAL_EMAIL = 'oauth-session@internal.invalid';
 
-const store = new Map();
+const hashCode = (code) => crypto.createHash('sha256').update(code).digest('hex');
 
-const sweep = (now) => {
-  for (const [code, entry] of store) {
-    if (entry.expiresAt <= now) store.delete(code);
-  }
-  while (store.size > MAX_ENTRIES) {
-    const oldest = store.keys().next().value;
-    if (oldest === undefined) break;
-    store.delete(oldest);
-  }
+const requireStore = () => {
+  if (!supabaseServer) throw new Error('Penyimpanan sesi OAuth belum dikonfigurasi.');
+  return supabaseServer;
 };
 
-/**
- * Simpan payload sesi dan kembalikan kode sekali-pakai.
- *
- * @param {object} payload - Bentuk `{ token, user }`.
- * @param {{ ttlMs?: number, now?: number }} [options]
- * @returns {string} Kode base64url 43 karakter.
- */
-export const createOneTimeCode = (payload, { ttlMs = DEFAULT_TTL_MS, now = Date.now() } = {}) => {
+/** Simpan payload sesi di store bersama dan kembalikan kode acak base64url. */
+export const createOneTimeCode = async (
+  payload,
+  { ttlMs = DEFAULT_TTL_MS, now = Date.now() } = {}
+) => {
+  const supabase = requireStore();
   const code = crypto.randomBytes(32).toString('base64url');
-  store.set(code, { payload, expiresAt: now + ttlMs });
-  sweep(now);
+  const createdAt = new Date(now).toISOString();
+  const expiresAt = new Date(now + Math.max(1, ttlMs)).toISOString();
+
+  const { error: cleanupError } = await supabase
+    .from('email_verifications')
+    .delete()
+    .eq('purpose', PURPOSE)
+    .lte('expires_at', createdAt);
+  if (cleanupError) throw cleanupError;
+
+  const { error } = await supabase.from('email_verifications').insert({
+    email: INTERNAL_EMAIL,
+    purpose: PURPOSE,
+    code_hash: hashCode(code),
+    payload,
+    expires_at: expiresAt
+  });
+  if (error) throw error;
+
   return code;
 };
 
-/**
- * Tukar kode menjadi payload. Kode selalu dihapus, termasuk saat kedaluwarsa.
- *
- * @param {string} code
- * @param {{ now?: number }} [options]
- * @returns {object|null} Payload bila sah dan belum kedaluwarsa.
- */
-export const redeemOneTimeCode = (code, { now = Date.now() } = {}) => {
-  if (typeof code !== 'string' || !code) return null;
-  const entry = store.get(code);
-  if (!entry) return null;
-  store.delete(code);
-  return entry.expiresAt > now ? entry.payload : null;
+/** Tukar kode sekali-pakai menjadi payload; setiap percobaan menghabiskan kode. */
+export const redeemOneTimeCode = async (code, { now = Date.now() } = {}) => {
+  if (typeof code !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(code)) return null;
+
+  const { data, error } = await requireStore()
+    .from('email_verifications')
+    .delete()
+    .eq('purpose', PURPOSE)
+    .eq('code_hash', hashCode(code))
+    .select('payload, expires_at')
+    .maybeSingle();
+
+  if (error) throw error;
+  const expiresAt = Date.parse(data?.expires_at);
+  if (!data || !Number.isFinite(expiresAt) || expiresAt <= now) return null;
+  return data.payload || null;
 };

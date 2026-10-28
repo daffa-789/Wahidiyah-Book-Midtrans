@@ -335,7 +335,7 @@ export const sendEventReminderNow = async (eventId, { force = false, type = 'aut
  * Penyapu berkala: cari semua agenda H-1 yang belum dikirim pengingatnya.
  * Dipanggil saat boot dan setiap 15 menit setelahnya.
  */
-const sweepDueReminders = async () => {
+export const sweepDueReminders = async () => {
   if (!isPushConfigured()) return { checked: 0, sent: 0, skipped: true };
 
   const tomorrow = addDaysYmd(todayWib(), 1);

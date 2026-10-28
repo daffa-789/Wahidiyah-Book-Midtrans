@@ -3,17 +3,31 @@ npm-debug.log
 dist
 .git
 .gitignore
+.npmrc
 # Secrets are injected by Compose at runtime, never copied into build context.
 .env
 .env.*
 server/.env
 server/.env.*
+client_secret_*.json
+.otp-dev-store.json
+server/.otp-dev-store.json
 .vscode
 .vercel
+.agents
+.codex
 .workbuddy-ai
 _refwork
-document skripsi
-Research Design
-coverage
-.temp
+document skripsi/
+Research Design/
+buku-siap-upload/
+scripts/
+tests/
+docs/
+api/
+supabase/
+supabase_database/
+coverage/
+*.md
 *.log
+.temp/

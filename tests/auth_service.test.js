@@ -418,18 +418,25 @@ describe('auth.service: loginWithGoogleSupabase', () => {
 
 
 describe('auth.service: exchangeSessionCode (kode sekali-pakai, VULN-03)', () => {
-  it('kode valid ditukar sekali, pemakaian kedua hangus', () => {
-    const code = createOneTimeCode({ token: 'jwt-token', user: { id: 'u1' } });
+  it('kode valid ditukar sekali, pemakaian kedua hangus', async () => {
+    stub().reset();
+    stub().enqueue({ data: null, error: null }); // bersihkan kode sesi kedaluwarsa
+    stub().enqueue({ data: null, error: null }); // simpan kode baru
+    const code = await createOneTimeCode({ token: 'jwt-token', user: { id: 'u1' } });
+    const inserted = stub().last('insert').rows[0];
 
-    const first = exchangeSessionCode(code);
+    stub().enqueue({ data: { payload: { token: 'jwt-token', user: { id: 'u1' } }, expires_at: inserted.expires_at }, error: null });
+    const first = await exchangeSessionCode(code);
     expect(first.token).toBe('jwt-token');
     expect(first.user.id).toBe('u1');
 
-    expect(exchangeSessionCode(code)).toBeNull();
+    stub().enqueue({ data: null, error: null });
+    expect(await exchangeSessionCode(code)).toBeNull();
   });
 
-  it('kode asing → null', () => {
-    expect(exchangeSessionCode('kode-tidak-pernah-ada')).toBeNull();
-    expect(exchangeSessionCode('')).toBeNull();
+  it('kode asing → null tanpa mengakses store', async () => {
+    expect(await exchangeSessionCode('kode-tidak-pernah-ada')).toBeNull();
+    expect(await exchangeSessionCode('')).toBeNull();
+    expect(stub().ops('delete')).toHaveLength(0);
   });
 });

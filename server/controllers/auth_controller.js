@@ -306,7 +306,7 @@ export async function googleCallback(req, res) {
 
     const token = createSessionToken(account.user);
     const user = toPublicUser(account.user);
-    const sessionCode = createOneTimeCode({ token, user });
+    const sessionCode = await createOneTimeCode({ token, user });
 
     const successUrl = new URL('/auth/success', frontendOrigin);
     successUrl.searchParams.set('code', sessionCode);
@@ -321,18 +321,22 @@ export async function googleCallback(req, res) {
 /* Menukar kode sekali-pakai dari redirect Google menjadi sesi (VULN-03).
  * Kode berumur 60 detik dan hangus pada percobaan pertama, berhasil atau tidak.
  */
-export function exchange(req, res) {
+export async function exchange(req, res) {
   const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
-  const session = exchangeSessionCode(code);
+  try {
+    const session = await exchangeSessionCode(code);
 
-  if (!session) {
-    return res.status(401).json({
-      success: false,
-      message: 'Kode sesi tidak valid atau sudah kedaluwarsa. Silakan masuk ulang.'
-    });
+    if (!session) {
+      return res.status(401).json({
+        success: false,
+        message: 'Kode sesi tidak valid atau sudah kedaluwarsa. Silakan masuk ulang.'
+      });
+    }
+
+    return res.json({ success: true, token: session.token, user: session.user });
+  } catch (error) {
+    return replyAuthFailure(res, error);
   }
-
-  return res.json({ success: true, token: session.token, user: session.user });
 }
 
 

@@ -10,7 +10,13 @@ RUN npm ci
 
 # Copy full source and build frontend assets
 COPY . .
-RUN npm run build
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_GOOGLE_CLIENT_ID
+RUN VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
+    VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" \
+    VITE_GOOGLE_CLIENT_ID="$VITE_GOOGLE_CLIENT_ID" \
+    npm run build
 
 # ===================================================
 # Stage 2: Production Runtime (Express Server)
@@ -30,8 +36,11 @@ COPY --from=builder /app/dist ./dist
 
 # Copy backend source code & necessary assets
 COPY server ./server
-COPY scripts ./scripts
+COPY shared ./shared
 COPY public ./public
+
+# Run as the unprivileged account provided by the official Node image.
+USER node
 
 # Expose backend port
 EXPOSE 5000

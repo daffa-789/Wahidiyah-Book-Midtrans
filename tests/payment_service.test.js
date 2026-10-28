@@ -28,6 +28,13 @@ vi.mock('../server/lib/membership.js', () => ({
   activatePaidMembership: vi.fn(),
   activeSubscriptionConflict: vi.fn(() => null),
   insertTransaction: vi.fn(() => '000012345678'),
+  restorePendingTransaction: vi.fn(async (transactionId) => {
+    const result = await h.stub.client.from('transactions')
+      .update({ status: 'pending', verified_at: null })
+      .eq('id', transactionId)
+      .eq('status', 'success');
+    if (result.error) throw result.error;
+  }),
   toRefCode: (refNo) => 'REF-' + String(refNo).slice(-8),
   matchCatalogPlan: vi.fn(),
   resolveManualTransferPricing: vi.fn(),

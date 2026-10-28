@@ -6,10 +6,13 @@
  */
 
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
+import { rateLimitStoreFor } from '../lib/supabaseRateLimitStore.js';
 import {
   badRequest,
   wrap
 } from '../lib/http.js';
+import { isAllowedPushEndpoint } from '../lib/pushEndpoint.js';
 import {
   isPushConfigured,
   saveSubscription,
@@ -21,22 +24,15 @@ import { clippedText } from '../lib/validate.js';
 
 export const notificationsRouter = Router();
 
-const MAX_ENDPOINT_LENGTH = 1000;
 const MAX_KEY_LENGTH = 200;
-
-/* Endpoint WAJIB berupa URL https ke push service. Tanpa cek ini, penyerang
-   bisa mendaftarkan endpoint internal (SSRF) dan menjadikan server sebagai
-   pengirim permintaan ke jaringan dalam. */
-const isAllowedEndpoint = (value) => {
-  if (typeof value !== 'string') return false;
-  if (value.length > MAX_ENDPOINT_LENGTH) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-};
+const subscriptionRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak perubahan langganan notifikasi. Coba lagi nanti.' },
+  store: rateLimitStoreFor('push-subscription')
+});
 
 const isValidKey = (value) =>
   typeof value === 'string' && value.length > 0 && value.length <= MAX_KEY_LENGTH &&
@@ -52,7 +48,7 @@ notificationsRouter.get('/notifications/public-key', (req, res) => {
 });
 
 
-notificationsRouter.post('/notifications/subscribe', wrap(async (req, res) => {
+notificationsRouter.post('/notifications/subscribe', subscriptionRateLimit, wrap(async (req, res) => {
   if (!isPushConfigured()) {
     return res.status(503).json({
       success: false,
@@ -63,8 +59,8 @@ notificationsRouter.post('/notifications/subscribe', wrap(async (req, res) => {
   const endpoint = req.body?.endpoint;
   const keys = req.body?.keys || {};
 
-  if (!isAllowedEndpoint(endpoint)) {
-    return badRequest(res, 'Endpoint langganan tidak valid — harus berupa URL https.');
+  if (!isAllowedPushEndpoint(endpoint)) {
+    return badRequest(res, 'Endpoint langganan harus berasal dari layanan push yang didukung.');
   }
 
   if (!isValidKey(keys.p256dh) || !isValidKey(keys.auth)) {
@@ -102,10 +98,10 @@ notificationsRouter.post('/notifications/subscribe', wrap(async (req, res) => {
 }));
 
 
-notificationsRouter.post('/notifications/unsubscribe', wrap(async (req, res) => {
+notificationsRouter.post('/notifications/unsubscribe', subscriptionRateLimit, wrap(async (req, res) => {
   const endpoint = req.body?.endpoint;
 
-  if (!isAllowedEndpoint(endpoint)) {
+  if (!isAllowedPushEndpoint(endpoint)) {
     return badRequest(res, 'Endpoint langganan tidak valid.');
   }
 

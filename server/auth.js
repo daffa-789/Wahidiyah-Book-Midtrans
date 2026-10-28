@@ -120,7 +120,8 @@ export const settleExpiredMembership = async (userId = null) => {
       .not('expires_at', 'is', null)
       .lt('expires_at', nowIso);
     if (userId) subQuery = subQuery.eq('user_id', userId);
-    await subQuery;
+    const { error: subscriptionError } = await subQuery;
+    if (subscriptionError) throw subscriptionError;
 
     let userQuery = supabaseServer
       .from('users')
@@ -128,9 +129,11 @@ export const settleExpiredMembership = async (userId = null) => {
       .not('subscription_expires_at', 'is', null)
       .lt('subscription_expires_at', nowIso);
     if (userId) userQuery = userQuery.eq('id', userId);
-    await userQuery;
+    const { error: userError } = await userQuery;
+    if (userError) throw userError;
   } catch (error) {
     console.warn('[DB] Penegakan kedaluwarsa langganan dilewati:', error.message);
+    throw error;
   }
 };
 
