@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
+import { SAVE_SCROLL_POSITION_EVENT } from '@lib/scrollPositionEvents';
 
 const STORAGE_KEY = 'wahidiyah-scroll-positions';
 const MAX_SAVED_ENTRIES = 100;
@@ -102,10 +103,14 @@ export const ScrollRestoration = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('pagehide', saveCurrentPosition);
+    window.addEventListener('popstate', saveCurrentPosition, true);
+    window.addEventListener(SAVE_SCROLL_POSITION_EVENT, saveCurrentPosition);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('pagehide', saveCurrentPosition);
+      window.removeEventListener('popstate', saveCurrentPosition, true);
+      window.removeEventListener(SAVE_SCROLL_POSITION_EVENT, saveCurrentPosition);
       saveCurrentPosition();
     };
   }, []);
@@ -146,7 +151,6 @@ export const ScrollRestoration = () => {
         saveTimerRef.current = null;
       }
 
-      persistPosition(positionsRef, previousKey, window.scrollY);
       cancelPendingRestoreRef.current?.();
       activeKeyRef.current = location.key;
     }

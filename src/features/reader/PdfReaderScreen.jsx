@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft,
   BookOpen,
@@ -13,6 +13,7 @@ import { useApp } from '@context/AppContext';
 import { apiJson, apiRequest, authHeaders } from '@lib/api';
 import { ContinuousPdfViewer } from './ContinuousPdfViewer';
 import { sanitizeHtml } from '@lib/sanitizeHtml';
+import { useAnchoredPinchZoom } from './useAnchoredPinchZoom';
 
 const TEXT_TYPES = new Set(['txt', 'md', 'csv', 'rtf']);
 const PDF_TYPES = new Set(['pdf']);
@@ -78,6 +79,13 @@ export const PdfReaderScreen = () => {
 
   // Reset Zoom ke 100%
   const resetZoom = () => setClampedZoom(100);
+
+  const readingSurfaceRef = useRef(null);
+  const pinchZoomHandlers = useAnchoredPinchZoom({
+    containerRef: readingSurfaceRef,
+    zoom,
+    setZoom: setClampedZoom
+  });
 
   // Toggle Layar Penuh
   const toggleFullscreen = () => {
@@ -208,8 +216,6 @@ export const PdfReaderScreen = () => {
     );
   }
 
-  const percentage = Math.min(100, Math.max(1, Math.round((currentPage / totalPages) * 100)));
-
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-canvas-subtle text-ink-900 dark:text-cream-50 select-none overflow-hidden">
       {/* Top Header Minimalis & Bersih */}
@@ -236,6 +242,26 @@ export const PdfReaderScreen = () => {
               </p>
             )}
           </div>
+
+          <form
+            onSubmit={handlePageInputSubmit}
+            className="ml-1 flex shrink-0 items-center gap-0.5 rounded-lg px-1.5 py-1 font-mono text-small font-semibold text-ink-500 dark:text-ink-400"
+            aria-label="Navigasi halaman"
+          >
+            <input
+              type="text"
+              inputMode="numeric"
+              value={pageInput}
+              onChange={(event) => setPageInput(event.target.value)}
+              onBlur={handlePageInputSubmit}
+              className="min-w-[1ch] max-w-[4ch] bg-transparent text-right text-ink-800 dark:text-cream-100 focus-visible:outline-none"
+              style={{ width: `${Math.max(1, pageInput.length)}ch` }}
+              aria-label="Halaman saat ini"
+              title="Ketik nomor halaman lalu tekan Enter"
+            />
+            <span aria-hidden="true">/</span>
+            <span>{totalPages}</span>
+          </form>
         </div>
 
         {/* Kontrol Kanan: Tombol Zoom di sebelah kiri Fullscreen */}
@@ -329,15 +355,22 @@ export const PdfReaderScreen = () => {
           </div>
         ) : (docHtml || DOCX_TYPES.has(extension)) && docHtml ? (
           <div
-            className="w-full max-w-full md:max-w-4xl xl:max-w-5xl bg-ui-card shadow-none md:shadow-md rounded-none md:rounded-2xl p-4 sm:p-8 md:p-12 border-0 md:border border-ink-200/60 dark:border-ink-800/80 leading-relaxed text-ink-900 dark:text-cream-50 select-text transition-all overflow-y-auto h-full overscroll-contain"
+            ref={readingSurfaceRef}
+            onTouchStart={pinchZoomHandlers.handleTouchStart}
+            onTouchMove={pinchZoomHandlers.handleTouchMove}
+            onTouchEnd={pinchZoomHandlers.handleTouchEnd}
+            onTouchCancel={pinchZoomHandlers.handleTouchEnd}
+            className="w-full max-w-full md:max-w-4xl xl:max-w-5xl bg-ui-card shadow-none md:shadow-md rounded-none md:rounded-2xl p-4 sm:p-8 md:p-12 border-0 md:border border-ink-200/60 dark:border-ink-800/80 leading-relaxed text-ink-900 dark:text-cream-50 select-text overflow-y-auto h-full overscroll-contain"
             style={{
               fontSize: `${(zoom / 100) * 1.05}rem`,
               WebkitOverflowScrolling: 'touch',
-              touchAction: 'pan-y'
+              touchAction: 'pan-x pan-y',
+              overflowAnchor: 'none'
             }}
           >
             <div
-              className="prose dark:prose-invert max-w-none [&>p]:mb-4 [&>p]:leading-relaxed [&>h1]:text-2xl [&>h1]:font-black [&>h1]:mb-4 [&>h2]:text-xl [&>h2]:font-bold [&>h2]:mb-3 [&>table]:w-full [&>table]:border-collapse [&>table_td]:border [&>table_td]:border-cream-300 [&>table_td]:p-2 [&>table_th]:border [&>table_th]:border-cream-300 [&>table_th]:p-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 font-serif sm:font-sans"
+              className="prose dark:prose-invert max-w-none [&>p]:mb-4 [&>p]:leading-relaxed [&>h1]:text-[1.5em] [&>h1]:font-black [&>h1]:mb-4 [&>h2]:text-[1.25em] [&>h2]:font-bold [&>h2]:mb-3 [&>table]:w-full [&>table]:border-collapse [&>table_td]:border [&>table_td]:border-cream-300 [&>table_td]:p-2 [&>table_th]:border [&>table_th]:border-cream-300 [&>table_th]:p-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 font-serif sm:font-sans"
+              style={{ fontSize: `${(zoom / 100) * 1.05}rem` }}
               dangerouslySetInnerHTML={{ __html: docHtml }}
             />
           </div>
@@ -355,8 +388,13 @@ export const PdfReaderScreen = () => {
           />
         ) : TEXT_TYPES.has(extension) && (textContent || docHtml) ? (
           <div
+            ref={readingSurfaceRef}
+            onTouchStart={pinchZoomHandlers.handleTouchStart}
+            onTouchMove={pinchZoomHandlers.handleTouchMove}
+            onTouchEnd={pinchZoomHandlers.handleTouchEnd}
+            onTouchCancel={pinchZoomHandlers.handleTouchEnd}
             className="w-full h-full flex flex-col items-center overflow-y-auto p-4 sm:p-8 overscroll-contain"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y', overflowAnchor: 'none' }}
           >
             <article
               className="relative w-full max-w-3xl bg-ui-card p-8 sm:p-14 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 whitespace-pre-wrap select-none my-auto"
@@ -367,14 +405,18 @@ export const PdfReaderScreen = () => {
           </div>
         ) : totalPages > 0 && samplePages.length > 0 ? (
           <div
+            ref={readingSurfaceRef}
+            onTouchStart={pinchZoomHandlers.handleTouchStart}
+            onTouchMove={pinchZoomHandlers.handleTouchMove}
+            onTouchEnd={pinchZoomHandlers.handleTouchEnd}
+            onTouchCancel={pinchZoomHandlers.handleTouchEnd}
             className="w-full h-full flex flex-col items-center justify-start overflow-y-auto p-4 sm:p-6 overscroll-contain"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y', overflowAnchor: 'none' }}
           >
             <article
-              className="relative w-full max-w-3xl bg-ui-card p-8 sm:p-12 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 select-none my-auto transition-transform origin-top"
+              className="relative w-full max-w-3xl bg-ui-card p-8 sm:p-12 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 select-none my-auto"
               style={{
-                transform: zoom === 100 ? 'none' : `scale(${zoom / 100})`,
-                transformOrigin: 'top center'
+                fontSize: `${(zoom / 100) * 1.05}rem`
               }}
             >
               <header className="flex justify-between border-b border-ink-100 pb-3 text-micro font-bold text-ink-400">
@@ -382,11 +424,11 @@ export const PdfReaderScreen = () => {
                 <span>HALAMAN {currentPage} / {totalPages}</span>
               </header>
               {samplePages[currentPage - 1]?.arabicHeading && (
-                <p className="font-arabic my-6 text-center text-2xl text-brand-700">
+                <p className="font-arabic my-6 text-center text-brand-700" style={{ fontSize: '1.5em' }}>
                   {samplePages[currentPage - 1].arabicHeading}
                 </p>
               )}
-              <h2 className="mb-4 text-center text-h2 font-black text-brand-900 dark:text-cream-50">
+              <h2 className="mb-4 text-center font-black text-brand-900 dark:text-cream-50" style={{ fontSize: '1.75em' }}>
                 {samplePages[currentPage - 1]?.title}
               </h2>
               <p className="whitespace-pre-line leading-8">
@@ -405,32 +447,6 @@ export const PdfReaderScreen = () => {
         )}
       </main>
 
-      {/* Floating Bottom Navigation Pill (Tanpa Tombol Next & Prev Sesuai Permintaan) */}
-      <footer className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-        <form
-          onSubmit={handlePageInputSubmit}
-          className="pointer-events-auto flex items-center gap-2 bg-ui-card/95 backdrop-blur-md shadow-xl border border-ink-200/90 dark:border-ink-700/80 rounded-full px-4 py-1.5 text-caption font-medium text-ink-800 dark:text-cream-100"
-        >
-          {/* Kotak Halaman Dinamis & Persentase Membaca */}
-          <div className="flex items-center gap-1.5 font-mono text-small">
-            <span className="text-micro font-sans text-ink-500 dark:text-ink-400 font-medium">Halaman</span>
-            <input
-              type="text"
-              value={pageInput}
-              onChange={(e) => setPageInput(e.target.value)}
-              onBlur={handlePageInputSubmit}
-              className="w-9 sm:w-11 text-center font-bold text-ink-900 dark:text-cream-50 bg-ink-50 dark:bg-ink-800/80 rounded py-0.5 border border-ink-200 dark:border-ink-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-600 text-small"
-              title="Ketik nomor halaman lalu tekan Enter untuk loncat ke halaman tersebut"
-            />
-            <span className="text-ink-400">/</span>
-            <span className="text-ink-600 dark:text-ink-300 font-semibold">{totalPages}</span>
-            <span className="text-ink-300 dark:text-ink-600 mx-1">•</span>
-            <span className="text-ink-500 dark:text-ink-400 text-caption font-sans">
-              {percentage}%
-            </span>
-          </div>
-        </form>
-      </footer>
     </div>
   );
 };

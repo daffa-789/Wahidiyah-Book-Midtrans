@@ -65,12 +65,6 @@ export const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, on
                 }`}
                 strokeWidth={isActive ? 2.3 : 1.8}
               />
-              {isActive && (
-                <span
-                  aria-hidden="true"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-brand-700"
-                />
-              )}
             </div>
             <span className="mt-0.5 text-caption leading-tight tracking-tight truncate max-w-full">
               {item.label}

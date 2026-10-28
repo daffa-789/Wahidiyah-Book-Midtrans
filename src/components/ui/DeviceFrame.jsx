@@ -14,7 +14,7 @@ const SUBPAGE_TITLES = {
   help: 'Pusat Bantuan',
   'subscription-history': 'Riwayat Langganan',
   riwayat: 'Riwayat Langganan',
-  about: 'Tentang Aplikasi',
+  about: 'Tentang',
   'profile-edit': 'Profil',
   profile: 'Profil'
 };
@@ -177,7 +177,7 @@ const DeviceFrameBase = ({ children }) => {
               aria-label="Kembali"
             >
               <ArrowLeft className="w-5 h-5 text-ink-700" strokeWidth={2.2} />
-              <span className="text-body font-bold text-ink-900">
+              <span className="font-sans text-base font-semibold tracking-normal text-ink-900">
                 {SUBPAGE_TITLES[currentScreen]}
               </span>
             </button>

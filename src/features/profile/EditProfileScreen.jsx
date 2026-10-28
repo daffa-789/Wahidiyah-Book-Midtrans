@@ -147,9 +147,6 @@ export const EditProfileScreen = () => {
                     </span>
                   </div>
                 </div>
-                <p className="mt-1 text-micro text-ink-400">
-                  Email akun tidak dapat diubah karena terhubung dengan autentikasi keamanan.
-                </p>
               </div>
 
               {/* Field WhatsApp */}
@@ -248,10 +245,7 @@ export const EditProfileScreen = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-body font-bold text-ink-900 group-hover:text-brand-800 transition-colors">
-                    Riwayat Langganan & Kwitansi
-                  </p>
-                  <p className="text-caption text-ink-500 truncate mt-0.5">
-                    Lihat riwayat transaksi dan kwitansi resmi
+                    Riwayat Langganan
                   </p>
                 </div>
               </div>
@@ -279,9 +273,6 @@ export const EditProfileScreen = () => {
                   <p className="text-body font-bold text-ink-900 group-hover:text-brand-800 transition-colors">
                     Pusat Bantuan
                   </p>
-                  <p className="text-caption text-ink-500 truncate mt-0.5">
-                    Pertanyaan umum dan panduan penggunaan aplikasi
-                  </p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-ink-300 group-hover:text-ink-600 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
@@ -298,10 +289,7 @@ export const EditProfileScreen = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-body font-bold text-ink-900 group-hover:text-brand-800 transition-colors">
-                    Tentang E-Book Wahidiyah
-                  </p>
-                  <p className="text-caption text-ink-500 truncate mt-0.5">
-                    Informasi sistem perpustakaan dan legalitas
+                    Tentang
                   </p>
                 </div>
               </div>

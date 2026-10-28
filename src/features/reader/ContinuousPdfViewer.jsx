@@ -114,12 +114,13 @@ export const ContinuousPdfViewer = ({
   const displayPageHeight = Math.round(displayPageWidth * naturalAspect);
 
   // 4. Deteksi Posisi Bacaan Terkini saat Menggulir (Scroll-Spy & Anchor Tracker)
-  const updateReadingPosition = useCallback(() => {
+  const updateReadingPosition = useCallback((focalY) => {
     const el = containerRef.current;
     if (!el || !pdfDoc || totalPages === 0) return;
 
     const containerRect = el.getBoundingClientRect();
-    const eyelineY = containerRect.top + el.clientHeight * 0.35;
+    const localEyelineY = focalY ?? el.clientHeight * 0.35;
+    const eyelineY = containerRect.top + localEyelineY;
 
     let closestPage = 1;
     let minDistance = Infinity;
@@ -187,8 +188,11 @@ export const ContinuousPdfViewer = ({
       customFocalYRef.current = null;
 
       // Hitung koordinat dokumen baru untuk baris teks yang sedang dibaca
-      const newPageStride = displayPageHeight + GAP;
-      const targetYInDoc = (page - 1) * newPageStride + (ratio * displayPageHeight);
+      const pageElement = pageContainerRefs.current[page];
+      const targetYInDoc = pageElement
+        ? pageElement.getBoundingClientRect().top - container.getBoundingClientRect().top
+          + container.scrollTop + (ratio * pageElement.clientHeight)
+        : (page - 1) * (displayPageHeight + GAP) + (ratio * displayPageHeight);
       const newScrollTop = Math.max(0, targetYInDoc - eyelineY);
 
       container.scrollTop = newScrollTop;
@@ -218,17 +222,21 @@ export const ContinuousPdfViewer = ({
         e.touches[0].clientY - e.touches[1].clientY
       );
       if (touchStartDistRef.current > 10) {
+        const midpointClientY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
         if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
         pinchRafRef.current = requestAnimationFrame(() => {
           const el = containerRef.current;
           if (el) {
             const rect = el.getBoundingClientRect();
-            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+            const midY = midpointClientY - rect.top;
+            updateReadingPosition(midY);
             customFocalYRef.current = midY;
           }
 
-          const factor = currentDist / touchStartDistRef.current;
-          const targetZoom = Math.min(300, Math.max(40, Math.round(initialPinchZoomRef.current * factor)));
+          const rawFactor = currentDist / touchStartDistRef.current;
+          const easedFactor = 1 + (rawFactor - 1) * 0.45;
+          const gestureFactor = Math.min(1.25, Math.max(0.8, easedFactor));
+          const targetZoom = Math.min(300, Math.max(40, Math.round(initialPinchZoomRef.current * gestureFactor)));
           setZoom(targetZoom);
         });
       }
@@ -394,7 +402,8 @@ export const ContinuousPdfViewer = ({
       className="relative flex-1 min-h-0 w-full h-full overflow-y-auto overflow-x-auto bg-canvas-subtle flex flex-col items-center py-4 px-2 sm:px-4 select-text overscroll-contain"
       style={{
         WebkitOverflowScrolling: 'touch',
-        touchAction: zoom > 100 ? 'pan-x pan-y' : 'pan-y pinch-zoom'
+        touchAction: 'pan-x pan-y',
+        overflowAnchor: 'none'
       }}
     >
       {/* Tampilan Lembar Dokumen Kanvas Tetap (Fixed Sheet Canvas) */}

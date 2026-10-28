@@ -51,9 +51,12 @@ const ScreenLoading = () => (
 
 const AuthBoot = () => (
   <div className="min-h-screen bg-cream-100 flex items-center justify-center px-6">
-    <div className="flex items-center gap-3 rounded-2xl border border-cream-300 bg-cream-50 px-5 py-4 text-body font-semibold text-ink-700 shadow-sm">
+    <div
+      role="status"
+      aria-label="Memeriksa sesi pengguna"
+      className="flex items-center gap-3 rounded-2xl border border-cream-300 bg-cream-50 px-5 py-4 text-body font-semibold text-ink-700 shadow-sm"
+    >
       <span className="h-4 w-4 rounded-full border-2 border-brand-200 border-t-brand-700 animate-spin" />
-      Menyiapkan sesi aman…
     </div>
   </div>
 );

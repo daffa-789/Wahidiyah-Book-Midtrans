@@ -13,6 +13,7 @@ import {
   peekIntendedLocation,
   saveIntendedLocation
 } from '@lib/api';
+import { saveScrollPositionBeforeNavigation } from '@lib/scrollPositionEvents';
 
 export const useNavigationSlice = ({ initialScreen, userRole }) => {
   const [currentScreen, setCurrentScreen] = useState(() => initialScreen || getScreenFromPath());
@@ -99,6 +100,8 @@ export const useNavigationSlice = ({ initialScreen, userRole }) => {
     if (destScreen === 'admin-dashboard' && adminTab) {
       targetPath = adminPathForTab(adminTab);
     }
+
+    saveScrollPositionBeforeNavigation();
 
     screenRef.current = destScreen;
     setCurrentScreen(destScreen);

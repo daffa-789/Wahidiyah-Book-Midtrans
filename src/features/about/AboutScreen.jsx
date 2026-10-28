@@ -5,13 +5,7 @@ export const AboutScreen = () => {
   return (
     <div className="min-h-[700px] flex flex-col justify-between px-4 sm:px-6 py-6 bg-cream-50">
       <div className={layout.contentCenter}>
-
-        <div className="text-center my-4">
-          <h3 className="text-xl font-bold text-ink-900">Buku Wahidiyah</h3>
-          <p className="text-xs text-brand-800 font-semibold mt-0.5">Perpustakaan Digital Sholawat Wahidiyah</p>
-        </div>
-
-        <div className="space-y-4 mt-6">
+        <div className="space-y-4">
 
           <div className="bg-cream-100/80 rounded-3xl p-5 border border-cream-200 space-y-2">
             <div className={layout.rowGap2}>
