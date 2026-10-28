@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { pdfjsLib } from './pdfWorkerSetup';
+import { getPinchScale, getPinchZoom } from './zoomUtils';
 
 /**
  * ContinuousPdfViewer
@@ -29,6 +30,7 @@ export const ContinuousPdfViewer = ({
   const renderTasksRef = useRef({});
   const canvasRefs = useRef({});
   const pageContainerRefs = useRef({});
+  const pageStackRef = useRef(null);
 
   // Pelacak posisi bacaan aktif secara riil ({ page: nomor halaman, ratio: offset vertikal dalam halaman })
   const currentViewRef = useRef({ page: currentPage || 1, ratio: 0 });
@@ -38,8 +40,12 @@ export const ContinuousPdfViewer = ({
   // Ref untuk mendeteksi Pinch-to-zoom (2 jari di mobile)
   const touchStartDistRef = useRef(0);
   const initialPinchZoomRef = useRef(100);
+  const lastPinchDistRef = useRef(0);
+  const pinchOriginRef = useRef({ x: 0, y: 0, clientX: 0, clientY: 0 });
+  const pinchAnchorRef = useRef(null);
   const isPinchingRef = useRef(false);
   const pinchRafRef = useRef(null);
+  const touchMoveHandlerRef = useRef(null);
 
   // 1. Muat Dokumen PDF dari ArrayBuffer
   useEffect(() => {
@@ -171,7 +177,8 @@ export const ContinuousPdfViewer = ({
   }, [updateReadingPosition]);
 
   // 5. Kunci Posisi Fokus Membaca saat Zoom Berubah (Reading Anchor Lock)
-  // Menjamin teks yang sedang dilihat TIDAK BERGESER ATAU MELONCAT KE HALAMAN LAIN
+  // Pinch hanya mengubah transform saat jari bergerak; ukuran PDF dan canvas
+  // dihitung ulang sekali setelah gesture selesai.
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container || prevZoomRef.current === zoom) {
@@ -179,76 +186,133 @@ export const ContinuousPdfViewer = ({
       return;
     }
 
-    const { page, ratio } = currentViewRef.current;
+    const anchor = pinchAnchorRef.current;
+    const { page, ratio } = anchor || currentViewRef.current;
+    const eyelineY = anchor?.focalY ?? (customFocalYRef.current !== null
+      ? customFocalYRef.current
+      : container.clientHeight * 0.35);
+
+    pageStackRef.current?.style.removeProperty('transform');
+    pageStackRef.current?.style.removeProperty('transform-origin');
+    pageStackRef.current?.style.removeProperty('will-change');
+    customFocalYRef.current = null;
+
     if (page >= 1 && page <= totalPages) {
       const GAP = 16;
-      const eyelineY = customFocalYRef.current !== null
-        ? customFocalYRef.current
-        : container.clientHeight * 0.35;
-      customFocalYRef.current = null;
-
-      // Hitung koordinat dokumen baru untuk baris teks yang sedang dibaca
       const pageElement = pageContainerRefs.current[page];
       const targetYInDoc = pageElement
         ? pageElement.getBoundingClientRect().top - container.getBoundingClientRect().top
           + container.scrollTop + (ratio * pageElement.clientHeight)
         : (page - 1) * (displayPageHeight + GAP) + (ratio * displayPageHeight);
-      const newScrollTop = Math.max(0, targetYInDoc - eyelineY);
-
-      container.scrollTop = newScrollTop;
+      container.scrollTop = Math.max(0, targetYInDoc - eyelineY);
     }
 
+    pinchAnchorRef.current = null;
     prevZoomRef.current = zoom;
   }, [zoom, displayPageHeight, totalPages]);
 
-  // 6. Deteksi Zoom Manual: Pinch 2 Jari (Mobile) & Ctrl + Wheel (Desktop)
+  // 6. Preview pinch memakai transform GPU, lalu commit zoom setelah jari dilepas.
   const handleTouchStart = (e) => {
-    if (e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      touchStartDistRef.current = dist;
-      initialPinchZoomRef.current = zoom;
-      isPinchingRef.current = true;
-    }
+    if (e.touches.length !== 2) return;
+
+    const [firstTouch, secondTouch] = e.touches;
+    const distance = Math.hypot(
+      firstTouch.clientX - secondTouch.clientX,
+      firstTouch.clientY - secondTouch.clientY
+    );
+    const midpointX = (firstTouch.clientX + secondTouch.clientX) / 2;
+    const midpointY = (firstTouch.clientY + secondTouch.clientY) / 2;
+    const container = containerRef.current;
+    const pageStack = pageStackRef.current;
+    if (!container || !pageStack) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const pageStackRect = pageStack.getBoundingClientRect();
+    const focalY = midpointY - containerRect.top;
+    updateReadingPosition(focalY);
+
+    touchStartDistRef.current = distance;
+    lastPinchDistRef.current = distance;
+    initialPinchZoomRef.current = zoom;
+    pinchOriginRef.current = {
+      x: midpointX - pageStackRect.left,
+      y: midpointY - pageStackRect.top,
+      clientX: midpointX,
+      clientY: midpointY
+    };
+    pinchAnchorRef.current = { ...currentViewRef.current, focalY };
+    isPinchingRef.current = true;
+    pageStack.style.willChange = 'transform';
   };
 
   const handleTouchMove = (e) => {
-    if (isPinchingRef.current && e.touches.length === 2) {
-      if (e.cancelable) e.preventDefault();
-      const currentDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      if (touchStartDistRef.current > 10) {
-        const midpointClientY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
-        pinchRafRef.current = requestAnimationFrame(() => {
-          const el = containerRef.current;
-          if (el) {
-            const rect = el.getBoundingClientRect();
-            const midY = midpointClientY - rect.top;
-            updateReadingPosition(midY);
-            customFocalYRef.current = midY;
-          }
+    if (!isPinchingRef.current || e.touches.length !== 2) return;
+    if (e.cancelable) e.preventDefault();
 
-          const rawFactor = currentDist / touchStartDistRef.current;
-          const easedFactor = 1 + (rawFactor - 1) * 0.45;
-          const gestureFactor = Math.min(1.25, Math.max(0.8, easedFactor));
-          const targetZoom = Math.min(300, Math.max(40, Math.round(initialPinchZoomRef.current * gestureFactor)));
-          setZoom(targetZoom);
-        });
-      }
+    const [firstTouch, secondTouch] = e.touches;
+    const currentDist = Math.hypot(
+      firstTouch.clientX - secondTouch.clientX,
+      firstTouch.clientY - secondTouch.clientY
+    );
+    const midpointX = (firstTouch.clientX + secondTouch.clientX) / 2;
+    const midpointY = (firstTouch.clientY + secondTouch.clientY) / 2;
+    lastPinchDistRef.current = currentDist;
+
+    const container = containerRef.current;
+    if (container) {
+      pinchAnchorRef.current = {
+        ...currentViewRef.current,
+        focalY: midpointY - container.getBoundingClientRect().top
+      };
     }
+
+    if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
+    pinchRafRef.current = requestAnimationFrame(() => {
+      const pageStack = pageStackRef.current;
+      if (!pageStack || touchStartDistRef.current <= 10) {
+        pinchRafRef.current = null;
+        return;
+      }
+
+      const scale = getPinchScale(initialPinchZoomRef.current, touchStartDistRef.current, currentDist);
+      const origin = pinchOriginRef.current;
+      pageStack.style.transformOrigin = `${origin.x}px ${origin.y}px`;
+      pageStack.style.transform = `translate(${midpointX - origin.clientX}px, ${midpointY - origin.clientY}px) scale(${scale})`;
+      pinchRafRef.current = null;
+    });
   };
+
+  touchMoveHandlerRef.current = handleTouchMove;
 
   const handleTouchEnd = (e) => {
-    if (isPinchingRef.current && e.touches.length < 2) {
-      isPinchingRef.current = false;
-      touchStartDistRef.current = 0;
+    if (!isPinchingRef.current || e.touches.length >= 2) return;
+
+    isPinchingRef.current = false;
+    if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
+    pinchRafRef.current = null;
+
+    const targetZoom = getPinchZoom(initialPinchZoomRef.current, touchStartDistRef.current, lastPinchDistRef.current);
+    touchStartDistRef.current = 0;
+
+    if (targetZoom === zoom) {
+      pageStackRef.current?.style.removeProperty('transform');
+      pageStackRef.current?.style.removeProperty('transform-origin');
+      pageStackRef.current?.style.removeProperty('will-change');
+      pinchAnchorRef.current = null;
+      return;
     }
+
+    setZoom(targetZoom);
   };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    const handleNativeTouchMove = (event) => touchMoveHandlerRef.current?.(event);
+    container.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
+    return () => container.removeEventListener('touchmove', handleNativeTouchMove);
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -259,6 +323,7 @@ export const ContinuousPdfViewer = ({
         e.preventDefault();
         const rect = el.getBoundingClientRect();
         const cursorY = e.clientY - rect.top;
+        updateReadingPosition(cursorY);
         customFocalYRef.current = cursorY;
 
         // Perbesaran seamless berkelanjutan tanpa batasan kelipatan 5%
@@ -397,8 +462,8 @@ export const ContinuousPdfViewer = ({
     <div
       ref={containerRef}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       className="relative flex-1 min-h-0 w-full h-full overflow-y-auto overflow-x-auto bg-canvas-subtle flex flex-col items-center py-4 px-2 sm:px-4 select-text overscroll-contain"
       style={{
         WebkitOverflowScrolling: 'touch',
@@ -408,6 +473,7 @@ export const ContinuousPdfViewer = ({
     >
       {/* Tampilan Lembar Dokumen Kanvas Tetap (Fixed Sheet Canvas) */}
       <div
+        ref={pageStackRef}
         className="mx-auto flex flex-col items-center gap-4"
         style={{
           width: `${displayPageWidth}px`

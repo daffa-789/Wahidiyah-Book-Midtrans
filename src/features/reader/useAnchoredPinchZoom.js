@@ -1,10 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
-
-const MIN_ZOOM = 40;
-const MAX_ZOOM = 300;
-const MIN_GESTURE_FACTOR = 0.8;
-const MAX_GESTURE_FACTOR = 1.25;
-const PINCH_SENSITIVITY = 0.45;
+import { getPinchScale, getPinchZoom } from './zoomUtils';
 
 const getTouchDistance = (touches) =>
   Math.hypot(
@@ -30,68 +25,144 @@ const getTextPositionAtPoint = (x, y) => {
   return null;
 };
 
-/** Keeps the text beneath a mobile pinch point in place as the document reflows. */
-export const useAnchoredPinchZoom = ({ containerRef, zoom, setZoom }) => {
+const clearPreviewTransform = (preview) => {
+  if (!preview) return;
+  preview.style.removeProperty('transform');
+  preview.style.removeProperty('transform-origin');
+  preview.style.removeProperty('will-change');
+};
+
+/** Applies pinch movement on the compositor, then reflows once when the gesture ends. */
+export const useAnchoredPinchZoom = ({ containerRef, previewRef, zoom, setZoom }) => {
   const startDistanceRef = useRef(0);
   const startZoomRef = useRef(zoom);
+  const startMidpointRef = useRef({ x: 0, y: 0 });
+  const transformOriginRef = useRef({ x: 0, y: 0 });
+  const lastDistanceRef = useRef(0);
   const isPinchingRef = useRef(false);
   const pinchRafRef = useRef(null);
+  const touchMoveHandlerRef = useRef(null);
   const pendingAnchorRef = useRef(null);
   const previousZoomRef = useRef(zoom);
+
+  const captureAnchor = (clientX, clientY, focalX, focalY) => {
+    const container = containerRef.current;
+    if (!container) return null;
+
+    return {
+      container,
+      position: getTextPositionAtPoint(clientX, clientY),
+      focalX,
+      focalY,
+      scrollLeft: container.scrollLeft,
+      scrollTop: container.scrollTop,
+      scrollWidth: container.scrollWidth,
+      scrollHeight: container.scrollHeight
+    };
+  };
+
+  const prepareZoom = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const focalX = container.clientWidth / 2;
+    const focalY = container.clientHeight * 0.35;
+    pendingAnchorRef.current = captureAnchor(
+      rect.left + focalX,
+      rect.top + focalY,
+      focalX,
+      focalY
+    );
+  };
 
   const handleTouchStart = (event) => {
     if (event.touches.length !== 2) return;
 
-    startDistanceRef.current = getTouchDistance(event.touches);
+    const [firstTouch, secondTouch] = event.touches;
+    const midpointX = (firstTouch.clientX + secondTouch.clientX) / 2;
+    const midpointY = (firstTouch.clientY + secondTouch.clientY) / 2;
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    const previewRect = previewRef.current?.getBoundingClientRect();
+    if (!containerRect || !previewRect) return;
+
+    const distance = getTouchDistance(event.touches);
+    startDistanceRef.current = distance;
+    lastDistanceRef.current = distance;
     startZoomRef.current = zoom;
+    startMidpointRef.current = { x: midpointX, y: midpointY };
+    transformOriginRef.current = {
+      x: midpointX - previewRect.left,
+      y: midpointY - previewRect.top
+    };
+    pendingAnchorRef.current = captureAnchor(
+      midpointX,
+      midpointY,
+      midpointX - containerRect.left,
+      midpointY - containerRect.top
+    );
     isPinchingRef.current = true;
+    previewRef.current.style.willChange = 'transform';
   };
 
   const handleTouchMove = (event) => {
     if (!isPinchingRef.current || event.touches.length !== 2) return;
     if (event.cancelable) event.preventDefault();
 
+    const [firstTouch, secondTouch] = event.touches;
     const currentDistance = getTouchDistance(event.touches);
-    if (startDistanceRef.current <= 10) return;
+    const midpointX = (firstTouch.clientX + secondTouch.clientX) / 2;
+    const midpointY = (firstTouch.clientY + secondTouch.clientY) / 2;
+    lastDistanceRef.current = currentDistance;
 
-    const midpointX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
-    const midpointY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
     const container = containerRef.current;
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      pendingAnchorRef.current = {
-        container,
-        position: getTextPositionAtPoint(midpointX, midpointY),
-        focalX: midpointX - rect.left,
-        focalY: midpointY - rect.top,
-        scrollLeft: container.scrollLeft,
-        scrollTop: container.scrollTop,
-        scrollWidth: container.scrollWidth,
-        scrollHeight: container.scrollHeight
-      };
+    const containerRect = container?.getBoundingClientRect();
+    if (containerRect) {
+      pendingAnchorRef.current = captureAnchor(
+        midpointX,
+        midpointY,
+        midpointX - containerRect.left,
+        midpointY - containerRect.top
+      );
     }
 
     if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
     pinchRafRef.current = requestAnimationFrame(() => {
-      const rawFactor = currentDistance / startDistanceRef.current;
-      const easedFactor = 1 + (rawFactor - 1) * PINCH_SENSITIVITY;
-      const gestureFactor = Math.min(
-        MAX_GESTURE_FACTOR,
-        Math.max(MIN_GESTURE_FACTOR, easedFactor)
-      );
-      const nextZoom = Math.min(
-        MAX_ZOOM,
-        Math.max(MIN_ZOOM, Math.round(startZoomRef.current * gestureFactor))
-      );
-      setZoom(nextZoom);
+      const preview = previewRef.current;
+      if (!preview || startDistanceRef.current <= 10) {
+        pinchRafRef.current = null;
+        return;
+      }
+
+      const scale = getPinchScale(startZoomRef.current, startDistanceRef.current, currentDistance);
+      const { x: originX, y: originY } = transformOriginRef.current;
+      const { x: startX, y: startY } = startMidpointRef.current;
+
+      preview.style.transformOrigin = `${originX}px ${originY}px`;
+      preview.style.transform = `translate(${midpointX - startX}px, ${midpointY - startY}px) scale(${scale})`;
+      pinchRafRef.current = null;
     });
   };
 
+  touchMoveHandlerRef.current = handleTouchMove;
+
   const handleTouchEnd = (event) => {
-    if (isPinchingRef.current && event.touches.length < 2) {
-      isPinchingRef.current = false;
-      startDistanceRef.current = 0;
+    if (!isPinchingRef.current || event.touches.length >= 2) return;
+
+    isPinchingRef.current = false;
+    if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
+    pinchRafRef.current = null;
+
+    const targetZoom = getPinchZoom(startZoomRef.current, startDistanceRef.current, lastDistanceRef.current);
+    startDistanceRef.current = 0;
+
+    if (targetZoom === zoom) {
+      clearPreviewTransform(previewRef.current);
+      pendingAnchorRef.current = null;
+      return;
     }
+
+    setZoom(targetZoom);
   };
 
   useLayoutEffect(() => {
@@ -101,6 +172,7 @@ export const useAnchoredPinchZoom = ({ containerRef, zoom, setZoom }) => {
     const anchor = pendingAnchorRef.current;
     pendingAnchorRef.current = null;
     const container = containerRef.current;
+    clearPreviewTransform(previewRef.current);
     if (!anchor || anchor.container !== container || !container?.isConnected) return;
 
     const { position } = anchor;
@@ -121,15 +193,25 @@ export const useAnchoredPinchZoom = ({ containerRef, zoom, setZoom }) => {
 
     const verticalRange = Math.max(1, anchor.scrollHeight - container.clientHeight);
     const horizontalRange = Math.max(1, anchor.scrollWidth - container.clientWidth);
-    const verticalRatio = anchor.scrollTop / verticalRange;
-    const horizontalRatio = anchor.scrollLeft / horizontalRange;
-    container.scrollTop = verticalRatio * Math.max(0, container.scrollHeight - container.clientHeight);
-    container.scrollLeft = horizontalRatio * Math.max(0, container.scrollWidth - container.clientWidth);
-  }, [containerRef, zoom]);
+    container.scrollTop = (anchor.scrollTop / verticalRange)
+      * Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollLeft = (anchor.scrollLeft / horizontalRange)
+      * Math.max(0, container.scrollWidth - container.clientWidth);
+  }, [containerRef, previewRef, zoom]);
 
   useLayoutEffect(() => () => {
     if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
-  }, []);
+    clearPreviewTransform(previewRef.current);
+  }, [previewRef]);
 
-  return { handleTouchStart, handleTouchMove, handleTouchEnd };
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    const handleNativeTouchMove = (event) => touchMoveHandlerRef.current?.(event);
+    container.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
+    return () => container.removeEventListener('touchmove', handleNativeTouchMove);
+  });
+
+  return { handleTouchStart, handleTouchEnd, prepareZoom };
 };

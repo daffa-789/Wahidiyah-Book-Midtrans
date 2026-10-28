@@ -79,15 +79,24 @@ export const PdfReaderScreen = () => {
     });
   }, []);
 
-  // Reset Zoom ke 100%
-  const resetZoom = () => setClampedZoom(100);
-
   const readingSurfaceRef = useRef(null);
+  const readingPreviewRef = useRef(null);
   const pinchZoomHandlers = useAnchoredPinchZoom({
     containerRef: readingSurfaceRef,
+    previewRef: readingPreviewRef,
     zoom,
     setZoom: setClampedZoom
   });
+
+  const adjustZoom = (delta) => {
+    pinchZoomHandlers.prepareZoom();
+    setClampedZoom((prev) => prev + delta);
+  };
+
+  const resetZoom = () => {
+    pinchZoomHandlers.prepareZoom();
+    setClampedZoom(100);
+  };
 
   // Toggle Layar Penuh
   const toggleFullscreen = () => {
@@ -222,9 +231,11 @@ export const PdfReaderScreen = () => {
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-canvas-subtle text-ink-900 dark:text-cream-50 select-none overflow-hidden">
-      {/* Top Header Minimalis & Bersih */}
-      <header className="h-14 shrink-0 z-30 bg-ui-card/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs">
-        {/* Tombol Kembali & Judul Buku di Kiri Atas */}
+      {/* Header ringkas agar area halaman bacaan lebih luas */}
+      <header
+        aria-label={activeBook.title}
+        className="h-12 shrink-0 z-30 bg-ui-card/95 backdrop-blur-md border-b border-ink-200/70 dark:border-ink-800/80 px-4 sm:px-6 flex items-center justify-between shadow-xs"
+      >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
@@ -236,20 +247,9 @@ export const PdfReaderScreen = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
 
-          <div className="min-w-0">
-            <h1 className="text-body font-bold text-ink-900 dark:text-cream-50 truncate max-w-xs sm:max-w-md md:max-w-lg">
-              {activeBook.title}
-            </h1>
-            {activeBook.author && !/^(tidak\s*diketahui|penyusun\s*wahidiyah)$/i.test(activeBook.author.trim()) && (
-              <p className="text-caption text-ink-400 dark:text-ink-500 truncate -mt-0.5">
-                {activeBook.author}
-              </p>
-            )}
-          </div>
-
           <form
             onSubmit={handlePageInputSubmit}
-            className="ml-1 flex shrink-0 items-center gap-0.5 rounded-lg px-1.5 py-1 font-mono text-small font-semibold text-ink-500 dark:text-ink-400"
+            className="flex shrink-0 items-center gap-0.5 rounded-lg px-1.5 py-1 font-mono text-small font-semibold text-ink-500 dark:text-ink-400"
             aria-label="Navigasi halaman"
           >
             <input
@@ -274,7 +274,7 @@ export const PdfReaderScreen = () => {
           <div className="flex items-center bg-cream-100/90 dark:bg-ink-800/90 rounded-xl p-0.5 border border-cream-300 dark:border-ink-700 shadow-2xs">
             <button
               type="button"
-              onClick={() => setClampedZoom((prev) => Math.max(40, prev - 10))}
+              onClick={() => adjustZoom(-10)}
               disabled={zoom <= 40}
               className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-cream-200/80 dark:hover:bg-ink-700/80 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
               title="Perkecil (Zoom Out)"
@@ -299,7 +299,7 @@ export const PdfReaderScreen = () => {
 
             <button
               type="button"
-              onClick={() => setClampedZoom((prev) => Math.min(300, prev + 10))}
+              onClick={() => adjustZoom(10)}
               disabled={zoom >= 300}
               className="p-1.5 rounded-lg text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-cream-200/80 dark:hover:bg-ink-700/80 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
               title="Perbesar (Zoom In)"
@@ -364,7 +364,6 @@ export const PdfReaderScreen = () => {
           <div
             ref={readingSurfaceRef}
             onTouchStart={pinchZoomHandlers.handleTouchStart}
-            onTouchMove={pinchZoomHandlers.handleTouchMove}
             onTouchEnd={pinchZoomHandlers.handleTouchEnd}
             onTouchCancel={pinchZoomHandlers.handleTouchEnd}
             className="w-full max-w-full md:max-w-4xl xl:max-w-5xl bg-ui-card shadow-none md:shadow-md rounded-none md:rounded-2xl p-4 sm:p-8 md:p-12 border-0 md:border border-ink-200/60 dark:border-ink-800/80 leading-relaxed text-ink-900 dark:text-cream-50 select-text overflow-y-auto h-full overscroll-contain"
@@ -376,6 +375,7 @@ export const PdfReaderScreen = () => {
             }}
           >
             <div
+              ref={readingPreviewRef}
               className="prose dark:prose-invert max-w-none [&>p]:mb-4 [&>p]:leading-relaxed [&>h1]:text-[1.5em] [&>h1]:font-black [&>h1]:mb-4 [&>h2]:text-[1.25em] [&>h2]:font-bold [&>h2]:mb-3 [&>table]:w-full [&>table]:border-collapse [&>table_td]:border [&>table_td]:border-cream-300 [&>table_td]:p-2 [&>table_th]:border [&>table_th]:border-cream-300 [&>table_th]:p-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 font-serif sm:font-sans"
               style={{ fontSize: `${(zoom / 100) * 1.05}rem` }}
               dangerouslySetInnerHTML={{ __html: docHtml }}
@@ -397,13 +397,13 @@ export const PdfReaderScreen = () => {
           <div
             ref={readingSurfaceRef}
             onTouchStart={pinchZoomHandlers.handleTouchStart}
-            onTouchMove={pinchZoomHandlers.handleTouchMove}
             onTouchEnd={pinchZoomHandlers.handleTouchEnd}
             onTouchCancel={pinchZoomHandlers.handleTouchEnd}
             className="w-full h-full flex flex-col items-center overflow-y-auto p-4 sm:p-8 overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y', overflowAnchor: 'none' }}
           >
             <article
+              ref={readingPreviewRef}
               className="relative w-full max-w-3xl bg-ui-card p-8 sm:p-14 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 whitespace-pre-wrap select-none my-auto"
               style={{ fontSize: `${(zoom / 100) * 1.05}rem` }}
             >
@@ -414,13 +414,13 @@ export const PdfReaderScreen = () => {
           <div
             ref={readingSurfaceRef}
             onTouchStart={pinchZoomHandlers.handleTouchStart}
-            onTouchMove={pinchZoomHandlers.handleTouchMove}
             onTouchEnd={pinchZoomHandlers.handleTouchEnd}
             onTouchCancel={pinchZoomHandlers.handleTouchEnd}
             className="w-full h-full flex flex-col items-center justify-start overflow-y-auto p-4 sm:p-6 overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y', overflowAnchor: 'none' }}
           >
             <article
+              ref={readingPreviewRef}
               className="relative w-full max-w-3xl bg-ui-card p-8 sm:p-12 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 select-none my-auto"
               style={{
                 fontSize: `${(zoom / 100) * 1.05}rem`
