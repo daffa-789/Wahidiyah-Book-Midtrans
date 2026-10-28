@@ -34,6 +34,8 @@ export const PdfReaderScreen = () => {
   // Status Perbesaran Dokumen (Zoom) - Default 100%
   const [zoom, setZoom] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const supportsNativeFullscreen = typeof window !== 'undefined'
+    && window.matchMedia('(pointer: fine)').matches;
 
   // Pelacak Halaman Terakhir & Navigasi Scroll
   const bookTotalPages = Number(activeBook?.pages || activeBook?.totalPages || (activeBook?.samplePages?.length || 1));
@@ -89,6 +91,8 @@ export const PdfReaderScreen = () => {
 
   // Toggle Layar Penuh
   const toggleFullscreen = () => {
+    if (!supportsNativeFullscreen) return;
+
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
       setIsFullscreen(true);
@@ -305,18 +309,21 @@ export const PdfReaderScreen = () => {
             </button>
           </div>
 
-          <div className="h-4 w-px bg-cream-300 dark:bg-ink-700 mx-0.5" />
+          {supportsNativeFullscreen && (
+            <>
+              <div className="h-4 w-px bg-cream-300 dark:bg-ink-700 mx-0.5" />
 
-          {/* Tombol Fullscreen */}
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            className="p-2 rounded-xl text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-ink-100 dark:hover:bg-ink-800 transition cursor-pointer"
-            title={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
-            aria-label={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
-          >
-            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-          </button>
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                className="p-2 rounded-xl text-ink-600 dark:text-ink-300 hover:text-ink-900 dark:hover:text-cream-50 hover:bg-ink-100 dark:hover:bg-ink-800 transition cursor-pointer"
+                title={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
+                aria-label={isFullscreen ? 'Keluar Layar Penuh' : 'Layar Penuh'}
+              >
+                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+              </button>
+            </>
+          )}
         </div>
       </header>
 

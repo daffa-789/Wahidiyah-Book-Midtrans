@@ -9,8 +9,8 @@
 // v11 (VULN-21): /api/payments/ masuk deny-list, respons Cache-Control
 //      private/no-store tidak pernah disimpan, blok cache-first dibatasi
 //      aset internal, dan cache dibuang saat pengguna keluar akun.
-// v13: pembaca mobile menjaga fokus saat zoom; kontrol halaman diringkas di header.
-const CACHE_NAME = 'wahidiyah-app-shell-v13';
+// v14: cegah petunjuk fullscreen bawaan browser muncul di pembaca mobile.
+const CACHE_NAME = 'wahidiyah-app-shell-v14';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
