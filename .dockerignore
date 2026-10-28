@@ -3,8 +3,11 @@ npm-debug.log
 dist
 .git
 .gitignore
-.env.local
-.env.*.local
+# Secrets are injected by Compose at runtime, never copied into build context.
+.env
+.env.*
+server/.env
+server/.env.*
 .vscode
 .vercel
 .workbuddy-ai
