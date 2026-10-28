@@ -6,6 +6,7 @@ import { AppProvider } from '@context/AppContext';
 import { ThemeProvider, useTheme } from '@theme/ThemeProvider';
 import { ErrorBoundary } from '@ui/ErrorBoundary';
 import { Toaster } from 'sonner';
+import { Analytics } from '@vercel/analytics/react';
 import './theme/themeInjector.js';
 import './index.css';
 
@@ -33,6 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <AppProvider>
             <App />
             <AppToaster />
+            <Analytics />
           </AppProvider>
         </BrowserRouter>
       </ThemeProvider>
