@@ -23,6 +23,7 @@ import {
   activatePaidMembership,
   activeSubscriptionConflict,
   insertTransaction,
+  restorePendingTransaction,
   toRefCode
 } from '../lib/membership.js';
 import { QRIS_ADMIN_FEE, findPlan } from '../lib/constants.js';
@@ -127,15 +128,17 @@ export async function settleTransaction(transaction) {
       refCode: toRefCode(transaction.ref_no)
     });
   } catch (activationError) {
+    let statusRestored = true;
+    try {
+      await restorePendingTransaction(transaction.id);
+    } catch (rollbackError) {
+      statusRestored = false;
+      activationError.rollbackError = rollbackError;
+    }
 
-
-
-    await supabaseServer
-      .from('transactions')
-      .update({ status: TRANSACTION_PENDING_STATUS, verified_at: null })
-      .eq('id', transaction.id);
-
-    logger.error('MIDTRANS', 'Aktivasi gagal — status dikembalikan ke pending', {
+    logger.error('MIDTRANS', statusRestored
+      ? 'Aktivasi gagal; transaksi dikembalikan ke pending'
+      : 'Aktivasi gagal; pemulihan transaksi juga gagal', {
       orderId: transaction.id,
       pesan: activationError.message
     });

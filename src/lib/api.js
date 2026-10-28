@@ -1,5 +1,19 @@
 const API_FALLBACK_ORIGIN = 'http://localhost:5000';
 
+const canUseApiFallback = (path) =>
+  import.meta.env?.DEV === true &&
+  typeof window !== 'undefined' &&
+  ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname) &&
+  typeof path === 'string' &&
+  path.startsWith('/') &&
+  !path.startsWith('//');
+
+const offlineError = () => {
+  const error = new Error('Server tidak dapat dihubungi.');
+  error.network = true;
+  return error;
+};
+
 
 
 const SESSION_STORAGE_KEY = 'buku-wahidiyah:auth-session';
@@ -160,19 +174,14 @@ export const apiRequest = async (path, options = {}) => {
   try {
     return await fetchWithTimeout(path, options);
   } catch (error) {
-    
-    
     if (error?.timeout) throw error;
+    if (!canUseApiFallback(path)) throw offlineError();
 
     try {
       return await fetchWithTimeout(`${API_FALLBACK_ORIGIN}${path}`, options);
     } catch (fallbackError) {
       if (fallbackError?.timeout) throw fallbackError;
-      
-      
-      const offline = new Error('Server tidak dapat dihubungi.');
-      offline.network = true;
-      throw offline;
+      throw offlineError();
     }
   }
 };

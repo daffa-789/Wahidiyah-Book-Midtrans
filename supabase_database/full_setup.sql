@@ -1,8 +1,9 @@
 -- ════════════════════════════════════════════════════════════════════════════
--- PERINGATAN: skrip ini MENGHAPUS seluruh tabel di bawah lalu membangunnya
--- ulang dari nol. Jangan dijalankan pada database yang sudah berisi data.
--- Untuk database yang sudah berjalan, pakai migrasi bertarget seperti
--- remove_avatar_column.sql.
+-- PERINGATAN: ini adalah setup awal/reset total. Skrip menghapus seluruh
+-- tabel di bawah beserta datanya lalu membangunnya ulang dari nol.
+-- Jangan jalankan pada database yang sudah berisi data produksi.
+-- Repositori hanya menyimpan berkas setup ini; perubahan pada database aktif
+-- harus ditinjau dan diterapkan sebagai migrasi terpisah setelah backup.
 -- ════════════════════════════════════════════════════════════════════════════
 
 ALTER DATABASE postgres SET timezone TO 'Asia/Jakarta';
@@ -33,9 +34,8 @@ CREATE TYPE public.transaction_status AS ENUM ('pending', 'success', 'rejected')
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Catatan: kolom `avatar` sengaja tidak ada. Fitur foto profil dicabut
--- (commit 68aac84) dan kode tidak lagi membaca/menulisnya. Database lama yang
--- masih punya kolom itu dirapikan lewat remove_avatar_column.sql.
+-- Catatan: kolom `avatar` sengaja tidak ada karena kode aplikasi tidak lagi
+-- membaca atau menulis foto profil.
 CREATE TABLE public.users (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -238,14 +238,10 @@ END $$;
 -- mengosongkan seluruh data. Jalankan blok di bawah ini saja bila basis data
 -- sudah terisi dan hanya perlu ditambahi banner carousel + kolom agenda baru.
 --
--- CATATAN: blok serupa juga tersedia sebagai berkas berdiri sendiri di
---          `carousel_slides.sql` — pakai itu bila HANYA ingin menambah tabel
---          carousel tanpa menyentuh apa pun yang lain.
---
--- BASIS DATA SUDAH TERISI? Bagian di atas tidak boleh dijalankan (ia DROP
--- TABLE). Untuk membawa basis data yang sudah ada ke kondisi aman, pakai
---          `hardening_vuln02_vuln16.sql` — idempoten, berisi pencabutan
---          grant tingkat tabel + verifikasi.
+-- CATATAN: bagian ini menjadi bagian dari satu-satunya berkas setup.
+-- Jangan jalankan seluruh berkas pada basis data yang sudah berisi data.
+-- Untuk basis data aktif, salin hanya patch yang relevan setelah meninjau
+-- skema target dan membuat backup.
 -- ════════════════════════════════════════════════════════════════════════════
 
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS time_start VARCHAR(5) DEFAULT '19:30';

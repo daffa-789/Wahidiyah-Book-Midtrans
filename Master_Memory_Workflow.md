@@ -6,7 +6,6 @@
 [![Express](https://img.shields.io/badge/Express-4.21-lightgrey.svg)](https://expressjs.com/)
 [![Vite](https://img.shields.io/badge/Vite-6.1-purple.svg)](https://vitejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.3-38bdf8.svg)](https://tailwindcss.com/)
-[![Vitest](https://img.shields.io/badge/Vitest-102%2F102%20Passed-success.svg)](https://vitest.dev/)
 [![Database](https://img.shields.io/badge/Database-Supabase%20(PostgreSQL)-emerald.svg)](https://supabase.com/)
 [![Payment](https://img.shields.io/badge/Payment-Midtrans%20Core%20API%20(QRIS)-0052cc.svg)](https://midtrans.com/)
 [![WhatsApp](https://img.shields.io/badge/WhatsApp-Multi--Provider%20Gateway-25D366.svg)](https://whatsapp.com/)
@@ -14,8 +13,9 @@
 
 > 🎯 **FUNGSI UTAMA BERKAS INI:** 
 > Berkas ini adalah **SATU-SATUNYA SUMBER KEBENARAN (Single Source of Truth / Memory Tunggal)** untuk seluruh arsitektur, spesifikasi REST API, alur pembayaran Midtrans QRIS, gateway autentikasi WhatsApp, integrasi database Supabase Cloud, panduan developer, naskah akademik/Zotero, standar keamanan siber, dan riwayat rilis aplikasi **Wahidiyah Book**.
+>
 > 
-> Seluruh dokumentasi terpisah (`README.md`, `docs/API_SPECIFICATION.md`, `ARCHITECTURE.md`, `DESIGN.md`, `docs/ARCHITECTURE_AND_ENGINEERING_GUIDELINES.md`, `docs/DEVELOPER_GUIDE.md`, `docs/MIDTRANS_QRIS.md`, `supabase_database/README.md`, dan `PANDUAN_ZOTERO_WORD.md`) telah **DIPADATKAN DAN DISATUKAN SECARA TOTAL** ke dalam dokumen ini. Seluruh alur kerja (*workflow*) pengembangan selanjutnya **EKSKLUSIF BERPATOKAN PADA BERKAS INI**.
+> Ini satu-satunya **memory teknis utama**. `README.md` hanya pintu masuk; `ARCHITECTURE.md`, `DESIGN.md`, dan `docs/ARCHITECTURE_AND_ENGINEERING_GUIDELINES.md` hanya pengarah ke bagian terkait di sini. Panduan operasional khusus, seperti panduan upload admin, tetap berdiri sendiri. Jika dokumentasi berbeda dengan kode aktif atau `full_setup.sql`, kode dan skema aktif menjadi acuan lalu memory ini diperbarui.
 
 ---
 
@@ -34,7 +34,7 @@
 12. [Prasyarat & Konfigurasi Lingkungan (.env)](#12-prasyarat--konfigurasi-lingkungan-env)
 13. [Panduan Instalasi & Katalog NPM Scripts](#13-panduan-instalasi--katalog-npm-scripts)
 14. [Struktur Direktori Repositori Terpadu](#14-struktur-direktori-repositori-terpadu)
-15. [Histori Rilis & Rekam Jejak Kerja (R40–R70)](#15-histori-rilis--rekam-jejak-kerja-r40r70)
+15. [Riwayat singkat](#15-riwayat-singkat)
 16. [Roadmap & Rencana Pengembangan Mendatang](#16-roadmap--rencana-pengembangan-mendatang)
 17. [Informasi Pengembang & Identitas Skripsi](#17-informasi-pengembang--identitas-skripsi)
 
@@ -47,13 +47,13 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Modular Layered Mo
 * **Frontend:** React 19 (`.jsx` dan `.js`), Vite 6, React Router v7, Tailwind CSS 4, Headless UI, Lucide Icons, Sonner.
 * **Document Engine:** Mozilla PDF.js Canvas (`ContinuousPdfViewer.jsx` Continuous Vertical Scroll, Retina HD scaling, scroll-spy otomatis, anchor pelacak zoom tanpa geser teks) dan Mammoth (.docx ke HTML semantik terproteksi).
 * **Receipt Engine:** `jspdf` untuk ekspor kwitansi digital A4 resmi instan di peramban (client-side) tanpa dialog print fisik.
-* **Backend:** Node.js (v22+ / v24+), Express.js 4 (`.js` murni ES Module) dengan Service Layer terpisah (`auth.service.js`, `payment.service.js`) dan entri serverless Vercel (`api/index.js`).
+* **Backend:** Node.js 24+ dan Express.js 4 (ES Module), dengan Service Layer dan adapter serverless Vercel (`api/index.js`).
 * **Database & BaaS:** Supabase Cloud (PostgreSQL 15 dengan *Row Level Security* fail-closed dan zona waktu `Asia/Jakarta`).
 * **Payment Gateway:** Midtrans Core API (Mode QRIS Sandbox Real-time dengan payload EMVCo `qr_string`, salin kode QR, link simulator sandbox, dan webhook idempoten).
 * **WhatsApp Multi-Provider:** Gateway berbasis *Strategy Pattern* (Fonnte, Wablas, WhaCenter, Twilio, Webhook, dan Demo lokal) sebagai fallback pemulihan akun.
 * **Image Processing:** Sharp (kompresi & sanitasi otomatis gambar sampul ke format WebP).
 * **Email & Notifikasi:** Google OAuth2 API (Gmail API HTTPS untuk OTP email registrasi & verifikasi).
-* **Testing & Quality Harness:** Vitest 5 (102/102 unit tests lulus) + script linter otomatis (`check-syntax.js`, `check-colors.js`, `check-contrast.js`).
+* **Quality Harness:** Vitest dan pemeriksaan sintaks, token warna, kontras WCAG, serta build Vite (`npm run check`). Status lulus terakhir harus dicatat bersama perubahan yang diverifikasi; jangan menganggap badge atau hitungan lama sebagai hasil terkini.
 
 ---
 
@@ -183,7 +183,7 @@ Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
   1. *Separation of Concerns (SoC):* Pemisahan tegas Routes $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Repositories.
   2. *Idempotency (Operasi Bayar & Webhook):* Webhook Midtrans dan aktivasi keanggotaan menggunakan klaim UPDATE bersyarat atomik untuk mencegah aktivasi ganda (*prevent double fulfillment*).
   3. *Security by Design:* Row Level Security fail-closed, parameter query anti-SQLi, enkripsi kata sandi `bcryptjs` 12 rounds, rate limiting berlapis, dan proteksi hak cipta e-reader.
-  4. *Testability:* Seluruh logika bisnis diuji otomatis melalui Vitest harness (102 tests lulus).
+  4. *Testability:* Vitest harness tersedia untuk logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi; jalankan suite untuk status terbaru.
   5. *KISS & YAGNI:* Menghindari abstraksi dinamis berlebih yang tidak dibutuhkan skripsi.
   6. *High Cohesion & Loose Coupling:* Modul mandiri yang hanya berkomunikasi via antarmuka fungsi terdefinisi.
 - **Tier 2: Standar Clean Code & Operasional (P2)**
@@ -564,7 +564,7 @@ server mengaktifkan membership Pro (activatePaidMembership) — SEKALI SAJA (IDE
 
 ### 5.2. 7 Prinsip Ketahanan Transaksi Midtrans QRIS
 1. **Insert Pending Sebelum Charge:** Transaksi status `pending` dicatat ke database sebelum request HTTP charge dikirim ke Midtrans. Jika charge gagal, transaksi segera ditandai `rejected`.
-2. **Atomisitas Aktivasi Pro:** Pembaruan status transaksi ke `success` dan perpanjangan langganan dibungkus blok try/catch. Bila aktivasi gagal, status dikembalikan ke `pending` agar polling berikutnya dapat mencoba ulang secara idempoten.
+2. **Idempotensi Aktivasi Pro:** Klaim status transaksi memakai perubahan bersyarat agar webhook/polling ulang tidak mengaktifkan paket dua kali. Jika aktivasi gagal, server mencoba mengembalikan status transaksi ke `pending`. Pembaruan pengguna dan penyisipan langganan masih dua operasi Supabase terpisah, jadi belum atomik; gunakan satu fungsi SQL/RPC sebagai tindak lanjut sebelum mengandalkan jaminan transaksi penuh.
 3. **Pembatasan Laju (Rate Limiting):** Endpoint `POST /api/payments/qris/charge` dibatasi 20 permintaan / 5 menit, dan `GET /api/payments/qris/:orderId/qr.png` dibatasi 60 permintaan / menit.
 4. **Proteksi Anti-SSRF pada Proxy QR:** Pengambilan gambar QR Midtrans dibatasi ketat ke host `*.midtrans.com`, protokol wajib HTTPS, penanganan redirect manual, dan batas waktu respons (timeout) 10 detik.
 5. **Validasi Waktu Kedaluwarsa (15 Menit):** Server memeriksa `expires_at` saat polling status. Jika waktu lewat, transaksi otomatis ditandai `rejected` dan status `expire` dikembalikan ke klien.
@@ -673,35 +673,32 @@ Informasi Project Database Supabase:
 
 > ⚠️ **Catatan Migrasi:** Project lama (`cfpmkwjkqfktagdkmlai`) sudah dihapus. Seluruh konfigurasi aplikasi aktif diarahkan ke project `pdimjmbjutlzjdfjaqgt` di atas.
 
-### 7.1. Opsi Penggunaan Berkas SQL (`supabase_database/`):
-* **Pilihan A: Setup Bersih Total (`supabase_database/full_setup.sql`)**
-  Digunakan saat inisialisasi awal database baru atau reset total dari nol. Menghasilkan database kosong tanpa data demo yang 100% aman dan menghasilkan **0 warning** di Supabase Security Linter.
-  > ⚠️ *Mengandung `DROP ... CASCADE`, jangan jalankan pada database yang sudah berisi data produksi.*
-* **Pilihan B: Database Sudah Ada Data & Ingin Hilangkan 24 Warning Linter**
-  Buka `full_setup.sql` bagian **9. PATCH PERBAIKAN LINTER & KEAMANAN UNTUK DATABASE AKTIF**, salin perintahnya, dan jalankan di SQL Editor Supabase.
-* **Pilihan C: Menambah Tabel Baru Secara Idempoten (`supabase_database/carousel_slides.sql`)**
-  Digunakan jika hanya ingin menambahkan tabel banner carousel tanpa menimpa data yang ada (hanya memuat `CREATE TABLE IF NOT EXISTS`).
+### 7.1. Satu-satunya berkas SQL
+Repositori hanya menyimpan `supabase_database/full_setup.sql` sebagai definisi setup database. Skrip ini untuk database baru atau reset yang memang disetujui; bagian awal menjalankan `DROP ... CASCADE` dan menghapus data tabel yang disebut di dalamnya. Jangan jalankan seluruh skrip pada database yang berisi data.
 
-### 7.2. Daftar 7 Tabel Inti Pasca-Pembersihan (Clean Core Schema):
+Perubahan untuk database yang sudah berjalan harus ditinjau dan diterapkan sebagai migrasi terkontrol setelah backup. Hardening VULN-02/VULN-16 tercatat sudah dijalankan pada project aktif pada 22 Oktober 2026; aturan grant akhirnya juga ada di setup ini. Skrip pembersihan dan penghapusan avatar tidak lagi disimpan terpisah. Status kolom `users.avatar` pada project Supabase aktif belum diverifikasi di sesi ini.
+
+### 7.2. Tabel pada `full_setup.sql`
+Setup mendefinisikan **7 tabel inti dan 1 tabel Web Push**:
 | Tabel | Fungsi & Peran |
 |---|---|
 | `users` | Akun pengguna (email, nomor WhatsApp `phone`, password hash bcrypt, role `user`/`admin`, `is_pro`, masa aktif `subscription_expires_at`). |
-| `books` | Katalog naskah murni 11 kolom (`id`, `title`, `pages`, `is_locked`, `cover_url`, `content_url`, `content_name`, `content_extension`, `content_size`, `created_at`, `updated_at`). Bebas dari kolom usang. |
+| `books` | Katalog buku, metadata berkas, dan status akses Pro (13 kolom sesuai DDL). |
 | `events` | Jadwal agenda & mujahadah Wahidiyah (judul, waktu WIB, lokasi, deskripsi). |
 | `subscriptions` | Riwayat langganan keanggotaan Pro pengguna (`plan_name` seragam: `"Pro"`). |
 | `transactions` | Transaksi pembayaran resmi (`midtrans_transaction_id`, `midtrans_qr_string`, `midtrans_qr_url`, status idempoten). |
 | `email_verifications` | Kode OTP 6 digit untuk registrasi dan reset password (berlaku 10 menit, salt hash SHA-256). |
 | `carousel_slides` | Slide banner Hero Carousel di beranda (urutan, gambar, periode tampil, status aktif). |
+| `push_subscriptions` | Endpoint dan kunci perangkat untuk pengingat agenda Web Push; hanya diakses server dengan service-role key. |
 
-> 🛡️ **Catatan Pembersihan Arsitektur:** 
-> 6 tabel usang/redundant telah **DIPANGKAS & DIHAPUS TOTAL** dari Supabase: `ads`, `password_resets`, `qris_transactions`, `user_bookmarks`, `reading_progress`, dan `push_subscriptions`. Basis data kini murni 7 tabel inti dengan RLS fail-closed. 14 data transaksi uji sampah juga telah dibersihkan, menyisakan transaksi valid sukses.
+Tabel lama seperti `ads`, `password_resets`, `qris_transactions`, dan `user_bookmarks` tidak dibuat oleh setup baru. `push_subscriptions` **masih digunakan** oleh pengingat agenda dan tidak boleh dihapus. `reading_progress` disimpan di browser, bukan tabel database.
 
 ### 7.3. Standar Zona Waktu Database
 Seluruh kolom waktu memakai `TIMESTAMPTZ` dengan `NOW()` polos, dan timezone database di-set ke **`Asia/Jakarta` (WIB, UTC+7)**. Postgres menyimpan waktu dalam UTC secara internal lalu menampilkannya sesuai timezone sesi, sehingga waktu aplikasi selalu sinkron dengan waktu Indonesia bagian barat.
 
 ### 7.4. Kueri Verifikasi Database (Checklist SQL):
 ```sql
--- 1. Harus mengembalikan 7 tabel public aktif (books, carousel_slides, email_verifications, events, subscriptions, transactions, users)
+-- 1. Harus mengembalikan 8 tabel aplikasi, termasuk push_subscriptions
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;
 
 -- 2. Harus 0 baris — tabel ads sudah tidak ada
@@ -730,7 +727,7 @@ Sistem telah diaudit dan mengimplementasikan **30 Indikator Standar Kualitas Per
 | :---: | :--- | :--- | :--- |
 | 1 | **Hashing Password** | `bcryptjs` salt cost 12 rounds pada registrasi & ganti password. | ✅ Lulus |
 | 2 | **Stateless JWT** | Token ditandatangani `JWT_SECRET` berkekuatan tinggi (expiry 12 jam). | ✅ Lulus |
-| 3 | **Supabase RLS Fail-Closed** | Row Level Security ketat pada 7 tabel inti, akses public dicabut, hanya service role & JWT pemilik yang berhak. | ✅ Lulus |
+| 3 | **Supabase RLS Fail-Closed** | RLS aktif pada 7 tabel inti dan tabel `push_subscriptions`; operasi data privat dilakukan server dengan service-role key. | ✅ Lulus |
 | 4 | **Validasi Skema Request** | Menggunakan pustaka `zod` untuk memvalidasi seluruh payload request di controller. | ✅ Lulus |
 | 5 | **Rate Limiting Anti-Bruteforce** | `express-rate-limit` pada endpoint auth, OTP, dan pemicu charge pembayaran. | ✅ Lulus |
 | 6 | **HTTP Header Hardening** | `helmet` aktif untuk proteksi XSS, Clickjacking, dan MIME-sniffing. | ✅ Lulus |
@@ -738,7 +735,7 @@ Sistem telah diaudit dan mengimplementasikan **30 Indikator Standar Kualitas Per
 | 8 | **Proteksi Hak Cipta PDF** | Canvas PDF.js murni, `#toolbar=0`, `select-none`, larangan klik kanan, inline streaming JWT. | ✅ Lulus |
 | 9 | **Paywall Buku Pro Server-Side** | PDF buku berstatus Pro mewajibkan validasi `is_pro` aktif sebelum di-stream. | ✅ Lulus |
 | 10 | **Anti-SSRF pada Proxy Gambar** | Whitelist domain `*.midtrans.com` dan protokol HTTPS pada fetching gambar QR. | ✅ Lulus |
-| 11 | **Idempotensi Transaksi & Webhook** | Pola claim status `pending` ➔ `settlement` dengan UPDATE bersyarat untuk mencegah aktivasi ganda. | ✅ Lulus |
+| 11 | **Idempotensi Transaksi & Webhook** | Klaim `pending` bersyarat mencegah aktivasi ganda; pemulihan status adalah kompensasi best-effort, belum satu transaksi PostgreSQL. | ⚠️ Belum atomik |
 | 12 | **Otoritatif Harga di Server** | Nominal harga pesanan dikalkulasi dari konstanta backend, bukan input klien. | ✅ Lulus |
 | 13 | **Pembersihan MIME Upload** | Validasi magic-bytes format raster dan konversi otomatis WebP via `sharp`. | ✅ Lulus |
 | 14 | **Perlindungan OTP** | Hash SHA-256 kode OTP dengan masa berlaku ketat 10 menit. | ✅ Lulus |
@@ -753,7 +750,7 @@ Sistem telah diaudit dan mengimplementasikan **30 Indikator Standar Kualitas Per
 | 23 | **Validasi Kompleksitas Password** | Validasi ketat sandi akun baru dan reset password via skema Zod terpusat. | ✅ Lulus |
 | 24 | **Rate Limiter Transaksi QRIS** | Pembatasan frekuensi request pembuatan charge QRIS per IP/pengguna untuk cegah spam order. | ✅ Lulus |
 | 25 | **Separation of Concerns (SoC)** | Pemisahan tegas Routes $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Supabase Repositories. | ✅ Lulus |
-| 26 | **Testability & Unit Test Harness** | Logika bisnis (pembayaran & otentikasi) 100% diuji otomatis lewat Vitest (102 tests lulus). | ✅ Lulus |
+| 26 | **Testability & Unit Test Harness** | Tes Vitest tersedia untuk autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi. Jalankan `npm test` untuk status terkini. | Tersedia |
 | 27 | **Kwitansi Digital Mandiri (jsPDF)** | Pembuatan berkas PDF kwitansi A4 di sisi klien tanpa latensi backend dan aman dari injection. | ✅ Lulus |
 | 28 | **Single Source of Truth Waktu** | Standarisasi seluruh operasi tanggal/waktu ke zona `Asia/Jakarta` (WIB) via Day.js. | ✅ Lulus |
 | 29 | **3 Color Key & WCAG AA** | 100% antarmuka patuh prinsip 60-30-10 dan lulus 17 pasang kontras $\ge 4.5:1$ tanpa palet mentah. | ✅ Lulus |
@@ -941,7 +938,7 @@ npm install
 ### 12.2. Katalog Perintah NPM Scripts
 | Perintah Terminal | Peran & Deskripsi Teknis |
 | :--- | :--- |
-| **`npm test`** | **Pengujian Komprehensif Sistem:** Menjalankan 4 gerbang verifikasi otomatis berturut-turut: sintaks berkas Node.js, audit palet warna 3-Color Key, audit kontras 17 pasangan WCAG AA, dan 102 unit tests Vitest (`tests/*.test.js`). |
+| **`npm test`** | Menjalankan pemeriksaan sintaks, warna, kontras, lalu unit test Vitest. |
 | **`npm run test:unit`** | Menjalankan seluruh pengujian unit Vitest secara langsung (`vitest run`). |
 | **`npm run dev`** | **Mode Pengembangan (Harian):** Menjalankan backend Express dan frontend Vite sekaligus dalam 1 port terpadu dengan Hot Module Replacement (HMR). Akses di `http://localhost:5000`. |
 | **`npm start`** | **Mode Produksi (Siap Rilis):** Otomatis mem-build aset ke folder `dist/` lalu menyalakan server produksi di port 5000. |
@@ -1021,68 +1018,39 @@ Wahidiyah Book + Real Midtrans Skripsi/
 │   ├── lib/                # Helper klien (api, countryCodes, styles, utils/cn, date)
 │   ├── App.jsx             # Router navigasi utama
 │   └── main.jsx            # Entry point React DOM
-├── supabase_database/      # Skrip DDL & patch PostgreSQL Supabase
-│   ├── full_setup.sql      # Skema lengkap 7 tabel inti & patch keamanan Linter 0 warning
-│   └── carousel_slides.sql # Skema idempoten tabel carousel
-├── tests/                  # Test suite terpadu Vitest (102 unit tests)
-│   ├── auth_service.test.js     # 31 tests pengujian otentikasi, login, registrasi, OTP, reset password
-│   ├── payment_service.test.js  # 21 tests idempotensi klaim QRIS, status polling, pembatalan
-│   ├── midtrans_parsing.test.js # 26 tests parsing status respon Midtrans & unwrap payload
-│   ├── membership.test.js       # 10 tests kalkulasi durasi keanggotaan Pro & masa aktif
-│   └── sanitize.test.js         # 14 tests sanitasi input & pencegahan XSS
+├── shared/                 # Modul yang dipakai lintas frontend dan backend
+├── supabase_database/
+│   └── full_setup.sql      # Satu-satunya setup SQL; hanya database baru/reset yang disetujui
+├── tests/                  # Unit test Vitest untuk auth, payment, membership, Midtrans, sanitasi
 ├── .env                    # Konfigurasi lingkungan tunggal & terproteksi
 ├── .gitignore              # Proteksi keamanan repositori Git
 ├── package.json            # Manifest dependensi & skrip proyek
 ├── vercel.json             # Konfigurasi deployment serverless Vercel
-├── ARCHITECTURE.md         # Ringkasan arsitektur & standar rekayasa perangkat lunak
-├── DESIGN.md               # Spesifikasi design system 3-Color Key & Cupertino profile
-└── Master_Memory_Workflow.md # SATU-SATUNYA MEMORY & SUMBER KEBENARAN DOKUMENTASI SISTEM
+├── README.md               # Pintu masuk dan quick start
+├── ARCHITECTURE.md         # Pengarah ke bagian arsitektur di master
+├── DESIGN.md               # Pengarah ke bagian desain di master
+└── Master_Memory_Workflow.md # SATU-SATUNYA MEMORY TEKNIS UTAMA
 ```
 
 ---
 
-## 15. Histori Rilis & Rekam Jejak Kerja (R40–R70)
+## 15. Riwayat singkat
 
-| Rilis | Tanggal | Ruang Lingkup & Pencapaian Utama | Status |
-| :---: | :---: | :--- | :---: |
-| **R40** | 30 Sep 2026 | Penyelesaian utang teknis R37, penanganan kegagalan GIS, dan konsolidasi dependensi atomik. | ✅ Selesai |
-| **R41** | 30 Sep 2026 | Refaktor penanggalan WIB tunggal, pengingat jatuh tempo, dan eliminasi total seluruh fitur slot iklan. | ✅ Selesai |
-| **R42** | 01 Okt 2026 | Arsitektur Single-Port (Vite middleware di dalam Express), sentralisasi SQL master, dan request timeout. | ✅ Selesai |
-| **R43** | 01 Okt 2026 | Penataan panel admin, eliminasi tab statistik redundan, dan konfigurasi resmi pengirim email Gmail API OAuth2. | ✅ Selesai |
-| **R44** | 02 Okt 2026 | Migrasi skrip `.mjs` ke `.js`, stabilisasi registrasi akun email baru, dan pembenahan header MIME anti-spam. | ✅ Selesai |
-| **R45** | 03 Okt 2026 | Penutupan celah keamanan P0, pengetatan paywall buku Pro, dan isolasi akses konten PDF terproteksi. | ✅ Selesai |
-| **R46** | 03 Okt 2026 | Penyegaran antarmuka otentikasi dan penambahan jeda cooldown kirim ulang kode OTP 60 detik. | ✅ Selesai |
-| **R47** | 03 Okt 2026 | Integrasi autentikasi Google Sign-In via Supabase Auth redirect callback. | ✅ Selesai |
-| **R48** | 03 Okt 2026 | Pemindahan alur Google OAuth langsung (*Direct OAuth 2.0 Authorization Code Flow*) demi independensi sistem. | ✅ Selesai |
-| **R49** | 04 Okt 2026 | Pengecekan pre-launch komprehensif, fitur Hero Carousel banner dinamis, dan pembersihan kode mati. | ✅ Selesai |
-| **R50** | 05 Okt 2026 | Audit keamanan RLS Supabase, redaksi kredensial git, standarisasi Pure React & Express, dekomposisi `AppContext` ke modular slices. | ✅ Selesai |
-| **R51** | 06–07 Okt 2026 | Integrasi Real Midtrans Core API (Sandbox), koreksi EMVCo `qr_string` 244 karakter, migrasi kolom database, dan pengujian E2E 10/10 lulus. | ✅ Selesai |
-| **R52** | 07–08 Okt 2026 | Pemanfaatan ekosistem pustaka NPM standar (`dayjs`, `zod`, `picocolors`), otomasi skrip CLI, proteksi PDF read-only (`#toolbar=0`), Last Read Tracker, tema pembaca 3 mode, simpan QRIS PNG galeri, dan kwitansi resmi. | ✅ Selesai |
-| **R53** | 08 Okt 2026 | **Tema Malam (dark mode) menyeluruh.** Seluruh warna token Tailwind diubah menjadi CSS variable sadar-tema (`:root` Terang / `.dark` Malam); ditambah provider tema (Terang/Malam/Sistem); tema pembaca PDF diisolasi lewat `.theme-light-scope`. | ✅ Selesai |
-| **R54** | 08–09 Okt 2026 | Skills terpusat + integrasi Zotero: 44 skill, MCP Zotero, filter referensi proposal, daftar pustaka APA 7th via Zotero CSL. | ✅ Selesai |
-| **R55** | 09 Okt 2026 | **Web Push Notification (pengingat agenda H-1).** Modul push mandiri tanpa dependensi (VAPID ES256 + enkripsi `aes128gcm` RFC 8291); tabel `push_subscriptions` + kolom `reminder_sent_at`; penjadwal berkala 15 menit & pemicu saat agenda disimpan. | ✅ Selesai |
-| **R56** | 10 Okt 2026 | Identitas visual resmi (`BrandMark` SVG inline), kompresi logo WebP, ekspor Excel lazy. | ✅ Selesai |
-| **R57** | 09–10 Okt 2026 | Optimasi helper error server terpusat di `server/lib/http.js` dan toast klien `withToast`. | ✅ Selesai |
-| **R58** | 10 Okt 2026 | Hapus kode mati dan satukan komponen bersama (`AuthStatus`, `AuthBrandHeader`, `AlreadySubscribedNotice`, `TxStatusBadge`). | ✅ Selesai |
-| **R59** | 10 Okt 2026 | Diagram Use Case + 4 Activity Diagram resmi (draw.io) bebas tembusan untuk laporan skripsi. | ✅ Selesai |
-| **R60** | 10 Okt 2026 | Pembersihan import, perbaikan namespace 3 layar auth, pengenalan `Field.jsx` dan `useSubmit.js`. | ✅ Selesai |
-| **R61** | 13–18 Okt 2026 | **WhatsApp Authenticator Multi-Provider + Bendera Vektor Sedunia + Pemadatan Dokumentasi Tunggal.** Integrasi nomor HP internasional (`users.phone`), Multi-Provider WhatsApp Gateway (`Fonnte`, `Wablas`, `Whacenter`, `Twilio`, `Webhook`, `Demo`), komponen `FlagIcon` + `PhoneInput` 245 negara dunia, pustaka `libphonenumber-js`, `clsx`, `tailwind-merge` (`cn()`), pemadatan seluruh memori ke berkas tunggal `Master_Memory_Workflow.md`, dan penghapusan seluruh berkas `.md` serta `.docx` redundan. | ✅ Selesai |
-| **R62** | 23–24 Okt 2026 | **Pembersihan Skema Supabase 7 Tabel Inti, Penampil Universal Word DOCX (Mammoth), Penyeragaman Paket Pro Tunggal, Tombol Simulasi QRIS Midtrans Sandbox, dan Pembersihan Transaksi Sampah.** Penyederhanaan tabel `books` murni 11 kolom, eliminasi default author *"Penyusun Wahidiyah"*, penambahan endpoint `GET /api/books/:id/html` berbasis `mammoth` untuk render naskah Word di browser, penyeragaman `plan_name: "Pro"` (Rp 25.000), penyediaan tombol bayar simulasi di UI via `ALLOW_PAYMENT_SIMULATION=1`, pembersihan 14 transaksi dummy pending/rejected, dan pemangkasan 6 tabel usang Supabase. | ✅ Selesai |
-| **R63** | 24 Okt 2026 | **Pembaruan Kebijakan Notifikasi & Alur OTP: Registrasi 100% via Email Bebas Biaya WA API, WhatsApp Dialokasikan Sebagai Fallback Opsi Cadangan Lupa Password.** Memangkas biaya operasional bot WA hingga >95% dan memitigasi risiko serangan *OTP Flooding/Pumping Attack* pada form registrasi publik dengan mengunci OTP registrasi ke Email (Gmail API / SMTP). Kanal WhatsApp tetap dicatat di profil pengguna dan dialokasikan sebagai opsi pemulihan sekunder (*Secondary Fallback Account Recovery*) pada fitur Lupa Password. | ✅ Selesai |
-| **R64** | 24 Okt 2026 | **Refactoring Arsitektur Bersih & Eliminasi Total Dead Code.** Unmount dan penghapusan rute usang `server/routes/reading.routes.js`, pemangkasan query kolom tak terpakai pada endpoint buku `server/routes/books.routes.js`, eliminasi berkas SQL tabel redundan, pembersihan panggilan siklus hidup mati `initTextScale()`, migrasi penyimpanan progres membaca ke `localStorage` peramban tanpa latensi jaringan, serta harmonisasi 100% token warna semantik WCAG AA pada pembaca e-reader. | ✅ Selesai |
-| **R65** | 25 Okt 2026 | **Continuous Vertical Scroll PDF Reader & Auto Scroll-Spy.** Implementasi komponen `ContinuousPdfViewer.jsx` dengan canvas Mozilla PDF.js murni, auto scroll-spy sinkronisasi nomor halaman aktif, kanvas berasio aspek tetap, pelacak persentase zoom real-time, gestur usap/pinch sentuh mobile yang mulus, *reading anchor* penahan posisi teks agar tidak bergeser saat zoom in/out, dan perapian tombol kontrol zoom berdampingan dengan tombol fullscreen. | ✅ Selesai |
-| **R66** | 25 Okt 2026 | **Pemisahan Service Layer (Modular Decoupled Architecture), Vitest Test Harness (102 Tests), dan Modular Admin Sub-Tabs.** Dekomposisi logika bisnis Express ke `server/controllers/` dan `server/services/` (`auth.service.js`, `payment.service.js`), pembuatan 102 automated unit tests dengan Vitest (100% lulus), pemisahan sub-tab admin ke 6 komponen mandiri di `src/features/admin/tabs/`, penyeragaman pembayaran eksklusif Midtrans QRIS (eliminasi transfer manual), serta tombol salin kode QR string & link simulator QRIS Midtrans Sandbox di `PaymentConfirmScreen.jsx`. | ✅ Selesai |
-| **R67** | 26 Okt 2026 | **Audit Keamanan Siber Komprehensif, Hardening Sistem & Deployment Serverless Vercel.** Resolusi kerentanan eskalasi hak akses (*self-demotion* admin), sanitasi anti-XSS pada reader naskah Word Mammoth, validasi ketat kompleksitas password admin via Zod, rate limiting pada pembuatan transaksi QRIS (`transactionsRateLimiter`), pencabutan policy public `users` di Supabase RLS, perbaikan 5 dependensi npm audit (0 vulnerability), standarisasi penamaan berkas dengan konvensi underscore, pembuatan entri serverless Vercel `api/index.js` dengan `vercel.json` rewrites, dan dukungan runtime Node 24. | ✅ Selesai |
-| **R68** | 26–27 Okt 2026 | **Cupertino Inset Grouped Profile Hub, Konsolidasi Sub-Halaman & Universal Sticky Back Button.** Redesain `EditProfileScreen.jsx` bergaya Apple Cupertino inset-grouped dengan kartu identitas taktil dan Data Akun di posisi paling atas; integrasi sub-halaman sekunder (`/about`, `/help`, `/riwayat`) ke dalam Hub Profil Akun; penyederhanaan sidebar desktop (eliminasi menu sekunder dan tombol badge EB); penerapan universal sticky back button header (`DeviceFrame.jsx`) seragam di Desktop, Tablet, dan Ponsel Mobile dengan margin cerdas dan fallback navigasi; pembersihan judul ganda di Pusat Bantuan, pembersihan logo di Tentang Aplikasi, dan penyederhanaan tombol "Daftar". | ✅ Selesai |
-| **R69** | 26–27 Okt 2026 | **Faktur Kwitansi Digital Resmi A4 & Unduh PDF Klien Instan (jsPDF).** Penggantian dialog cetak peramban `window.print()` dengan ekspor PDF mandiri beresolusi tinggi di sisi klien menggunakan pustaka `jspdf`; perancangan tata letak kwitansi A4 berstandar profesional dengan kop institusi hijau zamrud, kartu metadata 2 kolom, rincian biaya transparan, dan stempel verifikasi resmi Wahidiyah Book; perbaikan fallback riwayat langganan ke tabel `transactions` sehingga histori pembayaran selalu terisi lengkap. | ✅ Selesai |
-| **R70** | 27 Okt 2026 | **Konsolidasi Seluruh Arsitektur, Desain, dan Rekam Jejak ke Master Memory Workflow Tunggal.** Sinkronisasi dan pembaruan menyeluruh `ARCHITECTURE.md`, `DESIGN.md`, `README.md`, dan `Master_Memory_Workflow.md` sebagai *Single Source of Truth* mutlak sistem, pemadatan rekam jejak kerja hingga 102/102 unit test, verifikasi WCAG AA, dan kesiapan rilis produksi. | ✅ Selesai |
+| Periode | Perubahan utama |
+|---|---|
+| R40–R54 | Fondasi arsitektur, autentikasi, Midtrans QRIS, tema, dan integrasi Zotero. |
+| R55–R60 | Web Push agenda, panel admin, utilitas bersama, dan pembersihan kode. |
+| R61–R64 | Multi-provider WhatsApp, OTP email, penyederhanaan skema, DOCX reader, dan pemangkasan kode mati. |
+| R65–R67 | PDF reader berkelanjutan, service layer dan Vitest, hardening keamanan, serta dukungan Vercel. |
+| R68–R70 | Penyegaran profil/navigasi, kwitansi PDF, dan konsolidasi dokumentasi. |
+
+Riwayat detail berada di Git. Bagian ini hanya menyimpan konteks yang berguna untuk pengembangan berikutnya.
 
 ---
-
 ## 16. Roadmap & Rencana Pengembangan Mendatang
 
 ### 16.1. Rencana & Agenda Kerja Mendatang (Active & Future Milestones)
-Seluruh fitur inti aplikasi (Web frontend, Backend Express, Real Midtrans QRIS, WhatsApp Gateway 245 negara, Database Supabase, E-Reader read-only, PWA, sistem tema, keamanan CSP, aksesibilitas WCAG AA, skeleton loader, pencarian/filter katalog, penanda buku, progres membaca server, dan Mode Teks Besar untuk lansia) telah **100% selesai diimplementasikan dan terverifikasi penuh** (102/102 unit tests lulus, npm test 100% hijau). Fokus pengembangan dan tugas saat ini diarahkan pada agenda penyelesaian skripsi akademik dan kesiapan produksi:
+Fitur inti web sudah tersedia, tetapi kelulusan build, unit test, UAT, dan kesiapan produksi harus dicatat berdasarkan pemeriksaan terbaru. Fokus berikutnya adalah penyelesaian skripsi, uji pengguna, kesiapan produksi, dan menutup utang teknis atomisitas pembayaran:
 
 1. **Penyusunan Naskah & Dokumentasi Skripsi Akademik:**
    - Menyusun Bab IV (Hasil Implementasi dan Pembahasan): Menyajikan data empiris integrasi payment gateway Midtrans QRIS, evaluasi proteksi hak cipta konten e-reader PDF, serta efektivitas delivery OTP dual-channel (Gmail API vs WhatsApp Gateway).

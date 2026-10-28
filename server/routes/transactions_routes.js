@@ -22,6 +22,7 @@ import {
   activeSubscriptionConflict,
   insertTransaction,
   resolveManualTransferPricing,
+  restorePendingTransaction,
   toRefCode
 } from '../lib/membership.js';
 import { isOneOf, toBoundedInt } from '../lib/validate.js';
@@ -58,11 +59,12 @@ transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wr
     return badRequest(res, 'Aksi harus "approve" atau "reject".');
   }
 
-  const { data: tx } = await supabaseServer
+  const { data: tx, error: transactionError } = await supabaseServer
     .from('transactions')
     .select('*')
     .eq('id', id)
     .maybeSingle();
+  if (transactionError) throw transactionError;
   if (!tx) {
     return notFound(res, 'Transaksi tidak ditemukan');
   }
@@ -100,12 +102,21 @@ transactionsRouter.put('/transactions/:id/verify', requireAuth, requireAdmin, wr
   }
 
   if (action === 'approve') {
-    await activatePaidMembership({
-      userId: tx.user_id,
-      planName: tx.plan_name,
-      price: tx.amount,
-      refCode: toRefCode(tx.ref_no)
-    });
+    try {
+      await activatePaidMembership({
+        userId: tx.user_id,
+        planName: tx.plan_name,
+        price: tx.amount,
+        refCode: toRefCode(tx.ref_no)
+      });
+    } catch (activationError) {
+      try {
+        await restorePendingTransaction(id);
+      } catch (rollbackError) {
+        activationError.rollbackError = rollbackError;
+      }
+      throw activationError;
+    }
   }
 
   res.json({

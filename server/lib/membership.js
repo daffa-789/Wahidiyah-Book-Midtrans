@@ -2,7 +2,7 @@
 
 import crypto from 'crypto';
 import { supabaseServer } from '../db.js';
-import { generateId, hasActivePro, settleExpiredMembership } from '../auth.js';
+import { generateId, hasActivePro, settleExpiredMembership, TRANSACTION_PENDING_STATUS } from '../auth.js';
 import { logger } from '../logger.js';
 import { QRIS_ADMIN_FEE, SUBSCRIPTION_PLANS } from './constants.js';
 import { toPositiveNumber } from './validate.js';
@@ -37,6 +37,13 @@ const expiresAtFromNow = (days = DEFAULT_PLAN_DAYS, from = new Date()) =>
 
 const generateRefNo = () => `0000${crypto.randomInt(10000000, 100000000)}`;
 
+const throwIfDatabaseError = ({ error }, operation) => {
+  if (!error) return;
+  const wrappedError = new Error(`${operation} gagal: ${error.message || 'Galat basis data.'}`, { cause: error });
+  if (error.code) wrappedError.code = error.code;
+  throw wrappedError;
+};
+
 
 export const toRefCode = (refNo) => 'REF-' + String(refNo).slice(-8);
 
@@ -45,7 +52,7 @@ export async function insertTransaction({
   txId, userId, planName, amount, adminFee, totalPaid, method, status = 'success'
 }) {
   const refNo = generateRefNo();
-  await supabaseServer.from('transactions').insert({
+  const result = await supabaseServer.from('transactions').insert({
     id: txId,
     ref_no: refNo,
     user_id: userId,
@@ -57,6 +64,7 @@ export async function insertTransaction({
     status,
     created_at: new Date().toISOString()
   });
+  throwIfDatabaseError(result, 'Penyimpanan transaksi');
   return refNo;
 }
 
@@ -69,23 +77,44 @@ export async function activatePaidMembership({
   const days = planDaysFromPeriod(periodFallback);
   const expiresAt = expiresAtFromNow(days);
 
-  await supabaseServer.from('users').update({
+  const userUpdate = await supabaseServer.from('users').update({
     is_pro: true,
     subscription_expires_at: expiresAt
   }).eq('id', userId);
+  throwIfDatabaseError(userUpdate, 'Pembaruan status Pro pengguna');
 
-  await supabaseServer.from('subscriptions').insert({
+  const subscriptionInsert = await supabaseServer.from('subscriptions').insert({
     id: subId,
     user_id: userId,
     plan_name: planName || 'Pro',
     price: Number(price) || 0,
     status: ACTIVE_SUBSCRIPTION_STATUS,
+    period,
     expires_at: expiresAt,
     ref_code: refCode,
     created_at: new Date().toISOString()
   });
+  throwIfDatabaseError(subscriptionInsert, 'Penyimpanan langganan');
 
   return { subscriptionId: subId, expiresAt, period, days };
+}
+
+
+export async function restorePendingTransaction(transactionId) {
+  try {
+    const result = await supabaseServer
+      .from('transactions')
+      .update({ status: TRANSACTION_PENDING_STATUS, verified_at: null })
+      .eq('id', transactionId)
+      .eq('status', 'success');
+    throwIfDatabaseError(result, 'Pemulihan status transaksi');
+  } catch (error) {
+    logger.error('MEMBERSHIP', 'Gagal memulihkan transaksi ke pending', {
+      transactionId,
+      pesan: error.message
+    });
+    throw error;
+  }
 }
 
 
