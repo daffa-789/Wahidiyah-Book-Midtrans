@@ -204,7 +204,6 @@ Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
 - **Rate limit lintas-instance:** Pembatasan endpoint sensitif dapat memakai store PostgreSQL Supabase (`api_rate_limit_buckets`) melalui fungsi RPC atomik. Key IP/akun di-HMAC sebelum disimpan. Terapkan blok aditif **PATCH Distributed Rate Limits** di bagian akhir `supabase_database/full_setup.sql`, lalu set `SHARED_RATE_LIMITS=true` di lingkungan server. Tanpa langkah itu aplikasi memakai store bawaan per proses.
 - **Login Google lintas-instance:** Kode sesi acak sekali-pakai disimpan dalam bentuk hash di `email_verifications`, kedaluwarsa setelah 60 detik, dan dihapus atomik saat ditukar. Tabel yang sudah ada dipakai kembali.
 - **Pemeliharaan terjadwal:** Vercel menjalankan `/api/cron/daily-maintenance` sekali sehari pada `01:00 UTC` (sekitar `08:00–08:59 WIB` di paket Hobby). Handler memverifikasi `CRON_SECRET` sebelum mengirim pengingat agenda dan menyapu langganan kedaluwarsa. Isi `CRON_SECRET` di Production Environment Variables Vercel dengan nilai acak minimal 16 karakter. Docker tetap memakai scheduler proses.
-- **Web Analytics Vercel:** Paket `@vercel/analytics` dan komponen React `<Analytics />` dipasang di `src/main.jsx` untuk melacak page view SPA. Aktifkan Web Analytics di Dashboard Vercel agar pengumpulan kunjungan mulai berjalan.
 
 ---
 

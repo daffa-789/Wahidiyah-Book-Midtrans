@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { Analytics } from '@vercel/analytics/react';
 import App from './App.jsx';
 import { AppProvider } from '@context/AppContext';
 import { ThemeProvider, useTheme } from '@theme/ThemeProvider';
@@ -34,7 +33,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <AppProvider>
             <App />
             <AppToaster />
-            <Analytics />
           </AppProvider>
         </BrowserRouter>
       </ThemeProvider>
