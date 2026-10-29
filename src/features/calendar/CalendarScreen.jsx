@@ -1,6 +1,7 @@
 import { getMapUrl, getDisplayLocation } from '@lib/maps';
 import { useState, useMemo, useCallback } from 'react';
 import {
+  Calendar,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -195,7 +196,7 @@ export const CalendarScreen = () => {
             {selectedDateEvents.length > 0 ? (
               <div className="space-y-2">
                 <div className="text-caption font-bold text-ink-500 flex items-center gap-1">
-                  <CalendarIcon className={controls.iconSm} />
+                  <Calendar className={controls.iconSm} />
                   <span>Agenda Wahidiyah:</span>
                 </div>
                 {selectedDateEvents.map((evt) => (
