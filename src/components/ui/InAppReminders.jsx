@@ -54,7 +54,7 @@ export const InAppReminders = () => {
 
   return (
     <div
-      className="fixed bottom-4 left-4 z-40 flex w-[calc(100%-2rem)] max-w-[380px] flex-col gap-2"
+      className="fixed bottom-20 left-4 right-4 z-40 flex flex-col gap-2 md:bottom-4 md:left-auto md:w-[380px]"
       role="status"
       aria-live="polite"
       aria-label="Pengingat"
@@ -72,10 +72,10 @@ export const InAppReminders = () => {
               <KindIcon kind={reminder.kind} />
             </span>
             <div className="min-w-0 flex-1">
-              <p className={`text-xs font-bold ${tone.title}`}>{reminder.title}</p>
-              <p className={`mt-0.5 text-caption leading-relaxed ${tone.body}`}>{reminder.message}</p>
+              <p className={`text-xs font-bold break-words ${tone.title}`}>{reminder.title}</p>
+              <p className={`mt-0.5 text-caption leading-relaxed break-words ${tone.body}`}>{reminder.message}</p>
               {reminder.detail && (
-                <p className={`mt-1 text-caption font-semibold ${tone.body}`}>{reminder.detail}</p>
+                <p className={`mt-1 text-caption font-semibold break-words ${tone.body}`}>{reminder.detail}</p>
               )}
             </div>
             <button

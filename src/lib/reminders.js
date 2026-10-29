@@ -5,6 +5,8 @@
    permukaan API modul tetap sempit dan jelas mana yang stabil untuk dipakai
    dari luar. */
 
+import { getDisplayLocation } from '@lib/maps';
+
 const PRO_REMINDER_THRESHOLD_DAYS = [7, 3, 1, 0];
 
 const todayYmd = (now = new Date()) => {
@@ -67,7 +69,7 @@ export const buildReminders = ({ events = [], user = null, now = new Date() } = 
       severity: 'info',
       title: 'Acara hari ini',
       message: event.title,
-      detail: [event.time, event.location].filter(Boolean).join(' · '),
+      detail: [event.time, getDisplayLocation(event.location)].filter(Boolean).join(' · '),
       date: event.date
     });
   }
