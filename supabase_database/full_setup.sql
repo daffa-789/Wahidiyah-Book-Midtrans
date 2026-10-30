@@ -499,4 +499,22 @@ GRANT EXECUTE ON FUNCTION public.increment_api_rate_limit(TEXT, INTEGER) TO serv
 GRANT EXECUTE ON FUNCTION public.decrement_api_rate_limit(TEXT, INTEGER) TO service_role;
 GRANT EXECUTE ON FUNCTION public.reset_api_rate_limit(TEXT, INTEGER) TO service_role;
 
+-- ════════════════════════════════════════════════════════════════════════════
+-- PATCH Naskah di Storage — idempoten, aman untuk basis data yang sudah berisi data.
+--
+-- Naskah buku disimpan di bucket privat `buku`, bukan sebagai data URL di
+-- kolom books.content_url, karena function Vercel menolak muatan di atas 4,5 MB.
+-- Bucket ini harus ada sebelum admin bisa mengunggah buku.
+--
+-- Tidak ada kebijakan RLS yang dibuat dengan sengaja: unggah memakai tanda
+-- unggah sekali-pakai dan baca memakai peran layanan, jadi keduanya sudah tidak
+-- bergantung pada RLS. Menambahkan kebijakan justru membuka isi naskah berbayar.
+-- ════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('buku', 'buku', false, 52428800)
+ON CONFLICT (id) DO UPDATE
+SET public = false,
+    file_size_limit = EXCLUDED.file_size_limit;
+
 NOTIFY pgrst, 'reload schema';
