@@ -13,7 +13,9 @@
 // v16: wordmark QRIS resmi dipasang. Aset .svg dilayani cache-first, jadi tanpa
 //      bump ini browser pengguna terus menampilkan logo lama meski server sudah
 //      mengirim yang baru (inilah sebabnya aturan §R5.6 mewajibkan bump).
-const CACHE_NAME = 'wahidiyah-app-shell-v16';
+// v17: wordmark QRIS diberi latar putih — varian hitam transparan tidak terbaca
+//      di tema gelap, tempat lencana metode pembayaran memakai permukaan gelap.
+const CACHE_NAME = 'wahidiyah-app-shell-v17';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
