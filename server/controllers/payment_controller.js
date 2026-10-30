@@ -23,8 +23,7 @@ import {
   createQrisOrder,
   handleMidtransNotification,
   loadTransactionForViewer,
-  resolveQrisStatus,
-  simulateQrisSettlement
+  resolveQrisStatus
 } from '../services/payment_service.js';
 import { TRANSACTION_PENDING_STATUS } from '../auth.js';
 
@@ -147,30 +146,6 @@ export async function cancelQris(req, res) {
     warning: voidedByMidtrans
       ? null
       : 'Jangan membayar kode QR lama. Kalau terlanjur dibayar, langganan tetap aktif tetapi kamu membayar dua kali.'
-  });
-}
-
-
-/** POST /api/payments/qris/:orderId/simulate-paid (hanya sandbox ber-flag) */
-export async function simulatePaid(req, res) {
-  const { transaction, response } = await ownTransactionOr404(req, res);
-  if (response) return response;
-
-  if (transaction.status === 'success') {
-    return res.json({ success: true, alreadyProcessed: true, status: 'settlement', isPaid: true });
-  }
-
-  const result = await simulateQrisSettlement({ transaction });
-
-  if (result.kind === 'expired') {
-    return res.status(410).json({ success: false, message: 'Kode QR sudah kedaluwarsa. Buat ulang dulu.' });
-  }
-
-  return res.json({
-    success: true,
-    alreadyProcessed: result.alreadyProcessed,
-    status: 'settlement',
-    isPaid: true
   });
 }
 

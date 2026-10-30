@@ -10,16 +10,14 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from '../auth.js';
-import { notFound, wrap } from '../lib/http.js';
-import { isPaymentSimulationAllowed } from '../config.js';
+import { wrap } from '../lib/http.js';
 import { paymentRateLimiter, qrisStatusRateLimiter } from '../middleware/security.js';
 import {
   cancelQris,
   createQrisCharge,
   getQrImage,
   getQrisStatus,
-  midtransNotification,
-  simulatePaid
+  midtransNotification
 } from '../controllers/payment_controller.js';
 
 export const paymentsRouter = Router();
@@ -32,28 +30,11 @@ const qrImageRateLimiter = rateLimit({
   message: { success: false, message: 'Terlalu banyak permintaan kode QR. Tunggu sebentar.' }
 });
 
-/* Gerbang dievaluate SEBELUM requireAuth supaya rute ini benar-benar tidak
- * ada (404) saat flag opt-in mati — termasuk bagi pengunjung yang belum
- * masuk, dan supaya `curl` verifikasi tidak perlu membawa token sesi.
- */
-const requirePaymentSimulation = (req, res, next) => {
-  if (isPaymentSimulationAllowed(process.env)) return next();
-  return notFound(res, 'Rute tidak tersedia.');
-};
-
 paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(createQrisCharge));
 
 paymentsRouter.get('/qris/:orderId/status', requireAuth, qrisStatusRateLimiter, wrap(getQrisStatus));
 
 paymentsRouter.post('/qris/:orderId/cancel', paymentRateLimiter, requireAuth, wrap(cancelQris));
-
-paymentsRouter.post(
-  '/qris/:orderId/simulate-paid',
-  paymentRateLimiter,
-  requirePaymentSimulation,
-  requireAuth,
-  wrap(simulatePaid)
-);
 
 paymentsRouter.get('/qris/:orderId/qr.png', qrImageRateLimiter, requireAuth, wrap(getQrImage));
 

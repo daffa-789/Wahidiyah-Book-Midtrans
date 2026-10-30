@@ -27,7 +27,6 @@ export const useQrisPayment = ({
   const [isQrisPaid, setIsQrisPaid] = useState(false);
   const [countdown, setCountdown] = useState(DEFAULT_COUNTDOWN_SECONDS);
   const [isExpired, setIsExpired] = useState(false);
-  const [isSimulating, setIsSimulating] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
   const pollIntervalRef = useRef(null);
@@ -60,7 +59,6 @@ export const useQrisPayment = ({
         qrString: data.qrString || null,
         qrImageUrl: data.qrImageUrl || null,
         qrMidtransUrl: data.qrMidtransUrl || null,
-        simulationAvailable: Boolean(data.simulationAvailable),
         totalPaid: data.totalPaid,
         amount: data.amount ?? null,
         adminFee: data.adminFee ?? null,
@@ -162,31 +160,6 @@ export const useQrisPayment = ({
   }, [qrTransaction, isQrisPaid, isExpired, triggerSuccess]);
 
   /**
-   * Menandai transaksi lunas lewat server (mode sandbox saja).
-   * Server menolaknya di production, jadi aman dipanggil dari UI.
-   */
-  const simulatePaid = useCallback(async () => {
-    if (!qrTransaction?.orderId) return;
-    setIsSimulating(true);
-    setQrError('');
-    try {
-      const data = await apiJson(`/api/payments/qris/${qrTransaction.orderId}/simulate-paid`, {
-        method: 'POST',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' }
-      });
-      if (data?.isPaid === true) {
-        triggerSuccess();
-      } else {
-        setQrError(data?.message || 'Simulasi tidak berhasil.');
-      }
-    } catch (err) {
-      setQrError(err?.message || 'Simulasi pembayaran gagal.');
-    } finally {
-      setIsSimulating(false);
-    }
-  }, [qrTransaction, triggerSuccess]);
-
-  /**
    * Batalkan kode QR aktif di Midtrans, lalu minta order baru supaya hitung
    * mundur mulai lagi dari awal. Server menolak mematikan baris lokal kalau
    * Midtrans belum mengakui pembatalan, jadi pesan galatnya diteruskan apa ada.
@@ -222,11 +195,9 @@ export const useQrisPayment = ({
     qrNotice,
     isQrisPaid,
     isExpired,
-    isSimulating,
     isCancelling,
     formattedCountdown,
     regenerateQr: generateTransaction,
-    simulatePaid,
     cancelQris
   };
 };

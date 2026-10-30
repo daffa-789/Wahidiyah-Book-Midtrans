@@ -29,8 +29,7 @@ import { QRIS_ADMIN_FEE, findPlan } from '../lib/constants.js';
 import {
   MIDTRANS_IS_PRODUCTION,
   MIDTRANS_PAYMENT_METHOD_LABEL,
-  MIDTRANS_QRIS_EXPIRY_MINUTES,
-  isPaymentSimulationAllowed
+  MIDTRANS_QRIS_EXPIRY_MINUTES
 } from '../config.js';
 import {
   cancelQrisTransaction,
@@ -61,10 +60,6 @@ export function createServiceError(message, { statusCode = 500, code = null } = 
   if (code) error.code = code;
   return error;
 }
-
-
-const simulationFlag = (env = process.env) =>
-  (MIDTRANS_IS_PRODUCTION ? {} : { simulationAvailable: isPaymentSimulationAllowed(env) });
 
 
 const isExpired = (transaction, now = Date.now()) =>
@@ -235,7 +230,6 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
         qrString: pendingTx.midtrans_qr_string || null,
         qrImageUrl: pendingTx.midtrans_qr_url ? `/api/payments/qris/${pendingTx.id}/qr.png` : null,
         qrMidtransUrl: pendingTx.midtrans_qr_url || null,
-        ...simulationFlag(),
         planName: pendingTx.plan_name,
         amount: pendingTx.amount,
         adminFee: pendingTx.admin_fee,
@@ -327,10 +321,7 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
       qrString,
       // Cadangan: endpoint gambar kita sendiri (proxy PNG dari Midtrans).
       qrImageUrl: qrAction ? `/api/payments/qris/${orderId}/qr.png` : null,
-      ...(MIDTRANS_IS_PRODUCTION ? {} : {
-        qrMidtransUrl: qrAction?.url || null,
-        simulationAvailable: isPaymentSimulationAllowed(process.env)
-      }),
+      ...(MIDTRANS_IS_PRODUCTION ? {} : { qrMidtransUrl: qrAction?.url || null }),
       planName: plan.name,
       amount,
       adminFee,
@@ -441,30 +432,6 @@ export async function cancelQrisForUser({ transaction }) {
     : null;
 
   return { voidedByMidtrans, kedaluwarsaLama };
-}
-
-
-/**
- * Settlement DISIMULASIKAN (khusus demo sandbox) — mengaktifkan langganan
- * seolah-olah Midtrans sudah mengirim notifikasi settlement, untuk demo/tes
- * dari HP tanpa membuka simulator Midtrans. Sengaja memakai settleTransaction()
- * yang sama dengan jalur webhook asli, supaya perilaku (termasuk idempotensi &
- * rollback) persis identik.
- */
-export async function simulateQrisSettlement({ transaction }) {
-  if (isExpired(transaction)) {
-    await rejectTransaction(transaction, 'kedaluwarsa');
-    return { kind: 'expired' };
-  }
-
-  const { alreadyProcessed } = await settleTransaction(transaction);
-
-  logger.warn('MIDTRANS', 'Settlement DISIMULASIKAN dari UI (mode sandbox)', {
-    orderId: transaction.id,
-    userId: transaction.user_id
-  });
-
-  return { kind: 'settled', alreadyProcessed };
 }
 
 
