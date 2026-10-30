@@ -3,8 +3,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiJson } from '@lib/api';
 import { layout, typography, controls } from '@lib/styles';
-import { parsePhoneNumber } from '@lib/countryCodes';
-import { FlagIcon } from '@ui/FlagIcon';
+import { displayPhone } from '@lib/phone';
 
 export const VerifyEmailScreen = () => {
   const { verification, clearVerification, login, navigateTo } = useApp();
@@ -175,19 +174,7 @@ export const VerifyEmailScreen = () => {
             ? (isReset ? 'Kode pemulihan gagal dikirim ke ' : 'Kode verifikasi gagal dikirim ke ')
             : (isReset ? 'Kami mengirim kode pemulihan ke ' : 'Kami mengirim kode verifikasi ke ')}
           {isWhatsApp && target ? (
-            (() => {
-              const p = parsePhoneNumber(target);
-              return (
-                <span className="inline-flex items-center gap-1.5 font-bold text-ink-800 align-baseline">
-                  <FlagIcon
-                    code={p.country.code}
-                    name={p.country.name}
-                    className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] inline-block align-middle"
-                  />
-                  <span>{p.country.dial} {p.nationalNumber}</span>
-                </span>
-              );
-            })()
+            <span className="font-bold text-ink-800 align-baseline">{displayPhone(target)}</span>
           ) : (
             <strong className="text-ink-700">{target}</strong>
           )}{' '}

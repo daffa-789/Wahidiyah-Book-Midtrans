@@ -19,8 +19,7 @@ import { useApp } from '@context/AppContext';
 import { useTheme } from '@theme/ThemeProvider';
 import { apiJson, authHeaders } from '@lib/api';
 import { typography, controls } from '@lib/styles';
-import { parsePhoneNumber } from '@lib/countryCodes';
-import { FlagIcon } from '@ui/FlagIcon';
+import { displayPhone } from '@lib/phone';
 import { LogoutConfirmDialog } from '../../components/layout/LogoutConfirmDialog';
 
 export const EditProfileScreen = () => {
@@ -164,20 +163,7 @@ export const EditProfileScreen = () => {
                     className="flex h-12 w-full items-center gap-2.5 rounded-xl border border-cream-300 bg-cream-200/50 pl-10 pr-3.5 text-body font-medium text-ink-700"
                   >
                     {user.phone ? (
-                      (() => {
-                        const p = parsePhoneNumber(user.phone);
-                        return (
-                          <>
-                            <FlagIcon
-                              code={p.country.code}
-                              name={p.country.name}
-                              className="h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.12)] shrink-0"
-                            />
-                            <span className="font-semibold text-ink-800">{p.country.dial}</span>
-                            <span className="text-ink-600 font-mono text-caption">{p.nationalNumber}</span>
-                          </>
-                        );
-                      })()
+                      <span className="font-mono text-caption font-semibold text-ink-800">{displayPhone(user.phone)}</span>
                     ) : (
                       <span className="text-ink-400">-</span>
                     )}

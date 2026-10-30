@@ -71,10 +71,10 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Modular Layered Mo
 ### 2.2. Autentikasi Pengguna & WhatsApp Gateway Fonnte (R61–R67)
 - **Registrasi & Verifikasi Dual-Channel Terkendali:**
   - **Registrasi Akun:** 100% menggunakan verifikasi OTP via **Email (Gmail API OAuth2)** bebas biaya API dan anti-flooding (*OTP Flooding Protection*). Tombol pendaftaran disederhanakan dengan label bersih *"Daftar"*.
-  - **WhatsApp Secondary Fallback:** Kanal WhatsApp internasional dialokasikan sebagai opsi pemulihan sekunder (*Secondary Fallback Account Recovery*) pada fitur Lupa Password.
+  - Kanal WhatsApp untuk nomor Indonesia dialokasikan sebagai opsi pemulihan sekunder (*Secondary Fallback Account Recovery*) pada fitur Lupa Password.
 - **Pemilih Kode Negara Sedunia (245 Negara):**
-  - Lencana negara dirender `FlagIcon.jsx` sebagai teks dua huruf (ISO 3166-1 alpha-2) — tanpa berkas SVG dan tanpa dependensi npm, jadi tidak ada aset bendera yang ikut ke bundel.
-  - Integrasi pustaka standar Google `libphonenumber-js` untuk parsing nomor E.164 internasional dan deteksi validitas.
+  - Tidak ada lencana bendera atau pemilih negara: `PhoneInput.jsx` hanya menerima nomor Indonesia dan `src/lib/phone.js` menjaga dua bentuk — `62xx` untuk disimpan, `0xx` tanpa spasi untuk ditampilkan.
+  - Parsing nomor memakai helper lokal `src/lib/phone.js` (`normalizePhone`, `displayPhone`, `isValidPhone`), bukan pustaka luar.
   - Pencarian dwibahasa (dapat dicari dengan nama Indonesia *"Jepang"* atau Inggris *"Japan"*, dial code `+81`, atau ISO code `JP`).
   - Pembuangan otomatis angka nol di awal nomor lokal (`0812...` ➔ `812...` dengan dial `+62`).
 - **Login Akun Google:** Integrasi resmi Google OAuth 2.0 (*Direct Authorization Code Flow*) dengan verifikasi token ID dan pembuatan sesi JWT aman.
@@ -125,7 +125,7 @@ graph TD
     Client["Browser Desktop / Mobile PWA (React 19 + Vite 6)"] -->|Port 5000 / Vercel Serverless| Express["Server Express Node.js / api/index.js"]
     
     subgraph Frontend ["Frontend Modular (React 19)"]
-        UI["Komponen UI (DeviceFrame, ContinuousPdfViewer, FlagIcon, PhoneInput)"]
+        UI["Komponen UI (DeviceFrame, ContinuousPdfViewer, PhoneInput)"]
         State["Context Slices (Catalog, Payment, Navigation)"]
         AdminTabs["Admin Modular Tabs (Overview, Books, Users, Events, Carousel, Logs)"]
         Receipt["Client-Side Receipt Generator (jsPDF A4 Digital Receipt)"]
@@ -368,7 +368,7 @@ Mendaftarkan akun baru dan meminta pengiriman OTP ke email serta WhatsApp (jika 
     "dob": "1995-08-17"
   }
   ```
-  *(Catatan: `phone` bersifat opsional dan otomatis dinormalisasi ke format E.164 internasional tanpa tanda plus)*
+  *(Catatan: `phone` bersifat opsional dan otomatis dinormalisasi ke format 62xxx tanpa tanda plus)*
 * **Response (202 Accepted):**
   ```json
   {
@@ -990,7 +990,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 │   ├── whatsapp.js         # Delegator pengirim OTP WhatsApp
 │   └── server.js           # Titik masuk utama server Express
 ├── src/                    # Frontend React 19 (Vite SPA)
-│   ├── components/         # Komponen UI global (DeviceFrame, FlagIcon, PhoneInput)
+│   ├── components/         # Komponen UI global (DeviceFrame, PhoneInput, dll)
 │   │   └── pdf/            # Komponen penampil PDF (ContinuousPdfViewer.jsx)
 │   ├── context/            # AppContext & Modular Slices (catalog, payment, nav)
 │   ├── features/           # Halaman per fitur
@@ -1004,7 +1004,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 │   │   ├── profile/        # Cupertino inset-grouped EditProfileScreen.jsx
 │   │   ├── reader/         # PdfReaderScreen.jsx & WordDocxReader.jsx
 │   │   └── subscription/   # Riwayat langganan & ProScreen.jsx
-│   ├── lib/                # Helper klien (api, countryCodes, styles, utils/cn, date)
+│   ├── lib/                # Helper klien (api, phone, styles, utils/cn, date)
 │   ├── App.jsx             # Router navigasi utama
 │   └── main.jsx            # Entry point React DOM
 ├── shared/                 # Modul yang dipakai lintas frontend dan backend
@@ -1046,7 +1046,9 @@ Dicatat agar tidak ada sesi berikutnya yang mencari atau menghidupkan kembali be
 | `server/lib/supabaseRateLimitStore.js` + wiring `store:` di 4 limiter | `SHARED_RATE_LIMITS` tidak pernah diaktifkan, jadi kode itu mati | Keempat limiter tetap ada dengan MemoryStore bawaan `express-rate-limit` |
 | `Dockerfile`, `docker-compose.yml`, `.dockerignore` | Hosting di Vercel; tidak dirujuk skrip/dokumen mana pun | `vercel.json` + `npm start` lokal |
 | `supabase/.temp/` dari pelacakan Git | State lokal CLI; `pooler-url` memuat endpoint database dan repo ini **public** | Tetap ada di disk, diabaikan lewat `.gitignore` |
-| `public/flags/` (271 SVG, 2,4 MB) | Aplikasi hanya melayani nomor Indonesia, dan Fonnte selalu mengirim `countryCode: '62'` sehingga nomor non-62 tetap tidak terkirim | `FlagIcon.jsx` merender lencana teks dua huruf |
+| `public/flags/` (271 SVG, 2,4 MB) | Aplikasi hanya melayani nomor Indonesia, dan Fonnte selalu mengirim `countryCode: '62'` sehingga nomor non-62 tetap tidak terkirim | Nomor Indonesia ditulis langsung, tanpa bendera |
+| `src/lib/countryCodes.js` (2.323 baris) | Dataset 240+ negara + dropdown pemilihan negara tidak ada gunanya untuk pengguna Indonesia | `src/lib/phone.js` — 34 baris: `normalizePhone`, `displayPhone`, `isValidPhone` |
+| `src/components/ui/FlagIcon.jsx` + dependensi `libphonenumber-js` | Mengikuti pemangkasan di atas | Validitas nomor dicek regex Indonesia di `phone.js` |
 | Skrip `npm test`, `test:unit`, `test:watch`, `check`, `check:colors`, `check:contrast` | Filenya sudah tidak ada | `npm run build` dan `npm run health` |
 
 **Yang sengaja DIPERTAHANKAN walau terlihat bisa dibuang:**
