@@ -15,7 +15,9 @@
 //      mengirim yang baru (inilah sebabnya aturan §R5.6 mewajibkan bump).
 // v17: wordmark QRIS diberi latar putih — varian hitam transparan tidak terbaca
 //      di tema gelap, tempat lencana metode pembayaran memakai permukaan gelap.
-const CACHE_NAME = 'wahidiyah-app-shell-v17';
+// v18: latar putih dipindah ke kelas .logo-plate; pita putih di dalam SVG tidak
+//      memenuhi kotak lencana, jadi pelatnya kini whole-square di kedua tema.
+const CACHE_NAME = 'wahidiyah-app-shell-v18';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
