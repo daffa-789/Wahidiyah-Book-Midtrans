@@ -3,7 +3,6 @@ import {
   X,
   Loader2,
   CheckCircle2,
-  QrCode,
   RefreshCw,
   AlertCircle,
   Clock,
@@ -48,27 +47,30 @@ export const PaymentConfirmScreen = () => {
     });
   };
 
-  /* Simulator QRIS Midtrans meminta kolom "QR Code Image Url" — yaitu actions[].url
-     dari respons charge, bukan payload EMVCo. Karena itu yang disalin adalah
-     tautan QR, dengan qrString hanya sebagai cadangan paling akhir. */
-  const handleCopyQr = async () => {
-    const textToCopy =
-      qrTransaction?.qrMidtransUrl ||
-      (qrTransaction?.qrImageUrl ? `${window.location.origin}${qrTransaction.qrImageUrl}` : '') ||
-      qrTransaction?.qrString ||
-      '';
-    if (!textToCopy) {
-      toast.error('Tautan QR belum tersedia.');
-      return;
+  /* navigator.clipboard menolak tulisannya saat dokumen tidak fokus — di Android
+     ini terjadi tepat setelah pengguna berpindah ke aplikasi scanner. Textarea
+     tersembunyi masih diterima WebView lama dan tidak butuh fokus dokumen. */
+  const salinKePapanJepit = async (teks) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(teks);
+        return true;
+      } catch {
+        // jatuh ke cara cadangan di bawah
+      }
     }
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      setQrCopied(true);
-      toast.success('Tautan QR tersalin — tempel di kolom "QR Code Image Url" simulator.');
-      setTimeout(() => setQrCopied(false), 2500);
-    } catch {
-      toast.error('Gagal menyalin tautan QR.');
-    }
+
+    const area = document.createElement('textarea');
+    area.value = teks;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.top = '-9999px';
+    document.body.appendChild(area);
+    area.select();
+    area.setSelectionRange(0, teks.length);
+    const tersalin = document.execCommand('copy');
+    document.body.removeChild(area);
+    return tersalin;
   };
 
   const isQrisMethod = isQrisPaymentMethod(selectedPaymentMethod);
@@ -98,6 +100,31 @@ export const PaymentConfirmScreen = () => {
     isQrisActive: isQrisMethod && !isSubscribed,
     phone: paymentPhone
   });
+
+  /* Simulator QRIS Midtrans memakai kolom "QR Code Image Url" — yaitu actions[].url
+     dari respons charge — jadi yang disalin DAN yang ditampilkan adalah tautan itu,
+     dengan payload EMVCo hanya sebagai cadangan paling akhir. Menampilkan nilai yang
+     sama membuat pengguna di HP bisa menyalin manual lewat tahan-salin. */
+  const qrLinkToCopy =
+    qrTransaction?.qrMidtransUrl ||
+    (qrTransaction?.qrImageUrl ? `${window.location.origin}${qrTransaction.qrImageUrl}` : '') ||
+    qrTransaction?.qrString ||
+    '';
+
+  const handleCopyQr = async () => {
+    if (!qrLinkToCopy) {
+      toast.error('Tautan QR belum tersedia.');
+      return;
+    }
+    const tersalin = await salinKePapanJepit(qrLinkToCopy);
+    if (!tersalin) {
+      toast.error('Browser menolak menyalin. Tahan teks tautan di bawah, lalu salin manual.', { duration: 6000 });
+      return;
+    }
+    setQrCopied(true);
+    toast.success('Tautan QR tersalin — tempel di kolom "QR Code Image Url" simulator.');
+    setTimeout(() => setQrCopied(false), 2500);
+  };
 
   const handlePay = (e) => {
     e.preventDefault();
@@ -188,7 +215,12 @@ export const PaymentConfirmScreen = () => {
 
             <div className="flex items-center justify-between bg-qris-600 text-cream-50 px-4 py-2.5 rounded-2xl shadow-sm">
               <div className="flex items-center gap-2">
-                <QrCode className="w-5 h-5" />
+                <img
+                  src="/payments/qris-putih.svg"
+                  alt="Logo QRIS"
+                  className="h-4 w-auto shrink-0"
+                  loading="lazy"
+                />
                 <span className="font-black text-xs tracking-wider uppercase">QRIS PEMBAYARAN</span>
               </div>
               <span className="text-micro font-bold bg-cream-50/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -283,12 +315,12 @@ export const PaymentConfirmScreen = () => {
                     </span>
                   </div>
 
-                  {qrTransaction.qrString && (
+                  {qrLinkToCopy && (
                     <p
                       className="font-mono text-micro text-ink-600 bg-cream-50 rounded-xl p-2 border border-cream-200 truncate select-all"
-                      title="Payload EMVCo — cadangan bila simulator menolak tautan QR"
+                      title="Tautan gambar QR — tahan untuk menyalin manual"
                     >
-                      {qrTransaction.qrString}
+                      {qrLinkToCopy}
                     </p>
                   )}
 
