@@ -71,7 +71,6 @@ export async function activatePaidMembership({
   userId, planName, price, refCode, periodFallback = null
 }) {
   const subId = generateId('sub');
-  const period = periodFallback || 'Langganan Pro';
   const days = planDaysFromPeriod(periodFallback);
   const expiresAt = expiresAtFromNow(days);
 
@@ -87,14 +86,13 @@ export async function activatePaidMembership({
     plan_name: planName || 'Pro',
     price: Number(price) || 0,
     status: ACTIVE_SUBSCRIPTION_STATUS,
-    period,
     expires_at: expiresAt,
     ref_code: refCode,
     created_at: new Date().toISOString()
   });
   throwIfDatabaseError(subscriptionInsert, 'Penyimpanan langganan');
 
-  return { subscriptionId: subId, expiresAt, period, days };
+  return { subscriptionId: subId, expiresAt, days };
 }
 
 

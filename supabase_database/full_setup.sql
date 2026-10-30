@@ -106,7 +106,6 @@ CREATE TABLE public.subscriptions (
     plan_name VARCHAR(100) NOT NULL,
     price NUMERIC(12, 2) NOT NULL,
     status public.subscription_status DEFAULT 'Aktif',
-    period VARCHAR(100) NOT NULL,
     expires_at TIMESTAMPTZ DEFAULT NULL,
     ref_code VARCHAR(50) DEFAULT '',
     created_at TIMESTAMPTZ DEFAULT NOW()
