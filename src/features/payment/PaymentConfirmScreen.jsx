@@ -250,7 +250,7 @@ export const PaymentConfirmScreen = () => {
                   value={qrTransaction.qrString}
                   size={224}
                   level="M"
-                  marginSize={0}
+                  marginSize={4}
                   className="w-56 h-56"
                   title="Kode QRIS pembayaran"
                 />
