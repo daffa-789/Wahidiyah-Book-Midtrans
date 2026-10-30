@@ -368,6 +368,16 @@ body,
     background: #FBF8F3;
   }
 
+  /* dvh dipakai di PWA & browser mobile: vh menghitung tinggi layar termasuk
+     area toolbar sehingga kartu bisa terpotong di bawah. Ditulis sebagai blok
+     terpisah karena minifier menggabungkan dua deklarasi min-height dalam satu
+     aturan, yang menjatuhkan fallback 100vh. */
+  @supports (min-height: 100dvh) {
+    .auth-shell {
+      min-height: 100dvh;
+    }
+  }
+
   .auth-card {
     border: 1px solid rgba(228, 217, 198, 0.9);
     border-radius: 12px;
@@ -376,13 +386,15 @@ body,
     box-shadow: 0 24px 60px rgba(28, 26, 23, 0.10);
   }
 
-  /* Padanan 1:1 dari blok @media (max-width: 480px) lama — hanya sistemnya yang pindah ke Tailwind. */
+  /* Mobile & PWA: tetap di tengah, lalu digeser sedikit ke bawah. Margin atas
+     ikut dihitung flexbox saat centering, jadi perpindahan visualnya kira-kira
+     separuh nilai ini. */
   .auth-shell {
-    @apply max-xs:items-start max-xs:p-4;
+    @apply max-xs:items-center max-xs:p-4;
   }
 
   .auth-card {
-    @apply max-xs:mt-4 max-xs:p-[1.375rem] max-xs:rounded-xl;
+    @apply max-xs:mt-[7vh] max-xs:p-[1.375rem] max-xs:rounded-xl;
   }
 }
 
