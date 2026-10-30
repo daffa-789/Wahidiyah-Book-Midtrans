@@ -3,8 +3,8 @@
  * Route Layer — Modul Otentikasi (Fase 3 roadmap arsitektur).
  *
  * Berkas ini sengaja tipis: hanya pemetaan URL → middleware → method
- * controller. Rate limiting auth tidak didefinisikan di sini — dipasang
- * global di `server.js` melalui `AUTH_RATE_LIMITED_PATHS` (config.js).
+ * controller. Endpoint auth tidak dibatasi rate limit — perlindungan
+ * brute-force ada di sisi verifikasi OTP dan kredensial.
  * Seluruh logika bisnis ada di `server/services/auth.service.js`;
  * pemformatan HTTP ada di `server/controllers/auth.controller.js`.
  */
