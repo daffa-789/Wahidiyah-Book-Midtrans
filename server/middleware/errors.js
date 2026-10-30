@@ -1,5 +1,3 @@
-
-
 import multer from 'multer';
 import { internalErrorDetail } from '../lib/http.js';
 

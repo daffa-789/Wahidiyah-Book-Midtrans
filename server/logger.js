@@ -1,5 +1,3 @@
-
-
 /* Helper warna ANSI ringan (pengganti picocolors agar server tidak menarik
    dependensi lint/dev). Otomatis nonaktif saat output bukan TTY atau saat
    NO_COLOR dipasang — log yang di-pipe ke berkas tetap bersih. */

@@ -1,5 +1,3 @@
-
-
 import sharp from 'sharp';
 
 

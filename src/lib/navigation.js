@@ -1,5 +1,3 @@
-
-
 export const normalizePath = (pathname) =>
   String(pathname || '/').toLowerCase().replace(/\/+$/, '') || '/';
 

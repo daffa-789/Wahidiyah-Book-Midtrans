@@ -1,5 +1,3 @@
-
-
 import crypto from 'crypto';
 import { Router } from 'express';
 import { supabaseServer } from '../db.js';

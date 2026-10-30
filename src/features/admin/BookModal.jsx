@@ -1,5 +1,3 @@
-
-
 import { useRef } from 'react';
 import { FileUp, Loader2, X, CheckCircle2, FileText } from 'lucide-react';
 import { useDialogFocusTrap } from '@lib/useDialogFocusTrap';

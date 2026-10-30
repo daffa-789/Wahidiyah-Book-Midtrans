@@ -1,5 +1,3 @@
-
-
 import { Router } from 'express';
 import { supabaseServer } from '../db.js';
 import { generateId, requireAdmin, requireAuth } from '../auth.js';

@@ -1,5 +1,3 @@
-
-
 import crypto from 'crypto';
 import { isMailerConfigured, sendOtpEmail } from '../mailer.js';
 import { sendOtpWhatsApp } from '../whatsapp.js';

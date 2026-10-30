@@ -1,5 +1,3 @@
-
-
 import crypto from 'crypto';
 import { supabaseServer } from '../db.js';
 import { generateId, hasActivePro, settleExpiredMembership, TRANSACTION_PENDING_STATUS } from '../auth.js';

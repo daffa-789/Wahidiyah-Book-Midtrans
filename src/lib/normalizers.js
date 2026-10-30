@@ -1,5 +1,3 @@
-
-
 /**
  * Ambil nilai dari objek dengan mencoba beberapa nama kunci berurutan.
  *

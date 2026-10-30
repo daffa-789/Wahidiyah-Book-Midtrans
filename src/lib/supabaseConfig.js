@@ -1,19 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
 const procEnv = typeof process !== 'undefined' && process.env ? process.env : {};
 

@@ -1,5 +1,3 @@
-
-
 import { Router } from 'express';
 import { supabaseServer, isDatabaseHealthy } from '../db.js';
 import { requireAdmin, requireAuth } from '../auth.js';

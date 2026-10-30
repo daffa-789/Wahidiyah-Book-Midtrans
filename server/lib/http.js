@@ -1,5 +1,3 @@
-
-
 import { CONTENT_MIME_BY_EXTENSION } from './constants.js';
 
 

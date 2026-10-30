@@ -1,5 +1,3 @@
-
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BellRing, CalendarClock, Crown, X } from 'lucide-react';
 import { useApp } from '@context/AppContext';

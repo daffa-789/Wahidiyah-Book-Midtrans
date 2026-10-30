@@ -1,5 +1,3 @@
-
-
 import multer from 'multer';
 import { CAROUSEL_IMAGE_MAX_BYTES } from '../lib/constants.js';
 

@@ -1,5 +1,3 @@
-
-
 const WIB_TIME_ZONE = 'Asia/Jakarta';
 
 
