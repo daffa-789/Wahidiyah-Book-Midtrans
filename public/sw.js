@@ -10,7 +10,10 @@
 //      private/no-store tidak pernah disimpan, blok cache-first dibatasi
 //      aset internal, dan cache dibuang saat pengguna keluar akun.
 // v15: pinch zoom memakai preview GPU dan header baca buku diringkas.
-const CACHE_NAME = 'wahidiyah-app-shell-v15';
+// v16: wordmark QRIS resmi dipasang. Aset .svg dilayani cache-first, jadi tanpa
+//      bump ini browser pengguna terus menampilkan logo lama meski server sudah
+//      mengirim yang baru (inilah sebabnya aturan §R5.6 mewajibkan bump).
+const CACHE_NAME = 'wahidiyah-app-shell-v16';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
