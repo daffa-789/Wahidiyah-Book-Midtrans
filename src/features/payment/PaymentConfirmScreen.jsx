@@ -36,7 +36,7 @@ export const PaymentConfirmScreen = () => {
   const isSubscribed = isSubscriptionActive ? isSubscriptionActive(user) : Boolean(user?.isPro);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [copiedType, setCopiedType] = useState(null);
+  const [qrCopied, setQrCopied] = useState(false);
   const timerRef = useRef(null);
   const qrContainerRef = useRef(null);
 
@@ -48,19 +48,26 @@ export const PaymentConfirmScreen = () => {
     });
   };
 
-  const handleCopyQrString = async () => {
-    const textToCopy = qrTransaction?.qrString || '';
+  /* Simulator QRIS Midtrans meminta kolom "QR Code Image Url" — yaitu actions[].url
+     dari respons charge, bukan payload EMVCo. Karena itu yang disalin adalah
+     tautan QR, dengan qrString hanya sebagai cadangan paling akhir. */
+  const handleCopyQr = async () => {
+    const textToCopy =
+      qrTransaction?.qrMidtransUrl ||
+      (qrTransaction?.qrImageUrl ? `${window.location.origin}${qrTransaction.qrImageUrl}` : '') ||
+      qrTransaction?.qrString ||
+      '';
     if (!textToCopy) {
-      toast.error('Kode QR string belum tersedia.');
+      toast.error('Tautan QR belum tersedia.');
       return;
     }
     try {
       await navigator.clipboard.writeText(textToCopy);
-      setCopiedType('string');
-      toast.success('Kode QRIS (string) berhasil disalin! Silakan tempel di Midtrans Simulator.');
-      setTimeout(() => setCopiedType(null), 2500);
+      setQrCopied(true);
+      toast.success('Tautan QR tersalin — tempel di kolom "QR Code Image Url" simulator.');
+      setTimeout(() => setQrCopied(false), 2500);
     } catch {
-      toast.error('Gagal menyalin kode QRIS.');
+      toast.error('Gagal menyalin tautan QR.');
     }
   };
 
@@ -278,9 +285,8 @@ export const PaymentConfirmScreen = () => {
 
                   {qrTransaction.qrString && (
                     <p
-                      onClick={handleCopyQrString}
-                      className="font-mono text-micro text-ink-600 bg-cream-50 rounded-xl p-2 border border-cream-200 truncate select-all cursor-pointer hover:border-brand-500/50 transition"
-                      title="Klik untuk menyalin kode QR string"
+                      className="font-mono text-micro text-ink-600 bg-cream-50 rounded-xl p-2 border border-cream-200 truncate select-all"
+                      title="Payload EMVCo — cadangan bila simulator menolak tautan QR"
                     >
                       {qrTransaction.qrString}
                     </p>
@@ -288,11 +294,11 @@ export const PaymentConfirmScreen = () => {
 
                   <button
                     type="button"
-                    onClick={handleCopyQrString}
+                    onClick={handleCopyQr}
                     className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-cream-300 bg-cream-50 hover:bg-cream-200 text-ink-800 text-caption font-bold transition shadow-xs cursor-pointer active:scale-95"
-                    title="Salin QR string untuk ditempel langsung di Midtrans Simulator"
+                    title="Salin tautan QR untuk ditempel di kolom QR Code Image Url simulator"
                   >
-                    {copiedType === 'string' ? (
+                    {qrCopied ? (
                       <>
                         <CheckCircle2 className="w-3.5 h-3.5 text-brand-700" />
                         <span className="text-brand-800">Tersalin!</span>
