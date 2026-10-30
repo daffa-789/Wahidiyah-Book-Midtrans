@@ -1,9 +1,5 @@
 import express from 'express';
 import {
-  authIdentifierRateLimiter,
-  AUTH_IDENTIFIER_LIMITED_PATHS,
-  authRateLimitedPaths,
-  authRateLimiter,
   corsPolicy,
   jsonBody,
   responseCompression,
@@ -27,8 +23,6 @@ app.use(responseCompression);
 app.use(jsonBody);
 
 trustProxy(app);
-app.use(authRateLimitedPaths, authRateLimiter);
-app.use(AUTH_IDENTIFIER_LIMITED_PATHS, authIdentifierRateLimiter);
 
 // Mount all /api routers (health, auth, books, users, payments, subscriptions, events, carousel, admin)
 mountRoutes(app);

@@ -22,10 +22,6 @@ import {
   USE_VITE_MIDDLEWARE
 } from './config.js';
 import {
-  authIdentifierRateLimiter,
-  AUTH_IDENTIFIER_LIMITED_PATHS,
-  authRateLimitedPaths,
-  authRateLimiter,
   corsPolicy,
   jsonBody,
   responseCompression,
@@ -74,8 +70,6 @@ app.use(jsonBody);
 
 
 trustProxy(app);
-app.use(authRateLimitedPaths, authRateLimiter);
-app.use(AUTH_IDENTIFIER_LIMITED_PATHS, authIdentifierRateLimiter);
 
 
 mountRoutes(app);

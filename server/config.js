@@ -32,35 +32,6 @@ export const SERVE_STATIC = String(process.env.SERVE_STATIC ?? 'true').trim().to
 export const STATIC_DIR = path.resolve(ROOT_DIR, 'dist');
 export const STATIC_INDEX_FILE = path.join(STATIC_DIR, 'index.html');
 
-export const AUTH_RATE_LIMIT = {
-  windowMs: 15 * 60 * 1000,
-  max: 30,
-  message: { success: false, message: 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.' }
-};
-
-export const AUTH_RATE_LIMITED_PATHS = [
-  '/api/auth/login',
-  '/api/auth/register',
-  '/api/auth/verify-registration',
-  '/api/auth/request-password-reset',
-  '/api/auth/reset-password',
-  '/api/auth/resend-verification',
-  '/api/auth/exchange',
-  /* Callback Google menukar kode dengan Google, jadi tiap permintaan memakai
-   * sumber daya eksternal — perlu plafon seperti rute auth lain.
-   */
-  '/api/auth/google/callback'
-];
-
-/* Batas percobaan per akun/identifier, bukan per alamat socket. Tanpa ini satu
- * penyerang bisa mengunci seluruh pengguna lewat limiter berbasis IP.
- */
-export const AUTH_IDENTIFIER_RATE_LIMIT = {
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { success: false, message: 'Terlalu banyak percobaan untuk akun tersebut. Coba lagi dalam 15 menit.' }
-};
-
 /* Polling status QRIS berjalan tiap 3 detik (≈20 permintaan/menit) sampai
  * transaksi lunas atau kedaluwarsa. Plafon ini sengaja berada di atas ritme
  * itu — pengguna sah tidak boleh terpotong di tengah pembayaran — tetapi
