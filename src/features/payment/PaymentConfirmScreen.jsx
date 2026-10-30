@@ -7,12 +7,9 @@ import {
   RefreshCw,
   AlertCircle,
   Clock,
-  PlayCircle,
   ShieldCheck,
   Download,
-  Copy,
-  Link,
-  ExternalLink
+  Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -67,26 +64,6 @@ export const PaymentConfirmScreen = () => {
     }
   };
 
-  const handleCopyQrLink = async () => {
-    const urlToCopy =
-      qrTransaction?.qrMidtransUrl ||
-      (qrTransaction?.qrImageUrl ? `${window.location.origin}${qrTransaction.qrImageUrl}` : '') ||
-      qrTransaction?.qrString ||
-      '';
-    if (!urlToCopy) {
-      toast.error('Link gambar QRIS belum tersedia.');
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(urlToCopy);
-      setCopiedType('link');
-      toast.success('Link / data QRIS berhasil disalin!');
-      setTimeout(() => setCopiedType(null), 2500);
-    } catch {
-      toast.error('Gagal menyalin link QRIS.');
-    }
-  };
-
   const isQrisMethod = isQrisPaymentMethod(selectedPaymentMethod);
 
   const handlePaymentSuccess = useCallback(async (facts) => {
@@ -104,11 +81,9 @@ export const PaymentConfirmScreen = () => {
     qrNotice,
     isQrisPaid,
     isExpired,
-    isSimulating,
     isCancelling,
     formattedCountdown,
     regenerateQr,
-    simulatePaid,
     cancelQris
   } = useQrisPayment({
     selectedPlan,
@@ -294,23 +269,11 @@ export const PaymentConfirmScreen = () => {
               <div className="pt-1 space-y-2.5">
                 {/* Kotak Bantuan Simulator QRIS Midtrans (Salin Cepat) */}
                 <div className="rounded-2xl border border-cream-300 bg-cream-100/70 p-3 space-y-2 text-left">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />
-                      <span className="text-caption font-bold text-ink-900 truncate">
-                        Simulator QRIS Midtrans
-                      </span>
-                    </div>
-                    <a
-                      href="https://simulator.sandbox.midtrans.com/qris/index"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-micro font-bold text-brand-700 hover:text-brand-800 hover:underline shrink-0"
-                      title="Buka Midtrans Simulator di tab baru"
-                    >
-                      <span>Buka Simulator</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="h-2 w-2 rounded-full bg-brand-600 shrink-0" />
+                    <span className="text-caption font-bold text-ink-900 truncate">
+                      Simulator QRIS Midtrans
+                    </span>
                   </div>
 
                   {qrTransaction.qrString && (
@@ -323,45 +286,24 @@ export const PaymentConfirmScreen = () => {
                     </p>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={handleCopyQrString}
-                      className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-cream-300 bg-cream-50 hover:bg-cream-200 text-ink-800 text-caption font-bold transition shadow-xs cursor-pointer active:scale-95"
-                      title="Salin QR string untuk ditempel langsung di Midtrans Simulator"
-                    >
-                      {copiedType === 'string' ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-brand-700" />
-                          <span className="text-brand-800">Tersalin!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-ink-600" />
-                          <span>Salin Kode QR</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCopyQrLink}
-                      className="inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-cream-300 bg-cream-50 hover:bg-cream-200 text-ink-800 text-caption font-bold transition shadow-xs cursor-pointer active:scale-95"
-                      title="Salin tautan gambar QRIS"
-                    >
-                      {copiedType === 'link' ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-brand-700" />
-                          <span className="text-brand-800">Tersalin!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Link className="w-3.5 h-3.5 text-ink-600" />
-                          <span>Salin Link</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyQrString}
+                    className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-cream-300 bg-cream-50 hover:bg-cream-200 text-ink-800 text-caption font-bold transition shadow-xs cursor-pointer active:scale-95"
+                    title="Salin QR string untuk ditempel langsung di Midtrans Simulator"
+                  >
+                    {copiedType === 'string' ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-brand-700" />
+                        <span className="text-brand-800">Tersalin!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-ink-600" />
+                        <span>Salin Kode QR</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 <button
@@ -393,40 +335,6 @@ export const PaymentConfirmScreen = () => {
                   )}
                 </button>
 
-                {qrTransaction.simulationAvailable ? (
-                  <>
-                    <button
-                      type="button"
-                      data-testid="qris-simulate-paid"
-                      onClick={simulatePaid}
-                      disabled={isSimulating}
-                      className="w-full inline-flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gold-600 hover:bg-gold-700 active:bg-gold-700 dark:bg-gold-700 dark:hover:bg-gold-700/80 dark:active:bg-gold-700/80 disabled:opacity-60 disabled:cursor-not-allowed text-cream-50 text-xs font-bold rounded-xl shadow transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 cursor-pointer"
-                    >
-                      {isSimulating ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Memproses...</span>
-                        </>
-                      ) : (
-                        <>
-                          <PlayCircle className="w-4 h-4" />
-                          <span>Bayar Sekarang (Mode Simulasi)</span>
-                        </>
-                      )}
-                    </button>
-                    <p className="text-micro text-ink-500 leading-relaxed">
-                      Hanya untuk <span className="font-semibold text-semantic-warning">sandbox</span>. Di production
-                      tombol ini hilang dan pembayaran diverifikasi lewat webhook Midtrans sungguhan.
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-micro text-ink-500 leading-relaxed">
-                    Mode simulasi sedang <span className="font-semibold text-semantic-warning">mati</span>, jadi
-                    pembayaran hanya bisa diselesaikan lewat simulator QRIS Midtrans. Untuk demo, set
-                    {' '}<code className="font-mono">ALLOW_PAYMENT_SIMULATION=1</code> di <code className="font-mono">.env</code> lalu
-                    nyalakan ulang server.
-                  </p>
-                )}
               </div>
             )}
 
