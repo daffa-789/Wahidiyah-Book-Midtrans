@@ -7,7 +7,6 @@
 
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { rateLimitStoreFor } from '../lib/supabaseRateLimitStore.js';
 import {
   badRequest,
   wrap
@@ -30,8 +29,7 @@ const subscriptionRateLimit = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: 'Terlalu banyak perubahan langganan notifikasi. Coba lagi nanti.' },
-  store: rateLimitStoreFor('push-subscription')
+  message: { success: false, message: 'Terlalu banyak perubahan langganan notifikasi. Coba lagi nanti.' }
 });
 
 const isValidKey = (value) =>

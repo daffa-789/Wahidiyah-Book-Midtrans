@@ -88,3 +88,7 @@ docs/visual-flows/screenshots-verifikasi/
 __pycache__/
 *.pyc
 .vercel
+
+# State lokal Supabase CLI (project ref, versi layanan, URL pooler).
+# Bukan bagian proyek; URL pooler jangan sampai masuk repo publik.
+supabase/.temp/

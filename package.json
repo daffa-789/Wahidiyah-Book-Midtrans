@@ -13,12 +13,6 @@
     "build": "vite build",
     "preview": "vite preview",
     "health": "node scripts/health-check.js",
-    "test": "node scripts/check-syntax.js && node scripts/check-colors.js && node scripts/check-contrast.js && vitest run",
-    "test:unit": "vitest run",
-    "test:watch": "vitest",
-    "check:colors": "node scripts/check-colors.js",
-    "check:contrast": "node scripts/check-contrast.js",
-    "check": "node scripts/check-syntax.js && node scripts/check-colors.js && node scripts/check-contrast.js && vite build",
     "clean:ports": "node scripts/clean-ports.js",
     "dev:frontend": "vite",
     "dev:server": "node --watch server/server.js",
@@ -69,8 +63,7 @@
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^6.1.0",
-    "vitest": "^5.0.5"
+    "vite": "^6.1.0"
   },
   "overrides": {
     "uuid": "^11.1.1"

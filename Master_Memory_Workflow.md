@@ -26,7 +26,7 @@
 4. [Spesifikasi Lengkap Design System & Standar Visual UI](#4-spesifikasi-lengkap-design-system--standar-visual-ui)
 5. [Spesifikasi Lengkap REST API (/api/*)](#5-spesifikasi-lengkap-rest-api-api)
 6. [Mekanisme & Alur Pembayaran Real Midtrans QRIS](#6-mekanisme--alur-pembayaran-real-midtrans-qris)
-7. [Arsitektur Multi-Provider WhatsApp Gateway](#7-arsitektur-multi-provider-whatsapp-gateway)
+7. [Arsitektur Provider WhatsApp Gateway](#7-arsitektur-provider-whatsapp-gateway)
 8. [Panduan Setup & Skema Database Supabase Cloud](#8-panduan-setup--skema-database-supabase-cloud)
 9. [Standar Keamanan Sistem (30 Indikator Software Quality & Security Hardening)](#9-standar-keamanan-sistem-30-indikator-software-quality--security-hardening)
 10. [Panduan Pengembangan & Penambahan Fitur Baru](#10-panduan-pengembangan--penambahan-fitur-baru)
@@ -50,10 +50,10 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Modular Layered Mo
 * **Backend:** Node.js 24+ dan Express.js 4 (ES Module), dengan Service Layer dan adapter serverless Vercel (`api/index.js`).
 * **Database & BaaS:** Supabase Cloud (PostgreSQL 15 dengan *Row Level Security* fail-closed dan zona waktu `Asia/Jakarta`).
 * **Payment Gateway:** Midtrans Core API (Mode QRIS Sandbox Real-time dengan payload EMVCo `qr_string`, salin kode QR, link simulator sandbox, dan webhook idempoten).
-* **WhatsApp Multi-Provider:** Gateway berbasis *Strategy Pattern* (Fonnte, Wablas, WhaCenter, Twilio, Webhook, dan Demo lokal) sebagai fallback pemulihan akun.
+* **WhatsApp Gateway (Fonnte):** Berbasis *Strategy Pattern* di `server/providers/` dengan Fonnte sebagai satu-satunya gateway nyata dan Demo lokal untuk pengembangan.
 * **Image Processing:** Sharp (kompresi & sanitasi otomatis gambar sampul ke format WebP).
 * **Email & Notifikasi:** Google OAuth2 API (Gmail API HTTPS untuk OTP email registrasi & verifikasi).
-* **Quality Harness:** Vitest dan pemeriksaan sintaks, token warna, kontras WCAG, serta build Vite (`npm run check`). Status lulus terakhir harus dicatat bersama perubahan yang diverifikasi; jangan menganggap badge atau hitungan lama sebagai hasil terkini.
+* **Quality Harness:** Build Vite (`npm run build`) dan pemeriksaan kesehatan konfigurasi (`npm run health`). Status lulus terakhir harus dicatat bersama perubahan yang diverifikasi; jangan menganggap badge atau hitungan lama sebagai hasil terkini.
 
 ---
 
@@ -68,12 +68,12 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Modular Layered Mo
 - **Last Read Tracker (Ingat Posisi Terakhir):** Otomatis menyimpan posisi halaman baca pengguna ke `localStorage` peramban (tanpa beban latensi database) dan menampilkan dialog resume *"Lanjut membaca dari Halaman X?"*.
 - **Mode Tema Pembaca:** Pilihan latar belakang **Terang**, **Sepia (Hangat Lembut)**, dan **Malam (Gelap Elegan)** untuk kenyamanan membaca dalam waktu lama.
 
-### 2.2. Autentikasi Pengguna & WhatsApp Multi-Provider (R61–R67)
+### 2.2. Autentikasi Pengguna & WhatsApp Gateway Fonnte (R61–R67)
 - **Registrasi & Verifikasi Dual-Channel Terkendali:**
   - **Registrasi Akun:** 100% menggunakan verifikasi OTP via **Email (Gmail API OAuth2)** bebas biaya API dan anti-flooding (*OTP Flooding Protection*). Tombol pendaftaran disederhanakan dengan label bersih *"Daftar"*.
   - **WhatsApp Secondary Fallback:** Kanal WhatsApp internasional dialokasikan sebagai opsi pemulihan sekunder (*Secondary Fallback Account Recovery*) pada fitur Lupa Password.
 - **Pemilih Kode Negara Sedunia (245 Negara):**
-  - Menggunakan bendera vektor SVG resmi (disalin sekali dari set `flag-icons`) di `public/flags/[iso].svg` — tanpa dependensi npm saat runtime, sehingga tidak ada paket bendera yang ikut ke bundel (resolusi tajam di Windows, Linux, Android, iOS tanpa glitch rendering teks emoji).
+  - Lencana negara dirender `FlagIcon.jsx` sebagai teks dua huruf (ISO 3166-1 alpha-2) — tanpa berkas SVG dan tanpa dependensi npm, jadi tidak ada aset bendera yang ikut ke bundel.
   - Integrasi pustaka standar Google `libphonenumber-js` untuk parsing nomor E.164 internasional dan deteksi validitas.
   - Pencarian dwibahasa (dapat dicari dengan nama Indonesia *"Jepang"* atau Inggris *"Japan"*, dial code `+81`, atau ISO code `JP`).
   - Pembuangan otomatis angka nol di awal nomor lokal (`0812...` ➔ `812...` dengan dial `+62`).
@@ -135,7 +135,7 @@ graph TD
         Routes["Routes Layer (auth, books, payments, admin, users)"]
         Controllers["Controllers Layer (auth.controller, payment.controller)"]
         Services["Services Layer Murni (auth.service.js, payment.service.js)"]
-        WAProviders["server/providers/ - Multi-Provider Strategy Pattern"]
+        WAProviders["server/providers/ - Strategy Pattern (Fonnte + Demo)"]
     end
 
     subgraph External ["Layanan Cloud & Gateway"]
@@ -167,7 +167,7 @@ Pemisahan lapisan (*Separation of Concerns*) dilakukan secara ketat untuk menjam
    - Mengembalikan HTTP Response seragam (`res.status().json()`).
 3. **Services Layer Murni (`server/services/`):**
    - Menampung seluruh aturan bisnis (*business rules*) inti (misal: verifikasi token, alur klaim pembayaran idempoten, kalkulasi durasi keanggotaan Pro).
-   - **Bebas mutlak dari objek `req` dan `res` Express** sehingga 100% dapat diuji secara terisolasi via pengujian otomatis (*unit test* Vitest) tanpa mock HTTP server.
+   - **Bebas mutlak dari objek `req` dan `res` Express** sehingga aturan bisnis dapat diverifikasi tanpa menjalankan HTTP server.
 4. **Helper & Database Layer (`server/lib/` & `server/db.js`):**
    - `midtrans.js`: Integrasi API Midtrans Core (charge QRIS, status polling, verifikasi signature SHA512, unwrap payload, `isTransactionSettled`).
    - `time.js`: Penanggalan WIB tunggal terstandarisasi dengan `dayjs` (zona waktu `Asia/Jakarta`).
@@ -183,7 +183,7 @@ Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
   1. *Separation of Concerns (SoC):* Pemisahan tegas Routes $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Repositories.
   2. *Idempotency (Operasi Bayar & Webhook):* Webhook Midtrans dan aktivasi keanggotaan menggunakan klaim UPDATE bersyarat atomik untuk mencegah aktivasi ganda (*prevent double fulfillment*).
   3. *Security by Design:* Row Level Security fail-closed, parameter query anti-SQLi, enkripsi kata sandi `bcryptjs` 12 rounds, rate limiting pada endpoint pembayaran, dan proteksi hak cipta e-reader.
-  4. *Testability:* Vitest harness tersedia untuk logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi; jalankan suite untuk status terbaru.
+  4. *Testability:* Logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi berada di service layer murni sehingga dapat diverifikasi tanpa mock HTTP.
   5. *KISS & YAGNI:* Menghindari abstraksi dinamis berlebih yang tidak dibutuhkan skripsi.
   6. *High Cohesion & Loose Coupling:* Modul mandiri yang hanya berkomunikasi via antarmuka fungsi terdefinisi.
 - **Tier 2: Standar Clean Code & Operasional (P2)**
@@ -204,9 +204,9 @@ Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
 - **Region function:** `regions: ["sin1"]` dipasang di `vercel.json`. Tanpa itu Vercel memakai `iad1` (Virginia) sehingga setiap panggilan API menyeberangi Samudra Pasifik meski pembaca berada di Indonesia; terukur pada `GET /api/health` turun dari 1,2–1,8 detik menjadi 0,13–0,77 detik setelah dipindah ke Singapura. Paket Hobby hanya boleh satu region, jadi `sin1` tidak bisa digabung dengan region lain.
 - **Naskah di Supabase Storage:** Vercel menolak body request maupun response di atas 4,5 MB dengan `413 FUNCTION_PAYLOAD_TOO_LARGE` sebelum kode Express berjalan, sehingga naskah buku tidak boleh lewat function. Berkas dikirim peramban langsung ke bucket privat `buku` memakai tanda unggah dari `POST /api/books/upload-intent`, dan kolom `content_url` hanya menyimpan penanda `storage://buku/<path>` (`server/lib/storage.js`). `server/middleware/uploads.js` kini hanya menampung sampul (5 MB). Bucket `buku` dibuat oleh blok **PATCH Naskah di Storage** di `supabase_database/full_setup.sql`, sehingga project Supabase yang dibuat ulang tinggal menjalankan blok itu.
 - **Atribusi IP klien:** `TRUST_PROXY` harus diisi jumlah hop proxy di depan Express. Di Vercel nilainya `1`. Tanpa nilai ini `req.ip` jatuh ke alamat antarmuka dalam (`127.0.0.1` di Vercel), sehingga pembatasan berbasis IP dihitung sebagai satu ember global untuk seluruh pengguna. Verifikasi lewat log permintaan: kolom IP pada baris `REQ [HTTP]` harus menampilkan IP publik pengirim, bukan `127.0.0.1`. Tepi Vercel menimpa `x-forwarded-for` dengan alamat peer-nya (terverifikasi: kiriman header palsu tetap tercatat IP asli), sehingga `TRUST_PROXY: true` tidak diperlukan dan hop tambahan tidak perlu dihitung. Bila kelak dipasang Cloudflare di depan Vercel, yang terlihat justru IP egress Cloudflare — menaikkan jumlah hop tidak memulihkan IP klien; solusinya memercayai `cf-connecting-ip` dan hanya saat traffic memang lewat Cloudflare.
-- **Rate limit lintas-instance:** Pembatasan endpoint sensitif dapat memakai store PostgreSQL Supabase (`api_rate_limit_buckets`) melalui fungsi RPC atomik. Key IP/akun di-HMAC sebelum disimpan. Terapkan blok aditif **PATCH Distributed Rate Limits** di bagian akhir `supabase_database/full_setup.sql`, lalu set `SHARED_RATE_LIMITS=true` di lingkungan server. Tanpa langkah itu aplikasi memakai store bawaan per proses. Aktifkan hanya setelah `TRUST_PROXY` benar, karena store bersama akan membagikan kunci IP yang salah ke semua instance.
+- **Rate limit:** Endpoint sensitif (`qris-status`, `payment`, `qris-image`, `push-subscription`) memakai store in-memory bawaan `express-rate-limit` per proses. Store bersama lintas-instance berbasis Supabase (`server/lib/supabaseRateLimitStore.js`) sudah dilepas dari kode karena `SHARED_RATE_LIMITS` tidak pernah diaktifkan; fungsi RPC dan tabel `api_rate_limit_buckets` masih ada di `supabase_database/full_setup.sql` dan di database cloud sampai diputuskan menjatuhkannya.
 - **Login Google lintas-instance:** Kode sesi acak sekali-pakai disimpan dalam bentuk hash di `email_verifications`, kedaluwarsa setelah 60 detik, dan dihapus atomik saat ditukar. Tabel yang sudah ada dipakai kembali.
-- **Pemeliharaan terjadwal:** Vercel menjalankan `/api/cron/daily-maintenance` sekali sehari pada `01:00 UTC` (sekitar `08:00–08:59 WIB` di paket Hobby). Handler memverifikasi `CRON_SECRET` sebelum mengirim pengingat agenda dan menyapu langganan kedaluwarsa. Isi `CRON_SECRET` di Production Environment Variables Vercel dengan nilai acak minimal 16 karakter. Docker tetap memakai scheduler proses.
+- **Pemeliharaan terjadwal:** Vercel menjalankan `/api/cron/daily-maintenance` sekali sehari pada `01:00 UTC` (sekitar `08:00–08:59 WIB` di paket Hobby). Handler memverifikasi `CRON_SECRET` sebelum mengirim pengingat agenda dan menyapu langganan kedaluwarsa. Isi `CRON_SECRET` di Production Environment Variables Vercel dengan nilai acak minimal 16 karakter.
 
 ---
 
@@ -235,7 +235,7 @@ Seluruh rute antarmuka wajib menerapkan TIGA color key dari Tema 1 "Editorial El
 **Aturan Penerapan:**
 1. **Status Fungsional:** Menggunakan token semantik `semantic-success/warning/danger/info` (bukan warna dekoratif, tidak dihitung dalam 60-30-10).
 2. **Larangan Palet Mentah:** Dilarang keras memakai kelas warna Tailwind mentah (`slate-*`, `gray-*`, `zinc-*`, `indigo-*`, `rose-*`, `emerald-*`, dll.) untuk elemen struktural. Seluruh warna wajib melalui CSS variable token.
-3. **Pengecualian Resmi:** Logo Google multicolor pada tombol OAuth, logo resmi metode pembayaran (`public/payments/`), bendera SVG 271 negara, serta token merah resmi QRIS `qris-600/700` (`#E30613`/`#C00511` — kemasan merah baku QRIS Indonesia).
+3. **Pengecualian Resmi:** Logo Google multicolor pada tombol OAuth, logo resmi metode pembayaran (`public/payments/`), serta token merah resmi QRIS `qris-600/700` (`#E30613`/`#C00511` — kemasan merah baku QRIS Indonesia).
 4. **Mode Malam (Dark Mode):** Tetap mengikuti proporsi 60-30-10 via CSS variable (charcoal hangat menggantikan krem, zamrud dinaikkan terangnya agar terbaca kontras).
 
 ### 4.4 6 Koleksi Tema Terkalibrasi (Theme Palettes)
@@ -620,7 +620,7 @@ curl -X POST http://localhost:5000/api/payments/midtrans/notification \
 
 ---
 
-## 7. Arsitektur Multi-Provider WhatsApp Gateway
+## 7. Arsitektur Provider WhatsApp Gateway
 
 Gateway WhatsApp menggunakan arsitektur **Strategy / Provider Pattern** di folder `server/providers/`:
 
@@ -628,10 +628,6 @@ Gateway WhatsApp menggunakan arsitektur **Strategy / Provider Pattern** di folde
 server/providers/
 ├── base.js         # BaseWhatsAppProvider (kontrak kelas abstrak & format pesan)
 ├── fonnte.js       # FonnteProvider (Fonnte API - default)
-├── wablas.js       # WablasProvider (Wablas API)
-├── whacenter.js    # WhacenterProvider (WhaCenter API)
-├── twilio.js       # TwilioProvider (Twilio Programmable Messaging API)
-├── webhook.js      # GenericWebhookProvider (Custom Webhook Gateway)
 ├── demo.js         # DemoProvider (Terminal console fallback untuk dev lokal)
 └── index.js        # Provider Registry & Singleton Factory
 ```
@@ -640,18 +636,7 @@ server/providers/
 1. **`fonnte` (Fonnte API - Default)**:
    * `.env`: `WHATSAPP_PROVIDER=fonnte`, `FONNTE_TOKEN=...`
    * Endpoint: `https://api.fonnte.com/send`
-2. **`wablas` (Wablas API)**:
-   * `.env`: `WHATSAPP_PROVIDER=wablas`, `WABLAS_TOKEN=...`, `WABLAS_SERVER=https://...`
-   * Endpoint: `${WABLAS_SERVER}/api/send-message`
-3. **`whacenter` (WhaCenter API)**:
-   * `.env`: `WHATSAPP_PROVIDER=whacenter`, `WHACENTER_DEVICE_ID=...`
-   * Endpoint: `https://app.whacenter.com/api/send`
-4. **`twilio` (Twilio WhatsApp Sandbox/Prod)**:
-   * `.env`: `WHATSAPP_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID=...`, `TWILIO_AUTH_TOKEN=...`, `TWILIO_WHATSAPP_NUMBER=...`
-   * Endpoint: `https://api.twilio.com/2010-04-01/Accounts/${SID}/Messages.json`
-5. **`webhook` (Custom Internal Gateway)**:
-   * `.env`: `WHATSAPP_PROVIDER=webhook`, `WHATSAPP_WEBHOOK_URL=...`, `WHATSAPP_WEBHOOK_SECRET=...`
-6. **`demo` (Local Terminal Fallback)**:
+2. **`demo` (Local Terminal Fallback)**:
    * Otomatis aktif jika tidak ada token provider yang terisi atau disetel eksplisit `WHATSAPP_PROVIDER=demo`. Mencetak pesan dan kode OTP ke terminal pengembang secara jelas untuk debugging lokal.
 
 ### 6.2. Menambahkan Provider Baru:
@@ -766,7 +751,7 @@ Sistem telah diaudit dan mengimplementasikan **30 Indikator Standar Kualitas Per
 | 23 | **Validasi Kompleksitas Password** | Validasi ketat sandi akun baru dan reset password via skema Zod terpusat. | ✅ Lulus |
 | 24 | **Rate Limiter Transaksi QRIS** | Pembatasan frekuensi request pembuatan charge QRIS per IP/pengguna untuk cegah spam order. | ✅ Lulus |
 | 25 | **Separation of Concerns (SoC)** | Pemisahan tegas Routes $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Supabase Repositories. | ✅ Lulus |
-| 26 | **Testability & Unit Test Harness** | Tes Vitest tersedia untuk autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi. Jalankan `npm test` untuk status terkini. | Tersedia |
+| 26 | **Service Layer Murni** | Logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi berada di service layer tanpa objek `req`/`res`. | Tersedia |
 | 27 | **Kwitansi Digital Mandiri (jsPDF)** | Pembuatan berkas PDF kwitansi A4 di sisi klien tanpa latensi backend dan aman dari injection. | ✅ Lulus |
 | 28 | **Single Source of Truth Waktu** | Standarisasi seluruh operasi tanggal/waktu ke zona `Asia/Jakarta` (WIB) via Day.js. | ✅ Lulus |
 | 29 | **3 Color Key & WCAG AA** | 100% antarmuka patuh prinsip 60-30-10 dan lulus 17 pasang kontras $\ge 4.5:1$ tanpa palet mentah. | ✅ Lulus |
@@ -923,7 +908,6 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
 JWT_SECRET=rahasia-kunci-jwt-anda-minimal-32-karakter
 JWT_EXPIRES_IN=12h
 CRON_SECRET=acak-minimal-16-karakter-untuk-vercel-cron
-SHARED_RATE_LIMITS=true # aktifkan hanya setelah PATCH Distributed Rate Limits diterapkan
 # Jumlah hop proxy di depan server. Kosong = 1 saat middleware Vite (dev), false di produksi.
 # Vercel: 1 (tepinya menimpa x-forwarded-for, jadi tidak perlu menghitung hop tambahan).
 # Salah nilai membuat req.ip bukan IP klien dan rate limit jadi satu ember global.
@@ -935,17 +919,9 @@ GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxxxx
 GMAIL_SENDER=email-pengirim@gmail.com
 GMAIL_REFRESH_TOKEN=1//04xxxxxxxxxxxx
 
-# WhatsApp Multi-Provider Gateway (fonnte | wablas | whacenter | twilio | webhook | demo)
+# WhatsApp Gateway (fonnte | demo)
 WHATSAPP_PROVIDER=fonnte
 FONNTE_TOKEN=your_fonnte_token_here
-
-# Provider Opsional:
-# WABLAS_TOKEN=your_wablas_token
-# WABLAS_SERVER=https://kudus.wablas.com
-# WHACENTER_DEVICE_ID=your_device_id
-# TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxx
-# TWILIO_AUTH_TOKEN=your_auth_token
-# TWILIO_WHATSAPP_NUMBER=+14155238886
 ```
 
 ---
@@ -960,14 +936,9 @@ npm install
 ### 12.2. Katalog Perintah NPM Scripts
 | Perintah Terminal | Peran & Deskripsi Teknis |
 | :--- | :--- |
-| **`npm test`** | Menjalankan pemeriksaan sintaks, warna, kontras, lalu unit test Vitest. |
-| **`npm run test:unit`** | Menjalankan seluruh pengujian unit Vitest secara langsung (`vitest run`). |
 | **`npm run dev`** | **Mode Pengembangan (Harian):** Menjalankan backend Express dan frontend Vite sekaligus dalam 1 port terpadu dengan Hot Module Replacement (HMR). Akses di `http://localhost:5000`. |
 | **`npm start`** | **Mode Produksi (Siap Rilis):** Otomatis mem-build aset ke folder `dist/` lalu menyalakan server produksi di port 5000. |
 | **`npm run health`** | **Uji Kesehatan Sistem (6/6 Checklist):** 1-klik periksa koneksi Cloud Supabase, WhatsApp Gateway, tabel-tabel utama, dan status payment gateway Midtrans. |
-| **`npm run check`** | **Validasi Integritas Kode:** Memeriksa sintaks seluruh berkas backend/skrip Node.js, audit warna, kontras WCAG AA, dan memastikan kompilasi bundle frontend 0 error (`vite build`). |
-| **`npm run check:colors`** | Memastikan tidak ada kelas warna Tailwind mentah non-token di seluruh berkas antarmuka `src/`. |
-| **`npm run check:contrast`** | Memverifikasi kepatuhan rasio kontras 17 pasangan elemen terhadap standar WCAG AA $\ge 4.5:1$ (teks) dan $\ge 3:1$ (komponen non-teks). |
 | **`npm run clean:ports`** | **Bebaskan Port Windows:** Menghentikan proses `node.exe` yang macet di port 3000 / 5000 jika terminal tertutup paksa. |
 | **`npm run build`** | Mengompilasi kode sumber React menjadi berkas statis siap saji di folder `dist/`. |
 | **`npm run gmail:token`** | Wizard interaktif untuk mendapatkan refresh token Gmail API guna pengiriman OTP. |
@@ -996,12 +967,8 @@ Wahidiyah Book + Real Midtrans Skripsi/
 │   ├── render_uml_figures.py # Render visual UML ke format PNG
 │   └── _refwork/           # Metadata referensi SINTA (BibTeX/JSON) & template logo
 ├── public/                 # Aset statis publik
-│   ├── payments/           # Logo resmi metode pembayaran (QRIS, e-wallet)
-│   └── flags/              # 271 vektor SVG bendera resmi seluruh negara dunia
-├── scripts/                # Otomasi skrip pengembang & audit CI/CD
-│   ├── check-syntax.js     # Validasi AST rekursif berkas JavaScript
-│   ├── check-colors.js     # Audit kepatuhan 3-Color Key (larangan palet mentah)
-│   ├── check-contrast.js   # Audit rasio kontras 17 pasangan warna WCAG AA
+│   └── payments/           # Logo resmi metode pembayaran (QRIS, e-wallet)
+├── scripts/                # Otomasi skrip pengembang
 │   ├── clean-ports.js      # Pembebas port Windows 3000 & 5000
 │   ├── dev.js              # Runner server mode development
 │   ├── generate-vapid-keys.js # Generator kunci VAPID Web Push
@@ -1013,7 +980,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 │   ├── services/           # Service layer murni (auth.service.js, payment.service.js)
 │   ├── lib/                # Logika bisnis murni (midtrans, http, images, storage, time, validate, otp)
 │   ├── middleware/         # Middleware otentikasi JWT, role check, upload Multer, rate-limit
-│   ├── providers/          # Multi-Provider WhatsApp Gateway (Strategy Pattern)
+│   ├── providers/          # WhatsApp Gateway Fonnte (Strategy Pattern)
 │   ├── routes/             # Rute modular Express (auth, books, payments, admin, users)
 │   ├── auth.js             # Otentikasi JWT & Bcrypt
 │   ├── config.js           # Konfigurasi sistem & konstanta lingkungan
@@ -1043,7 +1010,6 @@ Wahidiyah Book + Real Midtrans Skripsi/
 ├── shared/                 # Modul yang dipakai lintas frontend dan backend
 ├── supabase_database/
 │   └── full_setup.sql      # Satu-satunya setup SQL; hanya database baru/reset yang disetujui
-├── tests/                  # Unit test Vitest untuk auth, payment, membership, Midtrans, sanitasi
 ├── .env                    # Konfigurasi lingkungan tunggal & terproteksi
 ├── .gitignore              # Proteksi keamanan repositori Git
 ├── package.json            # Manifest dependensi & skrip proyek
@@ -1062,9 +1028,33 @@ Wahidiyah Book + Real Midtrans Skripsi/
 |---|---|
 | R40–R54 | Fondasi arsitektur, autentikasi, Midtrans QRIS, tema, dan integrasi Zotero. |
 | R55–R60 | Web Push agenda, panel admin, utilitas bersama, dan pembersihan kode. |
-| R61–R64 | Multi-provider WhatsApp, OTP email, penyederhanaan skema, DOCX reader, dan pemangkasan kode mati. |
-| R65–R67 | PDF reader berkelanjutan, service layer dan Vitest, hardening keamanan, serta dukungan Vercel. |
+| R61–R64 | Gateway WhatsApp Fonnte, OTP email, penyederhanaan skema, DOCX reader, dan pemangkasan kode mati. |
+| R65–R67 | PDF reader berkelanjutan, service layer murni, hardening keamanan, serta dukungan Vercel. |
 | R68–R70 | Penyegaran profil/navigasi, kwitansi PDF, dan konsolidasi dokumentasi. |
+| R71 | Pemangkasan besar 30 Okt 2026 — lihat daftar 15.1. |
+
+### 15.1 Yang sudah tidak ada lagi (R71, 30 Oktober 2026)
+
+Dicatat agar tidak ada sesi berikutnya yang mencari atau menghidupkan kembali benda-benda ini:
+
+| Yang dibuang | Alasan | Gantinya |
+|---|---|---|
+| `tests/` (8 berkas, 120 uji) + `vitest.config.js` + dependensi `vitest` | Diminta dipangkas; repo tetap ramping | Verifikasi manual + `npm run build` + `npm run health` |
+| `scripts/check-syntax.js`, `check-colors.js`, `check-contrast.js` | Guard konvensi, bukan fungsi aplikasi | Aturan warna/kontras di `DESIGN.md` kini hanya konvensi — tidak ada yang menegakkannya |
+| `scripts/seed-skripsi-data.js` | Masih memakai data URL base64, sudah tertinggal oleh model Supabase Storage (`c84f29b`) | Unggah naskah lewat panel admin |
+| `server/providers/webhook.js`, `wablas.js`, `whacenter.js`, `twilio.js` | Hanya Fonnte yang dipakai | `server/providers/` berisi `base.js`, `demo.js`, `fonnte.js`, `index.js` |
+| `server/lib/supabaseRateLimitStore.js` + wiring `store:` di 4 limiter | `SHARED_RATE_LIMITS` tidak pernah diaktifkan, jadi kode itu mati | Keempat limiter tetap ada dengan MemoryStore bawaan `express-rate-limit` |
+| `Dockerfile`, `docker-compose.yml`, `.dockerignore` | Hosting di Vercel; tidak dirujuk skrip/dokumen mana pun | `vercel.json` + `npm start` lokal |
+| `supabase/.temp/` dari pelacakan Git | State lokal CLI; `pooler-url` memuat endpoint database dan repo ini **public** | Tetap ada di disk, diabaikan lewat `.gitignore` |
+| `public/flags/` (271 SVG, 2,4 MB) | Aplikasi hanya melayani nomor Indonesia, dan Fonnte selalu mengirim `countryCode: '62'` sehingga nomor non-62 tetap tidak terkirim | `FlagIcon.jsx` merender lencana teks dua huruf |
+| Skrip `npm test`, `test:unit`, `test:watch`, `check`, `check:colors`, `check:contrast` | Filenya sudah tidak ada | `npm run build` dan `npm run health` |
+
+**Yang sengaja DIPERTAHANKAN walau terlihat bisa dibuang:**
+
+- `shared/sanitizeHtml.js` — dipakai `PdfReaderScreen.jsx:165` (me-render HTML naskah ke semua pembaca) dan `books_routes.js:286` (sanitasi saat tulis). Menghapusnya membuka stored XSS.
+- `src/data/mockData.js` — namanya menyesatkan tapi isinya hidup: `PAYMENT_METHODS` dipakai `usePaymentSlice.js` + `PaymentMethodScreen.jsx`, `FAQ_ITEMS` dipakai `HelpCenterScreen.jsx`.
+- `document skripsi/` dan `docs/diagrams/` — naskah Bab 1, generator gambar, dan figur UML; bukan bagian aplikasi tapi bukan sampah.
+- `server/mailer.js` + `scripts/get-gmail-token.js` — jalur OTP email masih hidup di `server/lib/otp.js:74` dan `sendGoogleAccountEmail` di `auth_service.js`.
 
 Riwayat detail berada di Git. Bagian ini hanya menyimpan konteks yang berguna untuk pengembangan berikutnya.
 
@@ -1107,9 +1097,9 @@ Rencana pengembangan aplikasi mobile mandiri difokuskan khusus pada keamanan nas
 ### 16.3. Tips Penting Untuk Pengembang / Mahasiswa Penerus:
 1. **Menjalankan Proyek:** Cukup jalankan `npm install` dan pastikan file `.env` telah terisi di akar proyek. Jalankan `npm run dev` dan buka browser di `http://localhost:5000`.
 2. **Jika Port Terganjal di Windows:** Jalankan `npm run clean:ports` di terminal, skrip akan otomatis membebaskan port 5000/3000.
-3. **Menguji Kode Sebelum Commit:** Jalankan `npm run check`. Perintah ini menguji sintaks seluruh 50 berkas backend dan kompilasi bundling Vite sekaligus (wajib 0 error).
+3. **Menguji Kode Sebelum Commit:** Jalankan `npm run build`. Perintah ini mengompilasi bundling Vite (wajib 0 error).
 4. **Menguji Kesehatan Sistem:** Jalankan `npm run health`. Perintah ini menguji 6 checklist: Supabase, Midtrans, WhatsApp Gateway, dan tabel database.
-5. **Mengubah Provider WhatsApp:** Cukup ubah nilai `WHATSAPP_PROVIDER` di file `.env`. Untuk testing tanpa kuota, gunakan `WHATSAPP_PROVIDER=demo`.
+5. **Provider WhatsApp:** Hanya `fonnte` yang didukung — isi `FONNTE_TOKEN` di file `.env`. Untuk testing tanpa kuota, set `WHATSAPP_PROVIDER=demo`.
 
 ---
 

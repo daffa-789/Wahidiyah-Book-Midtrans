@@ -1,14 +1,17 @@
-import { useState } from 'react';
 import { cn } from '@lib/utils';
 
 /**
- * Komponen ikon bendera negara berbasis vektor SVG.
- * Menggunakan file SVG resmi seluruh dunia dari folder public/flags/[iso].svg.
+ * Lencana kode negara dua huruf (ISO 3166-1 alpha-2).
+ *
+ * Komponen ini dulu memuat /flags/[iso].svg dari 271 berkas vektor. Asetnya dibuang
+ * pada R71 karena aplikasi hanya melayani nomor Indonesia: Fonnte selalu mengirim
+ * `countryCode: '62'` (server/providers/fonnte.js) apa pun negara yang dipilih,
+ * jadi nomor non-62 tetap tidak terkirim walau benderanya ada.
  *
  * @param {Object} props
- * @param {string} [props.code] - ISO 3166-1 alpha-2 kode negara (contoh: 'ID', 'MY', 'SA', 'US')
- * @param {string} [props.flag] - Nama berkas flag SVG jika berbeda dari ISO code (contoh: 'sh-ac')
- * @param {string} [props.name] - Nama negara untuk atribut alt & title
+ * @param {string} [props.code] - Kode ISO dua huruf, contoh 'ID'
+ * @param {string} [props.flag] - Nama berkas flag lama; hanya dipakai bila `code` kosong
+ * @param {string} [props.name] - Nama negara untuk atribut title
  * @param {string} [props.className] - Kelas CSS tambahan
  */
 export const FlagIcon = ({
@@ -17,31 +20,19 @@ export const FlagIcon = ({
   name = '',
   className = 'h-3.5 w-5 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.1)]'
 }) => {
-  const [hasError, setHasError] = useState(false);
-  const flagKey = String(flag || code || '').trim().toLowerCase();
+  const label = String(code || flag || '').trim().toUpperCase().slice(0, 2);
 
-  if (!flagKey || hasError) {
-    return (
-      <span
-        title={name || code}
-        className={cn(
-          'inline-flex h-3.5 w-5 items-center justify-center rounded-[2px] bg-cream-200 text-[9px] font-bold text-ink-600 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] select-none',
-          className
-        )}
-      >
-        {String(code || flagKey || '').toUpperCase().slice(0, 2)}
-      </span>
-    );
-  }
+  if (!label) return null;
 
   return (
-    <img
-      src={`/flags/${flagKey}.svg`}
-      alt={name ? `Bendera ${name}` : `Bendera ${code}`}
-      title={name || code}
-      loading="lazy"
-      onError={() => setHasError(true)}
-      className={cn('inline-block shrink-0 align-middle select-none', className)}
-    />
+    <span
+      title={name || label}
+      className={cn(
+        'inline-flex h-3.5 w-5 items-center justify-center rounded-[2px] bg-cream-200 text-[9px] font-bold text-ink-600 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] select-none',
+        className
+      )}
+    >
+      {label}
+    </span>
   );
 };

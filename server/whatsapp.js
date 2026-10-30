@@ -66,7 +66,7 @@ export const getWhatsAppProviderInfo = () => {
 
 /**
  * Mengirim pesan WhatsApp berisi kode OTP menggunakan provider aktif.
- * Mendukung Fonnte, Wablas, Whacenter, Twilio, Webhook custom, serta mode demo.
+ * Mendukung Fonnte serta mode demo.
  */
 export async function sendOtpWhatsApp({ phone, code, purpose = 'register' }) {
   const normalized = normalizePhone(phone);

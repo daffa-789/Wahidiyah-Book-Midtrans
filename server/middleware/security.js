@@ -3,7 +3,6 @@ import helmet from 'helmet';
 import compression from 'compression';
 import express from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import { rateLimitStoreFor } from '../lib/supabaseRateLimitStore.js';
 import {
   ALLOWED_ORIGINS,
   CSP_DIRECTIVES,
@@ -49,8 +48,7 @@ export const qrisStatusRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: QRIS_STATUS_RATE_LIMIT.message,
-  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip || 'unknown'),
-  store: rateLimitStoreFor('qris-status')
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip || 'unknown')
 });
 
 export const paymentRateLimiter = rateLimit({
@@ -58,6 +56,5 @@ export const paymentRateLimiter = rateLimit({
   max: 20,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { success: false, message: 'Terlalu banyak percobaan transaksi atau pembayaran. Coba lagi dalam 5 menit.' },
-  store: rateLimitStoreFor('payment')
+  message: { success: false, message: 'Terlalu banyak percobaan transaksi atau pembayaran. Coba lagi dalam 5 menit.' }
 });

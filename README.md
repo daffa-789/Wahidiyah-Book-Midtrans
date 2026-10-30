@@ -13,8 +13,7 @@ Prasyarat: Node.js 24+, konfigurasi Supabase, dan file .env yang diisi sesuai da
 
 ## Perintah utama
 
-- **npm run check** — cek sintaks, token warna, kontras, dan build frontend.
-- **npm test** — pemeriksaan kualitas dan unit test.
+- **npm run build** — build frontend Vite.
 - **npm run health** — periksa konfigurasi layanan.
 - **npm start** — jalankan aplikasi dalam mode produksi.
 
