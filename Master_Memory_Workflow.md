@@ -202,7 +202,7 @@ Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
 - **Development & Bare-Metal:** Berjalan dalam satu port terpadu (`http://localhost:5000`) dengan Vite HMR middleware.
 - **Vercel Serverless (`api/index.js` + `vercel.json`):** Server Express dibungkus menjadi serverless handler yang kompatibel dengan runtime Node 24 Vercel, dengan rewrite `/api/(.*)` ke serverless function dan aset statis disajikan via CDN edge Vercel.
 - **Region function:** `regions: ["sin1"]` dipasang di `vercel.json`. Tanpa itu Vercel memakai `iad1` (Virginia) sehingga setiap panggilan API menyeberangi Samudra Pasifik meski pembaca berada di Indonesia; terukur pada `GET /api/health` turun dari 1,2–1,8 detik menjadi 0,13–0,77 detik setelah dipindah ke Singapura. Paket Hobby hanya boleh satu region, jadi `sin1` tidak bisa digabung dengan region lain.
-- **Batas muatan function:** Vercel menolak body request maupun response di atas 4,5 MB dengan `413 FUNCTION_PAYLOAD_TOO_LARGE` sebelum kode Express berjalan, sementara `server/middleware/uploads.js` mengizinkan 25 MB. Akibatnya unggahan naskah di atas ~4,5 MB selalu gagal di produksi meski lolos di Docker — terkirimnya berkas besar harus lewat penyimpanan Supabase langsung, bukan melalui function.
+- **Naskah di Supabase Storage:** Vercel menolak body request maupun response di atas 4,5 MB dengan `413 FUNCTION_PAYLOAD_TOO_LARGE` sebelum kode Express berjalan, sehingga naskah buku tidak boleh lewat function. Berkas dikirim peramban langsung ke bucket privat `buku` memakai tanda unggah dari `POST /api/books/upload-intent`, dan kolom `content_url` hanya menyimpan penanda `storage://buku/<path>` (`server/lib/storage.js`). `server/middleware/uploads.js` kini hanya menampung sampul (5 MB). Catatan: bucket `buku` dibuat lewat API Storage dan **tidak** tercatat di `supabase_database/full_setup.sql`, jadi project Supabase yang dibuat ulang harus membuatnya lagi sebelum admin bisa mengunggah buku.
 - **Atribusi IP klien:** `TRUST_PROXY` harus diisi jumlah hop proxy di depan Express. Di Vercel nilainya `1`. Tanpa nilai ini `req.ip` jatuh ke alamat antarmuka dalam (`127.0.0.1` di Vercel), sehingga pembatasan berbasis IP dihitung sebagai satu ember global untuk seluruh pengguna. Verifikasi lewat log permintaan: kolom IP pada baris `REQ [HTTP]` harus menampilkan IP publik pengirim, bukan `127.0.0.1`. Tepi Vercel menimpa `x-forwarded-for` dengan alamat peer-nya (terverifikasi: kiriman header palsu tetap tercatat IP asli), sehingga `TRUST_PROXY: true` tidak diperlukan dan hop tambahan tidak perlu dihitung. Bila kelak dipasang Cloudflare di depan Vercel, yang terlihat justru IP egress Cloudflare — menaikkan jumlah hop tidak memulihkan IP klien; solusinya memercayai `cf-connecting-ip` dan hanya saat traffic memang lewat Cloudflare.
 - **Rate limit lintas-instance:** Pembatasan endpoint sensitif dapat memakai store PostgreSQL Supabase (`api_rate_limit_buckets`) melalui fungsi RPC atomik. Key IP/akun di-HMAC sebelum disimpan. Terapkan blok aditif **PATCH Distributed Rate Limits** di bagian akhir `supabase_database/full_setup.sql`, lalu set `SHARED_RATE_LIMITS=true` di lingkungan server. Tanpa langkah itu aplikasi memakai store bawaan per proses. Aktifkan hanya setelah `TRUST_PROXY` benar, karena store bersama akan membagikan kunci IP yang salah ke semua instance.
 - **Login Google lintas-instance:** Kode sesi acak sekali-pakai disimpan dalam bentuk hash di `email_verifications`, kedaluwarsa setelah 60 detik, dan dihapus atomik saat ditukar. Tabel yang sudah ada dipakai kembali.
@@ -462,19 +462,27 @@ Mengambil daftar buku (terbuka untuk publik).
   }
   ```
 
+#### `POST /api/books/upload-intent`
+Minta tanda unggah sekali-pakai agar berkas naskah dikirim peramban langsung ke Supabase Storage.
+* **Header:** `Authorization: Bearer <ADMIN_TOKEN>`, `Content-Type: application/json`
+* **Body:** `{ "filename": "terjemah-al-hikam.pdf" }` — ekstensi harus termasuk `CONTENT_EXTENSIONS`
+* **Response (200):** `{ "success": true, "bucket": "buku", "path": "naskah/tmp-<hex>/<nama-amanku>.pdf", "token": "<sekali-pakai>", "maxBytes": 52428800 }`
+* Peramban melanjutkan `uploadToSignedUrl(path, token, berkas)` dengan kunci anonim; byte tidak pernah melewati function.
+
 #### `POST /api/books/upload`
-Mengunggah buku baru beserta file thumbnail dan dokumen konten (PDF/EPUB).
+Mencatat buku baru setelah naskahnya ada di penyimpanan.
 * **Header:** `Authorization: Bearer <ADMIN_TOKEN>`
 * **Content-Type:** `multipart/form-data`
-* **Fields:** `title`, `author`, `category`, `pages`, `is_locked`, `description`
-* **Files:** `thumbnail` (gambar max 5MB), `content` (dokumen max 25MB)
+* **Fields:** `title`, `pages`, `is_locked`, `content_path` (hasil intent), `content_name` (nama asli untuk tampilan)
+* **Files:** `thumbnail` saja (gambar max 5 MB, dikompres ke WebP 600 px dan disimpan sebagai data URL)
+* **Pemeriksaan:** path harus cocok `naskah/<id>/<berkas>`, ukuran dibaca dari penyimpanan (maks 50 MB), dan beberapa byte pertama diuji magic byte terhadap ekstensinya (VULN-11).
 * **Response (201 Created):** `{ "success": true, "message": "Buku berhasil diunggah", "bookId": "buku-..." }`
 
 #### `GET /api/books/:id/content`
 Membaca/mengunduh isi buku.
 * **Header:** `Authorization: Bearer <TOKEN>`
 * **Rules:** Pengguna biasa hanya dapat mengakses buku yang `is_locked: false`. Buku `is_locked: true` membutuhkan akun Pro atau role Admin (403 jika tidak Pro).
-* **Response:** Stream konten file PDF/dokumen (`Content-Disposition: inline`).
+* **Response:** buku lama berupa data URL dialirkan langsung (`200`, `Content-Disposition: inline`); buku di penyimpanan dialihkan `302` ke URL bertanda berumur 5 menit dengan `Cache-Control: no-store` agar alamat itu tidak ikut tersimpan di tepi CDN.
 
 ---
 
@@ -1001,7 +1009,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 ├── server/                 # Backend Node.js Express (ES Module)
 │   ├── controllers/        # Controller layer (auth.controller.js, payment.controller.js)
 │   ├── services/           # Service layer murni (auth.service.js, payment.service.js)
-│   ├── lib/                # Logika bisnis murni (midtrans, http, images, time, validate, otp)
+│   ├── lib/                # Logika bisnis murni (midtrans, http, images, storage, time, validate, otp)
 │   ├── middleware/         # Middleware otentikasi JWT, role check, upload Multer, rate-limit
 │   ├── providers/          # Multi-Provider WhatsApp Gateway (Strategy Pattern)
 │   ├── routes/             # Rute modular Express (auth, books, payments, admin, users)

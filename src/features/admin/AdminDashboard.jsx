@@ -3,6 +3,7 @@ import { Navigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
 import { apiJson, authHeaders } from '@lib/api';
+import { supabase } from '@lib/supabase';
 
 import { ADMIN_DEFAULT_TAB, ADMIN_TAB_SLUGS, tabIdFromPath } from '@lib/navigation';
 import { normalizeEvent, normalizeTransaction, normalizeUser } from '@lib/normalizers';
@@ -196,7 +197,22 @@ export const AdminDashboard = () => {
           data.set('thumbnail', bookForm.thumbnail);
         }
         if (bookForm.content instanceof File) {
-          data.set('content', bookForm.content);
+          const berkas = bookForm.content;
+          if (!supabase) throw new Error('Supabase Storage belum terkonfigurasi.');
+          const tiket = await apiJson('/api/books/upload-intent', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: berkas.name })
+          });
+          /* Byte naskah dikirim peramban langsung ke Supabase Storage. Melalui
+           * /api/books/upload ia akan ditolak Vercel di atas 4,5 MB.
+           */
+          const { error } = await supabase.storage
+            .from(tiket.bucket)
+            .uploadToSignedUrl(tiket.path, tiket.token, berkas);
+          if (error) throw error;
+          data.set('content_path', tiket.path);
+          data.set('content_name', berkas.name);
         }
 
         if (editingBookId) {

@@ -16,12 +16,73 @@ import {
 } from '../lib/http.js';
 import { toDataUrl, toWebp } from '../lib/images.js';
 import { matchesContentExtension, sniffDataUrlImage, sniffImageMime } from '../lib/sniff.js';
-import { BOOK_FIELDS, CONTENT_EXTENSIONS, CONTENT_MIME_BY_EXTENSION } from '../lib/constants.js';
+import { BOOK_FIELDS, CONTENT_EXTENSIONS } from '../lib/constants.js';
 import { bookInputSchema, parseBooleanFlag } from '../lib/validate.js';
 import { sanitizeHtml } from '../lib/sanitizeHtml.js';
 import { uploadBookFiles } from '../middleware/uploads.js';
+import {
+  CONTENT_BUCKET,
+  CONTENT_MAX_BYTES,
+  CONTENT_PATH_PREFIX,
+  createUploadTicket,
+  contentRef,
+  headBytes,
+  objectInfo,
+  readContentBuffer,
+  removeContent,
+  resolveReadUrl
+} from '../lib/storage.js';
 
 export const booksRouter = Router();
+
+const UPLOAD_PATH_PATTERN = /^naskah\/[a-z0-9-]+\/[A-Za-z0-9._-]+$/;
+
+const MAX_CONTENT_MB = Math.round(CONTENT_MAX_BYTES / 1048576);
+
+/* Nama objek di penyimpanan dibuat aman; nama asli tetap disimpan terpisah
+ * untuk tampilan, karena ekstensi berkas menentukan cara naskah disajikan.
+ */
+const safeContentName = (filename, extension) => {
+  const base = String(filename || '')
+    .replace(/\.[^.]*$/, '')
+    .replace(/[^A-Za-z0-9._-]+/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '')
+    .slice(0, 80);
+  return `${base || 'naskah'}.${extension}`;
+};
+
+/** Berkasnya sudah ada di penyimpanan; diperiksa ukuran dan isi aslinya. */
+const storedContentFields = async (contentPath, originalName) => {
+  if (typeof contentPath !== 'string' || !UPLOAD_PATH_PATTERN.test(contentPath)) {
+    return { message: 'Lokasi konten tidak valid. Unggah ulang berkasnya.' };
+  }
+  const extension = path.extname(contentPath).toLowerCase();
+  if (!CONTENT_EXTENSIONS.has(extension)) {
+    return { message: 'Konten mendukung PDF, TXT, DOC/DOCX, RTF, ODT, EPUB, Markdown, atau CSV.' };
+  }
+  const info = await objectInfo(contentPath);
+  const size = Number(info?.size) || 0;
+  if (!info || size <= 0) {
+    return { message: 'Berkas konten belum sampai ke penyimpanan. Coba unggah ulang.' };
+  }
+  if (size > CONTENT_MAX_BYTES) {
+    return { message: `Ukuran konten maksimal ${MAX_CONTENT_MB} MB.` };
+  }
+  const head = await headBytes(contentPath);
+  if (!matchesContentExtension(head, extension)) {
+    return {
+      message: `Isi berkas tidak cocok dengan ekstensi ${extension}. Periksa apakah berkasnya benar-benar jenis tersebut.`
+    };
+  }
+  return {
+    fields: {
+      content_url: contentRef(contentPath),
+      content_name: String(originalName || path.basename(contentPath)),
+      content_extension: extension.replace(/^\./, ''),
+      content_size: size
+    }
+  };
+};
 
 
 const toBookResponse = (book) => ({
@@ -105,69 +166,68 @@ booksRouter.post('/books', requireAuth, requireAdmin, wrap(async (req, res) => {
 
 
 
-booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wrap(async (req, res) => {
-  const { title, pages, is_locked } = req.body;
-  const thumbnail = req.files?.thumbnail?.[0];
-  const content = req.files?.content?.[0];
-  const contentExtension = content ? path.extname(content.originalname).toLowerCase() : '';
+/* Tanda unggah sekali-pakai: peramban mengirim byte naskah langsung ke
+ * Supabase Storage sehingga tidak menyentuh batas muatan function Vercel.
+ */
+booksRouter.post('/books/upload-intent', requireAuth, requireAdmin, wrap(async (req, res) => {
+  const { filename } = req.body || {};
+  const extension = path.extname(String(filename || '')).toLowerCase();
+  if (!CONTENT_EXTENSIONS.has(extension)) {
+    return res.status(415).json({
+      success: false,
+      message: 'Konten mendukung PDF, TXT, DOC/DOCX, RTF, ODT, EPUB, Markdown, atau CSV.'
+    });
+  }
 
-  if (!title || !content || !thumbnail) {
-    return badRequest(res, 'Judul, thumbnail, dan file konten wajib diisi');
+  const uploadId = generateId('tmp').toLowerCase();
+  const target = `${CONTENT_PATH_PREFIX}/${uploadId}/${safeContentName(filename, extension.replace(/^\./, ''))}`;
+  const ticket = await createUploadTicket(target);
+
+  res.json({
+    success: true,
+    bucket: CONTENT_BUCKET,
+    path: ticket.path,
+    token: ticket.token,
+    maxBytes: CONTENT_MAX_BYTES
+  });
+}));
+
+
+booksRouter.post('/books/upload', requireAuth, requireAdmin, uploadBookFiles, wrap(async (req, res) => {
+  const { title, pages, is_locked, content_path: contentPath, content_name: contentName } = req.body;
+  const thumbnail = req.files?.thumbnail?.[0];
+
+  if (!title || !thumbnail || !contentPath) {
+    return badRequest(res, 'Judul, thumbnail, dan berkas konten wajib diisi');
   }
   /* Jenis berkas ditentukan dari isinya, bukan dari `mimetype` kiriman klien
    * (VULN-11). Sharp tetap dipakai untuk konversi, tetapi keputusan menerima
    * atau menolak dibuat di sini.
    */
-  const thumbnailMimeDetected = thumbnail?.buffer ? sniffImageMime(thumbnail.buffer) : null;
-  if (thumbnail && !thumbnailMimeDetected) {
+  const thumbnailMimeDetected = sniffImageMime(thumbnail.buffer);
+  if (!thumbnailMimeDetected) {
     return res.status(415).json({ success: false, message: 'Thumbnail harus berupa gambar PNG, JPG, WebP, atau GIF.' });
   }
-  if (thumbnail && thumbnail.size > 5 * 1024 * 1024) {
-    return res.status(413).json({ success: false, message: 'Ukuran thumbnail maksimal 5 MB' });
-  }
-  if (!CONTENT_EXTENSIONS.has(contentExtension)) {
-    return res.status(415).json({ success: false, message: 'Konten mendukung PDF, TXT, DOC/DOCX, RTF, ODT, EPUB, Markdown, atau CSV.' });
-  }
-  if (!matchesContentExtension(content.buffer, contentExtension)) {
-    return res.status(415).json({
-      success: false,
-      message: `Isi berkas tidak cocok dengan ekstensi ${contentExtension}. Periksa apakah berkasnya benar-benar jenis tersebut.`
-    });
+
+  const stored = await storedContentFields(contentPath, contentName);
+  if (stored.message) {
+    return res.status(415).json({ success: false, message: stored.message });
   }
 
   const id = generateId('buku');
-  let thumbnailBuffer = null;
-  let thumbnailMime = null;
+  const cover = await toWebp(thumbnail.buffer, {
+    width: 600,
+    quality: 80,
+    fallbackMime: thumbnailMimeDetected
+  });
 
-  if (thumbnail?.buffer) {
-    const result = await toWebp(thumbnail.buffer, {
-      width: 600,
-      quality: 80,
-      fallbackMime: thumbnailMimeDetected
-    });
-    thumbnailBuffer = result.buffer;
-    thumbnailMime = result.mime;
-  }
-
-  
-  
-  
-  const coverUrl = toDataUrl(thumbnailBuffer, thumbnailMime);
-  const extension = contentExtension.replace(/^\./, '');
-  /* MIME kanonis dari ekstensi yang sudah lolos pemeriksaan magic byte —
-   * bukan `content.mimetype` kiriman klien (VULN-13).
-   */
-  const canonicalContentMime = CONTENT_MIME_BY_EXTENSION[extension] || 'application/octet-stream';
   const { error } = await supabaseServer.from('books').insert({
     id,
     title: title.trim(),
     pages: Number(pages) || 1,
-    is_locked: is_locked === 'true' || is_locked === true || is_locked === 1,
-    cover_url: coverUrl,
-    content_url: `data:${canonicalContentMime};base64,${content.buffer.toString('base64')}`,
-    content_name: content.originalname,
-    content_extension: extension,
-    content_size: content.size,
+    is_locked: parseBooleanFlag(is_locked),
+    cover_url: toDataUrl(cover.buffer, cover.mime),
+    ...stored.fields
   });
   if (error) throw error;
 
@@ -212,14 +272,10 @@ booksRouter.get('/books/:id/html', requireAuth, wrap(async (req, res) => {
   }
 
   let buffer;
-  if (book.content_url.startsWith('data:')) {
-    const base64Data = book.content_url.split(',')[1];
-    buffer = Buffer.from(base64Data, 'base64');
-  } else {
-    const fetched = await fetch(book.content_url);
-    if (!fetched.ok) return notFound(res, 'Gagal mengambil isi berkas');
-    const arrayBuf = await fetched.arrayBuffer();
-    buffer = Buffer.from(arrayBuf);
+  try {
+    buffer = await readContentBuffer(book.content_url);
+  } catch {
+    return notFound(res, 'Gagal mengambil isi berkas');
   }
 
   const ext = (book.content_extension || path.extname(book.content_name || '')).toLowerCase().replace('.', '');
@@ -268,16 +324,20 @@ booksRouter.get('/books/:id/content', requireAuth, wrap(async (req, res) => {
     'Content-Disposition',
     `${disposition}; filename*=UTF-8''${encodeURIComponent(book.content_name || 'book.pdf')}`
   );
-  res.setHeader('Cache-Control', 'private, max-age=3600');
+  const target = await resolveReadUrl(book.content_url);
+  /* Alihan ke URL bertanda tidak boleh ikut tersimpan di tepi CDN: alamat itu
+   * memberi akses baca tanpa sesi, dan usianya sengaja pendek.
+   */
+  res.setHeader('Cache-Control', target.startsWith('http') ? 'no-store' : 'private, max-age=3600');
 
-  if (sendDataUrl(res, book.content_url, { contentType: contentMime })) return;
-  return res.redirect(book.content_url);
+  if (sendDataUrl(res, target, { contentType: contentMime })) return;
+  return res.redirect(target);
 }));
 
 
 booksRouter.put('/books/:id', requireAuth, requireAdmin, uploadBookFiles, wrap(async (req, res) => {
   const { id } = req.params;
-  const { title, pages, is_locked } = req.body;
+  const { title, pages, is_locked, content_path: contentPath, content_name: contentName } = req.body;
 
   if (!title || !title.trim()) {
     return badRequest(res, 'Judul buku wajib diisi');
@@ -304,22 +364,30 @@ booksRouter.put('/books/:id', requireAuth, requireAdmin, uploadBookFiles, wrap(a
     updatePayload.cover_url = toDataUrl(result.buffer, result.mime);
   }
 
-  const content = req.files?.content?.[0];
-  if (content?.buffer) {
-    const contentExtension = path.extname(content.originalname).toLowerCase();
-    if (!CONTENT_EXTENSIONS.has(contentExtension)) {
-      return res.status(415).json({ success: false, message: 'Format dokumen tidak didukung.' });
+  let previousContentUrl = null;
+  if (contentPath) {
+    const stored = await storedContentFields(contentPath, contentName);
+    if (stored.message) {
+      return res.status(415).json({ success: false, message: stored.message });
     }
-    const extension = contentExtension.replace(/^\./, '');
-    const canonicalContentMime = CONTENT_MIME_BY_EXTENSION[extension] || 'application/octet-stream';
-    updatePayload.content_url = `data:${canonicalContentMime};base64,${content.buffer.toString('base64')}`;
-    updatePayload.content_name = content.originalname;
-    updatePayload.content_extension = extension;
-    updatePayload.content_size = content.size;
+    const { data: current } = await supabaseServer
+      .from('books')
+      .select('content_url')
+      .eq('id', id)
+      .maybeSingle();
+    previousContentUrl = current?.content_url || null;
+    Object.assign(updatePayload, stored.fields);
   }
 
   const { error } = await supabaseServer.from('books').update(updatePayload).eq('id', id);
   if (error) throw error;
+
+  /* Objek lama dibuang setelah barisnya pasti menunjuk yang baru, supaya
+   * kegagalan di tengah jalan tidak meninggalkan buku tanpa naskah.
+   */
+  if (previousContentUrl && previousContentUrl !== updatePayload.content_url) {
+    await removeContent(previousContentUrl);
+  }
 
   res.json({ success: true, message: 'Buku berhasil diperbarui' });
 }));
@@ -328,11 +396,19 @@ booksRouter.put('/books/:id', requireAuth, requireAdmin, uploadBookFiles, wrap(a
 booksRouter.delete('/books/:id', requireAuth, requireAdmin, wrap(async (req, res) => {
   const { id } = req.params;
 
+  const { data: current } = await supabaseServer
+    .from('books')
+    .select('content_url')
+    .eq('id', id)
+    .maybeSingle();
+
   const { data, error } = await supabaseServer.from('books').delete().eq('id', id).select('id');
   if (error) throw error;
   if (!data?.length) {
     return notFound(res, 'Buku tidak ditemukan');
   }
+
+  await removeContent(current?.content_url);
 
   res.json({ success: true, message: 'Buku berhasil dihapus' });
 }));

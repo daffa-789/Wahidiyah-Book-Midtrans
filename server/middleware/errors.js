@@ -24,7 +24,7 @@ export const errorHandler = (error, req, res, next) => {
     
     
     const message = error.code === 'LIMIT_FILE_SIZE'
-      ? 'Ukuran file maksimal 25 MB.'
+      ? 'Ukuran berkas melebihi batas yang diizinkan.'
       : 'Berkas unggahan tidak valid.';
     return res.status(413).json({ success: false, message });
   }
