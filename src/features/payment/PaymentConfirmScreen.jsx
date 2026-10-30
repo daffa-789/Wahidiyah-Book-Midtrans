@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   X,
   Loader2,
@@ -36,6 +36,7 @@ export const PaymentConfirmScreen = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [qrCopied, setQrCopied] = useState(false);
+  const [qrImageGagal, setQrImageGagal] = useState(false);
   const timerRef = useRef(null);
   const qrContainerRef = useRef(null);
 
@@ -100,6 +101,11 @@ export const PaymentConfirmScreen = () => {
     isQrisActive: isQrisMethod && !isSubscribed,
     phone: paymentPhone
   });
+
+  /* Order baru berarti gambar resminya layak dicoba lagi sebelum jatuh ke render lokal. */
+  useEffect(() => {
+    setQrImageGagal(false);
+  }, [qrTransaction?.orderId]);
 
   /* Simulator QRIS Midtrans memakai kolom "QR Code Image Url" — yaitu actions[].url
      dari respons charge — jadi yang disalin DAN yang ditampilkan adalah tautan itu,
@@ -277,6 +283,18 @@ export const PaymentConfirmScreen = () => {
                     <span>Buat Ulang</span>
                   </button>
                 </div>
+              ) : qrTransaction?.qrImageUrl && !qrImageGagal ? (
+                /* Gambar resmi dari Midtrans: sudah ber-logo QRIS + GPN, memuat nama
+                   merchant, dan identik dengan yang dikirim ke simulator. */
+                <img
+                  key={qrTransaction.orderId}
+                  src={qrTransaction.qrImageUrl}
+                  alt="Kode QRIS pembayaran resmi Midtrans"
+                  width="224"
+                  height="224"
+                  className="h-56 w-56 rounded-xl bg-cream-50 object-contain"
+                  onError={() => setQrImageGagal(true)}
+                />
               ) : qrTransaction?.qrString ? (
                 <QRCodeSVG
                   value={qrTransaction.qrString}
@@ -285,12 +303,6 @@ export const PaymentConfirmScreen = () => {
                   marginSize={4}
                   className="w-56 h-56"
                   title="Kode QRIS pembayaran"
-                />
-              ) : qrTransaction?.qrImageUrl ? (
-                <img
-                  src={qrTransaction.qrImageUrl}
-                  alt="Kode QRIS pembayaran"
-                  className="w-56 h-56 object-contain"
                 />
               ) : null}
             </div>
