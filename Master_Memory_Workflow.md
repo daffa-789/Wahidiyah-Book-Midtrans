@@ -201,7 +201,8 @@ Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
 ### 3.3 Dukungan Lingkungan & Vercel Serverless:
 - **Development & Bare-Metal:** Berjalan dalam satu port terpadu (`http://localhost:5000`) dengan Vite HMR middleware.
 - **Vercel Serverless (`api/index.js` + `vercel.json`):** Server Express dibungkus menjadi serverless handler yang kompatibel dengan runtime Node 24 Vercel, dengan rewrite `/api/(.*)` ke serverless function dan aset statis disajikan via CDN edge Vercel.
-- **Rate limit lintas-instance:** Pembatasan endpoint sensitif dapat memakai store PostgreSQL Supabase (`api_rate_limit_buckets`) melalui fungsi RPC atomik. Key IP/akun di-HMAC sebelum disimpan. Terapkan blok aditif **PATCH Distributed Rate Limits** di bagian akhir `supabase_database/full_setup.sql`, lalu set `SHARED_RATE_LIMITS=true` di lingkungan server. Tanpa langkah itu aplikasi memakai store bawaan per proses.
+- **Atribusi IP klien:** `TRUST_PROXY` harus diisi jumlah hop proxy di depan Express. Di Vercel nilainya `1`. Tanpa nilai ini `req.ip` jatuh ke alamat antarmuka dalam (`127.0.0.1` di Vercel), sehingga pembatasan berbasis IP dihitung sebagai satu ember global untuk seluruh pengguna. Verifikasi lewat log permintaan: kolom IP pada baris `REQ [HTTP]` harus menampilkan IP publik pengirim, bukan `127.0.0.1`. Tepi Vercel menimpa `x-forwarded-for` dengan alamat peer-nya (terverifikasi: kiriman header palsu tetap tercatat IP asli), sehingga `TRUST_PROXY: true` tidak diperlukan dan hop tambahan tidak perlu dihitung. Bila kelak dipasang Cloudflare di depan Vercel, yang terlihat justru IP egress Cloudflare — menaikkan jumlah hop tidak memulihkan IP klien; solusinya memercayai `cf-connecting-ip` dan hanya saat traffic memang lewat Cloudflare.
+- **Rate limit lintas-instance:** Pembatasan endpoint sensitif dapat memakai store PostgreSQL Supabase (`api_rate_limit_buckets`) melalui fungsi RPC atomik. Key IP/akun di-HMAC sebelum disimpan. Terapkan blok aditif **PATCH Distributed Rate Limits** di bagian akhir `supabase_database/full_setup.sql`, lalu set `SHARED_RATE_LIMITS=true` di lingkungan server. Tanpa langkah itu aplikasi memakai store bawaan per proses. Aktifkan hanya setelah `TRUST_PROXY` benar, karena store bersama akan membagikan kunci IP yang salah ke semua instance.
 - **Login Google lintas-instance:** Kode sesi acak sekali-pakai disimpan dalam bentuk hash di `email_verifications`, kedaluwarsa setelah 60 detik, dan dihapus atomik saat ditukar. Tabel yang sudah ada dipakai kembali.
 - **Pemeliharaan terjadwal:** Vercel menjalankan `/api/cron/daily-maintenance` sekali sehari pada `01:00 UTC` (sekitar `08:00–08:59 WIB` di paket Hobby). Handler memverifikasi `CRON_SECRET` sebelum mengirim pengingat agenda dan menyapu langganan kedaluwarsa. Isi `CRON_SECRET` di Production Environment Variables Vercel dengan nilai acak minimal 16 karakter. Docker tetap memakai scheduler proses.
 
@@ -911,6 +912,10 @@ JWT_SECRET=rahasia-kunci-jwt-anda-minimal-32-karakter
 JWT_EXPIRES_IN=12h
 CRON_SECRET=acak-minimal-16-karakter-untuk-vercel-cron
 SHARED_RATE_LIMITS=true # aktifkan hanya setelah PATCH Distributed Rate Limits diterapkan
+# Jumlah hop proxy di depan server. Kosong = 1 saat middleware Vite (dev), false di produksi.
+# Vercel: 1 (tepinya menimpa x-forwarded-for, jadi tidak perlu menghitung hop tambahan).
+# Salah nilai membuat req.ip bukan IP klien dan rate limit jadi satu ember global.
+TRUST_PROXY=1
 
 # Google OAuth & Gmail OTP API
 GOOGLE_CLIENT_ID=xxxxxxxxxxxx.apps.googleusercontent.com
