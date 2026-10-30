@@ -77,13 +77,13 @@ export const PaymentMethodScreen = () => {
                     >
                       <div className="flex items-center gap-4">
                         <div
-                          className="w-14 h-14 p-2 rounded-xl flex items-center justify-center font-bold text-xs logo-plate border border-cream-200 shadow-sm overflow-hidden"
+                          className="w-14 h-14 p-2 rounded-xl flex items-center justify-center font-bold text-xs bg-cream-50 border border-cream-200 shadow-sm overflow-hidden"
                         >
                           {opt.logoUrl ? (
                             <img
                               src={opt.logoUrl}
                               alt={opt.name}
-                              className="w-full h-full object-contain drop-shadow-sm"
+                              className={`w-full h-full object-contain drop-shadow-sm ${opt.mono ? 'dark:invert' : ''}`}
                               onError={(e) => {
                                 e.target.style.display = 'none';
                                 e.target.nextSibling.style.display = 'flex';

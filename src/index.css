@@ -396,16 +396,6 @@ body,
   .auth-card {
     @apply max-xs:mt-[7vh] max-xs:p-[1.375rem] max-xs:rounded-xl;
   }
-
-  /* Pelat tempat logo metode pembayaran diletakkan. Logo pihak ketiga
-     (public/payments/) memang dikecualikan dari token tema (lihat
-     Master_Memory_Workflow §4.3 aturan 3), tetapi wordmark QRIS berwarna hitam
-     sehingga pelatnya tidak boleh memakai cream-50 — token itu ikut gelap di
-     mode malam dan membuat logo lenyap. Putih murni di kedua tema adalah syarat
-     keterbacaan logo, bukan keputusan dekoratif. */
-  .logo-plate {
-    background: #FFFFFF;
-  }
 }
 
 .auth-label {

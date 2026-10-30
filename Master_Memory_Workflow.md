@@ -235,7 +235,7 @@ Seluruh rute antarmuka wajib menerapkan TIGA color key dari Tema 1 "Editorial El
 **Aturan Penerapan:**
 1. **Status Fungsional:** Menggunakan token semantik `semantic-success/warning/danger/info` (bukan warna dekoratif, tidak dihitung dalam 60-30-10).
 2. **Larangan Palet Mentah:** Dilarang keras memakai kelas warna Tailwind mentah (`slate-*`, `gray-*`, `zinc-*`, `indigo-*`, `rose-*`, `emerald-*`, dll.) untuk elemen struktural. Seluruh warna wajib melalui CSS variable token.
-3. **Pengecualian Resmi:** Logo Google multicolor pada tombol OAuth, logo resmi metode pembayaran (`public/payments/`) berikut pelatnya `.logo-plate` (putih murni di kedua tema — `cream-50` ikut gelap di mode malam sehingga wordmark QRIS hitam lenyap), serta token merah resmi QRIS `qris-600/700` (`#E30613`/`#C00511` — kemasan merah baku QRIS Indonesia).
+3. **Pengecualian Resmi:** Logo Google multicolor pada tombol OAuth, logo resmi metode pembayaran (`public/payments/`), serta token merah resmi QRIS `qris-600/700` (`#E30613`/`#C00511` — kemasan merah baku QRIS Indonesia). Logo satu warna seperti wordmark QRIS diberi penanda `mono: true` di katalog metode pembayaran lalu dibalik lewat `dark:invert` — bukan memakai pelat putih, karena pelat menciptakan kotak putih yang tidak menyatu dengan kartu di mode gelap.
 4. **Mode Malam (Dark Mode):** Tetap mengikuti proporsi 60-30-10 via CSS variable (charcoal hangat menggantikan krem, zamrud dinaikkan terangnya agar terbaca kontras).
 
 ### 4.4 6 Koleksi Tema Terkalibrasi (Theme Palettes)

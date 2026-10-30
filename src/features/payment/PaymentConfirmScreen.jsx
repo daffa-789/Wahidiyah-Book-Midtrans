@@ -184,11 +184,11 @@ export const PaymentConfirmScreen = () => {
             <span className="text-xs font-medium text-ink-400">Metode Pembayaran</span>
             <div className="flex items-center gap-3">
               {selectedPaymentMethod?.logoUrl && (
-                <div className="w-10 h-8 p-1 rounded-lg logo-plate border border-cream-200 shadow-sm flex items-center justify-center">
+                <div className="w-10 h-8 p-1 rounded-lg bg-cream-50 border border-cream-200 shadow-sm flex items-center justify-center">
                   <img
                     src={selectedPaymentMethod.logoUrl}
                     alt={selectedPaymentMethod.name}
-                    className="w-full h-full object-contain"
+                    className={`w-full h-full object-contain ${selectedPaymentMethod.mono ? 'dark:invert' : ''}`}
                   />
                 </div>
               )}
