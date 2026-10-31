@@ -57,9 +57,10 @@ export const QRIS_STATUS_RATE_LIMIT = {
  * tujuan CSP. Skrip itu tidak bisa dipindah ke berkas terpisah: ia harus jalan
  * sebelum lukisan pertama agar tidak ada kedipan terang.
  *
- * `tests/security.test.js` memastikan hash di bawah cocok dengan isi
- * index.html. Bila skrip itu diubah, uji GAGAL dan hash harus diperbarui —
- * itu memang tujuannya, bukan kebetulan.
+ * Karena suite uji sudah dihapus, hash di bawah tidak lagi dijaga otomatis.
+ * Setiap kali skrip inline di index.html diubah, hitung ulang SHA-256 isinya
+ * (mis. lewat `openssl dgst -sha256 -binary | openssl base64`) dan ganti
+ * nilai ini — kalau tidak, CSP memblokir skrip tema pra-cat.
  */
 const THEME_INIT_HASH = "'sha256-h6WxRX0CwhoUEoC8JE0ISRoQ9984c8tt++I5IUMO0rg='";
 

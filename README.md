@@ -4,12 +4,12 @@ Perpustakaan digital Wahidiyah dengan katalog dan pembaca PDF/DOCX, keanggotaan 
 
 ## Mulai menjalankan
 
-Prasyarat: Node.js 24+, konfigurasi Supabase, dan file .env yang diisi sesuai daftar variabel di [Master Memory Workflow](./Master_Memory_Workflow.md#12-prasyarat--konfigurasi-lingkungan-env).
+Prasyarat: Node.js 24.x, konfigurasi Supabase, dan file .env yang diisi sesuai daftar variabel di [Master Memory Workflow](./Master_Memory_Workflow.md#12-prasyarat--konfigurasi-lingkungan-env).
 
 1. Pasang dependensi: **npm install**
 2. Siapkan Supabase. **supabase_database/full_setup.sql** hanya untuk database baru atau reset yang disetujui; skrip ini menghapus tabel dan data yang ada.
 3. Jalankan aplikasi lokal: **npm run dev**
-4. Buka **http://localhost:5000**
+4. Buka **http://localhost:3000** (mode produksi lokal: `npm start` di **http://localhost:5000**)
 
 ## Perintah utama
 

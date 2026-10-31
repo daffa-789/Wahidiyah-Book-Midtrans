@@ -2,9 +2,9 @@
  * Controller Layer — Modul Otentikasi (Fase 3 roadmap arsitektur).
  *
  * Tanggung jawab TUNGGAL berkas ini (§2.1 panduan): mengekstrak DTO dari
- * `req`, memanggil `auth.service`, dan memformat respons HTTP (JSON maupun
+ * `req`, memanggil `auth_service`, dan memformat respons HTTP (JSON maupun
  * redirect OAuth). Tidak ada query database, verifikasi OTP, atau logika
- * pendaftaran di sini — semuanya ada di `server/services/auth.service.js`.
+ * pendaftaran di sini — semuanya ada di `server/services/auth_service.js`.
  *
  * Bentuk respons dipertahankan kompatibel dengan klien yang ada.
  */

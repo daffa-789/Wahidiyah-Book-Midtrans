@@ -1,14 +1,14 @@
 # 📖 Wahidiyah Book — Digital Library, Real Midtrans QRIS & WhatsApp Authenticator
 ## 🧠 Master Memory Workflow & Dokumentasi Teknis Sistem Terpadu (Single Source of Truth)
 
-[![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D24-brightgreen.svg)](https://nodejs.org/)
+[![Node.js Version](https://img.shields.io/badge/Node.js-24.x-brightgreen.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19.3-blue.svg)](https://react.dev/)
 [![Express](https://img.shields.io/badge/Express-4.21-lightgrey.svg)](https://expressjs.com/)
 [![Vite](https://img.shields.io/badge/Vite-6.1-purple.svg)](https://vitejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.3-38bdf8.svg)](https://tailwindcss.com/)
 [![Database](https://img.shields.io/badge/Database-Supabase%20(PostgreSQL)-emerald.svg)](https://supabase.com/)
 [![Payment](https://img.shields.io/badge/Payment-Midtrans%20Core%20API%20(QRIS)-0052cc.svg)](https://midtrans.com/)
-[![WhatsApp](https://img.shields.io/badge/WhatsApp-Multi--Provider%20Gateway-25D366.svg)](https://whatsapp.com/)
+[![WhatsApp](https://img.shields.io/badge/WhatsApp-Gateway%20Fonnte-25D366.svg)](https://whatsapp.com/)
 [![Deploy](https://img.shields.io/badge/Deploy-Vercel%20Serverless%20Ready-black.svg)](https://vercel.com/)
 
 > 🎯 **FUNGSI UTAMA BERKAS INI:** 
@@ -47,13 +47,13 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Modular Layered Mo
 * **Frontend:** React 19 (`.jsx` dan `.js`), Vite 6, React Router v7, Tailwind CSS 4, Headless UI, Lucide Icons, Sonner.
 * **Document Engine:** Mozilla PDF.js Canvas (`ContinuousPdfViewer.jsx` Continuous Vertical Scroll, Retina HD scaling, scroll-spy otomatis, anchor pelacak zoom tanpa geser teks) dan Mammoth (.docx ke HTML semantik terproteksi).
 * **Receipt Engine:** `jspdf` untuk ekspor kwitansi digital A4 resmi instan di peramban (client-side) tanpa dialog print fisik.
-* **Backend:** Node.js 24+ dan Express.js 4 (ES Module), dengan Service Layer dan adapter serverless Vercel (`api/index.js`).
-* **Database & BaaS:** Supabase Cloud (PostgreSQL 15 dengan *Row Level Security* fail-closed dan zona waktu `Asia/Jakarta`).
-* **Payment Gateway:** Midtrans Core API (Mode QRIS Sandbox Real-time dengan payload EMVCo `qr_string`, salin kode QR, link simulator sandbox, dan webhook idempoten).
+* **Backend:** Node.js 24.x (`engines` di `package.json`) dan Express.js 4 (ES Module), dengan Service Layer dan adapter serverless Vercel (`api/index.js`).
+* **Database & BaaS:** Supabase Cloud (PostgreSQL 17 dengan *Row Level Security* fail-closed dan zona waktu `Asia/Jakarta`).
+* **Payment Gateway:** Midtrans Core API QRIS. Server menyimpan payload EMVCo `qr_string` dan URL gambar resmi Midtrans; UI menampilkan gambar resmi (diproksikan server), dengan fallback QR SVG dari `qr_string`, lalu webhook idempoten.
 * **WhatsApp Gateway (Fonnte):** Berbasis *Strategy Pattern* di `server/providers/` dengan Fonnte sebagai satu-satunya gateway nyata dan Demo lokal untuk pengembangan.
 * **Image Processing:** Sharp (kompresi & sanitasi otomatis gambar sampul ke format WebP).
-* **Email & Notifikasi:** Google OAuth2 API (Gmail API HTTPS untuk OTP email registrasi & verifikasi).
-* **Quality Harness:** Build Vite (`npm run build`) dan pemeriksaan kesehatan konfigurasi (`npm run health`). Status lulus terakhir harus dicatat bersama perubahan yang diverifikasi; jangan menganggap badge atau hitungan lama sebagai hasil terkini.
+* **Email & Notifikasi:** Google OAuth2 API (Gmail API HTTPS untuk OTP email registrasi & verifikasi) dan Web Push VAPID untuk pengingat agenda.
+* **Quality Harness:** `npm run build` (Vite), `npm run format:check` (Prettier `printWidth: 100`), dan `npm run health` (6 pemeriksaan konfigurasi). Tidak ada suite unit test aktif; status lulus terakhir harus dicatat bersama perubahan yang diverifikasi.
 
 ---
 
@@ -70,35 +70,37 @@ Aplikasi **Wahidiyah Book** dibangun menggunakan arsitektur **Modular Layered Mo
 
 ### 2.2. Autentikasi Pengguna & WhatsApp Gateway Fonnte (R61–R67)
 - **Registrasi & Verifikasi Dual-Channel Terkendali:**
-  - **Registrasi Akun:** 100% menggunakan verifikasi OTP via **Email (Gmail API OAuth2)** bebas biaya API dan anti-flooding (*OTP Flooding Protection*). Tombol pendaftaran disederhanakan dengan label bersih *"Daftar"*.
-  - Kanal WhatsApp untuk nomor Indonesia dialokasikan sebagai opsi pemulihan sekunder (*Secondary Fallback Account Recovery*) pada fitur Lupa Password.
-- **Pemilih Kode Negara Sedunia (245 Negara):**
+  - **Registrasi Akun:** 100% menggunakan verifikasi OTP via **Email (Gmail API OAuth2)** bebas biaya API dan anti-flooding (*OTP Flooding Protection*). `RegisterScreen.jsx` mengunci `deliveryMethod = 'email'`; tombol pendaftaran berlabel bersih *"Daftar"*.
+  - Kanal WhatsApp untuk nomor Indonesia dialokasikan sebagai opsi pemulihan sekunder (*Secondary Fallback Account Recovery*) pada fitur Lupa Password dan kirim ulang kode.
+- **Nomor WhatsApp Indonesia Saja (Tanpa Bendera):**
   - Tidak ada lencana bendera atau pemilih negara: `PhoneInput.jsx` hanya menerima nomor Indonesia dan `src/lib/phone.js` menjaga dua bentuk — `62xx` untuk disimpan, `0xx` tanpa spasi untuk ditampilkan.
   - Parsing nomor memakai helper lokal `src/lib/phone.js` (`normalizePhone`, `displayPhone`, `isValidPhone`), bukan pustaka luar.
-  - Pencarian dwibahasa (dapat dicari dengan nama Indonesia *"Jepang"* atau Inggris *"Japan"*, dial code `+81`, atau ISO code `JP`).
-  - Pembuangan otomatis angka nol di awal nomor lokal (`0812...` ➔ `812...` dengan dial `+62`).
+  - Nomor wajib diisi saat registrasi (`registerSchema` di `server/lib/validate.js`); Fonnte selalu mengirim `countryCode: '62'`.
+  - Pembuangan otomatis angka nol di awal nomor lokal (`0812...` ➔ `62812...`).
 - **Login Akun Google:** Integrasi resmi Google OAuth 2.0 (*Direct Authorization Code Flow*) dengan verifikasi token ID dan pembuatan sesi JWT aman.
 - **Sesi Aman & Proteksi Hak Akses:** Penyimpanan kata sandi dengan salt hashing `bcryptjs` (12 rounds), sesi berbasis token `jsonwebtoken` (JWT), dan mitigasi celah *self-demotion* (admin tidak dapat mencabut hak admin dirinya sendiri).
 
 ### 2.3. Sistem Keanggotaan Pro & Pembayaran Real Midtrans QRIS
-- **Paket Pro Tunggal Terstandarisasi:** Skema keanggotaan Pro tunggal dengan tarif Rp 25.000/bulan (disertai penyesuaian biaya layanan resmi katalog server).
+- **Paket Pro Tunggal Terstandarisasi:** Skema keanggotaan Pro tunggal `monthly` dengan tarif Rp 25.000/bulan ditambah biaya administrasi Rp 3.000 (`server/lib/constants.js`), sehingga total tagihan Rp 28.000.
 - **Integrasi Midtrans Core API Sandbox Eksklusif:** Charge QRIS dibuat langsung dari backend server dengan payload EMVCo dinamis (bebas dari manipulasi harga di sisi klien). Seluruh metode manual non-QRIS telah dieliminasi demi otomasi 100%.
-- **Bantuan Pengujian Sandbox:** Dilengkapi tombol *"Salin Kode QR String"* untuk pengujian via curl/simulator, tautan langsung ke *Midtrans QRIS Simulator*, dan tombol *"▶ Bayar Sekarang (Mode Simulasi)"* langsung pada UI konfirmasi pembayaran (`PaymentConfirmScreen.jsx`) jika flag `ALLOW_PAYMENT_SIMULATION=1` aktif di `.env`.
-- **Simpan QRIS ke Galeri Ponsel:** Konversi SVG EMVCo QRIS ke gambar PNG beresolusi tinggi via HTML5 Canvas dengan `Blob` UTF-8 dan `URL.createObjectURL` agar dapat dipindai dari galeri e-wallet (DANA, GoPay, BCA, Livin, OVO).
-- **Polling & Webhook Idempoten:** Pengecekan otomatis status transaksi setiap 3 detik dan verifikasi *SHA512 Signature Key* pada endpoint webhook notifikasi. Menggunakan Service Layer `payment.service.js` dengan mekanisme klaim bersyarat (*conditional claim*) untuk mencegah aktivasi membership ganda.
+- **Bantuan Pengujian Sandbox:** Kotak *"Simulator QRIS Midtrans"* menyediakan tautan QR yang dapat disalin (`qrMidtransUrl` pada sandbox, atau URL proxy gambar) untuk ditempel ke kolom **"QR Code Image Url"** simulator. Tidak ada tautan keluar otomatis maupun tombol pembayaran simulasi di aplikasi.
+- **Simpan QRIS ke Galeri Ponsel:** Gambar QR (SVG/PNG) digambar ulang ke `<canvas>` berukuran 320 px dengan kop hijau dan keterangan e-wallet, lalu diunduh sebagai PNG agar dapat dipindai dari galeri (DANA, GoPay, BCA, OVO, ShopeePay).
+- **Batalkan & Buat Ulang:** Tombol batal memanggil `POST /api/payments/qris/:orderId/cancel`, mematikan order di Midtrans bila didukung (QRIS sering menolak dengan 412), lalu membuat order baru. Bila Midtrans menolak, server menjelaskan bahwa QR lama masih berlaku sampai kedaluwarsa.
+- **Polling & Webhook Idempoten:** Pengecekan otomatis status transaksi setiap 3 detik dan verifikasi *SHA512 Signature Key* pada endpoint webhook notifikasi. Logika berada di `server/services/payment_service.js` dengan mekanisme klaim bersyarat (*conditional claim*) untuk mencegah aktivasi membership ganda.
 - **Faktur Kwitansi Pembayaran Resmi & Unduh PDF Instan:**
   - Format kwitansi A4 resmi dengan desain profesional, branding hijau zamrud tua, metadata dua kolom rapi, rincian biaya transparan, dan stempel verifikasi resmi Wahidiyah Book.
   - Unduh langsung ke format PDF di sisi klien menggunakan pustaka `jspdf` — cepat, tanpa dialog `window.print()` peramban, dan terhindar dari pemotongan halaman fisik.
   - Riwayat langganan dilengkapi fallback otomatis ke tabel `transactions` sehingga histori transaksi selalu tampil lengkap.
 
 ### 2.4. Panel Administrasi Komprehensif (Modular Sub-Tabs)
-- **Arsitektur Sub-Tab Terisolasi:** Panel admin didekomposisi menjadi 6 komponen mandiri di `src/features/admin/tabs/`:
-  1. `OverviewTab.jsx`: Metrik ringkasan 3+2 (Anggota Terdaftar, Total Pendapatan, Kitab Digital, Transaksi Sukses, Pembaca Aktif), grafik analitik pendapatan berbasis `recharts`, dan ekspor laporan Excel terpusat.
-  2. `BooksTab.jsx`: Manajemen katalog buku, formulir tambah/edit buku, kompresi sampul WebP otomatis via `sharp`, dan kelola visibilitas Pro.
-  3. `UsersTab.jsx`: Manajemen anggota, pencarian pengguna, dan penugasan role admin.
-  4. `EventsTab.jsx`: Kalender agenda majelis mujahadah, pemisah nama lokasi & link presisi Google Maps.
-  5. `CarouselTab.jsx`: Pengelolaan banner carousel beranda dinamis.
-  6. `LogsTab.jsx`: Pemantauan log aktivitas sistem real-time dengan tombol refresh di samping filter.
+- **Arsitektur Sub-Tab Terisolasi:** `AdminDashboard.jsx` hanya menyusun tab dan hook; enam panel mandiri berada langsung di `src/features/admin/`, dengan sub-komponen agenda di `events/` dan hook data di `hooks/`:
+  1. `OverviewTab.jsx`: tiga kartu KPI (Total pengguna, Koleksi aktif, Langganan aktif), donut *Status langganan* (Pro vs Reguler) via `recharts`, kartu pendapatan tervalidasi, riwayat 10 transaksi terakhir, dan tombol ekspor laporan lengkap `.xlsx`.
+  2. `BooksTab.jsx` + `BookModal.jsx`: manajemen katalog buku, formulir tambah/edit, unggah naskah ke Supabase Storage via tanda unggah, kompresi sampul WebP via `sharp`, dan kelola visibilitas Pro.
+  3. `UsersTab.jsx`: manajemen anggota, pencarian pengguna, penugasan role admin, dan toggle Pro.
+  4. `EventsTab.jsx`: orkestrator kalender agenda; panel dipecah menjadi `EventCalendarPanel`, `SelectedDateAgenda`, `AllAgendaPanel`, `EventFormPanel`, dan `PushStatusBanner`, dengan state di `useAdminEventEditor`.
+  5. `CarouselTab.jsx`: pengelolaan banner carousel beranda dinamis (termasuk unggah gambar).
+  6. `LogsTab.jsx`: pemantauan log aktivitas sistem (langganan + pengguna) dengan tombol refresh di samping filter.
+- **Hook Komposisi:** `useAdminDashboardData` memuat statistik, pengguna, transaksi, agenda, dan carousel; `useAdminBookEditor` mengelola unggah sampul/naskah; `useAdminEventEditor` mengelola agenda terpilih.
 - **Ekspor Laporan 1-Klik:** Unduh riwayat transaksi, data pengguna, dan katalog buku langsung ke format Microsoft Excel (`.xlsx`) via library `exceljs` yang dimuat secara dinamis.
 
 ### 2.5. Antarmuka Pengguna & Navigasi Terpadu (Mobile, Tablet, Desktop)
@@ -122,7 +124,7 @@ Aplikasi dibangun menggunakan prinsip **Modular Layered Monolith (Unified Single
 
 ```mermaid
 graph TD
-    Client["Browser Desktop / Mobile PWA (React 19 + Vite 6)"] -->|Port 5000 / Vercel Serverless| Express["Server Express Node.js / api/index.js"]
+    Client["Browser Desktop / Mobile PWA (React 19 + Vite 6)"] -->|Dev :3000 · Produksi :5000 · Vercel Serverless| Express["Server Express Node.js / api/index.js"]
     
     subgraph Frontend ["Frontend Modular (React 19)"]
         UI["Komponen UI (DeviceFrame, ContinuousPdfViewer, PhoneInput)"]
@@ -139,10 +141,10 @@ graph TD
     end
 
     subgraph External ["Layanan Cloud & Gateway"]
-        Supa[("Supabase PostgreSQL Cloud (7 Tabel Inti)")]
+        Supa[("Supabase PostgreSQL Cloud (7 tabel aplikasi + push_subscriptions + api_rate_limit_buckets)")]
         Midtrans["Midtrans Payment Gateway Core API (QRIS Sandbox)"]
         Gmail["Google Gmail API OAuth2"]
-        WAGateway["WhatsApp Gateway (Fonnte / Wablas / Twilio / Webhook)"]
+        WAGateway["WhatsApp Gateway (Fonnte / Demo)"]
     end
 
     Express --> Frontend
@@ -160,22 +162,27 @@ graph TD
 Pemisahan lapisan (*Separation of Concerns*) dilakukan secara ketat untuk menjamin *loose coupling*, *high cohesion*, dan kemampuan uji unit (*testability*):
 1. **Routes Layer (`server/routes/`):**
    - Tipis (*thin routes*): mendefinisikan URL, metode HTTP (`GET`, `POST`, `PUT`, `DELETE`), menyematkan middleware terkait (`requireAuth`, `requireAdmin`, `authRateLimiter`, `paymentRateLimiter`), lalu memetakan hasil service menjadi respons HTTP.
-   - Boleh memvalidasi bentuk permintaan yang dangkal (mis. `isOneOf(action, ['approve', 'reject'])`), tetapi **tidak memuat query Supabase maupun aturan bisnis**. Terverifikasi: seluruh berkas rute berada pada 0 referensi `supabaseServer`.
+   - Boleh memvalidasi bentuk permintaan yang dangkal (mis. `isOneOf(action, ['approve', 'reject'])`), tetapi **tidak memuat aturan bisnis**.
+   - Status migrasi per Oktober 2026: modul **books, users, transactions, events, carousel, auth, dan payments** sudah 0 referensi `supabaseServer` di berkas rutenya. Tiga rute masih memanggil Supabase langsung sebagai pengecualian yang diketahui: `subscriptions_routes.js` (riwayat + fallback transaksi), `admin_routes.js` (log aktivitas), dan `health_routes.js` (`/health`, `/stats`).
 2. **Controllers Layer (`server/controllers/`):**
    - Bukan lapisan wajib untuk semua modul. Hanya alur autentikasi dan pembayaran QRIS yang membutuhkannya karena memerlukan skema `zod`, ekstraksi `req`, dan amplop respons khusus.
-   - Modul lain (buku, agenda, carousel, pengguna, transaksi transfer) melompat langsung dari route ke service; satu lapisan tambahan di sana hanya memindahkan kode tanpa menambah kejelasan.
+   - Modul lain (buku, agenda, carousel, pengguna, transaksi) melompat langsung dari route ke service; satu lapisan tambahan di sana hanya memindahkan kode tanpa menambah kejelasan. Nama berkas memakai garis bawah: `auth_controller.js`, `payment_controller.js`, `auth_service.js`, `payment_service.js`.
 3. **Services Layer Murni (`server/services/`):**
    - Menampung seluruh aturan bisnis (*business rules*) dan query Supabase: `auth_service`, `payment_service`, `books_service`, `events_service`, `carousel_service`, `users_service`, `transactions_service`.
    - **Bebas mutlak dari objek `req` dan `res` Express** sehingga aturan bisnis dapat diverifikasi tanpa menjalankan HTTP server.
    - Hasil bisnis yang wajar (bukan galat) dikembalikan sebagai objek `outcome`; kegagalan aturan bisnis dilempar melalui `createServiceError(pesan, { statusCode, code, extra })` dari `server/lib/errors.js`.
 4. **Helper & Database Layer (`server/lib/` & `server/db.js`):**
    - `errors.js`: `createServiceError` — satu-satunya cara service menyatakan status HTTP yang diusulkan.
-   - `midtrans.js`: Integrasi API Midtrans Core (charge QRIS, status polling, verifikasi signature SHA512, unwrap payload, `isTransactionSettled`).
+   - `midtrans.js`: Integrasi API Midtrans Core (charge QRIS, status polling, pembatalan/expire, verifikasi signature SHA512, unwrap payload, `isTransactionSettled`).
    - `time.js`: Penanggalan WIB tunggal terstandarisasi dengan `dayjs` (zona waktu `Asia/Jakarta`).
    - `validate.js`: Skema validasi terstruktur dengan `zod` dan penjepit nilai query (`toBoundedInt`).
    - `images.js`: Pengolahan kompresi gambar WebP dengan `sharp`.
    - `http.js`: Helper pembungkus respons HTTP (`wrap`, `fail`, `badRequest`/`notFound`/`conflict`). `fail` menerjemahkan `error.statusCode` dari service menjadi respons 4xx/5xx yang seragam.
-   - `otp.js`: Manajemen pembuatan kode OTP terenkripsi dan jeda cooldown kirim ulang.
+   - `otp.js` + `oneTimeCode.js`: Manajemen pembuatan kode OTP terenkripsi, cooldown kirim ulang, dan kode sesi sekali-pakai.
+   - `membership.js` + `constants.js`: Aturan aktivasi Pro, klaim transaksi bersyarat, dan harga paket (Rp 25.000 + Rp 3.000).
+   - `storage.js` + `sniff.js`: Penanda `storage://buku/...`, URL bertanda, serta deteksi MIME dari magic bytes.
+   - `origin.js`, `pushEndpoint.js`, `webpush.js`, `eventReminder.js`: Validasi origin OAuth, whitelist endpoint push, pengiriman Web Push, dan pengingat agenda H-1.
+   - `sanitizeHtml.js`: Re-export `shared/sanitizeHtml.js` untuk konversi DOCX.
    - `db.js`: Klien `supabaseServer` ber-role service dengan Row Level Security fail-closed.
 
 ### 3.2 Evaluasi Kritis 30 Prinsip Kualitas Perangkat Lunak (Software Quality):
@@ -184,13 +191,13 @@ Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
   1. *Separation of Concerns (SoC):* Pemisahan tegas Routes $\rightarrow$ Controllers (auth & payment) $\rightarrow$ Services $\rightarrow$ Database; modul CRUD lain langsung Routes $\rightarrow$ Services.
   2. *Idempotency (Operasi Bayar & Webhook):* Webhook Midtrans dan aktivasi keanggotaan menggunakan klaim UPDATE bersyarat atomik untuk mencegah aktivasi ganda (*prevent double fulfillment*).
   3. *Security by Design:* Row Level Security fail-closed, parameter query anti-SQLi, enkripsi kata sandi `bcryptjs` 12 rounds, rate limiting pada endpoint pembayaran, dan proteksi hak cipta e-reader.
-  4. *Testability:* Logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi berada di service layer murni sehingga dapat diverifikasi tanpa mock HTTP.
+  4. *Testability:* Logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi berada di service layer murni sehingga dapat diperiksa tanpa mock HTTP. Repo tidak lagi memuat suite unit test; verifikasi rilis dilakukan manual lewat `npm run format:check`, `node --check`, `npm run build`, dan `npm run health`.
   5. *KISS & YAGNI:* Menghindari abstraksi dinamis berlebih yang tidak dibutuhkan skripsi.
   6. *High Cohesion & Loose Coupling:* Modul mandiri yang hanya berkomunikasi via antarmuka fungsi terdefinisi.
 - **Tier 2: Standar Clean Code & Operasional (P2)**
-  7. *Maintainability & Readability:* Penamaan fungsi deklaratif, konsistensi ES Module, dan dokumentasi single source of truth.
+  7. *Maintainability & Readability:* Penamaan fungsi deklaratif, konsistensi ES Module, Prettier `printWidth: 100`, dan dokumentasi single source of truth.
   8. *DRY (Don't Repeat Yourself):* Penggunaan helper terpusat (`http.js`, `time.js`, `validate.js`, `cn()`).
-  9. *Extensibility (Strategy Pattern):* WhatsApp Gateway menggunakan pola strategi multi-provider yang fleksibel.
+  9. *Extensibility (Strategy Pattern):* WhatsApp Gateway memakai kontrak `BaseWhatsAppProvider` dengan implementasi Fonnte dan Demo; provider baru cukup menambah satu kelas dan mendaftarkannya di registry.
   10. *Robustness & Fault Tolerance:* Polling status QRIS tetap berjalan aman meskipun ada fluktuasi jaringan; global error handler mencegah crash proses server.
   11. *Performance & Lazy Loading:* Pemisahan bundel manual (*manual chunks*) pada Vite untuk library berat (`pdfjs`, `exceljs`, `recharts`).
   12. *Observability & Structured Logging:* Logger performa tinggi berbasis `picocolors` dengan penanda waktu WIB dan prefix modul.
@@ -200,8 +207,8 @@ Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
   - ❌ *Distributed Message Broker (Kafka/RabbitMQ):* Diabaikan karena volume antrean webhook dapat ditangani secara asinkron oleh Express.
 
 ### 3.3 Dukungan Lingkungan & Vercel Serverless:
-- **Development & Bare-Metal:** Berjalan dalam satu port terpadu (`http://localhost:5000`) dengan Vite HMR middleware.
-- **Vercel Serverless (`api/index.js` + `vercel.json`):** Server Express dibungkus menjadi serverless handler yang kompatibel dengan runtime Node 24 Vercel, dengan rewrite `/api/(.*)` ke serverless function dan aset statis disajikan via CDN edge Vercel.
+- **Development:** `npm run dev` menyalakan Express dengan middleware Vite HMR dalam satu port di `http://localhost:3000` (`VITE_PORT`, default 3000). `PORT=5000` hanya dipakai mode API/Produksi.
+- **Vercel Serverless (`api/index.js` + `vercel.json`):** Server Express dibungkus menjadi serverless handler yang kompatibel dengan runtime Node 24 Vercel, dengan rewrite `/api/(.*)` ke serverless function dan aset statis disajikan via CDN edge Vercel. Node dipatok `24.x` lewat `engines` di `package.json`.
 - **Region function:** `regions: ["sin1"]` dipasang di `vercel.json`. Tanpa itu Vercel memakai `iad1` (Virginia) sehingga setiap panggilan API menyeberangi Samudra Pasifik meski pembaca berada di Indonesia; terukur pada `GET /api/health` turun dari 1,2–1,8 detik menjadi 0,13–0,77 detik setelah dipindah ke Singapura. Paket Hobby hanya boleh satu region, jadi `sin1` tidak bisa digabung dengan region lain.
 - **Naskah di Supabase Storage:** Vercel menolak body request maupun response di atas 4,5 MB dengan `413 FUNCTION_PAYLOAD_TOO_LARGE` sebelum kode Express berjalan, sehingga naskah buku tidak boleh lewat function. Berkas dikirim peramban langsung ke bucket privat `buku` memakai tanda unggah dari `POST /api/books/upload-intent`, dan kolom `content_url` hanya menyimpan penanda `storage://buku/<path>` (`server/lib/storage.js`). `server/middleware/uploads.js` kini hanya menampung sampul (5 MB). Bucket `buku` dibuat oleh blok **PATCH Naskah di Storage** di `supabase_database/full_setup.sql`, sehingga project Supabase yang dibuat ulang tinggal menjalankan blok itu.
 - **Atribusi IP klien:** `TRUST_PROXY` harus diisi jumlah hop proxy di depan Express. Di Vercel nilainya `1`. Tanpa nilai ini `req.ip` jatuh ke alamat antarmuka dalam (`127.0.0.1` di Vercel), sehingga pembatasan berbasis IP dihitung sebagai satu ember global untuk seluruh pengguna. Verifikasi lewat log permintaan: kolom IP pada baris `REQ [HTTP]` harus menampilkan IP publik pengirim, bukan `127.0.0.1`. Tepi Vercel menimpa `x-forwarded-for` dengan alamat peer-nya (terverifikasi: kiriman header palsu tetap tercatat IP asli), sehingga `TRUST_PROXY: true` tidak diperlukan dan hop tambahan tidak perlu dihitung. Bila kelak dipasang Cloudflare di depan Vercel, yang terlihat justru IP egress Cloudflare — menaikkan jumlah hop tidak memulihkan IP klien; solusinya memercayai `cf-connecting-ip` dan hanya saat traffic memang lewat Cloudflare.
@@ -236,43 +243,42 @@ Seluruh rute antarmuka wajib menerapkan TIGA color key dari Tema 1 "Editorial El
 **Aturan Penerapan:**
 1. **Status Fungsional:** Menggunakan token semantik `semantic-success/warning/danger/info` (bukan warna dekoratif, tidak dihitung dalam 60-30-10).
 2. **Larangan Palet Mentah:** Dilarang keras memakai kelas warna Tailwind mentah (`slate-*`, `gray-*`, `zinc-*`, `indigo-*`, `rose-*`, `emerald-*`, dll.) untuk elemen struktural. Seluruh warna wajib melalui CSS variable token.
-3. **Pengecualian Resmi:** Logo Google multicolor pada tombol OAuth, logo resmi metode pembayaran (`public/payments/`), serta token merah resmi QRIS `qris-600/700` (`#E30613`/`#C00511` — kemasan merah baku QRIS Indonesia). Logo satu warna seperti wordmark QRIS diberi penanda `mono: true` di katalog metode pembayaran lalu dibalik lewat `dark:invert` — bukan memakai pelat putih, karena pelat menciptakan kotak putih yang tidak menyatu dengan kartu di mode gelap.
+3. **Pengecualian Resmi:** Logo Google multicolor pada tombol OAuth, logo resmi QRIS di `public/payments/` (`qris.svg` dan `qris-putih.svg`), serta token merah resmi QRIS `qris-600/700` (`#E30613`/`#C00511` — kemasan merah baku QRIS Indonesia). Logo satu warna seperti wordmark QRIS diberi penanda `mono: true` di katalog metode pembayaran lalu dibalik lewat `dark:invert` — bukan memakai pelat putih, karena pelat menciptakan kotak putih yang tidak menyatu dengan kartu di mode gelap.
 4. **Mode Malam (Dark Mode):** Tetap mengikuti proporsi 60-30-10 via CSS variable (charcoal hangat menggantikan krem, zamrud dinaikkan terangnya agar terbaca kontras).
 
-### 4.4 6 Koleksi Tema Terkalibrasi (Theme Palettes)
-1. **Tema 1: Editorial Elegan (Default Skripsi — Emerald Heritage):**
-   - Brand: Hijau Zamrud Tua (`#14523A`, hover `#0E3D2C`)
-   - Background: Krem Hangat Alami (`#FBF8F3`, surface `#F7F2E9`, card `#FFFDFA`)
-   - Accent: Emas Antik Halus (`#B8860B`, highlight `#D4AF4F`)
-   - Text/Ink: Tinta Arang Hangat (`#1D1B17`, secondary `#5A544C`, muted `#7C756C`)
-   - Border: Garis Krem Lembut (`#E4D9C6`)
-2. **Tema 2: Modern Sage Islamic (Clean Contemporary Sand):** Sage green teduh (`#2D5A46`) di atas warm sand (`#F8F7F4`) dengan aksen perunggu muted (`#A37D45`).
-3. **Tema 3: Royal Islamic Blue & Amber (Lapis Lazuli Heritage):** Biru safir Persia (`#1E3A5F`) di atas pualam putih (`#F9F9F6`) dengan aksen amber ochre (`#C88A2C`).
-4. **Tema 4: Spiritual Twilight (Midnight Obsidian Oasis - Khusus Malam):** Giok luminesen (`#34D399`) di atas obsidian hutan malam (`#0C1612`) dengan aksen lilin emas (`#F3C766`).
-5. **Tema 5: Monochrome Academic Litho (Warm Paper & Carbon):** Karbon linotype (`#181818`) di atas kertas cetak litografi (`#F5F3EF`) dengan aksen tinta stempel kayu (`#8C6239`).
-6. **Tema 6: Terracotta & Olive Nusantara (Tradisional Kontemporer):** Zaitun hutan pesantren (`#3B4E3E`) di atas kertas beras krem (`#FAF7F2`) dengan aksen tanah liat terracotta (`#B4533C`).
+### 4.4 Palet Tunggal "Editorial Elegan" (Terang & Malam)
+Sumber kebenaran warna ada di `component.json` (`colors`) dan disuntikkan ke CSS variables oleh `src/theme/themeInjector.js`. Hanya ada **satu palet** dengan dua mode, bukan kumpulan tema yang bisa dipilih:
+
+| Peran | Mode Terang | Mode Malam | Token |
+|---|---|---|---|
+| **Brand / Sekunder** | Hijau Zamrud Tua `#14523A` (brand-700), hover `#0E3D2C` | Zamrud diterangkan `rgb(111 196 155)` / `#6FC49B` | `brand-*` |
+| **Latar Dominan** | Krem Hangat `#FBF8F3`, surface `#F7F2E9`, card `#FFFDFA` | Charcoal hangat `#14130F`, surface `#1B1A14`, card `#201E17` | `cream-*`, `ui-*` |
+| **Teks / Ink** | Tinta Arang `#1D1B17`, sekunder `#5A554E`, muted `#7C766E` | Off-white hangat `#F4EFE3`, sekunder `#C0B7A4`, muted `#948B79` | `ink-*`, `ui-text-*` |
+| **Aksen** | Emas Antik `#B8860B` (gold-500), highlight `#D4AF4F` | Emas lebih terang `rgb(217 180 74)` | `gold-*`, `accent-gold` |
+| **Border** | `#E4D9C6` | `#443E33` | `ui-border`, `cream-300` |
+
+Pemilihan mode dilakukan `ThemeProvider` (`src/theme/themeMode.js`) dengan tiga preferensi: `light`, `dark`, dan `system` (mengikuti `prefers-color-scheme`). Pilihan disimpan di `localStorage` dengan kunci `wb_theme`; skrip pra-cat di `index.html` mencegah kedipan tema. Mode malam bukan inversi putih/hitam: latar tetap hangat dan nilai solid tombol dipisahkan (`--night-solid-*`) agar `bg-brand-700` tetap pekat sementara `text-brand-700` tetap terbaca.
 
 ### 4.5 Tipografi & Hirarki Skala
-* **Display / Judul:** Serif bermartabat (*Newsreader*, *Cinzel*, *Playfair*) dipadu dengan *Plus Jakarta Sans* untuk keterbacaan modern.
-* **Body / Teks Bacaan:** *Plus Jakarta Sans* (400 Regular / 500 Medium / 600 SemiBold), `line-height: 1.65`, batas maksimal paragraf `65ch`.
-* **Ayat & Kaligrafi Arab:** Font *Amiri* atau *Scheherazade New*, ukuran proporsional 1.3x lebih besar dibanding teks latin dengan ruang vertikal harakat yang lapang.
-* **Monospace / Angka Finansial:** *JetBrains Mono* untuk nomor referensi Midtrans, nominal QRIS (tabular numbers), kode transaksi, dan nomor halaman.
+* **Display / Judul:** *Fraunces* (serif variabel dengan sumbu optik), fallback *Newsreader* → Georgia. Dipakai lewat `font-display`.
+* **Body / Teks Bacaan:** *Plus Jakarta Sans* (400–800), `line-height: 1.65`, batas maksimal paragraf `65ch`.
+* **Ayat & Kaligrafi Arab:** *Amiri* (400/700) lewat `.font-arabic`, ukuran proporsional lebih besar dengan ruang harakat yang lapang.
+* **Angka Finansial & Kode:** `font-mono` bawaan sistem untuk nominal QRIS dan nomor referensi; tidak ada font monospace kustom yang diunduh.
 
 ### 4.6 Arsitektur Navigasi Terpadu (Responsive Design)
 * **Desktop Sidebar (Ramping & Fokus):**
   - Lebar Terbuka: `218px` (proporsional dengan kanvas konten)
   - Lebar Ciut (Collapsed): `68px` (ikon + tooltip cerdas)
-  - Menu Utama: Beranda, Kalender Mujahadah, Langganan Pro.
-  - Menu Akun: Hub Profil Pengamal (memuat akses ke Riwayat, Bantuan, dan Tentang).
-  - Menu Admin: 6 Sub-Tab manajemen sistem.
-  - Tombol badge EB yang mengganggu telah dihilangkan dari header sidebar ciut.
+  - Menu Pengguna — Utama: Beranda, Kalender, Pro. Akun: Profil, Log Out. (Riwayat Langganan, Pusat Bantuan, dan Tentang dijangkau dari Hub Profil.)
+  - Menu Admin: saat pengguna ber-role admin, sidebar hanya menampilkan section **Administrasi** berisi Beranda (overview), Koleksi, Pengguna, Agenda, Carousel, Log Aktivitas, dan Log Out — menu pengguna digantikan.
+  - Label mengikuti `src/components/layout/navigationConfig.jsx`; tombol badge EB yang mengganggu telah dihilangkan.
 * **Universal Sticky Top Back Button Header (`DeviceFrame.jsx`):**
   - Hadir seragam di **Desktop, Tablet, dan Mobile** (`← [Judul]`) untuk sub-halaman: `/about` (Tentang Aplikasi), `/help` (Pusat Bantuan), `/riwayat` (Riwayat Langganan), dan `/profile` (Profil).
   - Margin dinamis terhadap sidebar desktop (`md:ml-[218px]` saat terbuka, `md:ml-[68px]` saat ciut) sehingga tidak saling bertumpuk.
   - *Smart Fallback Navigation:* Mengutamakan `window.history.back()`, jika riwayat kosong otomatis kembali ke Hub Profil atau Beranda.
 * **Mobile Bottom Dock Bar:**
   - Bar melayang di bagian bawah dengan radius `20px` dan bayangan lembut.
-  - 4 tombol utama: Beranda, Kalender, Pro (dengan lencana bintang emas), dan Profil.
+  - Pengguna: 4 tombol — Beranda, Kalender, Pro (lencana bintang emas), Profil. Admin: Ringkasan, Koleksi, Pengguna, Agenda, dan tombol **Menu**.
   - Target sentuh minimal `44px × 44px` memenuhi standar aksesibilitas mobile WCAG.
 
 ### 4.7 Spesifikasi Wireframe & Layout Layar Inti
@@ -288,20 +294,20 @@ Seluruh rute antarmuka wajib menerapkan TIGA color key dari Tema 1 "Editorial El
    - Pembaca Word DOCX berbasis HTML semantik terproteksi via Mammoth engine dan sanitasi anti-XSS (`DOMPurify`).
    - Proteksi hak cipta: tanda air dinamis identitas pembaca, pelarangan klik kanan (`contextmenu`), dan larangan seleksi teks (`select-none`).
 3. **Membership Pro & Real Midtrans QRIS:**
-   - Paket Pro tunggal terstandarisasi Rp 25.000/bulan.
-   - Tampilan scan QRIS EMVCo dinamis dengan timer 15 menit, tombol unduh QR PNG ke galeri ponsel, tombol salin kode QR string, dan link simulator Midtrans Sandbox.
-   - Tombol *"▶ Bayar Sekarang (Mode Simulasi)"* langsung di UI via flag `ALLOW_PAYMENT_SIMULATION=1`.
+   - Paket Pro tunggal terstandarisasi Rp 25.000/bulan + biaya administrasi Rp 3.000.
+   - Tampilan QRIS: gambar QR resmi Midtrans yang diproksikan `GET /api/payments/qris/:orderId/qr.png`, fallback `QRCodeSVG` dari `qrString` bila gambar gagal dimuat. Timer 15 menit, tombol simpan PNG, tombol **Salin Kode QR** (menyalin tautan gambar untuk kolom *QR Code Image Url* simulator), dan tombol **Batalkan & Buat Kode Baru**.
+   - Tidak ada tombol pembayaran simulasi maupun flag `ALLOW_PAYMENT_SIMULATION`; pelunasan hanya terjadi lewat Midtrans (scan asli atau simulator sandbox).
    - **Faktur Kwitansi Digital Resmi A4 (jsPDF):** Dibuat instan di sisi klien via pustaka `jspdf` tanpa dialog print peramban, memuat kop hijau zamrud resmi, 2 kolom metadata, rincian biaya, dan stempel verifikasi digital. Riwayat langganan terhubung otomatis ke tabel transaksi agar histori pembayaran tidak pernah kosong.
 4. **Kalender Kegiatan Mujahadah:**
    - Matriks kalender bulanan interaktif dengan zona waktu `Asia/Jakarta`.
    - Pemisahan jelas antara teks nama lokasi dan tombol navigasi rute presisi Google Maps.
 5. **Admin Management Dashboard (6 Sub-Tabs Modular):**
-   - `OverviewTab.jsx`: Metrik ringkasan 3+2, grafik analitik pendapatan Recharts, ekspor Excel terpusat.
-   - `BooksTab.jsx`: Manajemen katalog buku dan kompresi WebP otomatis.
+   - `OverviewTab.jsx`: tiga kartu KPI, donut status langganan, pendapatan tervalidasi, riwayat transaksi, ekspor Excel.
+   - `BooksTab.jsx` + `BookModal.jsx`: Manajemen katalog buku, unggah naskah, dan kompresi WebP otomatis.
    - `UsersTab.jsx`: Manajemen akun anggota dan penugasan peran admin.
-   - `EventsTab.jsx`: Manajemen jadwal majelis mujahadah.
+   - `EventsTab.jsx` + `events/*`: Manajemen jadwal majelis mujahadah.
    - `CarouselTab.jsx`: Pengelolaan banner beranda dinamis.
-   - `LogsTab.jsx`: Pemantauan log aktivitas sistem real-time dengan tombol refresh di samping filter.
+   - `LogsTab.jsx`: Pemantauan log aktivitas sistem dengan tombol refresh di samping filter.
 6. **Cupertino Inset Grouped Profile Hub (`EditProfileScreen.jsx`):**
    - Desain modern iOS Cupertino inset grouped card dengan Data Akun di posisi paling atas dan kartu profil taktil yang elegan.
    - Tombol ganti kata sandi dan switch slider tema gelap/terang.
@@ -326,11 +332,36 @@ Seluruh rute antarmuka wajib menerapkan TIGA color key dari Tema 1 "Editorial El
 
 ## 5. Spesifikasi Lengkap REST API (`/api/*`)
 
-* **Base URL:** `http://localhost:5000/api` (Development) / `/api` (Production)
-* **Format Request/Response:** `application/json` (kecuali upload multipart)
-* **Otentikasi:** Header `Authorization: Bearer <JWT_TOKEN>` untuk rute yang terproteksi.
+* **Base URL:** `http://localhost:3000/api` saat `npm run dev` (satu port Vite middleware). Mode Produksi `http://localhost:5000/api` atau `/api` di Vercel. `npm run dev:frontend` memakai proxy Vite ke `http://localhost:5000`.
+* **Format Request/Response:** `application/json` (kecuali upload multipart). Sukses selalu `{ "success": true, ...data }`; kegagalan `{ "success": false, "message": "..." }`.
+* **Otentikasi:** Header `Authorization: Bearer <JWT_TOKEN>` untuk rute terproteksi. Rute admin menambah `requireAdmin` (verifikasi role langsung ke database).
+* **Kegagalan service:** `createServiceError(pesan, { statusCode, code })` di `server/lib/errors.js`; `fail()` di `server/lib/http.js` menerjemahkan `statusCode` menjadi respons HTTP.
 
-### 4.1. Otentikasi (`/api/auth`)
+**Ringkasan 54 endpoint aktif:**
+
+| Modul | Jumlah | Modul | Jumlah |
+|---|---:|---|---:|
+| Auth | 10 | Books | 10 |
+| Payments | 5 | Users | 6 |
+| Transactions | 3 | Subscriptions | 1 |
+| Events | 5 | Carousel | 6 |
+| Notifications | 4 | Health & Stats | 2 |
+| Admin logs | 1 | Cron | 1 |
+
+### 5.1. Otentikasi (`/api/auth`)
+
+| Metode | Path | Akses | Body utama |
+|---|---|---|---|
+| POST | `/login` | Publik | `{ identifier \| email, password }` |
+| POST | `/register` | Publik | `{ name, email, phone, password }` |
+| POST | `/verify-registration` | Publik | `{ identifier \| email \| phone, code }` |
+| POST | `/request-password-reset` | Publik | `{ method: 'email' \| 'whatsapp', email \| phone }` |
+| POST | `/reset-password` | Publik | `{ method, identifier \| email \| phone, code, password }` |
+| POST | `/resend-verification` | Publik | `{ method, identifier, purpose: 'register' \| 'reset' }` |
+| POST | `/google-supabase` | Publik | `{ accessToken, googleName?, googleEmail? }` |
+| GET | `/google/callback` | Publik | Redirect OAuth (query `code`) |
+| POST | `/exchange` | Publik | `{ code }` — kode sesi sekali-pakai, berlaku 60 detik |
+| GET | `/me` | Bearer | — |
 
 #### `POST /api/auth/login`
 Masuk dengan kredensial email dan password.
@@ -358,33 +389,37 @@ Masuk dengan kredensial email dan password.
   ```
 
 #### `POST /api/auth/register`
-Mendaftarkan akun baru dan meminta pengiriman OTP ke email serta WhatsApp (jika nomor HP diisi).
+Mendaftarkan akun baru. Registrasi **selalu** mengirim OTP ke email (`deliveryMethod` dikunci `email` di server), dengan proteksi cooldown dan anti-flooding.
 * **Body:**
   ```json
   {
     "name": "Nama Lengkap",
     "email": "user@email.com",
     "phone": "6281234567890",
-    "password": "password123",
-    "dob": "1995-08-17"
+    "password": "password123"
   }
   ```
-  *(Catatan: `phone` bersifat opsional dan otomatis dinormalisasi ke format 62xxx tanpa tanda plus)*
+  *(Catatan: `phone` wajib dan dinormalisasi ke format `62xxx` tanpa tanda plus.)*
 * **Response (202 Accepted):**
   ```json
   {
     "success": true,
-    "message": "Kode verifikasi telah dikirim ke email Anda dan WhatsApp (jika nomor terdaftar), berlaku 10 menit.",
-    "email": "user@email.com"
+    "message": "Kode verifikasi telah dikirim ke email user@email.com dan berlaku 10 menit.",
+    "email": "user@email.com",
+    "phone": "6281234567890",
+    "identifier": "user@email.com",
+    "deliveryMethod": "email",
+    "deliveredBy": "email"
   }
   ```
+  *(Bila pengiriman gagal, mis. mode demo, `devOtp` hanya muncul saat `EXPOSE_DEV_OTP=1` di lingkungan non-produksi.)*
 
 #### `POST /api/auth/verify-registration`
 Memvalidasi kode OTP 6-digit untuk menyelesaikan pembuatan akun.
 * **Body:**
   ```json
   {
-    "email": "user@email.com",
+    "identifier": "user@email.com",
     "code": "123456"
   }
   ```
@@ -405,16 +440,17 @@ Memvalidasi kode OTP 6-digit untuk menyelesaikan pembuatan akun.
   }
   ```
 
-#### `POST /api/auth/resend-otp`
-Meminta pengiriman ulang kode verifikasi pendaftaran dengan proteksi cooldown 60 detik.
+#### `POST /api/auth/resend-verification`
+Meminta pengiriman ulang kode verifikasi pendaftaran atau reset password dengan proteksi cooldown 60 detik.
 * **Body:**
   ```json
   {
-    "email": "user@email.com",
-    "deliveryMethod": "whatsapp"
+    "method": "email",
+    "identifier": "user@email.com",
+    "purpose": "register"
   }
   ```
-  *(Pilihan `deliveryMethod`: `"email"` atau `"whatsapp"`)*
+  *(Pilihan `method`: `"email"` atau `"whatsapp"`; `purpose`: `"register"` atau `"reset"`)*
 * **Response (200 OK):**
   ```json
   {
@@ -424,13 +460,13 @@ Meminta pengiriman ulang kode verifikasi pendaftaran dengan proteksi cooldown 60
   ```
 
 #### `POST /api/auth/request-password-reset`
-Meminta OTP reset password ke email atau nomor WhatsApp terdaftar.
-* **Body:** `{ "email": "user@email.com", "phone": "6281234567890" }`
-* **Response (200 OK):** `{ "success": true, "message": "Kode reset password telah dikirim." }`
+Meminta OTP reset password ke email atau nomor WhatsApp terdaftar. Respons selalu seragam untuk mencegah enumerasi akun.
+* **Body:** `{ "method": "whatsapp", "phone": "6281234567890" }`
+* **Response (200 OK):** `{ "success": true, "message": "Jika data cocok, kode reset password telah dikirim." }`
 
 #### `POST /api/auth/reset-password`
 Mereset password dengan OTP yang valid.
-* **Body:** `{ "email": "user@email.com", "code": "123456", "password": "newpassword123" }`
+* **Body:** `{ "method": "email", "identifier": "user@email.com", "code": "123456", "password": "newpassword123" }`
 * **Response (200 OK):** `{ "success": true, "message": "Password berhasil diperbarui." }`
 
 #### `GET /api/auth/me`
@@ -440,7 +476,20 @@ Mengambil data profil pengguna yang sedang login.
 
 ---
 
-### 4.2. Katalog Buku (`/api/books`)
+### 5.2. Katalog Buku (`/api/books`)
+
+| Metode | Path | Akses | Keterangan |
+|---|---|---|---|
+| GET | `/books` | Publik | Query `search`, `sort` |
+| GET | `/books/:id` | Publik | Detail metadata buku |
+| GET | `/books/:id/thumbnail` | Publik | Data URL WebP atau `302` ke Storage |
+| GET | `/books/:id/html` | Bearer | HTML DOCX ter-sanitasi; paywall Pro berlaku |
+| GET | `/books/:id/content` | Bearer | PDF inline / DOCX-TXT attachment; Pro wajib untuk `is_locked` |
+| POST | `/books` | Admin | Metadata saja `{ title, pages, is_locked, cover_url }` |
+| POST | `/books/upload-intent` | Admin | Tanda unggah sekali-pakai ke bucket `buku` |
+| POST | `/books/upload` | Admin | Multipart: metadata + `content_path` + `thumbnail` (≤5 MB) |
+| PUT | `/books/:id` | Admin | Perbarui metadata / sampul / naskah |
+| DELETE | `/books/:id` | Admin | Hapus buku beserta objek penyimpanannya |
 
 #### `GET /api/books`
 Mengambil daftar buku (terbuka untuk publik).
@@ -467,7 +516,7 @@ Mengambil daftar buku (terbuka untuk publik).
 Minta tanda unggah sekali-pakai agar berkas naskah dikirim peramban langsung ke Supabase Storage.
 * **Header:** `Authorization: Bearer <ADMIN_TOKEN>`, `Content-Type: application/json`
 * **Body:** `{ "filename": "terjemah-al-hikam.pdf" }` — ekstensi harus termasuk `CONTENT_EXTENSIONS`
-* **Response (200):** `{ "success": true, "bucket": "buku", "path": "naskah/tmp-<hex>/<nama-amanku>.pdf", "token": "<sekali-pakai>", "maxBytes": 52428800 }`
+* **Response (200):** `{ "success": true, "bucket": "buku", "path": "naskah/tmp-<hex>/<nama-aman>.pdf", "token": "<sekali-pakai>", "maxBytes": 52428800 }`
 * Peramban melanjutkan `uploadToSignedUrl(path, token, berkas)` dengan kunci anonim; byte tidak pernah melewati function.
 
 #### `POST /api/books/upload`
@@ -483,11 +532,19 @@ Mencatat buku baru setelah naskahnya ada di penyimpanan.
 Membaca/mengunduh isi buku.
 * **Header:** `Authorization: Bearer <TOKEN>`
 * **Rules:** Pengguna biasa hanya dapat mengakses buku yang `is_locked: false`. Buku `is_locked: true` membutuhkan akun Pro atau role Admin (403 jika tidak Pro).
-* **Response:** buku lama berupa data URL dialirkan langsung (`200`, `Content-Disposition: inline`); buku di penyimpanan dialihkan `302` ke URL bertanda berumur 5 menit dengan `Cache-Control: no-store` agar alamat itu tidak ikut tersimpan di tepi CDN.
+* **Response:** buku lama berupa data URL dialirkan langsung (`200`, `Content-Disposition: inline`); buku di penyimpanan dialihkan `302` ke URL bertanda berumur pendek dengan `Cache-Control: no-store` agar alamat itu tidak ikut tersimpan di tepi CDN.
 
 ---
 
-### 4.3. Pembayaran QRIS Midtrans (`/api/payments`)
+### 5.3. Pembayaran QRIS Midtrans (`/api/payments`)
+
+| Metode | Path | Akses | Pembatas |
+|---|---|---|---|
+| POST | `/qris/charge` | Bearer | 20 / 5 menit |
+| GET | `/qris/:orderId/status` | Bearer | 150 / 5 menit per akun |
+| POST | `/qris/:orderId/cancel` | Bearer | 20 / 5 menit |
+| GET | `/qris/:orderId/qr.png` | Bearer | 60 / menit |
+| POST | `/midtrans/notification` | Publik | Verifikasi signature SHA512 |
 
 #### `POST /api/payments/qris/charge`
 Membuat invoice pembayaran QRIS ke Midtrans Core API.
@@ -501,6 +558,8 @@ Membuat invoice pembayaran QRIS ke Midtrans Core API.
     "refNo": "000012345678",
     "qrString": "00020101021226600016ID.CO.GOPAY.WWW0118...",
     "qrImageUrl": "/api/payments/qris/tx-123456/qr.png",
+    "qrMidtransUrl": "https://api.sandbox.midtrans.com/v2/qris/.../qr-code",
+    "planName": "Paket Bulanan",
     "amount": 25000,
     "adminFee": 3000,
     "totalPaid": 28000,
@@ -508,6 +567,7 @@ Membuat invoice pembayaran QRIS ke Midtrans Core API.
     "expiredAt": "2026-10-07T22:30:00.000Z"
   }
   ```
+  *(Bila ada order pending yang masih valid untuk paket sama, respons `200` memuat `reused: true`. Bila pengguna sudah Pro, respons `200` memuat `alreadyPro: true`.)*
 
 #### `GET /api/payments/qris/:orderId/status`
 Mengecek status pembayaran (polling berkala tiap 3 detik).
@@ -519,14 +579,20 @@ Mengecek status pembayaran (polling berkala tiap 3 detik).
     "orderId": "tx-123456",
     "status": "settlement",
     "isPaid": true,
-    "totalPaid": 28000
+    "totalPaid": 28000,
+    "expiredAt": "2026-10-07T22:30:00.000Z"
   }
   ```
 
-#### `GET /api/payments/qris/:orderId/qr.png`
-Proxy gambar QR (PNG) — cadangan bila klien memerlukan URL gambar langsung.
+#### `POST /api/payments/qris/:orderId/cancel`
+Membatalkan order aktif di Midtrans (expire lalu cancel) dan menandai baris lokal. Bila Midtrans menolak pembatalan QRIS, server hanya menghentikan order lokal dan mengembalikan `warning` agar pengguna tidak membayar QR lama.
 * **Header:** `Authorization: Bearer <TOKEN>`
-* **Proteksi:** Anti-SSRF whitelist domain `*.midtrans.com` dan protokol HTTPS.
+* **Response (200 OK):** `{ "success": true, "cancelled": true, "voidedByMidtrans": true, "orderId": "tx-123456" }`
+
+#### `GET /api/payments/qris/:orderId/qr.png`
+Proxy gambar QR resmi Midtrans (PNG).
+* **Header:** `Authorization: Bearer <TOKEN>`
+* **Proteksi:** Anti-SSRF whitelist domain `*.midtrans.com` dan protokol HTTPS; `404` bila transaksi hanya punya `qr_string`.
 
 #### `POST /api/payments/midtrans/notification`
 Webhook endpoint untuk menerima HTTP Notification dari server Midtrans.
@@ -536,17 +602,67 @@ Webhook endpoint untuk menerima HTTP Notification dari server Midtrans.
 
 ---
 
-### 4.4. Layanan Pendukung
-* `GET /api/subscriptions/my` — Mengambil riwayat paket langganan pengguna aktif.
-* `GET /api/events` — Mengambil daftar agenda kegiatan Wahidiyah.
-* `GET /api/carousel` — Mengambil daftar banner aktif di beranda.
-* `GET /api/health` — Status kesehatan server dan koneksi database.
+### 5.4. Layanan Pendukung
+
+**Pengguna (`/api/users`):**
+| Metode | Path | Akses | Keterangan |
+|---|---|---|---|
+| PUT | `/users/profile` | Bearer | Ubah nama profil sendiri |
+| GET | `/users` | Admin | Daftar seluruh pengguna |
+| PUT | `/users/:id/role` | Admin | `{ role: 'user' \| 'admin' }`; menolak self-demotion |
+| PUT | `/users/:id/pro` | Admin | `{ isPro: boolean }` |
+| POST | `/users` | Admin | Buat akun manual + password sementara |
+| DELETE | `/users/:id` | Admin | Hapus akun; menolak self-delete |
+
+**Transaksi (`/api/transactions`):**
+| Metode | Path | Akses | Keterangan |
+|---|---|---|---|
+| GET | `/transactions` | Admin | `?limit=` 1–200, default 50 |
+| PUT | `/transactions/:id/verify` | Admin | `{ action: 'approve' \| 'reject' }`, aktivasi/rollback |
+| POST | `/transactions` | Bearer + rate limit | Transaksi transfer manual; harga dihitung server |
+
+**Langganan:** `GET /api/subscriptions/my` (Bearer) — riwayat langganan; fallback ke `transactions` bila tabel kosong.
+
+**Agenda (`/api/events`):**
+| Metode | Path | Akses |
+|---|---|---|
+| GET | `/events` | Publik |
+| POST | `/events` | Admin |
+| PUT | `/events/:id` | Admin |
+| DELETE | `/events/:id` | Admin |
+| POST | `/events/:id/send-reminder` | Admin |
+
+**Carousel (`/api/carousel`):**
+| Metode | Path | Akses |
+|---|---|---|
+| GET | `/carousel` | Publik (hanya slide aktif) |
+| GET | `/carousel/all` | Admin |
+| POST | `/carousel` | Admin |
+| PUT | `/carousel/:id` | Admin |
+| DELETE | `/carousel/:id` | Admin |
+| POST | `/carousel/:id/image` | Admin (multipart gambar) |
+
+**Notifikasi Web Push (`/api/notifications`, publik dengan rate limit 20 / 15 menit):**
+| Metode | Path | Keterangan |
+|---|---|---|
+| GET | `/notifications/public-key` | Kunci VAPID publik; `null` bila push nonaktif |
+| POST | `/notifications/subscribe` | Simpan endpoint + kunci perangkat |
+| POST | `/notifications/unsubscribe` | Hapus langganan |
+| GET | `/notifications/status` | Jumlah pelanggan aktif |
+
+**Kesehatan, statistik, log, dan cron:**
+| Metode | Path | Akses | Keterangan |
+|---|---|---|---|
+| GET | `/health` | Publik | Status server + koneksi database |
+| GET | `/stats` | Admin | KPI dashboard + 5 transaksi terbaru |
+| GET | `/admin/logs` | Admin | `?limit` ≤ 200, default 50 |
+| GET | `/cron/daily-maintenance` | `Authorization: Bearer CRON_SECRET` | Kirim pengingat agenda + sapu langganan kedaluwarsa (Vercel cron 01:00 UTC) |
 
 ---
 
 ## 6. Mekanisme & Alur Pembayaran Real Midtrans QRIS
 
-### 5.1. Alur Transaksi Lengkap
+### 6.1. Alur Transaksi Lengkap
 ```
 Pengguna (non-Pro)
   │ pilih paket
@@ -557,11 +673,11 @@ PaymentConfirmScreen
 POST /api/payments/qris/charge        ──► server hitung harga dari SUBSCRIPTION_PLANS
   │                                        server charge ke Midtrans Core API (payment_type: qris)
   ▼                                        simpan transaksi status = pending
-Midtrans balas qr_string + actions[]   simpan payload QR + URL gambar cadangan + waktu kedaluwarsa
+Midtrans balas qr_string + actions[]   simpan payload QR + URL gambar resmi + waktu kedaluwarsa
   │
   ▼
-<QRCodeSVG value={qrString}>            ──► QR digambar di klien (SVG tajam, tanpa request gambar)
-  │                                        fallback: <img src="/api/payments/qris/:orderId/qr.png">
+<img src="/api/payments/qris/:orderId/qr.png">   ──► gambar QR resmi Midtrans (proxy server)
+  │                                                 fallback: <QRCodeSVG value={qrString}>
   │
   │  pengguna memindai QR / membayar lewat simulator sandbox
   ▼
@@ -575,23 +691,24 @@ isTransactionSettled(transaction_status, fraud_status) == true
 server mengaktifkan membership Pro (activatePaidMembership) — SEKALI SAJA (IDEMPOTEN)
 ```
 
-**Satu-satunya sumber kebenaran adalah Midtrans.** Frontend tidak pernah boleh menyatakan "lunas"; ia hanya menerima `isPaid: true` dari server.
+**Satu-satunya sumber kebenaran adalah Midtrans.** Frontend tidak pernah boleh menyatakan "lunas"; ia hanya menerima `isPaid: true` dari server. Tombol batal memanggil endpoint `cancel`; bila Midtrans menolak membatalkan QRIS, UI menampilkan peringatan bahwa QR lama masih berlaku sampai kedaluwarsa.
 
-### 5.2. 7 Prinsip Ketahanan Transaksi Midtrans QRIS
+### 6.2. 8 Prinsip Ketahanan Transaksi Midtrans QRIS
 1. **Insert Pending Sebelum Charge:** Transaksi status `pending` dicatat ke database sebelum request HTTP charge dikirim ke Midtrans. Jika charge gagal, transaksi segera ditandai `rejected`.
 2. **Idempotensi Aktivasi Pro:** Klaim status transaksi memakai perubahan bersyarat agar webhook/polling ulang tidak mengaktifkan paket dua kali. Jika aktivasi gagal, server mencoba mengembalikan status transaksi ke `pending`. Pembaruan pengguna dan penyisipan langganan masih dua operasi Supabase terpisah, jadi belum atomik; gunakan satu fungsi SQL/RPC sebagai tindak lanjut sebelum mengandalkan jaminan transaksi penuh.
-3. **Pembatasan Laju (Rate Limiting):** Endpoint `POST /api/payments/qris/charge` dibatasi 20 permintaan / 5 menit, dan `GET /api/payments/qris/:orderId/qr.png` dibatasi 60 permintaan / menit.
+3. **Pembatasan Laju (Rate Limiting):** `POST /qris/charge` dan `POST /qris/:orderId/cancel` dibatasi 20 permintaan / 5 menit; polling status 150 / 5 menit per akun; proxy gambar QR 60 permintaan / menit.
 4. **Proteksi Anti-SSRF pada Proxy QR:** Pengambilan gambar QR Midtrans dibatasi ketat ke host `*.midtrans.com`, protokol wajib HTTPS, penanganan redirect manual, dan batas waktu respons (timeout) 10 detik.
 5. **Validasi Waktu Kedaluwarsa (15 Menit):** Server memeriksa `expires_at` saat polling status. Jika waktu lewat, transaksi otomatis ditandai `rejected` dan status `expire` dikembalikan ke klien.
 6. **Pencegahan Akumulasi Order (Pending Reuse):** Saat pengguna membuka ulang layar pembayaran untuk paket yang sama dan masih memiliki transaksi `pending` yang valid/belum kedaluwarsa, sistem otomatis menggunakan kembali order tersebut (`reused: true`) tanpa menumpuk baris baru.
 7. **Penyembunyian URL Internal Merchant:** Properti internal `qrMidtransUrl` hanya dikirimkan pada mode Sandbox (`MIDTRANS_IS_PRODUCTION=false`).
+8. **Pembatalan yang Tidak Menelan Uang:** Order hanya ditutup ke `rejected` bila Midtrans benar-benar mematikan order. Bila QRIS menolak pembatalan (umumnya 412), baris lokal hanya kehilangan `expires_at`; pembayaran yang terlanjur masuk tetap bisa menyelesaikan langganan lewat polling/webhook.
 
-### 5.3. Panduan Pengujian di Sandbox Midtrans
+### 6.3. Panduan Pengujian di Sandbox Midtrans
 1. Login sebagai pengguna yang **belum Pro**.
 2. Masuk ke halaman berlangganan → pilih paket Pro → lanjut ke pembayaran.
-3. Kode QR akan muncul.
+3. Gambar QR resmi Midtrans akan muncul (proxy `/api/payments/qris/:orderId/qr.png`).
 4. Buka simulator: **https://simulator.sandbox.midtrans.com/v2/qris/index**
-5. Tempel nilai `qrMidtransUrl` dari respons charge, lalu klik **Bayar**.
+5. Klik **Salin Kode QR** di kotak *"Simulator QRIS Midtrans"*, lalu tempel tautan itu ke kolom **"QR Code Image Url"** simulator dan klik **Bayar**.
 6. Tunggu maksimal ~3 detik. Polling otomatis mendeteksi `settlement` dan akun menjadi Pro seketika.
 
 #### Simulasi Pengujian Webhook via cURL:
@@ -603,19 +720,21 @@ GROSS=28000.00
 SERVER_KEY=SB-Mid-server-xxxxxxxx
 SIG=$(printf "%s%s%s%s" "$ORDER_ID" "$STATUS_CODE" "$GROSS" "$SERVER_KEY" | sha512sum | cut -d' ' -f1)
 
-curl -X POST http://localhost:5000/api/payments/midtrans/notification \
+curl -X POST http://localhost:3000/api/payments/midtrans/notification \
   -H 'Content-Type: application/json' \
   -d "{\"order_id\":\"$ORDER_ID\",\"status_code\":\"$STATUS_CODE\",\"gross_amount\":\"$GROSS\",\"transaction_status\":\"settlement\",\"fraud_status\":\"accept\",\"signature_key\":\"$SIG\"}"
 ```
 *Catatan: Kirim dua kali berturut-turut — respons harus tetap sukses dan masa aktif Pro **tidak bertambah ganda** (bukti idempoten).*
 
-### 5.4. Troubleshooting Pembayaran Midtrans
+### 6.4. Troubleshooting Pembayaran Midtrans
 | Gejala | Kemungkinan Penyebab | Tindakan Perbaikan |
 |---|---|---|
 | "Payment gateway Midtrans belum dikonfigurasi" (503) | `MIDTRANS_SERVER_KEY` / `MIDTRANS_CLIENT_KEY` masih kosong di `.env` | Isi kredensial sandbox dari Dashboard Midtrans ke `.env`. |
 | "Midtrans tidak mengembalikan kode QR" (502) | Respons charge tidak berisi `qr_string` maupun `actions[]` | Periksa koneksi internet server dan log konsol Express. |
 | QR blank / `qrString` null | Migrasi SQL belum lengkap sehingga kolom `midtrans_qr_string` belum ada | Jalankan ulang migrasi skema `supabase_database/full_setup.sql`. |
-| QR muncul tapi tidak pernah lunas | Pembayaran belum dieksekusi di simulator sandbox atau QR kedaluwarsa | Buka simulator sandbox Midtrans dan tempel URL QR untuk membayar. |
+| Gambar QR gagal dimuat | Proxy `qr.png` menerima 404/502 atau koneksi ke Midtrans terganggu | UI otomatis jatuh ke `QRCodeSVG` dari `qrString`; periksa log `MIDTRANS`. |
+| QR muncul tapi tidak pernah lunas | Pembayaran belum dieksekusi di simulator sandbox atau QR kedaluwarsa | Buka simulator sandbox, tempel tautan gambar QR, lalu bayar. |
+| Tombol batal memberi peringatan "QR lama masih berlaku" | Midtrans menolak pembatalan order QRIS (umumnya 412) | Jangan bayar QR lama; tunggu kedaluwarsa atau gunakan order baru. |
 | Webhook Notifikasi ditolak 401 | `signature_key` salah | Pastikan urutan hash persis: `order_id + status_code + gross_amount + ServerKey`. |
 | Webhook Notifikasi 400 | Nominal `gross_amount` tidak sama dengan `total_paid` yang tersimpan | Pastikan nominal yang dikirim sama dengan database (Rp 28.000). |
 
@@ -633,14 +752,14 @@ server/providers/
 └── index.js        # Provider Registry & Singleton Factory
 ```
 
-### 6.1. Provider yang Didukung:
+### 7.1. Provider yang Didukung:
 1. **`fonnte` (Fonnte API - Default)**:
    * `.env`: `WHATSAPP_PROVIDER=fonnte`, `FONNTE_TOKEN=...`
-   * Endpoint: `https://api.fonnte.com/send`
+   * Endpoint: `https://api.fonnte.com/send` dengan `countryCode: '62'` (hanya nomor Indonesia).
 2. **`demo` (Local Terminal Fallback)**:
-   * Otomatis aktif jika tidak ada token provider yang terisi atau disetel eksplisit `WHATSAPP_PROVIDER=demo`. Mencetak pesan dan kode OTP ke terminal pengembang secara jelas untuk debugging lokal.
+   * Otomatis aktif jika `FONNTE_TOKEN` kosong atau disetel eksplisit `WHATSAPP_PROVIDER=demo`. Mencetak pesan dan kode OTP ke terminal pengembang secara jelas untuk debugging lokal.
 
-### 6.2. Menambahkan Provider Baru:
+### 7.2. Menambahkan Provider Baru:
 1. Buat berkas baru di `server/providers/[nama_provider].js`.
 2. Warisi kelas `BaseWhatsAppProvider`:
    ```javascript
@@ -673,46 +792,53 @@ Informasi Project Database Supabase:
 
 > ⚠️ **Catatan Migrasi:** Project lama (`cfpmkwjkqfktagdkmlai`) sudah dihapus. Seluruh konfigurasi aplikasi aktif diarahkan ke project `pdimjmbjutlzjdfjaqgt` di atas.
 
-### 7.1. Satu-satunya berkas SQL
+### 8.1. Satu-satunya berkas SQL
 Repositori hanya menyimpan `supabase_database/full_setup.sql` sebagai definisi setup database. Skrip ini untuk database baru atau reset yang memang disetujui; bagian awal menjalankan `DROP ... CASCADE` dan menghapus data tabel yang disebut di dalamnya. Jangan jalankan seluruh skrip pada database yang berisi data.
 
-Perubahan untuk database yang sudah berjalan harus ditinjau dan diterapkan sebagai migrasi terkontrol setelah backup. Hardening VULN-02/VULN-16 tercatat sudah dijalankan pada project aktif pada 22 Oktober 2026; aturan grant akhirnya juga ada di setup ini. Skrip pembersihan dan penghapusan avatar tidak lagi disimpan terpisah. Status kolom `users.avatar` pada project Supabase aktif belum diverifikasi di sesi ini.
+Perubahan untuk database yang sudah berjalan harus ditinjau dan diterapkan sebagai migrasi terkontrol setelah backup. Hardening VULN-02/VULN-16 tercatat sudah dijalankan pada project aktif pada 22 Oktober 2026; aturan grant akhirnya juga ada di setup ini. Skrip pembersihan dan penghapusan avatar tidak lagi disimpan terpisah. Kolom `users.avatar` **sengaja tidak ada** — dikonfirmasi oleh komentar DDL di `full_setup.sql` baris 38 dan tidak dibaca kode aplikasi.
 
-### 7.2. Tabel pada `full_setup.sql`
-Setup mendefinisikan **7 tabel inti dan 1 tabel Web Push**:
+### 8.2. Tabel pada `full_setup.sql`
+Setup mendefinisikan **7 tabel aplikasi, 1 tabel Web Push, dan 1 tabel pembatas laju**:
 | Tabel | Fungsi & Peran |
 |---|---|
-| `users` | Akun pengguna (email, nomor WhatsApp `phone`, password hash bcrypt, role `user`/`admin`, `is_pro`, masa aktif `subscription_expires_at`). |
-| `books` | Katalog buku, metadata berkas, dan status akses Pro (13 kolom sesuai DDL). |
+| `users` | Akun pengguna (email, nomor WhatsApp `phone`, password hash bcrypt, role `user`/`admin`, `is_pro`, masa aktif `subscription_expires_at`). Tidak ada kolom `avatar`. |
+| `books` | Katalog buku (termasuk `category`), metadata berkas, dan status akses Pro. |
 | `events` | Jadwal agenda & mujahadah Wahidiyah (judul, waktu WIB, lokasi, deskripsi). |
 | `subscriptions` | Riwayat langganan keanggotaan Pro pengguna (`plan_name` seragam: `"Pro"`). |
 | `transactions` | Transaksi pembayaran resmi (`midtrans_transaction_id`, `midtrans_qr_string`, `midtrans_qr_url`, status idempoten). |
-| `email_verifications` | Kode OTP 6 digit untuk registrasi dan reset password (berlaku 10 menit, salt hash SHA-256). |
+| `email_verifications` | Kode OTP 6 digit untuk registrasi dan reset password (berlaku 10 menit, salt hash SHA-256), juga kode sesi OAuth sekali-pakai. |
 | `carousel_slides` | Slide banner Hero Carousel di beranda (urutan, gambar, periode tampil, status aktif). |
 | `push_subscriptions` | Endpoint dan kunci perangkat untuk pengingat agenda Web Push; hanya diakses server dengan service-role key. |
+| `api_rate_limit_buckets` | Sisa infrastruktur pembatas laju bersama; tabel dan RPC `increment/decrement/reset_api_rate_limit` masih ada di cloud, tetapi store bersama sudah dilepas dari server. |
 
 Tabel lama seperti `ads`, `password_resets`, `qris_transactions`, dan `user_bookmarks` tidak dibuat oleh setup baru. `push_subscriptions` **masih digunakan** oleh pengingat agenda dan tidak boleh dihapus. `reading_progress` disimpan di browser, bukan tabel database.
 
+> ⚠️ **Status live 31 Oktober 2026:** saat server dijalankan, Supabase melaporkan `Could not find the table 'public.push_subscriptions' in the schema cache`, sehingga Web Push dilewati (fail-soft) dan hanya log peringatan yang muncul. Tabel itu belum terbaca oleh PostgREST — bisa belum dibuat atau cache skemanya belum diperbarui. Jalankan blok **PATCH Web Push** di bagian akhir `full_setup.sql` pada SQL Editor project `pdimjmbjutlzjdfjaqgt`, lalu restart server.
+
 Di luar skema `public`, blok aditif **PATCH Naskah di Storage** di bagian akhir berkas membuat satu bucket Storage bernama `buku` (privat, batas 50 MB) secara idempoten. Bucket ini prasyarat unggah naskah buku. Ia sengaja tidak diberi kebijakan RLS: unggah berjalan lewat tanda unggah sekali-pakai dan pembacaan lewat peran layanan, sehingga kebijakan tambahan hanya akan membuka isi naskah berbayar.
 
-### 7.3. Standar Zona Waktu Database
+### 8.3. Standar Zona Waktu Database
 Seluruh kolom waktu memakai `TIMESTAMPTZ` dengan `NOW()` polos, dan timezone database di-set ke **`Asia/Jakarta` (WIB, UTC+7)**. Postgres menyimpan waktu dalam UTC secara internal lalu menampilkannya sesuai timezone sesi, sehingga waktu aplikasi selalu sinkron dengan waktu Indonesia bagian barat.
 
-### 7.4. Kueri Verifikasi Database (Checklist SQL):
+### 8.4. Kueri Verifikasi Database (Checklist SQL):
 ```sql
--- 1. Harus mengembalikan 8 tabel aplikasi, termasuk push_subscriptions
+-- 1. Harus mengembalikan 9 tabel: 7 aplikasi + push_subscriptions + api_rate_limit_buckets
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;
 
 -- 2. Harus 0 baris — tabel ads sudah tidak ada
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ads';
 
--- 3. Harus rls_aktif = true pada tabel sensitif
+-- 3. Harus 0 baris — kolom avatar sengaja tidak dibuat
+SELECT column_name FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'avatar';
+
+-- 4. Harus rls_aktif = true pada tabel sensitif
 SELECT relrowsecurity AS rls_aktif FROM pg_class WHERE relname = 'email_verifications';
 
--- 4. Timezone harus Asia/Jakarta
+-- 5. Timezone harus Asia/Jakarta
 SHOW timezone;
 
--- 5. Hitung baris tabel utama
+-- 6. Hitung baris tabel utama
 SELECT 
   (SELECT COUNT(*) FROM public.users) AS total_users,
   (SELECT COUNT(*) FROM public.books) AS total_books,
@@ -730,7 +856,7 @@ Sistem telah diaudit dan mengimplementasikan **30 Indikator Standar Kualitas Per
 | 1 | **Hashing Password** | `bcryptjs` salt cost 12 rounds pada registrasi & ganti password. | ✅ Lulus |
 | 2 | **Stateless JWT** | Token ditandatangani `JWT_SECRET` berkekuatan tinggi (expiry 12 jam). | ✅ Lulus |
 | 3 | **Supabase RLS Fail-Closed** | RLS aktif pada 7 tabel inti dan tabel `push_subscriptions`; operasi data privat dilakukan server dengan service-role key. | ✅ Lulus |
-| 4 | **Validasi Skema Request** | Menggunakan pustaka `zod` untuk memvalidasi seluruh payload request di controller. | ✅ Lulus |
+| 4 | **Validasi Skema Request** | `zod` memvalidasi payload auth/payment di controller (`registerSchema`, dsb.) dan payload buku di service (`parseBookInput`); modul lain memakai helper `server/lib/validate.js`. | ✅ Lulus |
 | 5 | **Rate Limiting Anti-Bruteforce** | `express-rate-limit` hanya pada pemicu charge pembayaran, status QRIS, gambar QR, dan langganan push. Endpoint auth sengaja tidak dibatasi atas keputusan pemilik proyek. | ⚠️ Auth tanpa pembatas |
 | 6 | **HTTP Header Hardening** | `helmet` aktif untuk proteksi XSS, Clickjacking, dan MIME-sniffing. | ✅ Lulus |
 | 7 | **Fail-Closed Webhook Guard** | Webhook menolak transaksi tanpa tanda tangan SHA512 yang valid dari Midtrans. | ✅ Lulus |
@@ -751,104 +877,110 @@ Sistem telah diaudit dan mengimplementasikan **30 Indikator Standar Kualitas Per
 | 22 | **Sanitasi Anti-XSS Reader** | Sanitasi ketat naskah HTML Word hasil konversi Mammoth sebelum dirender di layar baca. | ✅ Lulus |
 | 23 | **Validasi Kompleksitas Password** | Validasi ketat sandi akun baru dan reset password via skema Zod terpusat. | ✅ Lulus |
 | 24 | **Rate Limiter Transaksi QRIS** | Pembatasan frekuensi request pembuatan charge QRIS per IP/pengguna untuk cegah spam order. | ✅ Lulus |
-| 25 | **Separation of Concerns (SoC)** | Pemisahan tegas Routes $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Supabase Repositories. | ✅ Lulus |
-| 26 | **Service Layer Murni** | Logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi berada di service layer tanpa objek `req`/`res`. | Tersedia |
+| 25 | **Separation of Concerns (SoC)** | Pemisahan tegas Routes → (Controllers hanya auth & payment) → Services → Supabase. Tiga rute pendukung (`subscriptions`, `admin/logs`, `health/stats`) masih query langsung dan dicatat sebagai pengecualian di §3.1. | ⚠️ 3 pengecualian |
+| 26 | **Service Layer Murni** | Logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi berada di service layer tanpa objek `req`/`res`. Verifikasi dilakukan manual karena suite unit test sudah dihapus. | ✅ Lulus (manual) |
 | 27 | **Kwitansi Digital Mandiri (jsPDF)** | Pembuatan berkas PDF kwitansi A4 di sisi klien tanpa latensi backend dan aman dari injection. | ✅ Lulus |
 | 28 | **Single Source of Truth Waktu** | Standarisasi seluruh operasi tanggal/waktu ke zona `Asia/Jakarta` (WIB) via Day.js. | ✅ Lulus |
-| 29 | **3 Color Key & WCAG AA** | 100% antarmuka patuh prinsip 60-30-10 dan lulus 17 pasang kontras $\ge 4.5:1$ tanpa palet mentah. | ✅ Lulus |
+| 29 | **3 Color Key & WCAG AA** | Antarmuka memakai token 60-30-10 dan palet terang/malam. Skrip `check-contrast` sudah dihapus, sehingga status ini adalah konvensi terverifikasi manual, bukan guard otomatis. | ⚠️ Manual |
 | 30 | **Vercel Serverless Isolation** | Dukungan deployment serverless terisolasi (`api/index.js`) dengan env runtime terkelola. | ✅ Lulus |
 
 ---
 
 ## 10. Panduan Pengembangan & Penambahan Fitur Baru
 
-Untuk menambah fitur baru secara rapi mengikuti standar Express + React:
+Alur wajib: **service → route tipis → slice → komponen**. Query Supabase dan aturan bisnis hanya boleh berada di `server/services/`, route hanya mendaftarkan URL + memanggil service, lalu UI memakai `apiJson` lewat slice context.
 
-### Langkah 1: Daftarkan Rute di Express (`server/routes/`)
-Buat file rute baru di `server/routes/` atau tambahkan endpoint ke file rute yang relevan:
+### Langkah 1: Tambahkan Fungsi di Service Layer (`server/services/`)
 ```javascript
-// Contoh: server/routes/bookmarks.routes.js
-import { Router } from 'express';
+// Contoh: server/services/books_service.js
 import { supabaseServer } from '../db.js';
-import { requireAuth } from '../auth.js';
 
-export const bookmarksRouter = Router();
+export async function listLatestBooks() {
+  const { data, error } = await supabaseServer
+    .from('books')
+    .select(BOOK_FIELDS)
+    .order('created_at', { ascending: false });
 
-bookmarksRouter.get('/bookmarks', requireAuth, async (req, res) => {
-  try {
-    const { data, error } = await supabaseServer
-      .from('user_bookmarks')
-      .select('*')
-      .eq('user_id', req.user.id);
-
-    if (error) throw error;
-    res.json({ success: true, bookmarks: data });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-```
-Daftarkan router di `server/server.js`:
-```javascript
-app.use('/api', bookmarksRouter);
-```
-
-### Langkah 2: Buat State di Frontend Slice (`src/context/slices/`)
-Buat custom hook untuk mengelola state fitur tersebut:
-```javascript
-// Contoh: src/context/slices/useBookmarkSlice.js
-import { useState, useCallback } from 'react';
-import { api } from '../../lib/api';
-
-export function useBookmarkSlice(token) {
-  const [bookmarks, setBookmarks] = useState([]);
-
-  const fetchBookmarks = useCallback(async () => {
-    if (!token) return;
-    const res = await api.get('/api/bookmarks', token);
-    if (res.success) setBookmarks(res.bookmarks);
-  }, [token]);
-
-  return { bookmarks, fetchBookmarks };
+  if (error) throw error;
+  return (data || []).map(toBookResponse);
 }
 ```
-Lalu sambungkan slice ini di `src/context/AppContext.jsx` ke dalam objek `value` yang dikembalikan oleh `useApp()`.
+Kegagalan yang merupakan bagian aturan bisnis (input salah, akses kurang, data tidak ada) dilempar dengan `createServiceError(pesan, { statusCode, code?, extra? })` dari `server/lib/errors.js`. Service tidak boleh menyentuh `req`/`res`.
 
-### Langkah 3: Tampilkan di Komponen JSX (`src/features/`)
-Gunakan hook `useApp()` di komponen React:
+### Langkah 2: Daftarkan Rute Tipis (`server/routes/`)
+Tambahkan endpoint ke file rute modul yang sesuai dan bungkus handler dengan `wrap()` agar `fail()` di `server/lib/http.js` menerjemahkan `statusCode` menjadi respons:
+```javascript
+// server/routes/books_routes.js
+import { wrap } from '../lib/http.js';
+import { listLatestBooks } from '../services/books_service.js';
+
+booksRouter.get(
+  '/books/latest',
+  wrap(async (req, res) => {
+    const books = await listLatestBooks();
+    res.json({ success: true, books });
+  }),
+);
+```
+Router terpasang lewat array `ROUTERS` di `server/routes/index.js` (`mountRoutes`) — file rute baru cukup ditambahkan di sana, tidak ada pendaftaran manual di `server/server.js`. Urutan penting: rute statis seperti `/books/latest` harus didaftarkan **sebelum** `/books/:id`, kalau tidak Express menganggap `latest` sebagai id.
+
+### Langkah 3: Buat Slice Frontend (`src/context/slices/`)
+Slice memegang state + pemanggilan HTTP memakai helper `apiJson` / `authHeaders` dari `src/lib/api.js`:
+```javascript
+// Contoh: src/context/slices/useLatestBooksSlice.js
+import { useState, useCallback } from 'react';
+import { apiJson } from '@lib/api';
+
+export function useLatestBooksSlice() {
+  const [latestBooks, setLatestBooks] = useState([]);
+
+  const refreshLatest = useCallback(async () => {
+    const payload = await apiJson('/api/books/latest');
+    setLatestBooks(payload.books || []);
+  }, []);
+
+  return { latestBooks, refreshLatest };
+}
+```
+Panggil slice di `AppProvider` (`src/context/AppContext.jsx`) dan sebarkan bidangnya ke objek `useMemo` yang dikembalikan `useApp()`.
+
+### Langkah 4: Tampilkan di Komponen (`src/features/`)
 ```jsx
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 
-export function BookmarkList() {
-  const { bookmarks, fetchBookmarks } = useApp();
+export function LatestBookList() {
+  const { latestBooks, refreshLatest } = useApp();
 
   useEffect(() => {
-    fetchBookmarks();
-  }, [fetchBookmarks]);
+    refreshLatest();
+  }, [refreshLatest]);
 
   return (
     <div className="space-y-2">
-      {bookmarks.map((item) => (
-        <div key={item.id} className="p-3 bg-white rounded-lg shadow-sm">
-          {item.title}
+      {latestBooks.map((book) => (
+        <div key={book.id} className="p-3 bg-cream-50 rounded-lg shadow-sm">
+          {book.title}
         </div>
       ))}
     </div>
   );
 }
 ```
+Layar baru didaftarkan di `src/lib/navigation.js` (`SCREEN_TO_PATH` / `PATH_TO_SCREEN`) dan di `useNavigationSlice`, bukan dengan menambah cabang acak di `App.jsx`.
+
+Terakhir verifikasi: `npm run format:check`, `node --check <berkas yang diubah>`, `npm run build`, dan `npm run health`.
 
 ---
 
 ## 11. Panduan Akademik & Integrasi Sitasi Zotero SINTA
 
-### 10.1. Status Integrasi Zotero
+### 11.1. Status Integrasi Zotero
 * **Zotero Desktop**: Local API aktif di `127.0.0.1:23119`.
 * **Plugin Word Add-in**: `Zotero.dotm` di `%APPDATA%\Microsoft\Word\STARTUP\`.
 * **Library Zotero**: 18 artikel referensi SINTA telah dirapikan metadatanya (nama penulis terpisah dengan benar).
 
-### 10.2. Daftar 18 Referensi SINTA Proposal Skripsi:
+### 11.2. Daftar 18 Referensi SINTA Proposal Skripsi:
 | No | Penulis (Tahun) | Zotero Item Key | DOI |
 |:--:|---|:---:|---|
 | 1 | Alexandro & Parhusip (2025) | `YQYRBJ46` | 10.33197/jitter.vol12.iss1.2025.3250 |
@@ -870,7 +1002,7 @@ export function BookmarkList() {
 | 17 | Widya & Wakhidah (2022) | `AQPXGG6H` | 10.32764/newton.v1i3.2064 |
 | 18 | Wijana & Prasetio (2023) | `7WPMDFWC` | 10.37424/informasi.v15i2.260 |
 
-### 10.3. Ekspor Daftar Pustaka via Zotero CLI:
+### 11.3. Ekspor Daftar Pustaka via Zotero CLI:
 ```bash
 zotero-cli export \
   --item-keys "YQYRBJ46,P3LP8SAD,C2VDTJXY,C84SPDEX,BLNBP7U2,IVJ4WUTW,3YZ24G5G,C3CKIH7Z,EUZYFPG3,785NYGZN,CUERWR7U,TCKRY67T,4JQGGM8Y,R27HFGQ5,X2YSDDRP,SDSZ37PR,AQPXGG6H,7WPMDFWC" \
@@ -881,17 +1013,22 @@ zotero-cli export \
 
 ## 12. Prasyarat & Konfigurasi Lingkungan (.env)
 
-### 11.1. Prasyarat Sistem
-- **Node.js:** Versi `>= 22.0.0`
+### 12.1. Prasyarat Sistem
+- **Node.js:** Versi `24.x` (tertulis di `engines` pada `package.json`; Vercel juga dipin ke 24.x).
 - **NPM:** Versi `>= 10.0.0`
 - **Akun Cloud:** Supabase PostgreSQL Cloud, Midtrans Sandbox, Google Cloud Console (Gmail API OAuth2).
 
-### 11.2. Format File Tunggal `.env`
-Konfigurasi lingkungan disimpan langsung pada berkas `.env` di akar proyek:
+### 12.2. Format File Tunggal `.env`
+Konfigurasi lingkungan disimpan pada `.env` (dan `.env.local` untuk override lokal) di akar proyek:
 ```env
-# Port Server
-PORT=5000
-VITE_PORT=3000
+# Port & Lingkungan
+PORT=5000                    # port API/produksi
+VITE_PORT=3000               # port dev terpadu (Express + middleware Vite)
+# VITE_MIDDLEWARE=1          # aktif otomatis lewat scripts/dev.js
+# SERVE_STATIC=true          # produksi menyajikan dist/
+# CORS_ORIGINS=http://localhost:3000,http://localhost:5000
+# FRONTEND_ORIGIN=https://domain-anda.tld   # wajib di produksi (redirect OAuth)
+# TRUST_PROXY=1              # jumlah hop proxy; kosong = 1 saat middleware Vite
 
 # Konfigurasi Midtrans Sandbox
 MIDTRANS_SERVER_KEY=SB-Mid-server-xxxxxxxxxxxxxxxxxxxx
@@ -901,49 +1038,65 @@ MIDTRANS_QRIS_ACQUIRER=gopay
 MIDTRANS_QRIS_EXPIRY_MINUTES=15
 
 # Konfigurasi Supabase Cloud
-SUPABASE_URL=https://pdimjmbjutlzjdfjaqgt.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOi...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+SUPABASE_URL=https://xxxxxxxxxxxxxxxx.supabase.co
+SUPABASE_SECRET_KEY=eyJhbGciOi...          # atau SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_PUBLISHABLE_KEY=eyJhbGciOi...     # atau VITE_SUPABASE_ANON_KEY
 
 # Keamanan Sesi JWT
 JWT_SECRET=rahasia-kunci-jwt-anda-minimal-32-karakter
 JWT_EXPIRES_IN=12h
 CRON_SECRET=acak-minimal-16-karakter-untuk-vercel-cron
-# Jumlah hop proxy di depan server. Kosong = 1 saat middleware Vite (dev), false di produksi.
-# Vercel: 1 (tepinya menimpa x-forwarded-for, jadi tidak perlu menghitung hop tambahan).
-# Salah nilai membuat req.ip bukan IP klien dan rate limit jadi satu ember global.
-TRUST_PROXY=1
 
 # Google OAuth & Gmail OTP API
 GOOGLE_CLIENT_ID=xxxxxxxxxxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxxxx
+# GOOGLE_OAUTH_REDIRECT_URI=https://domain-anda.tld/api/auth/google/callback
 GMAIL_SENDER=email-pengirim@gmail.com
+GMAIL_SENDER_NAME=Buku Wahidiyah
 GMAIL_REFRESH_TOKEN=1//04xxxxxxxxxxxx
 
 # WhatsApp Gateway (fonnte | demo)
 WHATSAPP_PROVIDER=fonnte
 FONNTE_TOKEN=your_fonnte_token_here
+
+# Web Push (pengingat agenda H-1) — buat lewat `npm run vapid:keys`
+VAPID_PUBLIC_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+VAPID_PRIVATE_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+VAPID_SUBJECT=mailto:admin@domain-anda.tld
+# PUSH_REMINDER_HOUR=08:00
+
+# Pengembangan & CSP
+# EXPOSE_DEV_OTP=1           # tampilkan OTP di layar hanya di non-produksi
+# CSP_ENFORCE=1              # default report-only; nyalakan setelah konsol bersih
 ```
+Bila kunci VAPID kosong, fitur push otomatis nonaktif tanpa menghentikan server.
 
 ---
 
 ## 13. Panduan Instalasi & Katalog NPM Scripts
 
-### 12.1. Pemasangan Dependensi
+### 13.1. Pemasangan Dependensi
 ```bash
 npm install
 ```
 
-### 12.2. Katalog Perintah NPM Scripts
+### 13.2. Katalog Perintah NPM Scripts
 | Perintah Terminal | Peran & Deskripsi Teknis |
 | :--- | :--- |
-| **`npm run dev`** | **Mode Pengembangan (Harian):** Menjalankan backend Express dan frontend Vite sekaligus dalam 1 port terpadu dengan Hot Module Replacement (HMR). Akses di `http://localhost:5000`. |
-| **`npm start`** | **Mode Produksi (Siap Rilis):** Otomatis mem-build aset ke folder `dist/` lalu menyalakan server produksi di port 5000. |
-| **`npm run health`** | **Uji Kesehatan Sistem (6/6 Checklist):** 1-klik periksa koneksi Cloud Supabase, WhatsApp Gateway, tabel-tabel utama, dan status payment gateway Midtrans. |
-| **`npm run clean:ports`** | **Bebaskan Port Windows:** Menghentikan proses `node.exe` yang macet di port 3000 / 5000 jika terminal tertutup paksa. |
-| **`npm run build`** | Mengompilasi kode sumber React menjadi berkas statis siap saji di folder `dist/`. |
-| **`npm run gmail:token`** | Wizard interaktif untuk mendapatkan refresh token Gmail API guna pengiriman OTP. |
-| **`npm run audit:security`** | Memindai seluruh dependensi paket terhadap potensi celah keamanan via `npm audit --ignore-scripts --audit-level=high` (0 vulnerability). |
+| **`npm run dev`** | **Mode Pengembangan (Harian):** `scripts/dev.js` menyalakan Express dan memasang Vite sebagai middleware dalam **satu port** (`VITE_PORT`, default **3000**) dengan HMR. Server Node diawasi `--watch-path=server`. Port 3000/5000 yang macet dibebaskan otomatis di Windows. |
+| **`npm start`** | **Mode Produksi Lokal:** `scripts/start.js` mem-build `dist/` bila belum ada, lalu menyalakan server produksi di `PORT` (default **5000**) dengan `SERVE_STATIC=true`. Flag: `--rebuild` (paksa build ulang) dan `--no-build` (wajib ada `dist/`). |
+| **`npm run build`** | Mengompilasi React + Tailwind ke `dist/` lewat Vite (manual chunk: `charts`, `excel`, `pdfjs`, `supabase-sdk`, `vendor`, dll.). |
+| **`npm run preview`** | Menyajikan hasil `dist/` lewat `vite preview` untuk inspeksi cepat aset hasil build. |
+| **`npm run format`** | Merapikan seluruh berkas dengan Prettier (`printWidth: 100`, kutip tunggal, `endOfLine: lf`). `.prettierignore` mengecualikan `.md`, `docs/`, `document skripsi/`, `buku-siap-upload/`, `public/`, `supabase_database/`, `package-lock.json`, `dist/`, dan `.qoder/`. |
+| **`npm run format:check`** | Memeriksa kepatuhan format tanpa mengubah berkas — dipakai sebelum commit. |
+| **`npm run health`** | **Uji Kesehatan Sistem (6/6 Checklist):** Supabase, Midtrans, WhatsApp Gateway, serta tabel `users`, `books`, `transactions`. |
+| **`npm run clean:ports`** | Membebaskan port 3000 / 5000 di Windows dari proses `node.exe` yang tertinggal. |
+| **`npm run dev:frontend`** | Menjalankan Vite berdiri sendiri di port 3000 dengan proxy `/api` → `http://localhost:5000` (butuh `npm run dev:server` terpisah). |
+| **`npm run dev:server`** / **`npm run server:dev`** | Menjalankan backend Express saja (`node --watch server/server.js`) di port `PORT` (default 5000), tanpa middleware Vite. |
+| **`npm run server`** | Menjalankan backend Express tanpa watch; menyajikan `dist/` bila ada. |
+| **`npm run gmail:token`** | Wizard interaktif mendapatkan refresh token Gmail API untuk OTP email. |
+| **`npm run vapid:keys`** | Membuat pasangan kunci VAPID untuk Web Push pengingat agenda. |
+| **`npm run audit:security`** | `npm audit --audit-level=high` untuk memeriksa celah dependensi (target 0 high/critical). |
 
 ---
 
@@ -951,70 +1104,74 @@ npm install
 
 ```text
 Wahidiyah Book + Real Midtrans Skripsi/
-├── api/                    # Serverless Functions (Vercel Entry Point)
-│   └── index.js            # Bridge serverless Express untuk runtime Vercel
-├── docs/                   # Visual & Diagram UML Sistem
-│   └── diagrams/           # Berkas sumber .drawio & hasil render PNG resolusi tinggi
-│       ├── visual-flows/   # Tangkapan alur visual UI & antarmuka
-│       ├── wahidiyah_book_uml_all.drawio # Master UML multi-page
-│       ├── activity_diagram_qris.drawio
-│       ├── sequence_diagram_qris.drawio
-│       ├── use_case_diagram.drawio
-│       └── fig_*.png       # Aset grafis diagram arsitektur
-├── document skripsi/       # Naskah & otomasi skripsi akademik
-│   ├── build_proposal_v3.py# Generator skrip proposal penelitian (R&D)
-│   ├── generate_drawio_diagrams.py # Generator diagram arsitektur ke docs/diagrams
-│   ├── make_figures.py     # Generator gambar ilustrasi sistem
-│   ├── render_uml_figures.py # Render visual UML ke format PNG
-│   └── _refwork/           # Metadata referensi SINTA (BibTeX/JSON) & template logo
-├── public/                 # Aset statis publik
-│   └── payments/           # Logo resmi metode pembayaran (QRIS, e-wallet)
-├── scripts/                # Otomasi skrip pengembang
-│   ├── clean-ports.js      # Pembebas port Windows 3000 & 5000
-│   ├── dev.js              # Runner server mode development
-│   ├── generate-vapid-keys.js # Generator kunci VAPID Web Push
-│   ├── get-gmail-token.js  # Wizard OAuth2 token Gmail API
-│   ├── health-check.js     # Runner uji kesehatan 6/6 layanan
-│   └── start.js            # Runner server mode produksi
-├── server/                 # Backend Node.js Express (ES Module)
-│   ├── controllers/        # Controller layer (auth.controller.js, payment.controller.js)
-│   ├── services/           # Service layer murni (auth.service.js, payment.service.js)
-│   ├── lib/                # Logika bisnis murni (midtrans, http, images, storage, time, validate, otp)
-│   ├── middleware/         # Middleware otentikasi JWT, role check, upload Multer, rate-limit
-│   ├── providers/          # WhatsApp Gateway Fonnte (Strategy Pattern)
-│   ├── routes/             # Rute modular Express (auth, books, payments, admin, users)
-│   ├── auth.js             # Otentikasi JWT & Bcrypt
-│   ├── config.js           # Konfigurasi sistem & konstanta lingkungan
-│   ├── db.js               # Inisialisasi klien Supabase server
-│   ├── logger.js           # Logger konsol performa tinggi via picocolors
-│   ├── mailer.js           # Pengirim email OTP via Gmail API OAuth2
-│   ├── whatsapp.js         # Delegator pengirim OTP WhatsApp
-│   └── server.js           # Titik masuk utama server Express
-├── src/                    # Frontend React 19 (Vite SPA)
-│   ├── components/         # Komponen UI global (DeviceFrame, PhoneInput, dll)
-│   │   └── pdf/            # Komponen penampil PDF (ContinuousPdfViewer.jsx)
-│   ├── context/            # AppContext & Modular Slices (catalog, payment, nav)
-│   ├── features/           # Halaman per fitur
-│   │   ├── admin/          # Admin Dashboard & tabs/ (Overview, Books, Users, Events, Carousel, Logs)
-│   │   ├── auth/           # LoginScreen, RegisterScreen, ForgotPasswordScreen
-│   │   ├── book/           # Detail buku, katalog, dan pencarian
-│   │   ├── calendar/       # Kalender kegiatan majelis mujahadah
-│   │   ├── help/           # Pusat Bantuan (HelpCenterScreen.jsx)
-│   │   ├── home/           # Beranda utama & Hero Carousel
-│   │   ├── payment/        # Alur checkout QRIS, PaymentConfirmScreen, ReceiptModal
-│   │   ├── profile/        # Cupertino inset-grouped EditProfileScreen.jsx
-│   │   ├── reader/         # PdfReaderScreen.jsx & WordDocxReader.jsx
-│   │   └── subscription/   # Riwayat langganan & ProScreen.jsx
-│   ├── lib/                # Helper klien (api, phone, styles, utils/cn, date)
+├── api/
+│   └── index.js            # Entry serverless Vercel → Express
+├── docs/
+│   ├── ARCHITECTURE_AND_ENGINEERING_GUIDELINES.md
+│   └── diagrams/           # wahidiyah_book_uml_all.drawio, sequence-*.json,
+│                           # mermaid-v12.html, fig_*.png, visual-flows/
+├── buku-siap-upload/       # Paket naskah + sampul siap unggah lewat panel admin
+├── document skripsi/       # Naskah, generator .py, _refwork/ (tidak diformat Prettier)
+├── public/
+│   ├── payments/           # Hanya qris.svg & qris-putih.svg
+│   ├── sw.js               # Service worker Web Push
+│   ├── manifest.webmanifest
+│   └── icon-192.png, icon-512.png, icon.svg
+├── scripts/
+│   ├── clean-ports.js      # Bebaskan port 3000/5000 di Windows
+│   ├── dev.js              # Dev satu port :3000 (Express + middleware Vite)
+│   ├── generate-vapid-keys.js
+│   ├── get-gmail-token.js
+│   ├── health-check.js     # 6 pemeriksaan lingkungan & tabel
+│   └── start.js            # Produksi lokal :5000 (build + serve dist/)
+├── server/
+│   ├── controllers/        # auth_controller.js, payment_controller.js
+│   ├── routes/             # 12 modul rute + index.js (array ROUTERS)
+│   ├── services/           # 7 service: auth, books, carousel, events, payment, transactions, users
+│   ├── lib/                # 15 helper: errors, http, midtrans, storage, sniff, validate, webpush, ...
+│   ├── middleware/         # errors, requestLog, security, uploads
+│   ├── providers/          # base.js, demo.js, fonnte.js, index.js
+│   ├── auth.js             # JWT, bcrypt, helper status Pro
+│   ├── config.js           # Port, CSP, Midtrans, VAPID, TRUST_PROXY
+│   ├── db.js               # Klien Supabase server
+│   ├── env.js              # Pemuat dotenv
+│   ├── logger.js
+│   ├── mailer.js           # Email OTP via Gmail API OAuth2
+│   ├── otpStore.js
+│   ├── whatsapp.js         # Delegator provider WhatsApp
+│   └── server.js           # Titik masuk Express
+├── shared/
+│   └── sanitizeHtml.js     # Sanitizer dipakai server saat tulis & klien saat render
+├── src/
+│   ├── components/
+│   │   ├── layout/         # Sidebar, MobileBottomNav, navigationConfig, LogoutConfirmDialog
+│   │   └── ui/             # Field, PhoneInput, ThemeToggle, ErrorBoundary, Skeleton, ...
+│   ├── context/
+│   │   ├── AppContext.jsx
+│   │   └── slices/         # useCatalogSlice, useNavigationSlice, usePaymentSlice
+│   ├── data/mockData.js    # PAYMENT_METHODS & FAQ_ITEMS (masih dipakai)
+│   ├── features/
+│   │   ├── about/, auth/, calendar/, help/, home/, payment/, profile/, subscription/
+│   │   ├── admin/          # AdminDashboard + tab Overview, Books, Users, Events, Carousel, Logs
+│   │   │   ├── events/     # AllAgendaPanel, EventCalendarPanel, EventFormPanel, ...
+│   │   │   └── hooks/      # useAdminDashboardData, useAdminBookEditor, useAdminEventEditor
+│   │   └── reader/         # PdfReaderScreen, ContinuousPdfViewer, pinch zoom, pdfWorkerSetup
+│   ├── lib/                # api, phone, date, excelExport, receiptPdf, navigation, normalizers, ...
+│   ├── theme/              # ThemeProvider, themeInjector, themeMode
 │   ├── App.jsx             # Router navigasi utama
+│   ├── index.css           # Token Tailwind 4 + palet Editorial Elegan
 │   └── main.jsx            # Entry point React DOM
-├── shared/                 # Modul yang dipakai lintas frontend dan backend
 ├── supabase_database/
 │   └── full_setup.sql      # Satu-satunya setup SQL; hanya database baru/reset yang disetujui
-├── .env                    # Konfigurasi lingkungan tunggal & terproteksi
-├── .gitignore              # Proteksi keamanan repositori Git
+├── supabase/.temp/         # State lokal CLI Supabase (di-ignore Git)
+├── .env / .env.local       # Konfigurasi lingkungan (tidak masuk Git)
+├── .prettierrc.json        # printWidth 100, singleQuote, semi, trailingComma all, LF
+├── .prettierignore         # Kecualikan md, docs, public, SQL, dist, package-lock
+├── component.json          # Sumber token desain → disuntik themeInjector.js
+├── jsconfig.json           # Alias @, @features, @ui, @lib, @data, @context, @theme
+├── tailwind.config.js / postcss.config.js / vite.config.js
+├── vercel.json             # Deployment serverless Vercel (Node 24.x)
 ├── package.json            # Manifest dependensi & skrip proyek
-├── vercel.json             # Konfigurasi deployment serverless Vercel
 ├── README.md               # Pintu masuk dan quick start
 ├── ARCHITECTURE.md         # Pengarah ke bagian arsitektur di master
 ├── DESIGN.md               # Pengarah ke bagian desain di master
@@ -1033,6 +1190,7 @@ Wahidiyah Book + Real Midtrans Skripsi/
 | R65–R67 | PDF reader berkelanjutan, service layer murni, hardening keamanan, serta dukungan Vercel. |
 | R68–R70 | Penyegaran profil/navigasi, kwitansi PDF, dan konsolidasi dokumentasi. |
 | R71 | Pemangkasan besar 30 Okt 2026 — lihat daftar 15.1. |
+| R72 | Perapian 31 Okt 2026: Prettier, service layer 5 modul, dan pemecahan komponen admin — lihat 15.2. |
 
 ### 15.1 Yang sudah tidak ada lagi (R71, 30 Oktober 2026)
 
@@ -1054,10 +1212,20 @@ Dicatat agar tidak ada sesi berikutnya yang mencari atau menghidupkan kembali be
 
 **Yang sengaja DIPERTAHANKAN walau terlihat bisa dibuang:**
 
-- `shared/sanitizeHtml.js` — dipakai `PdfReaderScreen.jsx:165` (me-render HTML naskah ke semua pembaca) dan `books_routes.js:286` (sanitasi saat tulis). Menghapusnya membuka stored XSS.
-- `src/data/mockData.js` — namanya menyesatkan tapi isinya hidup: `PAYMENT_METHODS` dipakai `usePaymentSlice.js` + `PaymentMethodScreen.jsx`, `FAQ_ITEMS` dipakai `HelpCenterScreen.jsx`.
+- `shared/sanitizeHtml.js` — dipakai `PdfReaderScreen.jsx:177` (me-render HTML naskah ke semua pembaca) dan `books_service.js:275` (sanitasi saat menyajikan hasil konversi). Menghapusnya membuka stored XSS.
+- `src/data/mockData.js` — namanya menyesatkan tapi isinya hidup: `PAYMENT_METHODS` dipakai `usePaymentSlice.js:29` + `PaymentMethodScreen.jsx:57`, `FAQ_ITEMS` dipakai `HelpCenterScreen.jsx:9`.
 - `document skripsi/` dan `docs/diagrams/` — naskah Bab 1, generator gambar, dan figur UML; bukan bagian aplikasi tapi bukan sampah.
-- `server/mailer.js` + `scripts/get-gmail-token.js` — jalur OTP email masih hidup di `server/lib/otp.js:74` dan `sendGoogleAccountEmail` di `auth_service.js`.
+- `server/mailer.js` + `scripts/get-gmail-token.js` — jalur OTP email masih hidup di `server/lib/otp.js:2`/`:83` dan `sendGoogleAccountEmail` di `auth_service.js:350`.
+
+### 15.2 Perubahan R72 (31 Oktober 2026)
+
+| Perubahan | Rincian |
+|---|---|
+| Prettier | `.prettierrc.json` (`printWidth: 100`, `singleQuote`, `semi`, `trailingComma: all`, `endOfLine: lf`) + `.prettierignore`; skrip `format` & `format:check`. Seluruh kode JS/JSX/CSS diformat ulang. |
+| Service layer | Query Supabase dan aturan bisnis dipindah dari `books`, `users`, `transactions`, `events`, dan `carousel` route ke `server/services/*_service.js`. Route kini hanya mendaftarkan URL, middleware, dan respons. |
+| Error layanan | `server/lib/errors.js` (`createServiceError`) + `fail()`/`wrap()` di `server/lib/http.js` menerjemahkan `statusCode` menjadi respons JSON `{ success: false, message }`. |
+| Komponen admin | `EventsTab.jsx` dipecah ke `src/features/admin/events/` (6 berkas) dan `AdminDashboard.jsx` memakai 3 hook di `src/features/admin/hooks/`. |
+| Perbaikan skrip | `scripts/start.js` kini mengimpor `picocolors` yang sebelumnya hilang sehingga `npm start` gagal saat runtime. |
 
 Riwayat detail berada di Git. Bagian ini hanya menyimpan konteks yang berguna untuk pengembangan berikutnya.
 
@@ -1065,7 +1233,7 @@ Riwayat detail berada di Git. Bagian ini hanya menyimpan konteks yang berguna un
 ## 16. Roadmap & Rencana Pengembangan Mendatang
 
 ### 16.1. Rencana & Agenda Kerja Mendatang (Active & Future Milestones)
-Fitur inti web sudah tersedia, tetapi kelulusan build, unit test, UAT, dan kesiapan produksi harus dicatat berdasarkan pemeriksaan terbaru. Fokus berikutnya adalah penyelesaian skripsi, uji pengguna, kesiapan produksi, dan menutup utang teknis atomisitas pembayaran:
+Fitur inti web sudah tersedia, tetapi kelulusan build, verifikasi manual, UAT, dan kesiapan produksi harus dicatat berdasarkan pemeriksaan terbaru. Fokus berikutnya adalah penyelesaian skripsi, uji pengguna, kesiapan produksi, dan menutup utang teknis atomisitas pembayaran:
 
 1. **Penyusunan Naskah & Dokumentasi Skripsi Akademik:**
    - Menyusun Bab IV (Hasil Implementasi dan Pembahasan): Menyajikan data empiris integrasi payment gateway Midtrans QRIS, evaluasi proteksi hak cipta konten e-reader PDF, serta efektivitas delivery OTP dual-channel (Gmail API vs WhatsApp Gateway).
@@ -1076,7 +1244,7 @@ Fitur inti web sudah tersedia, tetapi kelulusan build, unit test, UAT, dan kesia
    - Mengukur tingkat kepuasan dan ketergunaan antarmuka menggunakan kuesioner baku *System Usability Scale* (SUS).
 3. **Kesiapan Rilis Produksi (Production Hardening & Go-Live):**
    - Mengajukan akun produksi Midtrans Merchant ID (`Mid-server-...`) dan mengaktifkan QRIS Production (`MIDTRANS_IS_PRODUCTION=true`).
-   - Mendaftarkan nomor WhatsApp resmi lembaga ke provider Fonnte/Wablas/Twilio production untuk alokasi kuota OTP massal.
+   - Mendaftarkan nomor WhatsApp resmi lembaga ke provider Fonnte production untuk alokasi kuota OTP massal.
    - Pemasangan domain resmi publik (mis. `buku.wahidiyah.org`) dengan sertifikat SSL/TLS HTTPS otomatis.
 
 ---
@@ -1098,11 +1266,11 @@ Rencana pengembangan aplikasi mobile mandiri difokuskan khusus pada keamanan nas
 ---
 
 ### 16.3. Tips Penting Untuk Pengembang / Mahasiswa Penerus:
-1. **Menjalankan Proyek:** Cukup jalankan `npm install` dan pastikan file `.env` telah terisi di akar proyek. Jalankan `npm run dev` dan buka browser di `http://localhost:5000`.
-2. **Jika Port Terganjal di Windows:** Jalankan `npm run clean:ports` di terminal, skrip akan otomatis membebaskan port 5000/3000.
-3. **Menguji Kode Sebelum Commit:** Jalankan `npm run build`. Perintah ini mengompilasi bundling Vite (wajib 0 error).
-4. **Menguji Kesehatan Sistem:** Jalankan `npm run health`. Perintah ini menguji 6 checklist: Supabase, Midtrans, WhatsApp Gateway, dan tabel database.
-5. **Provider WhatsApp:** Hanya `fonnte` yang didukung — isi `FONNTE_TOKEN` di file `.env`. Untuk testing tanpa kuota, set `WHATSAPP_PROVIDER=demo`.
+1. **Menjalankan Proyek:** Jalankan `npm install`, pastikan `.env` terisi, lalu `npm run dev` dan buka `http://localhost:3000`. Mode produksi lokal: `npm start` (build + server di `http://localhost:5000`).
+2. **Jika Port Terganjal di Windows:** `npm run clean:ports` membebaskan port 3000/5000 dari proses Node yang tertinggal. `npm run dev` juga sudah mencoba membebaskan port otomatis.
+3. **Menguji Kode Sebelum Commit:** `npm run format:check` (Prettier) lalu `npm run build` (wajib 0 error). Tersedia juga `npm run format` untuk merapikan otomatis.
+4. **Menguji Kesehatan Sistem:** `npm run health` memeriksa 6 checklist: Supabase, Midtrans, WhatsApp Gateway, serta tabel `users`, `books`, dan `transactions`.
+5. **Provider WhatsApp:** Hanya `fonnte` yang didukung — isi `FONNTE_TOKEN` di `.env`. Untuk testing tanpa kuota, set `WHATSAPP_PROVIDER=demo`.
 
 ---
 

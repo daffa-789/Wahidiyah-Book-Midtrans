@@ -4,8 +4,8 @@
  * Berkas ini sengaja tipis: hanya pemetaan URL → middleware → method
  * controller. Endpoint auth tidak dibatasi rate limit — perlindungan
  * brute-force ada di sisi verifikasi OTP dan kredensial.
- * Seluruh logika bisnis ada di `server/services/auth.service.js`;
- * pemformatan HTTP ada di `server/controllers/auth.controller.js`.
+ * Seluruh logika bisnis ada di `server/services/auth_service.js`;
+ * pemformatan HTTP ada di `server/controllers/auth_controller.js`.
  */
 
 import { Router } from 'express';

@@ -2,9 +2,9 @@
  * Route Layer — Modul Pembayaran (Fase 2 roadmap arsitektur).
  *
  * Berkas ini sengaja tipis: hanya pemetaan URL → middleware (rate limiter,
- * otentikasi, gerbang flag) → method controller. Seluruh logika bisnis ada di
- * `server/services/payment.service.js`; pemformatan HTTP ada di
- * `server/controllers/payment.controller.js`.
+ * otentikasi) → method controller. Seluruh logika bisnis ada di
+ * `server/services/payment_service.js`; pemformatan HTTP ada di
+ * `server/controllers/payment_controller.js`.
  */
 
 import { Router } from 'express';
