@@ -13,7 +13,7 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
   const planName = details?.planName || 'Paket Bulanan Pro';
   const amount = Number(details?.amount || 25000);
   const adminFee = Number(details?.adminFee || 0);
-  const totalPaid = Number(details?.totalPaid || (amount + adminFee));
+  const totalPaid = Number(details?.totalPaid || amount + adminFee);
   const userName = user?.name || user?.fullName || 'Pengguna Wahidiyah';
   const userEmail = user?.email || '-';
   const userPhone = user?.phone || details?.phone || '';
@@ -88,16 +88,22 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
             {/* Customer Box */}
             <div className="p-4 rounded-2xl bg-cream-50/80 border border-cream-200 space-y-1.5">
-              <p className="text-micro font-bold uppercase tracking-wider text-ink-400">Diterbitkan Kepada:</p>
+              <p className="text-micro font-bold uppercase tracking-wider text-ink-400">
+                Diterbitkan Kepada:
+              </p>
               <p className="font-bold text-ink-900 text-sm">{userName}</p>
               <p className="text-ink-600 text-xs">{userEmail}</p>
               {userPhone && <p className="text-ink-500 text-micro">No. WhatsApp: {userPhone}</p>}
-              <p className="text-micro font-semibold text-brand-700 pt-0.5">Status Akun: Member Pro (Aktif)</p>
+              <p className="text-micro font-semibold text-brand-700 pt-0.5">
+                Status Akun: Member Pro (Aktif)
+              </p>
             </div>
 
             {/* Transaction Box */}
             <div className="p-4 rounded-2xl bg-cream-50/80 border border-cream-200 space-y-1.5">
-              <p className="text-micro font-bold uppercase tracking-wider text-ink-400">Informasi Transaksi:</p>
+              <p className="text-micro font-bold uppercase tracking-wider text-ink-400">
+                Informasi Transaksi:
+              </p>
               <div className="flex justify-between">
                 <span className="text-ink-500">Nomor Kwitansi:</span>
                 <span className="font-mono font-bold text-ink-800">{refNo}</span>
@@ -130,11 +136,17 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
                   <td className="px-4 py-3.5 text-ink-400 font-mono">01</td>
                   <td className="px-4 py-3.5">
                     <p className="font-bold text-ink-900 text-sm sm:text-xs">{planName}</p>
-                    <p className="text-micro text-ink-500 mt-0.5">Akses Penuh Seluruh Kitab & Dokumen Pro</p>
+                    <p className="text-micro text-ink-500 mt-0.5">
+                      Akses Penuh Seluruh Kitab & Dokumen Pro
+                    </p>
                   </td>
                   <td className="px-4 py-3.5 text-ink-600 hidden sm:table-cell">30 Hari</td>
-                  <td className="px-4 py-3.5 text-right font-medium text-ink-700">{formatRupiah(amount)}</td>
-                  <td className="px-4 py-3.5 text-right font-bold text-ink-900">{formatRupiah(amount)}</td>
+                  <td className="px-4 py-3.5 text-right font-medium text-ink-700">
+                    {formatRupiah(amount)}
+                  </td>
+                  <td className="px-4 py-3.5 text-right font-bold text-ink-900">
+                    {formatRupiah(amount)}
+                  </td>
                 </tr>
 
                 {adminFee > 0 && (
@@ -144,8 +156,12 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
                       <p className="font-bold text-ink-800">Biaya Administrasi & Gateway QRIS</p>
                     </td>
                     <td className="px-4 py-3 text-ink-600 hidden sm:table-cell">1x Transaksi</td>
-                    <td className="px-4 py-3 text-right font-medium text-ink-700">{formatRupiah(adminFee)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-ink-900">{formatRupiah(adminFee)}</td>
+                    <td className="px-4 py-3 text-right font-medium text-ink-700">
+                      {formatRupiah(adminFee)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-ink-900">
+                      {formatRupiah(adminFee)}
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -166,7 +182,9 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
                 </div>
               )}
               <div className="p-3.5 rounded-2xl bg-brand-900 text-cream-50 flex items-center justify-between shadow-sm">
-                <span className="text-xs font-bold uppercase tracking-wider">Total Pembayaran:</span>
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  Total Pembayaran:
+                </span>
                 <span className="font-display font-black text-base">{formatRupiah(totalPaid)}</span>
               </div>
             </div>
@@ -178,9 +196,13 @@ export const PaymentReceiptModal = ({ isOpen, onClose, details, user }) => {
               ✓
             </div>
             <div className="min-w-0 space-y-0.5">
-              <p className="font-bold text-brand-950 text-xs">Bukti Pembayaran Sah & Diverifikasi Gateway Resmi</p>
+              <p className="font-bold text-brand-950 text-xs">
+                Bukti Pembayaran Sah & Diverifikasi Gateway Resmi
+              </p>
               <p className="text-ink-600 text-micro leading-relaxed">
-                Dokumen ini merupakan tanda terima digital resmi yang sah menurut UU ITE No. 11/2008 Pasal 5. ID Transaksi: <span className="font-mono font-bold text-ink-800">{refNo}</span>.
+                Dokumen ini merupakan tanda terima digital resmi yang sah menurut UU ITE No. 11/2008
+                Pasal 5. ID Transaksi:{' '}
+                <span className="font-mono font-bold text-ink-800">{refNo}</span>.
               </p>
             </div>
           </div>

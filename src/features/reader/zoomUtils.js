@@ -7,10 +7,7 @@ export const getPinchScale = (startZoom, startDistance, currentDistance) => {
   if (startDistance <= 0) return 1;
   const distanceRatio = Math.max(0.1, currentDistance / startDistance);
   const scale = distanceRatio ** PINCH_RESPONSE;
-  return Math.min(
-    MAX_READER_ZOOM / startZoom,
-    Math.max(MIN_READER_ZOOM / startZoom, scale)
-  );
+  return Math.min(MAX_READER_ZOOM / startZoom, Math.max(MIN_READER_ZOOM / startZoom, scale));
 };
 
 export const getPinchZoom = (startZoom, startDistance, currentDistance) => {

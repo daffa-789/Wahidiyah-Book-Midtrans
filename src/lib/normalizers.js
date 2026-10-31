@@ -26,7 +26,7 @@ const EVENT_BADGE_COLORS = {
   Mujahadah: 'bg-brand-50 text-brand-800 border-brand-200',
   Pengajian: 'bg-brand-50 text-brand-800 border-brand-200',
   Kubro: 'bg-brand-50 text-brand-800 border-brand-200',
-  Peringatan: 'bg-brand-50 text-brand-800 border-brand-200'
+  Peringatan: 'bg-brand-50 text-brand-800 border-brand-200',
 };
 
 export const EMPTY_USER = {
@@ -40,7 +40,7 @@ export const EMPTY_USER = {
   activePlan: null,
   subscriptionPeriod: null,
   subscriptionExpiresAt: null,
-  createdAt: null
+  createdAt: null,
 };
 
 export const normalizeUser = (data = {}) => {
@@ -54,37 +54,48 @@ export const normalizeUser = (data = {}) => {
     loginMethod: pick(data, 'login_method', 'loginMethod') ?? 'email',
     isPro,
     activePlan: null,
-    subscriptionPeriod: isPro ? (pick(data, 'subscription_period', 'subscriptionPeriod') ?? null) : null,
-    subscriptionExpiresAt: isPro ? (pick(data, 'subscription_expires_at', 'subscriptionExpiresAt') ?? null) : null,
-    createdAt: pick(data, 'created_at', 'createdAt') ?? null
+    subscriptionPeriod: isPro
+      ? (pick(data, 'subscription_period', 'subscriptionPeriod') ?? null)
+      : null,
+    subscriptionExpiresAt: isPro
+      ? (pick(data, 'subscription_expires_at', 'subscriptionExpiresAt') ?? null)
+      : null,
+    createdAt: pick(data, 'created_at', 'createdAt') ?? null,
   };
 };
 
-export const userSignature = (target = EMPTY_USER) => JSON.stringify([
-  target.id ?? null,
-  target.name ?? '',
-  target.email ?? '',
-  target.role ?? 'user',
-  target.loginMethod ?? 'email',
-  Boolean(target.isPro),
-  target.activePlan ?? null,
-  target.subscriptionPeriod ?? null,
-  target.subscriptionExpiresAt ?? null,
-  target.createdAt ?? null
-]);
+export const userSignature = (target = EMPTY_USER) =>
+  JSON.stringify([
+    target.id ?? null,
+    target.name ?? '',
+    target.email ?? '',
+    target.role ?? 'user',
+    target.loginMethod ?? 'email',
+    Boolean(target.isPro),
+    target.activePlan ?? null,
+    target.subscriptionPeriod ?? null,
+    target.subscriptionExpiresAt ?? null,
+    target.createdAt ?? null,
+  ]);
 
 export const normalizeBook = (book = {}) => ({
   id: book.id,
   title: book.title || 'Tanpa judul',
   pages: Number(book.pages || book.total_pages || 1),
   isLocked: Boolean(pick(book, 'is_locked', 'isLocked')),
-  coverUrl: book.cover_url || book.coverUrl || (book.has_thumbnail ? `/api/books/${encodeURIComponent(book.id)}/thumbnail` : null),
-  contentUrl: book.contentUrl || (book.has_content ? `/api/books/${encodeURIComponent(book.id)}/content` : null),
+  coverUrl:
+    book.cover_url ||
+    book.coverUrl ||
+    (book.has_thumbnail ? `/api/books/${encodeURIComponent(book.id)}/thumbnail` : null),
+  contentUrl:
+    book.contentUrl ||
+    (book.has_content ? `/api/books/${encodeURIComponent(book.id)}/content` : null),
   contentName: pick(book, 'content_name', 'contentName') || null,
-  contentType: pick(book, 'content_type', 'contentType') || (book.content_extension || '').replace('.', ''),
+  contentType:
+    pick(book, 'content_type', 'contentType') || (book.content_extension || '').replace('.', ''),
   contentExtension: book.content_extension || '',
   hasContent: Boolean(pick(book, 'has_content', 'hasContent')),
-  createdAt: pick(book, 'created_at', 'createdAt') || null
+  createdAt: pick(book, 'created_at', 'createdAt') || null,
 });
 
 export const normalizeEvent = (event = {}) => {
@@ -106,8 +117,11 @@ export const normalizeEvent = (event = {}) => {
     organizer: event.organizer || '',
 
     showInCarousel: Boolean(pick(event, 'show_in_carousel', 'showInCarousel')),
-    badgeColor: event.badgeColor || EVENT_BADGE_COLORS[category] || 'bg-brand-50 text-brand-800 border-brand-200',
-    createdAt: pick(event, 'created_at', 'createdAt') ?? null
+    badgeColor:
+      event.badgeColor ||
+      EVENT_BADGE_COLORS[category] ||
+      'bg-brand-50 text-brand-800 border-brand-200',
+    createdAt: pick(event, 'created_at', 'createdAt') ?? null,
   };
 };
 
@@ -124,7 +138,7 @@ export const normalizeCarouselSlide = (slide = {}) => {
     isActive: Boolean(pick(slide, 'is_active', 'isActive') ?? true),
     startsAt: String(pick(slide, 'starts_at', 'startsAt') ?? '').slice(0, 10) || null,
     endsAt: String(pick(slide, 'ends_at', 'endsAt') ?? '').slice(0, 10) || null,
-    createdAt: pick(slide, 'created_at', 'createdAt') ?? null
+    createdAt: pick(slide, 'created_at', 'createdAt') ?? null,
   };
 };
 
@@ -140,5 +154,5 @@ export const normalizeTransaction = (tx = {}) => ({
   verifiedAt: pick(tx, 'verified_at', 'verifiedAt') ?? null,
   createdAt: pick(tx, 'created_at', 'createdAt') ?? null,
   userName: tx.userName ?? '',
-  userEmail: tx.userEmail ?? ''
+  userEmail: tx.userEmail ?? '',
 });

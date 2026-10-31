@@ -20,13 +20,20 @@ const STYLE_ID = 'wb-design-tokens';
 const hexToRgbTriplet = (hex) => {
   if (typeof hex !== 'string') return null;
   const h = hex.trim().replace(/^#/, '');
-  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const full =
+    h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h;
   if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
   const int = parseInt(full, 16);
   return `${(int >> 16) & 255} ${(int >> 8) & 255} ${int & 255}`;
 };
 
-const isHex = (value) => typeof value === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim());
+const isHex = (value) =>
+  typeof value === 'string' && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim());
 
 /** Skala warna (brand/gold/cream/ink) → pasangan var triplet + hex. */
 const pushScale = (rows, prefix, scale) => {
@@ -56,7 +63,8 @@ const buildColorVars = (palette) => {
   pushScale(rows, 'cream', palette.cream);
   pushScale(rows, 'ink', palette.ink);
 
-  if (palette.accent?.gold) pushSingle(rows, '--accent-gold', '--color-accent-gold', palette.accent.gold);
+  if (palette.accent?.gold)
+    pushSingle(rows, '--accent-gold', '--color-accent-gold', palette.accent.gold);
 
   const ui = palette.ui;
   if (ui) {
@@ -97,7 +105,9 @@ const buildColorVars = (palette) => {
 
 const buildStructuralVars = (tokens) => {
   const rows = [];
-  const push = (name, value) => { if (value !== undefined && value !== null && value !== '') rows.push([name, value]); };
+  const push = (name, value) => {
+    if (value !== undefined && value !== null && value !== '') rows.push([name, value]);
+  };
 
   const cr = tokens.shapes?.componentRadius;
   if (cr) {

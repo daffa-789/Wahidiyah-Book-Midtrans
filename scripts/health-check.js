@@ -26,16 +26,33 @@ function report(label, success, details = '') {
 
 // 1. Env variables check
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-report('Supabase Config', Boolean(supabaseUrl && supabaseKey), supabaseUrl ? 'URL Terdeteksi' : 'Belum diisi di .env');
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY;
+report(
+  'Supabase Config',
+  Boolean(supabaseUrl && supabaseKey),
+  supabaseUrl ? 'URL Terdeteksi' : 'Belum diisi di .env',
+);
 
 const midtransServer = process.env.MIDTRANS_SERVER_KEY;
 const midtransClient = process.env.MIDTRANS_CLIENT_KEY;
-report('Midtrans Gateway', Boolean(midtransServer && midtransClient), midtransServer ? `Mode: ${process.env.MIDTRANS_IS_PRODUCTION === 'true' ? 'Production' : 'Sandbox'}` : 'Key belum diisi');
+report(
+  'Midtrans Gateway',
+  Boolean(midtransServer && midtransClient),
+  midtransServer
+    ? `Mode: ${process.env.MIDTRANS_IS_PRODUCTION === 'true' ? 'Production' : 'Sandbox'}`
+    : 'Key belum diisi',
+);
 
 const waProvider = process.env.WHATSAPP_PROVIDER || 'fonnte';
 const isWaConfigured = waProvider === 'demo' || Boolean(process.env.FONNTE_TOKEN);
-report('WhatsApp Gateway', isWaConfigured, `Provider: ${waProvider}${waProvider === 'demo' ? ' (Testing)' : ''}`);
+report(
+  'WhatsApp Gateway',
+  isWaConfigured,
+  `Provider: ${waProvider}${waProvider === 'demo' ? ' (Testing)' : ''}`,
+);
 
 // 2. Supabase Database Connection & Tables Check
 async function checkDatabase() {
@@ -46,18 +63,28 @@ async function checkDatabase() {
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    
+
     // Check users table
-    const { count: userCount, error: userErr } = await supabase.from('users').select('*', { count: 'exact', head: true });
+    const { count: userCount, error: userErr } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true });
     report('Tabel Users', !userErr, userErr ? userErr.message : `${userCount ?? 0} pengguna`);
 
     // Check books table
-    const { count: bookCount, error: bookErr } = await supabase.from('books').select('*', { count: 'exact', head: true });
+    const { count: bookCount, error: bookErr } = await supabase
+      .from('books')
+      .select('*', { count: 'exact', head: true });
     report('Tabel Books', !bookErr, bookErr ? bookErr.message : `${bookCount ?? 0} buku`);
 
     // Check transactions table
-    const { count: txCount, error: txErr } = await supabase.from('transactions').select('*', { count: 'exact', head: true });
-    report('Tabel Transactions', !txErr, txErr ? txErr.message : `${txCount ?? 0} riwayat transaksi`);
+    const { count: txCount, error: txErr } = await supabase
+      .from('transactions')
+      .select('*', { count: 'exact', head: true });
+    report(
+      'Tabel Transactions',
+      !txErr,
+      txErr ? txErr.message : `${txCount ?? 0} riwayat transaksi`,
+    );
   } catch (err) {
     report('Koneksi Database', false, err.message);
   }
@@ -69,6 +96,12 @@ console.log(pc.cyan('\n───────────────────
 if (passedChecks === totalChecks) {
   console.log(pc.bold(pc.green(`🎉 SEMUA SISTEM SIAP! (${passedChecks}/${totalChecks} Lolos)`)));
 } else {
-  console.log(pc.bold(pc.yellow(`⚠️  Ada konfigurasi yang memerlukan perhatian (${passedChecks}/${totalChecks} Lolos)`)));
+  console.log(
+    pc.bold(
+      pc.yellow(
+        `⚠️  Ada konfigurasi yang memerlukan perhatian (${passedChecks}/${totalChecks} Lolos)`,
+      ),
+    ),
+  );
 }
 console.log(pc.cyan('────────────────────────────────────────────────\n'));

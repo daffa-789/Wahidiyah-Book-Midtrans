@@ -11,9 +11,7 @@ export const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
         aria-label={item.label}
         aria-current={item.isActive ? 'page' : undefined}
         className={`relative h-11 w-11 rounded-md flex items-center justify-center transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${
-          isDanger
-            ? 'focus-visible:ring-semantic-dangerOnDark'
-            : 'focus-visible:ring-brand-500'
+          isDanger ? 'focus-visible:ring-semantic-dangerOnDark' : 'focus-visible:ring-brand-500'
         } ${
           item.isActive
             ? 'bg-brand-700 text-cream-50 shadow-sm'
@@ -31,9 +29,7 @@ export const SidebarNavButton = ({ item, isCollapsed, onNavClick }) => {
       onClick={() => onNavClick(item.target)}
       aria-current={item.isActive ? 'page' : undefined}
       className={`group relative w-full h-11 flex items-center gap-3 pl-3 pr-3 rounded-md transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 ${
-        isDanger
-          ? 'focus-visible:ring-semantic-dangerOnDark'
-          : 'focus-visible:ring-brand-500'
+        isDanger ? 'focus-visible:ring-semantic-dangerOnDark' : 'focus-visible:ring-brand-500'
       } ${
         item.isActive
           ? 'bg-brand-700 text-cream-50 shadow-sm'
@@ -66,7 +62,12 @@ export const SidebarNavSection = ({ items, isCollapsed, onNavClick }) => {
   return (
     <div className={isCollapsed ? 'flex flex-col items-center gap-1' : 'space-y-0.5'}>
       {items.map((item) => (
-        <SidebarNavButton key={item.id} item={item} isCollapsed={isCollapsed} onNavClick={onNavClick} />
+        <SidebarNavButton
+          key={item.id}
+          item={item}
+          isCollapsed={isCollapsed}
+          onNavClick={onNavClick}
+        />
       ))}
     </div>
   );

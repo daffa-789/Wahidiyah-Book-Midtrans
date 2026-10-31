@@ -1,14 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import {
-  ImagePlus,
-  Images,
-  Loader2,
-  Pencil,
-  Plus,
-  Trash2,
-  Upload,
-  X
-} from 'lucide-react';
+import { ImagePlus, Images, Loader2, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiJson, authHeaders } from '@lib/api';
 import { dateLabel } from '@lib/date';
@@ -19,18 +10,18 @@ const EMPTY_SLIDE_FORM = {
   title: '',
   description: '',
   sort_order: 0,
-  is_active: true
+  is_active: true,
 };
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const periodLabel = (slide) => {
   if (!slide.startsAt && !slide.endsAt) return '';
-  if (slide.startsAt && slide.endsAt) return `${dateLabel(slide.startsAt)} – ${dateLabel(slide.endsAt)}`;
+  if (slide.startsAt && slide.endsAt)
+    return `${dateLabel(slide.startsAt)} – ${dateLabel(slide.endsAt)}`;
   if (slide.startsAt) return `Mulai ${dateLabel(slide.startsAt)}`;
   return `Sampai ${dateLabel(slide.endsAt)}`;
 };
-
 
 export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionToken }) => {
   const [form, setForm] = useState(EMPTY_SLIDE_FORM);
@@ -53,7 +44,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
       title: slide.title,
       description: slide.description || '',
       sort_order: slide.sortOrder,
-      is_active: slide.isActive
+      is_active: slide.isActive,
     });
   };
 
@@ -71,12 +62,12 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
           method: 'POST',
           headers,
           body: data,
-          timeoutMs: 60000
+          timeoutMs: 60000,
         });
         await refreshCarousel();
       },
       'Gambar banner gagal diunggah.',
-      'Gambar banner diperbarui.'
+      'Gambar banner diperbarui.',
     );
   };
 
@@ -90,68 +81,68 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
     setIsSaving(true);
     // Pesan sukses berbeda untuk tambah vs perbarui, jadi dipasang di dalam
     // aksi; pola galatnya tetap terpusat di `withToast`.
-    return withToast(
-      async () => {
-        const payload = {
-          title: form.title.trim(),
-          description: (form.description || '').trim(),
-          sort_order: Number(form.sort_order) || 0,
-          is_active: form.is_active
-        };
+    return withToast(async () => {
+      const payload = {
+        title: form.title.trim(),
+        description: (form.description || '').trim(),
+        sort_order: Number(form.sort_order) || 0,
+        is_active: form.is_active,
+      };
 
-        if (editingId) {
-          await apiJson(`/api/carousel/${encodeURIComponent(editingId)}`, {
-            method: 'PUT',
-            headers: { ...headers, 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          toast.success('Banner berhasil diperbarui.');
-        } else {
-          const created = await apiJson('/api/carousel', {
-            method: 'POST',
-            headers: { ...headers, 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          toast.success('Banner berhasil ditambahkan.');
-          const file = imageInputRef.current?.files?.[0];
-          if (file && created.slideId) {
-            await uploadImage(created.slideId, file);
-          }
+      if (editingId) {
+        await apiJson(`/api/carousel/${encodeURIComponent(editingId)}`, {
+          method: 'PUT',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        toast.success('Banner berhasil diperbarui.');
+      } else {
+        const created = await apiJson('/api/carousel', {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        toast.success('Banner berhasil ditambahkan.');
+        const file = imageInputRef.current?.files?.[0];
+        if (file && created.slideId) {
+          await uploadImage(created.slideId, file);
         }
+      }
 
-        resetForm();
-        await refreshCarousel();
-      },
-      'Banner gagal disimpan.'
-    ).finally(() => setIsSaving(false));
+      resetForm();
+      await refreshCarousel();
+    }, 'Banner gagal disimpan.').finally(() => setIsSaving(false));
   };
-
 
   const deleteSlide = (slide) => {
     if (!window.confirm(`Hapus banner “${slide.title}”?`)) return undefined;
     setBusyId(slide.id);
     return withToast(
       async () => {
-        await apiJson(`/api/carousel/${encodeURIComponent(slide.id)}`, { method: 'DELETE', headers });
+        await apiJson(`/api/carousel/${encodeURIComponent(slide.id)}`, {
+          method: 'DELETE',
+          headers,
+        });
         if (editingId === slide.id) resetForm();
         await refreshCarousel();
       },
       'Banner gagal dihapus.',
-      'Banner berhasil dihapus.'
+      'Banner berhasil dihapus.',
     ).finally(() => setBusyId(null));
   };
 
   const orderedSlides = useMemo(
     () => [...slides].sort((a, b) => a.sortOrder - b.sortOrder),
-    [slides]
+    [slides],
   );
 
   return (
     <section className="space-y-6">
-      
-
       {carouselReady === false && (
-        <div role="alert" className="rounded-2xl border border-cream-300 bg-cream-100 px-4 py-3 text-body text-ink-800">
+        <div
+          role="alert"
+          className="rounded-2xl border border-cream-300 bg-cream-100 px-4 py-3 text-body text-ink-800"
+        >
           Tabel <code className="font-mono">carousel_slides</code> belum ada di basis data. Jalankan
           <code className="font-mono"> supabase_database/full_setup.sql </code>
           di SQL Editor Supabase, lalu muat ulang halaman ini.
@@ -159,14 +150,14 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
       )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.75fr)] items-start">
-
         <div className="space-y-3">
           {orderedSlides.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-cream-300 bg-cream-50 p-10 text-center">
               <Images className={controls.emptyIcon} />
               <p className="mt-3 font-bold text-ink-700">Belum ada banner</p>
               <p className={typography.helper}>
-                Tambahkan dari formulir di samping, atau centang “Tampilkan di Carousel” pada sebuah agenda.
+                Tambahkan dari formulir di samping, atau centang “Tampilkan di Carousel” pada sebuah
+                agenda.
               </p>
             </div>
           ) : (
@@ -174,7 +165,9 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
               <article
                 key={slide.id}
                 className={`flex flex-wrap items-center gap-4 rounded-3xl border bg-cream-50 p-4 shadow-sm transition ${
-                  editingId === slide.id ? 'border-brand-400 ring-1 ring-brand-200' : 'border-cream-300'
+                  editingId === slide.id
+                    ? 'border-brand-400 ring-1 ring-brand-200'
+                    : 'border-cream-300'
                 }`}
               >
                 <div className="h-16 w-24 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-700 to-brand-900">
@@ -193,7 +186,7 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                       #{index + 1}
                     </span>
                     <h3 className="font-bold text-ink-900">{slide.title}</h3>
-                    
+
                     {slide.eventId && (
                       <span className="rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 text-micro font-bold text-brand-700">
                         Dari agenda
@@ -201,11 +194,14 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                     )}
                   </div>
                   {slide.description && (
-                    <p className="mt-1 line-clamp-2 text-caption text-ink-500">{slide.description}</p>
+                    <p className="mt-1 line-clamp-2 text-caption text-ink-500">
+                      {slide.description}
+                    </p>
                   )}
                   {(slide.eventDate || periodLabel(slide)) && (
                     <p className="mt-1 text-caption text-ink-400">
-                      {slide.eventDate ? `${dateLabel(slide.eventDate)} ` : ''}{periodLabel(slide)}
+                      {slide.eventDate ? `${dateLabel(slide.eventDate)} ` : ''}
+                      {periodLabel(slide)}
                     </p>
                   )}
                 </div>
@@ -226,7 +222,11 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                     className="rounded-xl border border-semantic-danger/30 p-2 text-semantic-danger transition hover:bg-semantic-dangerLight disabled:opacity-50 cursor-pointer"
                     title="Hapus banner"
                   >
-                    {busyId === slide.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    {busyId === slide.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
 
@@ -242,7 +242,9 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
                       onChange={(e) => uploadImage(slide.id, e.target.files?.[0])}
                       className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-caption file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-2.5 file:py-1 file:text-caption file:font-bold file:text-brand-700"
                     />
-                    <p className="mt-1 text-caption text-ink-400">PNG/JPEG/WebP, maksimal 8 MB. Otomatis dikompres ke WebP 1600 px.</p>
+                    <p className="mt-1 text-caption text-ink-400">
+                      PNG/JPEG/WebP, maksimal 8 MB. Otomatis dikompres ke WebP 1600 px.
+                    </p>
                   </div>
                 )}
               </article>
@@ -250,10 +252,17 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
           )}
         </div>
 
-        <form onSubmit={submitSlide} className="space-y-4 rounded-3xl border border-cream-300 bg-cream-50 p-5 shadow-sm">
+        <form
+          onSubmit={submitSlide}
+          className="space-y-4 rounded-3xl border border-cream-300 bg-cream-50 p-5 shadow-sm"
+        >
           <div className="flex items-center justify-between border-b border-cream-200 pb-3">
             <h3 className="flex items-center gap-2 text-h3 font-bold text-ink-900">
-              {editingId ? <Pencil className={controls.iconBrand} /> : <Plus className={controls.iconBrand} />}
+              {editingId ? (
+                <Pencil className={controls.iconBrand} />
+              ) : (
+                <Plus className={controls.iconBrand} />
+              )}
               {editingId ? 'Ubah banner' : 'Tambah banner'}
             </h3>
             {editingId && (
@@ -268,7 +277,9 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
           </div>
 
           <div>
-            <label htmlFor="slide-title" className={typography.fieldLabel}>Judul banner</label>
+            <label htmlFor="slide-title" className={typography.fieldLabel}>
+              Judul banner
+            </label>
             <input
               id="slide-title"
               required
@@ -281,7 +292,9 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
           </div>
 
           <div>
-            <label htmlFor="slide-description" className={typography.fieldLabel}>Deskripsi</label>
+            <label htmlFor="slide-description" className={typography.fieldLabel}>
+              Deskripsi
+            </label>
             <textarea
               id="slide-description"
               rows="3"
@@ -295,7 +308,9 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
 
           <div className="grid grid-cols-2 items-end gap-2">
             <div>
-              <label htmlFor="slide-order" className={typography.fieldLabel}>Urutan slide</label>
+              <label htmlFor="slide-order" className={typography.fieldLabel}>
+                Urutan slide
+              </label>
               <input
                 id="slide-order"
                 type="number"
@@ -337,7 +352,13 @@ export const CarouselTab = ({ slides, carouselReady, refreshCarousel, sessionTok
             disabled={isSaving}
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-700 px-4 py-3 text-small font-bold text-cream-50 shadow-sm transition hover:bg-brand-800 disabled:opacity-60"
           >
-            {isSaving ? <Loader2 className={controls.spinner} /> : (editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
+            {isSaving ? (
+              <Loader2 className={controls.spinner} />
+            ) : editingId ? (
+              <Pencil className="h-4 w-4" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
             {editingId ? 'Simpan perubahan' : 'Tambah banner'}
           </button>
         </form>

@@ -11,10 +11,7 @@ import { layout, typography } from '@lib/styles';
  * 4. Aksi pengalihan role (Jadikan user / Jadikan admin)
  * 5. Tampilan kosong (empty state) jika belum ada pengguna
  */
-export const UsersTab = ({
-  users = [],
-  onUpdateRole
-}) => {
+export const UsersTab = ({ users = [], onUpdateRole }) => {
   return (
     <section className="space-y-5">
       {/* Mobile User Cards (< sm) */}
@@ -63,9 +60,7 @@ export const UsersTab = ({
               </div>
               <button
                 type="button"
-                onClick={() =>
-                  onUpdateRole(item.id, item.role === 'admin' ? 'user' : 'admin')
-                }
+                onClick={() => onUpdateRole(item.id, item.role === 'admin' ? 'user' : 'admin')}
                 className="inline-flex items-center gap-1 rounded-xl border border-cream-300 bg-cream-50 px-2.5 py-1.5 text-caption font-bold text-ink-700 hover:bg-cream-100 active:scale-95 transition cursor-pointer"
               >
                 <UserCog className="h-3.5 w-3.5 text-brand-700" />
@@ -137,9 +132,7 @@ export const UsersTab = ({
                 <td className="px-4 py-3">
                   <button
                     type="button"
-                    onClick={() =>
-                      onUpdateRole(item.id, item.role === 'admin' ? 'user' : 'admin')
-                    }
+                    onClick={() => onUpdateRole(item.id, item.role === 'admin' ? 'user' : 'admin')}
                     className="rounded-xl border border-cream-300 px-2.5 py-1.5 text-small font-bold text-ink-700 hover:bg-cream-100 cursor-pointer"
                   >
                     <UserCog className="mr-1 inline h-3.5 w-3.5 text-brand-700" />

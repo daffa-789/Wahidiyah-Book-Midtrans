@@ -14,9 +14,10 @@ export const PwaInstallBanner = () => {
     const ua = navigator.userAgent;
     /* iPadOS 13+ mengirim UA "Macintosh", jadi perlu jumlah titik sentuh. */
     const isIpadOs = /macintosh/i.test(ua) && (navigator.maxTouchPoints ?? 0) > 1;
-    const isMobileOrTablet = typeof navigator.userAgentData?.mobile === 'boolean'
-      ? navigator.userAgentData.mobile || isIpadOs
-      : /android|iphone|ipad|ipod/i.test(ua) || isIpadOs;
+    const isMobileOrTablet =
+      typeof navigator.userAgentData?.mobile === 'boolean'
+        ? navigator.userAgentData.mobile || isIpadOs
+        : /android|iphone|ipad|ipod/i.test(ua) || isIpadOs;
 
     /* Penjaga kedua: perangkat sentuh. Chrome desktop tetap memicu
        `beforeinstallprompt` di Windows, jadi UA saja tidak cukup — kursor
@@ -28,12 +29,16 @@ export const PwaInstallBanner = () => {
     }
 
     // Cek apakah user sudah menutup banner
-    if (localStorage.getItem('wb_pwa_dismissed') === 'true' || sessionStorage.getItem('wb_pwa_dismissed') === 'true') {
+    if (
+      localStorage.getItem('wb_pwa_dismissed') === 'true' ||
+      sessionStorage.getItem('wb_pwa_dismissed') === 'true'
+    ) {
       return;
     }
 
     // Deteksi jika sudah dalam mode terinstall (standalone PWA)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if (isStandalone) {
       return;
     }
@@ -97,7 +102,8 @@ export const PwaInstallBanner = () => {
           <p className="mt-0.5 text-micro text-cream-300/80 leading-relaxed">
             {isIos ? (
               <span>
-                Buka menu <Share className="w-3 h-3 inline mx-0.5" /> <strong>Bagikan</strong> di Safari, lalu pilih <strong>&quot;Tambah ke Layar Utama&quot;</strong>.
+                Buka menu <Share className="w-3 h-3 inline mx-0.5" /> <strong>Bagikan</strong> di
+                Safari, lalu pilih <strong>&quot;Tambah ke Layar Utama&quot;</strong>.
               </span>
             ) : (
               'Pasang di layar HP Anda untuk akses lebih cepat layaknya aplikasi native.'

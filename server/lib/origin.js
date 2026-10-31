@@ -24,7 +24,10 @@ export const normalizeOrigin = (value) => {
 
 /** Ambil protokol pertama yang sah dari header majemuk; selain http/https diabaikan. */
 export const sanitizeForwardedProto = (value) => {
-  const first = String(value ?? '').split(',')[0].trim().toLowerCase();
+  const first = String(value ?? '')
+    .split(',')[0]
+    .trim()
+    .toLowerCase();
   return SAFE_PROTOCOLS.has(first) ? first : null;
 };
 
@@ -51,7 +54,9 @@ export const resolveFrontendOrigin = (env = process.env, req = null, allowedOrig
    * alamat backend. `X-Forwarded-Host` mengembalikan host asli yang dilihat
    * peramban — tetap hanya dipakai bila origin hasilnya ada di allowlist.
    */
-  const forwardedHost = String(req.headers?.['x-forwarded-host'] ?? '').split(',')[0].trim();
+  const forwardedHost = String(req.headers?.['x-forwarded-host'] ?? '')
+    .split(',')[0]
+    .trim();
   const host = forwardedHost || String(req.get?.('host') ?? '').trim();
   if (!host) return null;
 

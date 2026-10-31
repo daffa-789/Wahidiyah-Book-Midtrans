@@ -17,7 +17,7 @@ import {
   createQrisCharge,
   getQrImage,
   getQrisStatus,
-  midtransNotification
+  midtransNotification,
 } from '../controllers/payment_controller.js';
 
 export const paymentsRouter = Router();
@@ -27,12 +27,17 @@ const qrImageRateLimiter = rateLimit({
   max: 60,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { success: false, message: 'Terlalu banyak permintaan kode QR. Tunggu sebentar.' }
+  message: { success: false, message: 'Terlalu banyak permintaan kode QR. Tunggu sebentar.' },
 });
 
 paymentsRouter.post('/qris/charge', paymentRateLimiter, requireAuth, wrap(createQrisCharge));
 
-paymentsRouter.get('/qris/:orderId/status', requireAuth, qrisStatusRateLimiter, wrap(getQrisStatus));
+paymentsRouter.get(
+  '/qris/:orderId/status',
+  requireAuth,
+  qrisStatusRateLimiter,
+  wrap(getQrisStatus),
+);
 
 paymentsRouter.post('/qris/:orderId/cancel', paymentRateLimiter, requireAuth, wrap(cancelQris));
 

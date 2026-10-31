@@ -5,10 +5,8 @@ import {
   MIDTRANS_IS_PRODUCTION,
   MIDTRANS_QRIS_ACQUIRER,
   MIDTRANS_QRIS_EXPIRY_MINUTES,
-  MIDTRANS_SERVER_KEY
+  MIDTRANS_SERVER_KEY,
 } from '../config.js';
-
-
 
 const DEFAULT_QRIS_EXPIRY_MINUTES = 15;
 
@@ -16,12 +14,11 @@ export const isMidtransConfigured = Boolean(MIDTRANS_SERVER_KEY && MIDTRANS_CLIE
 
 let coreApi = null;
 
-
 function getCoreApi() {
   if (!isMidtransConfigured) {
     const error = new Error(
-      'Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di .env '
-      + '(kunci sandbox: SB-Mid-server-… / SB-Mid-client-… dari dashboard.sandbox.midtrans.com).'
+      'Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di .env ' +
+        '(kunci sandbox: SB-Mid-server-… / SB-Mid-client-… dari dashboard.sandbox.midtrans.com).',
     );
     error.code = 'MIDTRANS_NOT_CONFIGURED';
     throw error;
@@ -31,23 +28,22 @@ function getCoreApi() {
     coreApi = new midtransClient.CoreApi({
       isProduction: MIDTRANS_IS_PRODUCTION,
       serverKey: MIDTRANS_SERVER_KEY,
-      clientKey: MIDTRANS_CLIENT_KEY
+      clientKey: MIDTRANS_CLIENT_KEY,
     });
   }
 
   return coreApi;
 }
 
-
 const pad = (value) => String(value).padStart(2, '0');
-
 
 const jakartaOrderTime = () => {
   const shifted = new Date(Date.now() + 7 * 60 * 60 * 1000);
-  return `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-${pad(shifted.getUTCDate())} `
-    + `${pad(shifted.getUTCHours())}:${pad(shifted.getUTCMinutes())}:${pad(shifted.getUTCSeconds())} +0700`;
+  return (
+    `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-${pad(shifted.getUTCDate())} ` +
+    `${pad(shifted.getUTCHours())}:${pad(shifted.getUTCMinutes())}:${pad(shifted.getUTCSeconds())} +0700`
+  );
 };
-
 
 /**
  * Midtrans mengembalikan QRIS dalam dua bentuk (hasil probe sandbox 6 Okt 2026):
@@ -67,13 +63,11 @@ const unwrapChargePayload = (charge) => {
   return charge.data && typeof charge.data === 'object' ? charge.data : charge;
 };
 
-
 export const extractQrString = (charge) => {
   const payload = unwrapChargePayload(charge);
   const raw = payload.qr_string;
   return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
 };
-
 
 const pickQrAction = (actions) => {
   const list = Array.isArray(actions) ? actions : [];
@@ -82,15 +76,13 @@ const pickQrAction = (actions) => {
   return list.find((item) => item?.name === 'generate-qr-code' && item?.url) || null;
 };
 
-
 export const extractQrAction = (charge) => pickQrAction(unwrapChargePayload(charge)?.actions);
-
 
 export async function createQrisCharge({
   orderId,
   grossAmount,
   itemDetails = [],
-  customerDetails = {}
+  customerDetails = {},
 }) {
   const api = getCoreApi();
 
@@ -98,28 +90,25 @@ export async function createQrisCharge({
     payment_type: 'qris',
     transaction_details: {
       order_id: orderId,
-      gross_amount: Math.round(Number(grossAmount))
+      gross_amount: Math.round(Number(grossAmount)),
     },
     item_details: itemDetails,
     customer_details: customerDetails,
     qris: {
-      acquirer: MIDTRANS_QRIS_ACQUIRER || 'gopay'
-    }
+      acquirer: MIDTRANS_QRIS_ACQUIRER || 'gopay',
+    },
   };
 
-  
-  
   if (MIDTRANS_QRIS_EXPIRY_MINUTES !== DEFAULT_QRIS_EXPIRY_MINUTES) {
     parameter.custom_expiry = {
       order_time: jakartaOrderTime(),
       expiry_duration: MIDTRANS_QRIS_EXPIRY_MINUTES,
-      unit: 'minute'
+      unit: 'minute',
     };
   }
 
   return api.charge(parameter);
 }
-
 
 export async function getTransactionStatus(orderId) {
   const api = getCoreApi();
@@ -163,7 +152,6 @@ export function isVoidAcknowledged(payload = {}) {
   return false;
 }
 
-
 export function verifySignatureKey(payload = {}) {
   if (!MIDTRANS_SERVER_KEY) {
     return { ok: false, reason: 'MIDTRANS_SERVER_KEY belum diisi.' };
@@ -203,7 +191,6 @@ export const isTransactionSettled = (transactionStatus, fraudStatus = '') => {
 
 const QR_IMAGE_TIMEOUT_MS = 10_000;
 
-
 export const isAllowedQrUrl = (rawUrl) => {
   try {
     const parsed = new URL(String(rawUrl));
@@ -214,7 +201,6 @@ export const isAllowedQrUrl = (rawUrl) => {
     return false;
   }
 };
-
 
 export async function fetchQrImage(qrUrl) {
   if (!isAllowedQrUrl(qrUrl)) {
@@ -227,10 +213,10 @@ export async function fetchQrImage(qrUrl) {
   const response = await fetch(qrUrl, {
     headers: {
       Authorization: `Basic ${auth}`,
-      Accept: 'image/png'
+      Accept: 'image/png',
     },
     redirect: 'manual',
-    signal: AbortSignal.timeout(QR_IMAGE_TIMEOUT_MS)
+    signal: AbortSignal.timeout(QR_IMAGE_TIMEOUT_MS),
   });
 
   if (response.status >= 300 && response.status < 400) {

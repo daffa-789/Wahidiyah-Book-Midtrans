@@ -14,11 +14,7 @@ const offlineError = () => {
   return error;
 };
 
-
-
 const SESSION_STORAGE_KEY = 'buku-wahidiyah:auth-session';
-
-
 
 const INTENDED_LOCATION_STORAGE_KEY = 'buku-wahidiyah:intended-location';
 
@@ -32,22 +28,15 @@ export const getStoredSession = () => {
   }
 };
 
-
 export const saveSession = (session) => {
   try {
     window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
-  } catch {
-    
-  }
+  } catch {}
 };
 
 export const clearSession = () => {
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
 };
-
-
-
-
 
 const LAST_PAYMENT_STORAGE_KEY = 'buku-wahidiyah:last-payment';
 
@@ -67,24 +56,12 @@ export const saveLastPayment = (result) => {
       return;
     }
     window.sessionStorage.setItem(LAST_PAYMENT_STORAGE_KEY, JSON.stringify(result));
-  } catch {
-    
-  }
+  } catch {}
 };
 
 export const clearLastPayment = () => {
   window.sessionStorage.removeItem(LAST_PAYMENT_STORAGE_KEY);
 };
-
-
-
-
-
-
-
-
-
-
 
 const PENDING_VERIFICATION_STORAGE_KEY = 'buku-wahidiyah:pending-verification';
 
@@ -105,18 +82,10 @@ export const clearPendingVerification = () => {
   window.sessionStorage.removeItem(PENDING_VERIFICATION_STORAGE_KEY);
 };
 
-
-
-
-
-
 export const saveIntendedLocation = (path) => {
   try {
     window.sessionStorage.setItem(INTENDED_LOCATION_STORAGE_KEY, String(path));
-  } catch {
-    
-    
-  }
+  } catch {}
 };
 
 export const peekIntendedLocation = () => {
@@ -130,21 +99,13 @@ export const peekIntendedLocation = () => {
 export const clearIntendedLocation = () => {
   try {
     window.sessionStorage.removeItem(INTENDED_LOCATION_STORAGE_KEY);
-  } catch {
-    
-    
-  }
+  } catch {}
 };
 
-export const authHeaders = (token = getStoredSession()?.token) => (
-  token ? { Authorization: `Bearer ${token}` } : {}
-);
-
-
-
+export const authHeaders = (token = getStoredSession()?.token) =>
+  token ? { Authorization: `Bearer ${token}` } : {};
 
 const REQUEST_TIMEOUT_MS = 20000;
-
 
 const timeoutError = () => {
   const error = new Error('Server tidak membalas dalam batas waktu.');
@@ -152,7 +113,6 @@ const timeoutError = () => {
   error.timeout = true;
   return error;
 };
-
 
 const fetchWithTimeout = async (url, options = {}) => {
   const { timeoutMs, ...rest } = options;
@@ -187,8 +147,6 @@ export const apiRequest = async (path, options = {}) => {
 };
 
 export const apiJson = async (path, options = {}) => {
-  
-  
   const response = await apiRequest(path, options);
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -199,10 +157,10 @@ export const apiJson = async (path, options = {}) => {
   return payload;
 };
 
-
 export const readableError = (error) => {
   if (error?.timeout) return 'Server tidak membalas tepat waktu. Coba lagi.';
   if (error?.network) return 'Server tidak dapat dihubungi.';
-  if (error?.status === 503 || error?.status === 500) return 'Server menolak permintaan (basis data mungkin mati).';
+  if (error?.status === 503 || error?.status === 500)
+    return 'Server menolak permintaan (basis data mungkin mati).';
   return error?.message || 'Data gagal dimuat.';
 };

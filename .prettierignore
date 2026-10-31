@@ -1,0 +1,17 @@
+# Bukan kode aplikasi — jangan diformat ulang.
+node_modules/
+dist/
+dist-*/
+.vscode/
+.qoder/
+
+# Dokumen & materi skripsi
+*.md
+docs/
+document skripsi/
+buku-siap-upload/
+
+# Aset statis & skema database
+public/
+supabase_database/
+package-lock.json

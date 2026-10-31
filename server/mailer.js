@@ -39,7 +39,8 @@ const oauthClient = isMailerConfigured()
   : null;
 if (oauthClient) oauthClient.setCredentials({ refresh_token: REFRESH_TOKEN });
 
-const encodeHeader = (value) => `=?UTF-8?B?${Buffer.from(String(value), 'utf8').toString('base64')}?=`;
+const encodeHeader = (value) =>
+  `=?UTF-8?B?${Buffer.from(String(value), 'utf8').toString('base64')}?=`;
 const encodeBody = (value) => Buffer.from(String(value), 'utf8').toString('base64');
 
 const wrap76 = (base64) => (base64.match(/.{1,76}/g) || []).join('\r\n');
@@ -47,7 +48,20 @@ const wrap76 = (base64) => (base64.match(/.{1,76}/g) || []).join('\r\n');
 const rfc2822Date = (d = new Date()) => {
   const pad = (n) => String(n).padStart(2, '0');
   const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONTHS = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const offsetMinutes = -d.getTimezoneOffset();
   const sign = offsetMinutes >= 0 ? '+' : '-';
   const abs = Math.abs(offsetMinutes);
@@ -82,7 +96,7 @@ export const buildMimeMessage = ({ to, subject, text, html, inlineImages = [] })
     'Content-Transfer-Encoding: base64',
     '',
     wrap76(encodeBody(html)),
-    `--${altBoundary}--`
+    `--${altBoundary}--`,
   ].join('\r\n');
 
   const headers = [
@@ -96,7 +110,7 @@ export const buildMimeMessage = ({ to, subject, text, html, inlineImages = [] })
      * dan memberi sinyal yang benar ke penyaring spam.
      */
     'Auto-Submitted: auto-generated',
-    'X-Auto-Response-Suppress: All'
+    'X-Auto-Response-Suppress: All',
   ];
 
   if (!inlineImages.length) {
@@ -108,7 +122,7 @@ export const buildMimeMessage = ({ to, subject, text, html, inlineImages = [] })
     '',
     `--${relBoundary}`,
     alternative,
-    ''
+    '',
   ];
 
   for (const image of inlineImages) {
@@ -119,7 +133,7 @@ export const buildMimeMessage = ({ to, subject, text, html, inlineImages = [] })
       `Content-ID: <${image.cid}>`,
       `Content-Disposition: inline; filename="${image.filename}"`,
       '',
-      wrap76(image.base64)
+      wrap76(image.base64),
     );
   }
 
@@ -132,21 +146,29 @@ const sendViaGmailApi = async ({ to, subject, text, html }) => {
   if (!oauthClient) return false;
 
   const { token } = await oauthClient.getAccessToken();
-  if (!token) throw new Error('Gagal memperoleh access token Gmail (refresh token mungkin sudah dicabut).');
+  if (!token)
+    throw new Error('Gagal memperoleh access token Gmail (refresh token mungkin sudah dicabut).');
 
   const inlineImages = LOGO_BASE64
-    ? [{ cid: LOGO_CID, contentType: 'image/png', filename: 'logo-buku-wahidiyah.png', base64: LOGO_BASE64 }]
+    ? [
+        {
+          cid: LOGO_CID,
+          contentType: 'image/png',
+          filename: 'logo-buku-wahidiyah.png',
+          base64: LOGO_BASE64,
+        },
+      ]
     : [];
 
   const raw = Buffer.from(
     buildMimeMessage({ to, subject, text, html, inlineImages }),
-    'utf8'
+    'utf8',
   ).toString('base64url');
 
   const response = await fetch(GMAIL_SEND_URL, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ raw })
+    body: JSON.stringify({ raw }),
   });
 
   if (!response.ok) {
@@ -163,7 +185,8 @@ const COPY = {
     eyebrow: 'Kode verifikasi',
     action: 'Masukkan kode ini untuk menyelesaikan pendaftaran akun',
     note: 'Kode berlaku <strong>10 menit</strong> dan hanya dapat dipakai sekali.',
-    closing: 'Jika Anda tidak meminta kode ini, abaikan saja email ini — tidak ada perubahan pada akun Anda.'
+    closing:
+      'Jika Anda tidak meminta kode ini, abaikan saja email ini — tidak ada perubahan pada akun Anda.',
   },
   reset: {
     subject: 'Kode pemulihan password Buku Wahidiyah',
@@ -171,8 +194,9 @@ const COPY = {
     eyebrow: 'Kode pemulihan',
     action: 'Kami menerima permintaan untuk mengatur ulang password akun',
     note: 'Kode berlaku <strong>10 menit</strong> dan hanya dapat dipakai sekali.',
-    closing: 'Jika Anda tidak meminta pengaturan ulang password, abaikan email ini — password Anda tidak berubah.'
-  }
+    closing:
+      'Jika Anda tidak meminta pengaturan ulang password, abaikan email ini — password Anda tidak berubah.',
+  },
 };
 
 const EMAIL_FONT = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
@@ -254,21 +278,22 @@ export const sendOtpEmail = async (email, code, purpose = 'register') => {
     '',
     copy.closing,
     '',
-    'Email otomatis, mohon tidak dibalas.'
+    'Email otomatis, mohon tidak dibalas.',
   ].join('\n');
 
   return sendViaGmailApi({
     to: email,
     subject: copy.subject,
     text,
-    html: renderEmail({ ...copy, target: email, code })
+    html: renderEmail({ ...copy, target: email, code }),
   });
 };
 
 export const sendGoogleAccountEmail = async (email) => {
   if (!oauthClient) return false;
 
-  const action = 'Akun ini terdaftar melalui Google, sehingga tidak memiliki password yang bisa diatur ulang. Silakan masuk memakai tombol Masuk dengan Google di halaman masuk.';
+  const action =
+    'Akun ini terdaftar melalui Google, sehingga tidak memiliki password yang bisa diatur ulang. Silakan masuk memakai tombol Masuk dengan Google di halaman masuk.';
 
   return sendViaGmailApi({
     to: email,
@@ -281,7 +306,7 @@ export const sendGoogleAccountEmail = async (email) => {
       'Akun ini tidak memiliki password, jadi tidak ada yang bisa diatur ulang di sini.',
       'Silakan masuk memakai tombol "Masuk dengan Google" di halaman masuk.',
       '',
-      'Email otomatis, mohon tidak dibalas.'
+      'Email otomatis, mohon tidak dibalas.',
     ].join('\n'),
     html: renderEmail({
       heading: 'Cara masuk ke akun Anda',
@@ -290,7 +315,7 @@ export const sendGoogleAccountEmail = async (email) => {
       target: email,
       note: action,
       closing: 'Jika Anda tidak merasa meminta ini, abaikan saja email ini.',
-      code: ''
-    })
+      code: '',
+    }),
   });
 };

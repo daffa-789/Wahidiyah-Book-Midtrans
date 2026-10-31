@@ -11,13 +11,17 @@ export const ForgotPasswordScreen = () => {
   const [method, setMethod] = useState('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const { error, setError, isSubmitting, runSubmit } = useSubmit('Permintaan belum dapat diproses.');
+  const { error, setError, isSubmitting, runSubmit } = useSubmit(
+    'Permintaan belum dapat diproses.',
+  );
 
   const submit = (event) => {
     event.preventDefault();
 
     if (method === 'whatsapp') {
-      const standardPhone = String(phone || '').trim().replace(/[^0-9]/g, '');
+      const standardPhone = String(phone || '')
+        .trim()
+        .replace(/[^0-9]/g, '');
       if (!standardPhone || standardPhone.length < 8 || standardPhone.length > 15) {
         setError('Masukkan nomor WhatsApp yang valid.');
         return;
@@ -27,14 +31,14 @@ export const ForgotPasswordScreen = () => {
         const result = await apiJson('/api/auth/request-password-reset', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ method: 'whatsapp', phone: standardPhone })
+          body: JSON.stringify({ method: 'whatsapp', phone: standardPhone }),
         });
         setVerification({
           phone: standardPhone,
           method: 'whatsapp',
           identifier: standardPhone,
           purpose: 'reset',
-          devOtp: result.devOtp
+          devOtp: result.devOtp,
         });
         navigateTo('verify-email');
       });
@@ -50,14 +54,14 @@ export const ForgotPasswordScreen = () => {
       const result = await apiJson('/api/auth/request-password-reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'email', email: target })
+        body: JSON.stringify({ method: 'email', email: target }),
       });
       setVerification({
         email: target,
         method: 'email',
         identifier: target,
         purpose: 'reset',
-        devOtp: result.devOtp
+        devOtp: result.devOtp,
       });
       navigateTo('verify-email');
     });
@@ -66,10 +70,20 @@ export const ForgotPasswordScreen = () => {
   return (
     <main className={layout.authShell}>
       <section className={layout.authCard}>
-        <button type="button" onClick={() => navigateTo('login')} className="mb-6 inline-flex min-h-6 items-center gap-1 px-1 text-xs font-bold text-ink-400 transition hover:text-brand-700"><ArrowLeft className="h-4 w-4" /> Kembali ke masuk</button>
+        <button
+          type="button"
+          onClick={() => navigateTo('login')}
+          className="mb-6 inline-flex min-h-6 items-center gap-1 px-1 text-xs font-bold text-ink-400 transition hover:text-brand-700"
+        >
+          <ArrowLeft className="h-4 w-4" /> Kembali ke masuk
+        </button>
 
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><KeyRound className="h-6 w-6" /></div>
-        <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-ink-900">Atur ulang password</h1>
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+          <KeyRound className="h-6 w-6" />
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-ink-900">
+          Atur ulang password
+        </h1>
         <p className={typography.helperRelaxed}>
           {method === 'whatsapp'
             ? 'Opsi alternatif jika Anda tidak dapat membuka email. Kami akan mengirimkan kode 6 angka ke nomor WhatsApp terdaftar.'
@@ -80,7 +94,10 @@ export const ForgotPasswordScreen = () => {
         <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl bg-cream-100 p-1">
           <button
             type="button"
-            onClick={() => { setMethod('email'); setError(''); }}
+            onClick={() => {
+              setMethod('email');
+              setError('');
+            }}
             className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition ${
               method === 'email'
                 ? 'bg-cream-50 text-brand-800 shadow-sm'
@@ -92,7 +109,10 @@ export const ForgotPasswordScreen = () => {
           </button>
           <button
             type="button"
-            onClick={() => { setMethod('whatsapp'); setError(''); }}
+            onClick={() => {
+              setMethod('whatsapp');
+              setError('');
+            }}
             className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition ${
               method === 'whatsapp'
                 ? 'bg-cream-50 text-brand-800 shadow-sm'
@@ -107,11 +127,16 @@ export const ForgotPasswordScreen = () => {
         <form onSubmit={submit} className="mt-5 space-y-4" noValidate>
           {method === 'whatsapp' ? (
             <div className="block">
-              <label htmlFor="forgot-phone" className="auth-label">Nomor WhatsApp</label>
+              <label htmlFor="forgot-phone" className="auth-label">
+                Nomor WhatsApp
+              </label>
               <PhoneInput
                 id="forgot-phone"
                 value={phone}
-                onChange={(val) => { setPhone(val); setError(''); }}
+                onChange={(val) => {
+                  setPhone(val);
+                  setError('');
+                }}
                 className="mt-1.5"
               />
             </div>
@@ -124,17 +149,32 @@ export const ForgotPasswordScreen = () => {
                   type="email"
                   autoComplete="email"
                   value={email}
-                  onChange={(event) => { setEmail(event.target.value); setError(''); }}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    setError('');
+                  }}
                   placeholder="nama@email.com"
                 />
               </span>
             </label>
           )}
 
-          {error && <div role="alert" className="auth-alert"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
+          {error && (
+            <div role="alert" className="auth-alert">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
 
           <button type="submit" disabled={isSubmitting} className="auth-primary-button">
-            {isSubmitting ? <><span className="auth-spinner" />Memproses…</> : 'Kirim kode verifikasi'}
+            {isSubmitting ? (
+              <>
+                <span className="auth-spinner" />
+                Memproses…
+              </>
+            ) : (
+              'Kirim kode verifikasi'
+            )}
           </button>
         </form>
 

@@ -12,16 +12,16 @@ import {
   Users,
   CalendarDays,
   Activity,
-  GalleryHorizontalEnd
+  GalleryHorizontalEnd,
 } from 'lucide-react';
 
 export const SIDEBAR_SECTIONS = [
   {
     id: 'utama',
     title: 'Utama',
-    keys: ['home', 'calendar', 'pro']
+    keys: ['home', 'calendar', 'pro'],
   },
-  { id: 'akun', title: 'Akun', keys: ['profile', 'logout'] }
+  { id: 'akun', title: 'Akun', keys: ['profile', 'logout'] },
 ];
 
 export const ADMIN_SECTION_KEYS = [
@@ -30,19 +30,23 @@ export const ADMIN_SECTION_KEYS = [
   'admin-users',
   'admin-events',
   'admin-carousel',
-  'admin-logs'
+  'admin-logs',
 ];
 
 export const ADMIN_SECTION = {
   id: 'administrasi',
   title: 'Administrasi',
-  keys: [...ADMIN_SECTION_KEYS, 'logout']
+  keys: [...ADMIN_SECTION_KEYS, 'logout'],
 };
 
 export const SIDEBAR_ITEM_DEFS = {
   home: { label: 'Beranda', icon: Home, target: 'home' },
   calendar: { label: 'Kalender', icon: Calendar, target: 'calendar' },
-  'subscription-history': { label: 'Riwayat Langganan', icon: ReceiptText, target: 'subscription-history' },
+  'subscription-history': {
+    label: 'Riwayat Langganan',
+    icon: ReceiptText,
+    target: 'subscription-history',
+  },
   pro: { label: 'Pro', icon: Sparkles, target: 'pro' },
   'help-center': { label: 'Pusat Bantuan', icon: HelpCircle, target: 'help-center' },
   about: { label: 'Tentang', icon: Info, target: 'about' },
@@ -54,7 +58,7 @@ export const SIDEBAR_ITEM_DEFS = {
   'admin-users': { label: 'Pengguna', icon: Users, target: 'admin:users' },
   'admin-events': { label: 'Agenda', icon: CalendarDays, target: 'admin:events' },
   'admin-carousel': { label: 'Carousel', icon: GalleryHorizontalEnd, target: 'admin:carousel' },
-  'admin-logs': { label: 'Log Aktivitas', icon: Activity, target: 'admin:logs' }
+  'admin-logs': { label: 'Log Aktivitas', icon: Activity, target: 'admin:logs' },
 };
 
 export const ACTIVE_KEYS_BY_SCREEN = {
@@ -66,7 +70,7 @@ export const ACTIVE_KEYS_BY_SCREEN = {
   'help-center': ['help-center'],
   help: ['help-center'],
   about: ['about'],
-  'profile-edit': ['profile']
+  'profile-edit': ['profile'],
 };
 
 export const buildSidebarSections = (isAdmin, activeKeys) => {
@@ -81,8 +85,8 @@ export const buildSidebarSections = (isAdmin, activeKeys) => {
         id: key,
         ...SIDEBAR_ITEM_DEFS[key],
         accent: showAdminNav ? 'admin' : 'user',
-        isActive: activeKeys.includes(key)
-      }))
+        isActive: activeKeys.includes(key),
+      })),
     }))
     .filter((section) => section.items.length > 0);
 };

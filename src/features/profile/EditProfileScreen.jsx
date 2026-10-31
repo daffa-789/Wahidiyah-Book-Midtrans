@@ -12,7 +12,7 @@ import {
   Save,
   User,
   Mail,
-  Phone
+  Phone,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '@context/AppContext';
@@ -61,11 +61,11 @@ export const EditProfileScreen = () => {
         method: 'PUT',
         headers: {
           ...authHeaders(sessionToken),
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: name.trim()
-        })
+          name: name.trim(),
+        }),
       });
 
       if (payload.user) {
@@ -94,7 +94,6 @@ export const EditProfileScreen = () => {
   return (
     <div className="min-h-[640px] flex flex-col px-4 sm:px-6 py-6 sm:py-8 bg-cream-50 pb-24 md:pb-12">
       <div className="mx-auto w-full max-w-content-narrow space-y-6">
-
         {/* 1. Data Akun (Paling Atas) */}
         <div className="space-y-2">
           <h2 className="text-caption font-bold uppercase tracking-wider text-ink-400 px-1">
@@ -163,7 +162,9 @@ export const EditProfileScreen = () => {
                     className="flex h-12 w-full items-center gap-2.5 rounded-xl border border-cream-300 bg-cream-200/50 pl-10 pr-3.5 text-body font-medium text-ink-700"
                   >
                     {user.phone ? (
-                      <span className="font-mono text-caption font-semibold text-ink-800">{displayPhone(user.phone)}</span>
+                      <span className="font-mono text-caption font-semibold text-ink-800">
+                        {displayPhone(user.phone)}
+                      </span>
                     ) : (
                       <span className="text-ink-400">-</span>
                     )}
@@ -179,7 +180,10 @@ export const EditProfileScreen = () => {
 
               {/* Status Pesan */}
               {errorMessage && (
-                <div role="alert" className="flex items-center gap-2.5 rounded-xl border border-semantic-danger/30 bg-semantic-dangerLight p-3.5 text-caption font-semibold text-semantic-danger page-transition">
+                <div
+                  role="alert"
+                  className="flex items-center gap-2.5 rounded-xl border border-semantic-danger/30 bg-semantic-dangerLight p-3.5 text-caption font-semibold text-semantic-danger page-transition"
+                >
                   <AlertCircle className="h-4 w-4 shrink-0 text-semantic-danger" strokeWidth={2} />
                   <span>{errorMessage}</span>
                 </div>
@@ -293,9 +297,7 @@ export const EditProfileScreen = () => {
             {/* Slider Switch Mode Gelap / Terang */}
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-body font-bold text-ink-900">
-                  Mode Tampilan
-                </p>
+                <p className="text-body font-bold text-ink-900">Mode Tampilan</p>
                 <p className="text-caption text-ink-500">
                   {isDark ? 'Mode Gelap (Malam) aktif' : 'Mode Terang (Siang) aktif'}
                 </p>
@@ -333,7 +335,6 @@ export const EditProfileScreen = () => {
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Modal Konfirmasi Log Out */}

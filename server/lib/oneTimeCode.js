@@ -24,7 +24,7 @@ const requireStore = () => {
 /** Simpan payload sesi di store bersama dan kembalikan kode acak base64url. */
 export const createOneTimeCode = async (
   payload,
-  { ttlMs = DEFAULT_TTL_MS, now = Date.now() } = {}
+  { ttlMs = DEFAULT_TTL_MS, now = Date.now() } = {},
 ) => {
   const supabase = requireStore();
   const code = crypto.randomBytes(32).toString('base64url');
@@ -43,7 +43,7 @@ export const createOneTimeCode = async (
     purpose: PURPOSE,
     code_hash: hashCode(code),
     payload,
-    expires_at: expiresAt
+    expires_at: expiresAt,
   });
   if (error) throw error;
 

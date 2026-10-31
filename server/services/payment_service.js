@@ -16,20 +16,20 @@ import {
   loadMembershipUser,
   settleExpiredMembership,
   toPublicUser,
-  TRANSACTION_PENDING_STATUS
+  TRANSACTION_PENDING_STATUS,
 } from '../auth.js';
 import {
   activatePaidMembership,
   activeSubscriptionConflict,
   insertTransaction,
   restorePendingTransaction,
-  toRefCode
+  toRefCode,
 } from '../lib/membership.js';
 import { QRIS_ADMIN_FEE, findPlan } from '../lib/constants.js';
 import {
   MIDTRANS_IS_PRODUCTION,
   MIDTRANS_PAYMENT_METHOD_LABEL,
-  MIDTRANS_QRIS_EXPIRY_MINUTES
+  MIDTRANS_QRIS_EXPIRY_MINUTES,
 } from '../config.js';
 import {
   cancelQrisTransaction,
@@ -41,30 +41,24 @@ import {
   isMidtransConfigured,
   isTransactionSettled,
   isVoidAcknowledged,
-  verifySignatureKey
+  verifySignatureKey,
 } from '../lib/midtrans.js';
 import { logger } from '../logger.js';
 
 /** Status Midtrans yang berarti order mati (tidak mungkin dibayar lagi). */
 export const FAILED_MIDTRANS_STATUSES = new Set(['expire', 'cancel', 'deny']);
 
-export const TRANSACTION_COLUMNS = 'id, ref_no, user_id, plan_name, amount, admin_fee, total_paid, payment_method, status, verified_at, created_at, midtrans_transaction_id, midtrans_qr_url, midtrans_qr_string, expires_at';
+export const TRANSACTION_COLUMNS =
+  'id, ref_no, user_id, plan_name, amount, admin_fee, total_paid, payment_method, status, verified_at, created_at, midtrans_transaction_id, midtrans_qr_url, midtrans_qr_string, expires_at';
 
 /**
  * Galat layanan dengan status HTTP usulan (konvensi §4.1 panduan arsitektur).
  * Controller hanya meneruskan `statusCode`/`code` — tidak menerka sendiri.
  */
-export function createServiceError(message, { statusCode = 500, code = null } = {}) {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  if (code) error.code = code;
-  return error;
-}
-
+export { createServiceError } from '../lib/errors.js';
 
 const isExpired = (transaction, now = Date.now()) =>
   Boolean(transaction.expires_at) && new Date(transaction.expires_at).getTime() < now;
-
 
 /**
  * Memuat transaksi milik pemohon. Pemilik baris atau admin boleh melihat;
@@ -84,7 +78,6 @@ export async function loadTransactionForViewer({ orderId, viewerId, viewerRole }
   }
   return { transaction: data, forbidden: false };
 }
-
 
 /**
  * Menuntas transaksi menjadi lunas + mengaktifkan langganan Pro.
@@ -119,7 +112,7 @@ export async function settleTransaction(transaction) {
       userId: transaction.user_id,
       planName: transaction.plan_name,
       price: transaction.amount,
-      refCode: toRefCode(transaction.ref_no)
+      refCode: toRefCode(transaction.ref_no),
     });
   } catch (activationError) {
     let statusRestored = true;
@@ -130,24 +123,27 @@ export async function settleTransaction(transaction) {
       activationError.rollbackError = rollbackError;
     }
 
-    logger.error('MIDTRANS', statusRestored
-      ? 'Aktivasi gagal; transaksi dikembalikan ke pending'
-      : 'Aktivasi gagal; pemulihan transaksi juga gagal', {
-      orderId: transaction.id,
-      pesan: activationError.message
-    });
+    logger.error(
+      'MIDTRANS',
+      statusRestored
+        ? 'Aktivasi gagal; transaksi dikembalikan ke pending'
+        : 'Aktivasi gagal; pemulihan transaksi juga gagal',
+      {
+        orderId: transaction.id,
+        pesan: activationError.message,
+      },
+    );
     throw activationError;
   }
 
   logger.ok('MIDTRANS', 'Langganan Pro diaktifkan', {
     orderId: transaction.id,
     userId: transaction.user_id,
-    subscriptionId: activated.subscriptionId
+    subscriptionId: activated.subscriptionId,
   });
 
   return { alreadyProcessed: false, activated };
 }
-
 
 /**
  * Menandai transaksi pending sebagai gagal (expire/cancel/deny/kedaluwarsa).
@@ -170,7 +166,6 @@ export async function rejectTransaction(transaction, reason) {
   return { alreadyProcessed: !claimed || claimed.length === 0 };
 }
 
-
 /**
  * Membuat (atau memakai ulang) order QRIS untuk satu pengguna.
  *
@@ -186,7 +181,8 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
   if (!isMidtransConfigured) {
     return {
       outcome: 'gateway-unavailable',
-      message: 'Payment gateway Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di .env.'
+      message:
+        'Payment gateway Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di .env.',
     };
   }
 
@@ -203,11 +199,9 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
     return {
       outcome: 'already-pro',
       message: conflict.message,
-      user: toPublicUser(membership)
+      user: toPublicUser(membership),
     };
   }
-
-
 
   const { data: pendingTx } = await supabaseServer
     .from('transactions')
@@ -235,16 +229,14 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
         adminFee: pendingTx.admin_fee,
         totalPaid: pendingTx.total_paid,
         status: TRANSACTION_PENDING_STATUS,
-        expiredAt: pendingTx.expires_at
+        expiredAt: pendingTx.expires_at,
       },
-      user: toPublicUser(membership)
+      user: toPublicUser(membership),
     };
   }
 
   const orderId = generateId('tx');
   const expiredAt = new Date(Date.now() + MIDTRANS_QRIS_EXPIRY_MINUTES * 60_000).toISOString();
-
-
 
   const refNo = await insertTransaction({
     txId: orderId,
@@ -254,12 +246,9 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
     adminFee,
     totalPaid,
     method: MIDTRANS_PAYMENT_METHOD_LABEL,
-    status: TRANSACTION_PENDING_STATUS
+    status: TRANSACTION_PENDING_STATUS,
   });
-  await supabaseServer
-    .from('transactions')
-    .update({ expires_at: expiredAt })
-    .eq('id', orderId);
+  await supabaseServer.from('transactions').update({ expires_at: expiredAt }).eq('id', orderId);
 
   const pendingRow = { id: orderId, status: TRANSACTION_PENDING_STATUS };
 
@@ -270,13 +259,13 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
       grossAmount: totalPaid,
       itemDetails: [
         { id: plan.id, price: amount, quantity: 1, name: `Langganan ${plan.name}` },
-        { id: 'admin-fee', price: adminFee, quantity: 1, name: 'Biaya Administrasi' }
+        { id: 'admin-fee', price: adminFee, quantity: 1, name: 'Biaya Administrasi' },
       ],
       customerDetails: {
         first_name: membership?.name || 'Pembaca Wahidiyah',
         email: membership?.email || undefined,
-        phone: phone || undefined
-      }
+        phone: phone || undefined,
+      },
     });
   } catch (chargeError) {
     await rejectTransaction(pendingRow, 'charge gagal');
@@ -291,7 +280,7 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
     logger.error('MIDTRANS', 'Respons charge tidak berisi qr_string maupun URL QR', { orderId });
     throw createServiceError('Midtrans tidak mengembalikan kode QR. Coba beberapa saat lagi.', {
       statusCode: 502,
-      code: 'QR_MISSING'
+      code: 'QR_MISSING',
     });
   }
 
@@ -301,7 +290,7 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
       midtrans_transaction_id: charge?.transaction_id || null,
       midtrans_qr_url: qrAction?.url || null,
       midtrans_qr_string: qrString || null,
-      expires_at: expiredAt
+      expires_at: expiredAt,
     })
     .eq('id', orderId);
 
@@ -309,7 +298,7 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
     orderId,
     totalPaid,
     acquirer: charge?.acquirer,
-    sumberQr: qrString ? 'qr_string' : 'image'
+    sumberQr: qrString ? 'qr_string' : 'image',
   });
 
   return {
@@ -327,12 +316,11 @@ export async function createQrisOrder({ planId, userId, fallbackUser, phone }) {
       adminFee,
       totalPaid,
       status: TRANSACTION_PENDING_STATUS,
-      expiredAt
+      expiredAt,
     },
-    user: toPublicUser(membership)
+    user: toPublicUser(membership),
   };
 }
-
 
 /**
  * Status akhir sebuah order QRIS dari sudut pandang pembeli.
@@ -350,8 +338,6 @@ export async function resolveQrisStatus({ transaction }) {
   if (transaction.status === 'rejected') {
     return { status: 'expire', isPaid: false };
   }
-
-
 
   if (isExpired(transaction)) {
     await rejectTransaction(transaction, 'kedaluwarsa');
@@ -379,7 +365,6 @@ export async function resolveQrisStatus({ transaction }) {
     return { status: 'pending', isPaid: false };
   }
 }
-
 
 /**
  * Membatalkan kode QRIS milik sendiri lalu biarkan klien membuat order baru.
@@ -414,9 +399,11 @@ export async function cancelQrisForUser({ transaction }) {
   const nowIso = new Date().toISOString();
   const { error: cancelError } = await supabaseServer
     .from('transactions')
-    .update(voidedByMidtrans
-      ? { expires_at: nowIso, status: 'rejected', verified_at: nowIso }
-      : { expires_at: nowIso })
+    .update(
+      voidedByMidtrans
+        ? { expires_at: nowIso, status: 'rejected', verified_at: nowIso }
+        : { expires_at: nowIso },
+    )
     .eq('id', transaction.id)
     .eq('status', TRANSACTION_PENDING_STATUS);
 
@@ -424,7 +411,7 @@ export async function cancelQrisForUser({ transaction }) {
 
   logger.info('MIDTRANS', 'Kode QRIS dibatalkan pengguna', {
     orderId: transaction.id,
-    voidedByMidtrans
+    voidedByMidtrans,
   });
 
   const kedaluwarsaLama = transaction.expires_at
@@ -433,7 +420,6 @@ export async function cancelQrisForUser({ transaction }) {
 
   return { voidedByMidtrans, kedaluwarsaLama };
 }
-
 
 /**
  * Memproses payload webhook notifikasi Midtrans (POST /midtrans/notification).

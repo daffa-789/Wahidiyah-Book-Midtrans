@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { apiJson, authHeaders } from '@lib/api';
 
-
 const POLL_INTERVAL_MS = 3000;
 
 const DEFAULT_COUNTDOWN_SECONDS = 15 * 60;
-
 
 const secondsUntil = (isoDate) => {
   const target = new Date(isoDate).getTime();
@@ -13,12 +11,11 @@ const secondsUntil = (isoDate) => {
   return Math.max(0, Math.round((target - Date.now()) / 1000));
 };
 
-
 export const useQrisPayment = ({
   selectedPlan,
   onPaymentSuccess,
   isQrisActive = true,
-  phone = ''
+  phone = '',
 }) => {
   const [qrTransaction, setQrTransaction] = useState(null);
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
@@ -44,8 +41,8 @@ export const useQrisPayment = ({
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planId: selectedPlan?.id || 'monthly',
-          phone
-        })
+          phone,
+        }),
       });
 
       if (data.alreadyPro) {
@@ -63,7 +60,7 @@ export const useQrisPayment = ({
         amount: data.amount ?? null,
         adminFee: data.adminFee ?? null,
         planName: data.planName,
-        expiredAt: data.expiredAt
+        expiredAt: data.expiredAt,
       });
       setCountdown(secondsUntil(data.expiredAt));
       setIsExpired(false);
@@ -118,11 +115,11 @@ export const useQrisPayment = ({
          biaya layanan, dan total yang sebenarnya. */
       const facts = qrTransaction
         ? {
-          amount: qrTransaction.amount,
-          adminFee: qrTransaction.adminFee,
-          totalPaid: qrTransaction.totalPaid,
-          planName: qrTransaction.planName
-        }
+            amount: qrTransaction.amount,
+            adminFee: qrTransaction.adminFee,
+            totalPaid: qrTransaction.totalPaid,
+            planName: qrTransaction.planName,
+          }
         : null;
       setTimeout(() => {
         onPaymentSuccess(facts);
@@ -130,9 +127,6 @@ export const useQrisPayment = ({
     }
   }, [onPaymentSuccess, qrTransaction]);
 
-  
-  
-  
   useEffect(() => {
     if (!qrTransaction?.orderId || isQrisPaid || isExpired) return undefined;
 
@@ -140,16 +134,12 @@ export const useQrisPayment = ({
       try {
         const data = await apiJson(`/api/payments/qris/${qrTransaction.orderId}/status`, {
           headers: { ...authHeaders() },
-          cache: 'no-cache'
+          cache: 'no-cache',
         });
         if (data?.isPaid === true) {
           triggerSuccess();
         }
-      } catch {
-        
-        
-        
-      }
+      } catch {}
     };
 
     pollIntervalRef.current = setInterval(checkStatus, POLL_INTERVAL_MS);
@@ -171,7 +161,7 @@ export const useQrisPayment = ({
     try {
       const data = await apiJson(`/api/payments/qris/${qrTransaction.orderId}/cancel`, {
         method: 'POST',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' }
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       });
       await generateTransaction();
       // Diisi setelah order baru jadi, karena generateTransaction membersihkan
@@ -198,6 +188,6 @@ export const useQrisPayment = ({
     isCancelling,
     formattedCountdown,
     regenerateQr: generateTransaction,
-    cancelQris
+    cancelQris,
   };
 };

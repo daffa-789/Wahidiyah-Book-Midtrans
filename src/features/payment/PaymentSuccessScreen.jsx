@@ -16,7 +16,7 @@ export const PaymentSuccessScreen = () => {
         particleCount: 90,
         spread: 70,
         origin: { y: 0.55 },
-        colors: ['#14523A', '#B8860B', '#22C55E', '#F59E0B', '#3B82F6']
+        colors: ['#14523A', '#B8860B', '#22C55E', '#F59E0B', '#3B82F6'],
       });
     } catch {
       // Abaikan jika lingkungan tidak mendukung canvas
@@ -33,7 +33,7 @@ export const PaymentSuccessScreen = () => {
     adminFee: fallbackAdminFee,
     totalPaid: fallbackAmount + fallbackAdminFee,
     methodName: selectedPaymentMethod?.name || 'QRIS',
-    planName: selectedPlan?.title || 'Paket Bulanan'
+    planName: selectedPlan?.title || 'Paket Bulanan',
   };
 
   const hasRef = Boolean(details.refNo) && details.refNo !== '—';
@@ -48,14 +48,14 @@ export const PaymentSuccessScreen = () => {
   };
   const amount = angka(details.amount) ?? fallbackAmount;
   const adminFee = angka(details.adminFee) ?? fallbackAdminFee;
-  const total = angka(details.totalPaid) ?? (amount + adminFee);
+  const total = angka(details.totalPaid) ?? amount + adminFee;
 
   const rows = [
     ['Nomor referensi', hasRef ? details.refNo : 'WB-' + Date.now().toString(36).toUpperCase()],
     ['Waktu', details.dateStr],
     ['Paket', details.planName],
     ['Masa aktif', hasPeriod ? details.periodStr : 'Aktif 30 Hari (Pro)'],
-    ['Biaya layanan', adminFee === 0 ? 'Gratis (Rp 0)' : `Rp ${adminFee.toLocaleString('id-ID')}`]
+    ['Biaya layanan', adminFee === 0 ? 'Gratis (Rp 0)' : `Rp ${adminFee.toLocaleString('id-ID')}`],
   ];
 
   return (
@@ -66,16 +66,20 @@ export const PaymentSuccessScreen = () => {
             <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
           </div>
           <h1 className="font-display text-2xl font-bold tracking-tight text-ink-900">
-            {details.pendingVerification ? 'Menunggu konfirmasi pembayaran' : 'Pembayaran Berhasil!'}
+            {details.pendingVerification
+              ? 'Menunggu konfirmasi pembayaran'
+              : 'Pembayaran Berhasil!'}
           </h1>
 
           {details.pendingVerification ? (
             <p className="mt-2 text-sm text-ink-400">
-              Transaksi Anda tercatat. Paket Pro aktif setelah payment gateway mengonfirmasi pembayaran.
+              Transaksi Anda tercatat. Paket Pro aktif setelah payment gateway mengonfirmasi
+              pembayaran.
             </p>
           ) : (
             <p className="text-xs text-ink-500">
-              Selamat, akun Anda telah aktif sebagai <strong>Member Pro</strong>. Silakan nikmati akses penuh seluruh kitab dan fitur eksklusif.
+              Selamat, akun Anda telah aktif sebagai <strong>Member Pro</strong>. Silakan nikmati
+              akses penuh seluruh kitab dan fitur eksklusif.
             </p>
           )}
         </div>
@@ -83,13 +87,20 @@ export const PaymentSuccessScreen = () => {
         <section className="overflow-hidden rounded-3xl border border-cream-300 bg-ui-card shadow-xl shadow-brand-900/5">
           <div className="space-y-4 p-5 sm:p-6">
             <div className="border-b border-cream-200 pb-4 text-center">
-              <p className="text-micro font-bold uppercase tracking-wider text-ink-300">Total pembayaran</p>
-              <p className="mt-1 text-3xl font-black tracking-tight text-brand-900">Rp {total.toLocaleString('id-ID')}</p>
+              <p className="text-micro font-bold uppercase tracking-wider text-ink-300">
+                Total pembayaran
+              </p>
+              <p className="mt-1 text-3xl font-black tracking-tight text-brand-900">
+                Rp {total.toLocaleString('id-ID')}
+              </p>
               <p className={typography.helperTight}>{details.methodName}</p>
             </div>
             <dl className="space-y-3 text-sm">
               {rows.map(([label, value]) => (
-                <div key={label} className="flex items-start justify-between gap-5 border-b border-cream-200 pb-3 last:border-0 last:pb-0">
+                <div
+                  key={label}
+                  className="flex items-start justify-between gap-5 border-b border-cream-200 pb-3 last:border-0 last:pb-0"
+                >
                   <dt className="text-ink-400">{label}</dt>
                   <dd className="text-right text-xs font-bold text-ink-800">{value}</dd>
                 </div>

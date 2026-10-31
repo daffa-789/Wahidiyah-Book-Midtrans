@@ -1,17 +1,6 @@
 import { useMemo } from 'react';
-import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip
-} from 'recharts';
-import {
-  BookOpen,
-  FileSpreadsheet,
-  ShieldCheck,
-  Users
-} from 'lucide-react';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { BookOpen, FileSpreadsheet, ShieldCheck, Users } from 'lucide-react';
 import { TxStatusBadge } from './TxStatusBadge';
 import { formatWIB } from '@lib/date';
 import { formatRupiah } from '@lib/formatUtils';
@@ -29,19 +18,13 @@ const formatCurrency = formatRupiah;
  * 4. Kartu Pendapatan Tervalidasi
  * 5. Riwayat 10 Transaksi Pembayaran Terakhir (responsif: Card pada mobile, Table pada desktop)
  */
-export const OverviewTab = ({
-  stats,
-  books = [],
-  users = [],
-  transactions = [],
-  onExportFull
-}) => {
+export const OverviewTab = ({ stats, books = [], users = [], transactions = [], onExportFull }) => {
   const subscriptionShare = useMemo(() => {
     const pro = users.filter((item) => Boolean(item.isPro)).length;
     const regular = Math.max(users.length - pro, 0);
     return [
       { name: 'Pro', value: pro, color: '#14523A' },
-      { name: 'Reguler', value: regular, color: '#B9DBC9' }
+      { name: 'Reguler', value: regular, color: '#B9DBC9' },
     ].filter((item) => item.value > 0);
   }, [users]);
 
@@ -50,20 +33,20 @@ export const OverviewTab = ({
       label: 'Total pengguna',
       value: stats?.totalUsers ?? 0,
       icon: Users,
-      tone: 'text-ink-700 bg-cream-100 border-cream-200'
+      tone: 'text-ink-700 bg-cream-100 border-cream-200',
     },
     {
       label: 'Koleksi aktif',
       value: stats?.totalBooks ?? books.length,
       icon: BookOpen,
-      tone: 'text-brand-700 bg-brand-50 border-brand-200'
+      tone: 'text-brand-700 bg-brand-50 border-brand-200',
     },
     {
       label: 'Langganan aktif',
       value: stats?.activeSubscriptions ?? 0,
       icon: ShieldCheck,
-      tone: 'text-brand-700 bg-brand-50 border-brand-200'
-    }
+      tone: 'text-brand-700 bg-brand-50 border-brand-200',
+    },
   ];
 
   return (
@@ -133,10 +116,7 @@ export const OverviewTab = ({
           <div className="mt-3 flex items-center justify-around border-t border-cream-200/60 pt-3">
             {subscriptionShare.map((entry) => (
               <div key={entry.name} className="flex items-center gap-2 text-caption">
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: entry.color }}
-                />
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.color }} />
                 <span className="text-ink-500 font-medium">{entry.name}:</span>
                 <strong className="text-ink-900">{entry.value}</strong>
               </div>

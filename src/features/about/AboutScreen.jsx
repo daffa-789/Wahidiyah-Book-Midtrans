@@ -8,7 +8,9 @@ export const AboutScreen = () => {
         <div className="bg-cream-100/80 rounded-3xl p-5 border border-cream-200 space-y-3 text-xs">
           <div className={layout.rowGap2}>
             <Shield className="w-4 h-4" />
-            <h4 className="text-xs font-bold uppercase tracking-wider text-ink-800">Informasi Versi</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-ink-800">
+              Informasi Versi
+            </h4>
           </div>
 
           <div className="flex justify-between items-center py-1 border-b border-cream-300/60">
@@ -29,7 +31,6 @@ export const AboutScreen = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };

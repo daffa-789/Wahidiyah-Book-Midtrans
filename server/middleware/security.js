@@ -8,7 +8,7 @@ import {
   CSP_DIRECTIVES,
   CSP_REPORT_ONLY,
   QRIS_STATUS_RATE_LIMIT,
-  TRUST_PROXY
+  TRUST_PROXY,
 } from '../config.js';
 
 /* Report-only sampai CSP_ENFORCE=1: aplikasi tetap jalan sementara pelanggaran
@@ -18,16 +18,16 @@ export const securityHeaders = helmet({
   contentSecurityPolicy: {
     useDefaults: false,
     directives: CSP_DIRECTIVES,
-    reportOnly: CSP_REPORT_ONLY
+    reportOnly: CSP_REPORT_ONLY,
   },
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 });
 
 export const corsPolicy = cors({
   origin(origin, callback) {
     if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
     return callback(null, false);
-  }
+  },
 });
 
 export const responseCompression = compression({ threshold: 1024 });
@@ -48,7 +48,7 @@ export const qrisStatusRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: QRIS_STATUS_RATE_LIMIT.message,
-  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip || 'unknown')
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req.ip || 'unknown'),
 });
 
 export const paymentRateLimiter = rateLimit({
@@ -56,5 +56,8 @@ export const paymentRateLimiter = rateLimit({
   max: 20,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { success: false, message: 'Terlalu banyak percobaan transaksi atau pembayaran. Coba lagi dalam 5 menit.' }
+  message: {
+    success: false,
+    message: 'Terlalu banyak percobaan transaksi atau pembayaran. Coba lagi dalam 5 menit.',
+  },
 });

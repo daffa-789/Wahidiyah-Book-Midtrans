@@ -20,8 +20,12 @@ export const Field = ({ id, label, as: Control = 'input', className = '', childr
 
   return (
     <div className={className}>
-      <label htmlFor={id} className={typography.fieldLabel}>{label}</label>
-      <Control id={id} className={controlClass} {...props}>{children}</Control>
+      <label htmlFor={id} className={typography.fieldLabel}>
+        {label}
+      </label>
+      <Control id={id} className={controlClass} {...props}>
+        {children}
+      </Control>
     </div>
   );
 };

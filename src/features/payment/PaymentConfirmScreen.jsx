@@ -8,7 +8,7 @@ import {
   Clock,
   ShieldCheck,
   Download,
-  Copy
+  Copy,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -29,7 +29,7 @@ export const PaymentConfirmScreen = () => {
     setPaymentAgreed,
     completePayment,
     navigateTo,
-    isSubscriptionActive
+    isSubscriptionActive,
   } = useApp();
 
   const isSubscribed = isSubscriptionActive ? isSubscriptionActive(user) : Boolean(user?.isPro);
@@ -44,7 +44,7 @@ export const PaymentConfirmScreen = () => {
     downloadQrisImage({
       container: qrContainerRef.current,
       planId: selectedPlan?.id,
-      qrImageUrl: qrTransaction?.qrImageUrl
+      qrImageUrl: qrTransaction?.qrImageUrl,
     });
   };
 
@@ -76,13 +76,16 @@ export const PaymentConfirmScreen = () => {
 
   const isQrisMethod = isQrisPaymentMethod(selectedPaymentMethod);
 
-  const handlePaymentSuccess = useCallback(async (facts) => {
-    try {
-      await completePayment(facts);
-    } finally {
-      navigateTo('payment-success');
-    }
-  }, [completePayment, navigateTo]);
+  const handlePaymentSuccess = useCallback(
+    async (facts) => {
+      try {
+        await completePayment(facts);
+      } finally {
+        navigateTo('payment-success');
+      }
+    },
+    [completePayment, navigateTo],
+  );
 
   const {
     qrTransaction,
@@ -94,12 +97,12 @@ export const PaymentConfirmScreen = () => {
     isCancelling,
     formattedCountdown,
     regenerateQr,
-    cancelQris
+    cancelQris,
   } = useQrisPayment({
     selectedPlan,
     onPaymentSuccess: handlePaymentSuccess,
     isQrisActive: isQrisMethod && !isSubscribed,
-    phone: paymentPhone
+    phone: paymentPhone,
   });
 
   /* Order baru berarti gambar resminya layak dicoba lagi sebelum jatuh ke render lokal. */
@@ -124,7 +127,9 @@ export const PaymentConfirmScreen = () => {
     }
     const tersalin = await salinKePapanJepit(qrLinkToCopy);
     if (!tersalin) {
-      toast.error('Browser menolak menyalin. Tahan teks tautan di bawah, lalu salin manual.', { duration: 6000 });
+      toast.error('Browser menolak menyalin. Tahan teks tautan di bawah, lalu salin manual.', {
+        duration: 6000,
+      });
       return;
     }
     setQrCopied(true);
@@ -169,13 +174,14 @@ export const PaymentConfirmScreen = () => {
   return (
     <div className="relative min-h-[640px] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-6 bg-cream-50">
       <div className={layout.contentCenter}>
-
         <div className="mb-6">
           <h2 className="text-lg font-bold text-ink-900">
             {isQrisMethod ? 'Pembayaran QRIS' : 'Konfirmasi Pembayaran'}
           </h2>
           <p className="text-xs text-ink-400">
-            {isQrisMethod ? 'Pindai kode QR untuk mengaktifkan langganan' : 'Lengkapi data pembayaran'}
+            {isQrisMethod
+              ? 'Pindai kode QR untuk mengaktifkan langganan'
+              : 'Lengkapi data pembayaran'}
           </p>
         </div>
 
@@ -192,7 +198,9 @@ export const PaymentConfirmScreen = () => {
                   />
                 </div>
               )}
-              <span className="font-bold text-sm text-ink-900">{selectedPaymentMethod?.name || 'QRIS (Semua Pembayaran)'}</span>
+              <span className="font-bold text-sm text-ink-900">
+                {selectedPaymentMethod?.name || 'QRIS (Semua Pembayaran)'}
+              </span>
             </div>
           </div>
 
@@ -218,7 +226,6 @@ export const PaymentConfirmScreen = () => {
 
         {isQrisMethod ? (
           <div className="bg-cream-100 border border-cream-300 rounded-3xl p-6 shadow-sm space-y-5 text-center">
-
             <div className="flex items-center justify-between bg-qris-600 text-cream-50 px-4 py-2.5 rounded-2xl shadow-sm">
               <div className="flex items-center gap-2">
                 <img
@@ -245,7 +252,10 @@ export const PaymentConfirmScreen = () => {
               </div>
             )}
 
-            <div ref={qrContainerRef} className="relative mx-auto w-64 h-64 bg-cream-50 p-4 rounded-3xl border-2 border-dashed border-cream-300 shadow-inner flex flex-col items-center justify-center">
+            <div
+              ref={qrContainerRef}
+              className="relative mx-auto w-64 h-64 bg-cream-50 p-4 rounded-3xl border-2 border-dashed border-cream-300 shadow-inner flex flex-col items-center justify-center"
+            >
               {isGeneratingQr ? (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
@@ -384,16 +394,16 @@ export const PaymentConfirmScreen = () => {
                     </>
                   )}
                 </button>
-
               </div>
             )}
-
           </div>
         ) : (
-
           <form onSubmit={handlePay} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="payment-phone-input" className="block text-xs font-semibold text-ink-700">
+              <label
+                htmlFor="payment-phone-input"
+                className="block text-xs font-semibold text-ink-700"
+              >
                 Detail Pembayaran (Nomor Handphone)
               </label>
               <input
@@ -423,7 +433,9 @@ export const PaymentConfirmScreen = () => {
                   className="h-6 w-6 shrink-0 mt-0.5 text-brand-800 rounded border-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus:ring-brand-500 accent-brand-500"
                 />
                 <span className="text-xs text-ink-500 leading-snug">
-                  Saya menyetujui seluruh <span className="text-brand-800 font-semibold">Syarat & Ketentuan</span> berlangganan Buku Wahidiyah
+                  Saya menyetujui seluruh{' '}
+                  <span className="text-brand-800 font-semibold">Syarat & Ketentuan</span>{' '}
+                  berlangganan Buku Wahidiyah
                 </span>
               </label>
             </div>
@@ -438,11 +450,15 @@ export const PaymentConfirmScreen = () => {
             </button>
           </form>
         )}
-
       </div>
 
       {isProcessing && (
-        <div data-testid="payment-processing-modal" role="alertdialog" aria-labelledby="payment-processing-title" className="absolute inset-0 bg-cream-50/95 backdrop-blur-md z-50 flex flex-col justify-between p-6 page-transition">
+        <div
+          data-testid="payment-processing-modal"
+          role="alertdialog"
+          aria-labelledby="payment-processing-title"
+          className="absolute inset-0 bg-cream-50/95 backdrop-blur-md z-50 flex flex-col justify-between p-6 page-transition"
+        >
           <div>
             <button
               type="button"
@@ -465,9 +481,12 @@ export const PaymentConfirmScreen = () => {
                 <span className="text-xl">💳</span>
               </div>
             </div>
-            <h3 id="payment-processing-title" className="text-lg font-bold text-ink-900">Memproses pembayaran...</h3>
+            <h3 id="payment-processing-title" className="text-lg font-bold text-ink-900">
+              Memproses pembayaran...
+            </h3>
             <p className="text-xs text-ink-400 mt-2 max-w-xs leading-relaxed">
-              Mohon jangan menutup aplikasi sementara kami menghubungkan transaksi dengan payment gateway Midtrans.
+              Mohon jangan menutup aplikasi sementara kami menghubungkan transaksi dengan payment
+              gateway Midtrans.
             </p>
           </div>
 

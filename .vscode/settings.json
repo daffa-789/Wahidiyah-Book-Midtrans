@@ -1,5 +1,7 @@
 {
   "css.lint.unknownAtRules": "ignore",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "typescript.tsserver.maxTsServerMemory": 3072,
   "tailwindCSS.validate": true,
   "tailwindCSS.lint.cssConflict": "ignore",

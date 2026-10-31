@@ -22,7 +22,7 @@ export function requestContext(req, res, next) {
       path: req.originalUrl || req.url,
       status: res.statusCode,
       durationMs,
-      ip: req.ip
+      ip: req.ip,
     });
   });
 

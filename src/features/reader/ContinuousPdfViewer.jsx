@@ -16,7 +16,7 @@ export const ContinuousPdfViewer = ({
   onPageChange,
   targetScrollPage,
   onTargetScrollHandled,
-  bookId
+  bookId,
 }) => {
   const containerRef = useRef(null);
   const [pdfDoc, setPdfDoc] = useState(null);
@@ -55,7 +55,7 @@ export const ContinuousPdfViewer = ({
     setLoadError(null);
     const loadingTask = pdfjsLib.getDocument({
       data: pdfBuffer,
-      cMapPacked: true
+      cMapPacked: true,
     });
 
     loadingTask.promise
@@ -120,42 +120,45 @@ export const ContinuousPdfViewer = ({
   const displayPageHeight = Math.round(displayPageWidth * naturalAspect);
 
   // 4. Deteksi Posisi Bacaan Terkini saat Menggulir (Scroll-Spy & Anchor Tracker)
-  const updateReadingPosition = useCallback((focalY) => {
-    const el = containerRef.current;
-    if (!el || !pdfDoc || totalPages === 0) return;
+  const updateReadingPosition = useCallback(
+    (focalY) => {
+      const el = containerRef.current;
+      if (!el || !pdfDoc || totalPages === 0) return;
 
-    const containerRect = el.getBoundingClientRect();
-    const localEyelineY = focalY ?? el.clientHeight * 0.35;
-    const eyelineY = containerRect.top + localEyelineY;
+      const containerRect = el.getBoundingClientRect();
+      const localEyelineY = focalY ?? el.clientHeight * 0.35;
+      const eyelineY = containerRect.top + localEyelineY;
 
-    let closestPage = 1;
-    let minDistance = Infinity;
+      let closestPage = 1;
+      let minDistance = Infinity;
 
-    for (let p = 1; p <= totalPages; p++) {
-      const pageEl = pageContainerRefs.current[p];
-      if (!pageEl) continue;
+      for (let p = 1; p <= totalPages; p++) {
+        const pageEl = pageContainerRefs.current[p];
+        if (!pageEl) continue;
 
-      const rect = pageEl.getBoundingClientRect();
-      if (rect.top <= eyelineY && rect.bottom >= eyelineY) {
-        closestPage = p;
-        const ratio = rect.height > 0 ? (eyelineY - rect.top) / rect.height : 0;
-        currentViewRef.current = { page: p, ratio: Math.max(0, Math.min(1, ratio)) };
-        minDistance = 0;
-        break;
+        const rect = pageEl.getBoundingClientRect();
+        if (rect.top <= eyelineY && rect.bottom >= eyelineY) {
+          closestPage = p;
+          const ratio = rect.height > 0 ? (eyelineY - rect.top) / rect.height : 0;
+          currentViewRef.current = { page: p, ratio: Math.max(0, Math.min(1, ratio)) };
+          minDistance = 0;
+          break;
+        }
+
+        const dist = Math.abs(rect.top - eyelineY);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestPage = p;
+          currentViewRef.current = { page: p, ratio: 0 };
+        }
       }
 
-      const dist = Math.abs(rect.top - eyelineY);
-      if (dist < minDistance) {
-        minDistance = dist;
-        closestPage = p;
-        currentViewRef.current = { page: p, ratio: 0 };
+      if (closestPage !== currentPage) {
+        onPageChange?.(closestPage, totalPages);
       }
-    }
-
-    if (closestPage !== currentPage) {
-      onPageChange?.(closestPage, totalPages);
-    }
-  }, [pdfDoc, totalPages, currentPage, onPageChange]);
+    },
+    [pdfDoc, totalPages, currentPage, onPageChange],
+  );
 
   useEffect(() => {
     const el = containerRef.current;
@@ -188,9 +191,9 @@ export const ContinuousPdfViewer = ({
 
     const anchor = pinchAnchorRef.current;
     const { page, ratio } = anchor || currentViewRef.current;
-    const eyelineY = anchor?.focalY ?? (customFocalYRef.current !== null
-      ? customFocalYRef.current
-      : container.clientHeight * 0.35);
+    const eyelineY =
+      anchor?.focalY ??
+      (customFocalYRef.current !== null ? customFocalYRef.current : container.clientHeight * 0.35);
 
     pageStackRef.current?.style.removeProperty('transform');
     pageStackRef.current?.style.removeProperty('transform-origin');
@@ -201,9 +204,11 @@ export const ContinuousPdfViewer = ({
       const GAP = 16;
       const pageElement = pageContainerRefs.current[page];
       const targetYInDoc = pageElement
-        ? pageElement.getBoundingClientRect().top - container.getBoundingClientRect().top
-          + container.scrollTop + (ratio * pageElement.clientHeight)
-        : (page - 1) * (displayPageHeight + GAP) + (ratio * displayPageHeight);
+        ? pageElement.getBoundingClientRect().top -
+          container.getBoundingClientRect().top +
+          container.scrollTop +
+          ratio * pageElement.clientHeight
+        : (page - 1) * (displayPageHeight + GAP) + ratio * displayPageHeight;
       container.scrollTop = Math.max(0, targetYInDoc - eyelineY);
     }
 
@@ -218,7 +223,7 @@ export const ContinuousPdfViewer = ({
     const [firstTouch, secondTouch] = e.touches;
     const distance = Math.hypot(
       firstTouch.clientX - secondTouch.clientX,
-      firstTouch.clientY - secondTouch.clientY
+      firstTouch.clientY - secondTouch.clientY,
     );
     const midpointX = (firstTouch.clientX + secondTouch.clientX) / 2;
     const midpointY = (firstTouch.clientY + secondTouch.clientY) / 2;
@@ -238,7 +243,7 @@ export const ContinuousPdfViewer = ({
       x: midpointX - pageStackRect.left,
       y: midpointY - pageStackRect.top,
       clientX: midpointX,
-      clientY: midpointY
+      clientY: midpointY,
     };
     pinchAnchorRef.current = { ...currentViewRef.current, focalY };
     isPinchingRef.current = true;
@@ -252,7 +257,7 @@ export const ContinuousPdfViewer = ({
     const [firstTouch, secondTouch] = e.touches;
     const currentDist = Math.hypot(
       firstTouch.clientX - secondTouch.clientX,
-      firstTouch.clientY - secondTouch.clientY
+      firstTouch.clientY - secondTouch.clientY,
     );
     const midpointX = (firstTouch.clientX + secondTouch.clientX) / 2;
     const midpointY = (firstTouch.clientY + secondTouch.clientY) / 2;
@@ -262,7 +267,7 @@ export const ContinuousPdfViewer = ({
     if (container) {
       pinchAnchorRef.current = {
         ...currentViewRef.current,
-        focalY: midpointY - container.getBoundingClientRect().top
+        focalY: midpointY - container.getBoundingClientRect().top,
       };
     }
 
@@ -274,7 +279,11 @@ export const ContinuousPdfViewer = ({
         return;
       }
 
-      const scale = getPinchScale(initialPinchZoomRef.current, touchStartDistRef.current, currentDist);
+      const scale = getPinchScale(
+        initialPinchZoomRef.current,
+        touchStartDistRef.current,
+        currentDist,
+      );
       const origin = pinchOriginRef.current;
       pageStack.style.transformOrigin = `${origin.x}px ${origin.y}px`;
       pageStack.style.transform = `translate(${midpointX - origin.clientX}px, ${midpointY - origin.clientY}px) scale(${scale})`;
@@ -291,7 +300,11 @@ export const ContinuousPdfViewer = ({
     if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
     pinchRafRef.current = null;
 
-    const targetZoom = getPinchZoom(initialPinchZoomRef.current, touchStartDistRef.current, lastPinchDistRef.current);
+    const targetZoom = getPinchZoom(
+      initialPinchZoomRef.current,
+      touchStartDistRef.current,
+      lastPinchDistRef.current,
+    );
     touchStartDistRef.current = 0;
 
     if (targetZoom === zoom) {
@@ -368,7 +381,7 @@ export const ContinuousPdfViewer = ({
         const ctx = canvas.getContext('2d');
         const renderContext = {
           canvasContext: ctx,
-          viewport: viewport
+          viewport: viewport,
         };
 
         const task = page.render(renderContext);
@@ -382,7 +395,7 @@ export const ContinuousPdfViewer = ({
         delete renderTasksRef.current[pageNumber];
       }
     },
-    [pdfDoc, totalPages, displayPageWidth]
+    [pdfDoc, totalPages, displayPageWidth],
   );
 
   // 8. IntersectionObserver untuk Lazy Rendering Canvas Halaman
@@ -403,8 +416,8 @@ export const ContinuousPdfViewer = ({
       {
         root: containerRef.current,
         rootMargin: '400px 0px 400px 0px',
-        threshold: 0.01
-      }
+        threshold: 0.01,
+      },
     );
 
     for (let p = 1; p <= totalPages; p++) {
@@ -420,7 +433,7 @@ export const ContinuousPdfViewer = ({
     const timer = setTimeout(() => {
       const activeP = currentViewRef.current.page || currentPage || 1;
       const pagesToPrioritize = [activeP - 1, activeP, activeP + 1].filter(
-        (p) => p >= 1 && p <= totalPages
+        (p) => p >= 1 && p <= totalPages,
       );
 
       pagesToPrioritize.forEach((p) => {
@@ -468,7 +481,7 @@ export const ContinuousPdfViewer = ({
       style={{
         WebkitOverflowScrolling: 'touch',
         touchAction: 'pan-x pan-y',
-        overflowAnchor: 'none'
+        overflowAnchor: 'none',
       }}
     >
       {/* Tampilan Lembar Dokumen Kanvas Tetap (Fixed Sheet Canvas) */}
@@ -476,7 +489,7 @@ export const ContinuousPdfViewer = ({
         ref={pageStackRef}
         className="mx-auto flex flex-col items-center gap-4"
         style={{
-          width: `${displayPageWidth}px`
+          width: `${displayPageWidth}px`,
         }}
       >
         {pageNumbers.map((pageNum) => (
@@ -488,7 +501,7 @@ export const ContinuousPdfViewer = ({
             className="relative shadow-md md:shadow-lg rounded-sm sm:rounded-md overflow-hidden bg-ui-card border border-ink-200/50 dark:border-ink-700/50"
             style={{
               width: `${displayPageWidth}px`,
-              height: `${displayPageHeight}px`
+              height: `${displayPageHeight}px`,
             }}
           >
             <canvas
@@ -496,7 +509,7 @@ export const ContinuousPdfViewer = ({
               className="block w-full h-full"
               style={{
                 width: `${displayPageWidth}px`,
-                height: `${displayPageHeight}px`
+                height: `${displayPageHeight}px`,
               }}
             />
           </div>

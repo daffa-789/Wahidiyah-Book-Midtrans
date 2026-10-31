@@ -132,9 +132,9 @@ graph TD
     end
 
     subgraph Backend ["Backend Layered Architecture (Express.js)"]
-        Routes["Routes Layer (auth, books, payments, admin, users)"]
-        Controllers["Controllers Layer (auth.controller, payment.controller)"]
-        Services["Services Layer Murni (auth.service.js, payment.service.js)"]
+        Routes["Routes Layer (HTTP + validasi bentuk permintaan)"]
+        Controllers["Controllers Layer (khusus auth & payment)"]
+        Services["Services Layer Murni (auth, payment, books, events, carousel, users, transactions)"]
         WAProviders["server/providers/ - Strategy Pattern (Fonnte + Demo)"]
     end
 
@@ -148,6 +148,7 @@ graph TD
     Express --> Frontend
     Express --> Routes
     Routes --> Controllers
+    Routes --> Services
     Controllers --> Services
     Services --> Supa
     Services --> Midtrans
@@ -158,29 +159,29 @@ graph TD
 ### 3.1 Konvensi Kode & Pembagian Tanggung Jawab 4 Lapisan:
 Pemisahan lapisan (*Separation of Concerns*) dilakukan secara ketat untuk menjamin *loose coupling*, *high cohesion*, dan kemampuan uji unit (*testability*):
 1. **Routes Layer (`server/routes/`):**
-   - Tipis (*thin routes*), hanya bertugas mendefinisikan URL rute, metode HTTP (`GET`, `POST`, `PUT`, `DELETE`), dan menyematkan middleware terkait (`requireAuth`, `requireAdmin`, `authRateLimiter`, `transactionsRateLimiter`).
-   - Tidak memuat logika bisnis atau query SQL langsung.
+   - Tipis (*thin routes*): mendefinisikan URL, metode HTTP (`GET`, `POST`, `PUT`, `DELETE`), menyematkan middleware terkait (`requireAuth`, `requireAdmin`, `authRateLimiter`, `paymentRateLimiter`), lalu memetakan hasil service menjadi respons HTTP.
+   - Boleh memvalidasi bentuk permintaan yang dangkal (mis. `isOneOf(action, ['approve', 'reject'])`), tetapi **tidak memuat query Supabase maupun aturan bisnis**. Terverifikasi: seluruh berkas rute berada pada 0 referensi `supabaseServer`.
 2. **Controllers Layer (`server/controllers/`):**
-   - Mengambil data dari objek request Express (`req.body`, `req.params`, `req.user`).
-   - Memvalidasi struktur data menggunakan skema `zod`.
-   - Meneruskan DTO bersih ke Service Layer.
-   - Mengembalikan HTTP Response seragam (`res.status().json()`).
+   - Bukan lapisan wajib untuk semua modul. Hanya alur autentikasi dan pembayaran QRIS yang membutuhkannya karena memerlukan skema `zod`, ekstraksi `req`, dan amplop respons khusus.
+   - Modul lain (buku, agenda, carousel, pengguna, transaksi transfer) melompat langsung dari route ke service; satu lapisan tambahan di sana hanya memindahkan kode tanpa menambah kejelasan.
 3. **Services Layer Murni (`server/services/`):**
-   - Menampung seluruh aturan bisnis (*business rules*) inti (misal: verifikasi token, alur klaim pembayaran idempoten, kalkulasi durasi keanggotaan Pro).
+   - Menampung seluruh aturan bisnis (*business rules*) dan query Supabase: `auth_service`, `payment_service`, `books_service`, `events_service`, `carousel_service`, `users_service`, `transactions_service`.
    - **Bebas mutlak dari objek `req` dan `res` Express** sehingga aturan bisnis dapat diverifikasi tanpa menjalankan HTTP server.
+   - Hasil bisnis yang wajar (bukan galat) dikembalikan sebagai objek `outcome`; kegagalan aturan bisnis dilempar melalui `createServiceError(pesan, { statusCode, code, extra })` dari `server/lib/errors.js`.
 4. **Helper & Database Layer (`server/lib/` & `server/db.js`):**
+   - `errors.js`: `createServiceError` — satu-satunya cara service menyatakan status HTTP yang diusulkan.
    - `midtrans.js`: Integrasi API Midtrans Core (charge QRIS, status polling, verifikasi signature SHA512, unwrap payload, `isTransactionSettled`).
    - `time.js`: Penanggalan WIB tunggal terstandarisasi dengan `dayjs` (zona waktu `Asia/Jakarta`).
-   - `validate.js`: Skema validasi terstruktur dengan `zod`.
+   - `validate.js`: Skema validasi terstruktur dengan `zod` dan penjepit nilai query (`toBoundedInt`).
    - `images.js`: Pengolahan kompresi gambar WebP dengan `sharp`.
-   - `http.js`: Helper pembungkus respons HTTP (`wrap`, `fail`, `safeUrl`).
+   - `http.js`: Helper pembungkus respons HTTP (`wrap`, `fail`, `badRequest`/`notFound`/`conflict`). `fail` menerjemahkan `error.statusCode` dari service menjadi respons 4xx/5xx yang seragam.
    - `otp.js`: Manajemen pembuatan kode OTP terenkripsi dan jeda cooldown kirim ulang.
    - `db.js`: Klien `supabaseServer` ber-role service dengan Row Level Security fail-closed.
 
 ### 3.2 Evaluasi Kritis 30 Prinsip Kualitas Perangkat Lunak (Software Quality):
 Sistem dirancang dan dievaluasi berpatokan pada 3 tingkatan prioritas (*Tiers*):
 - **Tier 1: Pondasi Kritis & Mutlak (P1)**
-  1. *Separation of Concerns (SoC):* Pemisahan tegas Routes $\rightarrow$ Controllers $\rightarrow$ Services $\rightarrow$ Repositories.
+  1. *Separation of Concerns (SoC):* Pemisahan tegas Routes $\rightarrow$ Controllers (auth & payment) $\rightarrow$ Services $\rightarrow$ Database; modul CRUD lain langsung Routes $\rightarrow$ Services.
   2. *Idempotency (Operasi Bayar & Webhook):* Webhook Midtrans dan aktivasi keanggotaan menggunakan klaim UPDATE bersyarat atomik untuk mencegah aktivasi ganda (*prevent double fulfillment*).
   3. *Security by Design:* Row Level Security fail-closed, parameter query anti-SQLi, enkripsi kata sandi `bcryptjs` 12 rounds, rate limiting pada endpoint pembayaran, dan proteksi hak cipta e-reader.
   4. *Testability:* Logika autentikasi, pembayaran, membership, parsing Midtrans, dan sanitasi berada di service layer murni sehingga dapat diverifikasi tanpa mock HTTP.

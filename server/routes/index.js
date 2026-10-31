@@ -12,18 +12,18 @@ import { notificationsRouter } from './notifications_routes.js';
 import { cronRouter } from './cron_routes.js';
 
 const ROUTERS = [
-  { path: '/api', router: healthRouter },       
-  { path: '/api/auth', router: authRouter },    
-  { path: '/api', router: booksRouter },        
-  { path: '/api', router: usersRouter },        
-  { path: '/api', router: transactionsRouter }, 
+  { path: '/api', router: healthRouter },
+  { path: '/api/auth', router: authRouter },
+  { path: '/api', router: booksRouter },
+  { path: '/api', router: usersRouter },
+  { path: '/api', router: transactionsRouter },
   { path: '/api/payments', router: paymentsRouter },
   { path: '/api', router: subscriptionsRouter },
-  { path: '/api', router: eventsRouter },       
-  { path: '/api', router: carouselRouter },     
+  { path: '/api', router: eventsRouter },
+  { path: '/api', router: carouselRouter },
   { path: '/api', router: notificationsRouter },
   { path: '/api', router: cronRouter },
-  { path: '/api', router: adminRouter }         
+  { path: '/api', router: adminRouter },
 ];
 
 export const mountRoutes = (app) => {

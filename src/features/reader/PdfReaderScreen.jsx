@@ -7,7 +7,7 @@ import {
   Maximize,
   Minimize,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
 } from 'lucide-react';
 import { useApp } from '@context/AppContext';
 import { apiJson, apiRequest, authHeaders } from '@lib/api';
@@ -20,7 +20,9 @@ const PDF_TYPES = new Set(['pdf']);
 const DOCX_TYPES = new Set(['docx', 'doc', 'odt']);
 
 const getExtension = (book) =>
-  String(book?.contentExtension || book?.contentType || '').toLowerCase().replace('.', '');
+  String(book?.contentExtension || book?.contentType || '')
+    .toLowerCase()
+    .replace('.', '');
 
 export const PdfReaderScreen = () => {
   const { activeBook, navigateTo } = useApp();
@@ -34,11 +36,13 @@ export const PdfReaderScreen = () => {
   // Status Perbesaran Dokumen (Zoom) - Default 100%
   const [zoom, setZoom] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const supportsNativeFullscreen = typeof window !== 'undefined'
-    && window.matchMedia('(pointer: fine)').matches;
+  const supportsNativeFullscreen =
+    typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches;
 
   // Pelacak Halaman Terakhir & Navigasi Scroll
-  const bookTotalPages = Number(activeBook?.pages || activeBook?.totalPages || (activeBook?.samplePages?.length || 1));
+  const bookTotalPages = Number(
+    activeBook?.pages || activeBook?.totalPages || activeBook?.samplePages?.length || 1,
+  );
   const samplePages = activeBook?.samplePages || [];
   const [totalPages, setTotalPages] = useState(Math.max(1, samplePages.length || bookTotalPages));
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,16 +64,19 @@ export const PdfReaderScreen = () => {
   }, [activeBook?.id]);
 
   // Simpan posisi membaca saat halaman berubah
-  const handlePageChange = useCallback((page, total) => {
-    const validPage = Math.max(1, Math.min(total || totalPages, page));
-    setCurrentPage(validPage);
-    setPageInput(String(validPage));
-    if (total && total > 0) setTotalPages(total);
+  const handlePageChange = useCallback(
+    (page, total) => {
+      const validPage = Math.max(1, Math.min(total || totalPages, page));
+      setCurrentPage(validPage);
+      setPageInput(String(validPage));
+      if (total && total > 0) setTotalPages(total);
 
-    if (activeBook?.id) {
-      localStorage.setItem(`last_read_page_${activeBook.id}`, String(validPage));
-    }
-  }, [activeBook?.id, totalPages]);
+      if (activeBook?.id) {
+        localStorage.setItem(`last_read_page_${activeBook.id}`, String(validPage));
+      }
+    },
+    [activeBook?.id, totalPages],
+  );
 
   // Update level zoom dengan batasan aman (40% - 300%)
   const setClampedZoom = useCallback((newValOrFn) => {
@@ -85,7 +92,7 @@ export const PdfReaderScreen = () => {
     containerRef: readingSurfaceRef,
     previewRef: readingPreviewRef,
     zoom,
-    setZoom: setClampedZoom
+    setZoom: setClampedZoom,
   });
 
   const adjustZoom = (delta) => {
@@ -150,7 +157,12 @@ export const PdfReaderScreen = () => {
     const isDoc = DOCX_TYPES.has(extension);
     const isText = TEXT_TYPES.has(extension);
 
-    if (!isPdf && !isDoc && !isText && (!activeBook?.samplePages || activeBook.samplePages.length === 0)) {
+    if (
+      !isPdf &&
+      !isDoc &&
+      !isText &&
+      (!activeBook?.samplePages || activeBook.samplePages.length === 0)
+    ) {
       setContentStatus('idle');
       return undefined;
     }
@@ -173,7 +185,12 @@ export const PdfReaderScreen = () => {
         })
         .catch((err) => {
           if (cancelled) return;
-          if (err?.status === 403 || String(err?.message || '').toLowerCase().includes('pro')) {
+          if (
+            err?.status === 403 ||
+            String(err?.message || '')
+              .toLowerCase()
+              .includes('pro')
+          ) {
             setContentStatus('locked');
           } else {
             setContentStatus('error');
@@ -216,7 +233,9 @@ export const PdfReaderScreen = () => {
         <div className="max-w-md rounded-3xl border border-cream-300 bg-ui-card p-8 shadow-xl">
           <BookOpen className="mx-auto h-12 w-12 text-ink-300" />
           <h2 className="mt-4 text-h2 font-black text-ink-900">Buku tidak ditemukan</h2>
-          <p className="mt-2 text-caption text-ink-500">Pilih buku dari beranda katalog terlebih dahulu.</p>
+          <p className="mt-2 text-caption text-ink-500">
+            Pilih buku dari beranda katalog terlebih dahulu.
+          </p>
           <button
             type="button"
             onClick={() => navigateTo('home')}
@@ -332,8 +351,12 @@ export const PdfReaderScreen = () => {
         {contentStatus === 'locked' ? (
           <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-ui-card p-8 text-center shadow-xl">
             <Lock className="mx-auto h-10 w-10 text-gold-500 mb-3" />
-            <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Konten Khusus Member Pro</h2>
-            <p className="mt-2 text-caption text-ink-500">Aktifkan paket Pro untuk membuka dan membaca naskah lengkap ini.</p>
+            <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">
+              Konten Khusus Member Pro
+            </h2>
+            <p className="mt-2 text-caption text-ink-500">
+              Aktifkan paket Pro untuk membuka dan membaca naskah lengkap ini.
+            </p>
             <button
               type="button"
               onClick={() => navigateTo('pro')}
@@ -345,8 +368,12 @@ export const PdfReaderScreen = () => {
         ) : contentStatus === 'error' ? (
           <div className="my-auto max-w-md w-full rounded-3xl border border-cream-300 bg-ui-card p-8 text-center shadow-xl">
             <FileText className="mx-auto h-10 w-10 text-semantic-danger mb-3" />
-            <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">Gagal Memuat Dokumen</h2>
-            <p className="mt-2 text-caption text-ink-500">Berkas dokumen naskah tidak dapat dimuat atau diekstrak.</p>
+            <h2 className="text-h3 font-bold text-ink-900 dark:text-cream-50">
+              Gagal Memuat Dokumen
+            </h2>
+            <p className="mt-2 text-caption text-ink-500">
+              Berkas dokumen naskah tidak dapat dimuat atau diekstrak.
+            </p>
             <button
               type="button"
               onClick={retryLoadContent}
@@ -371,7 +398,7 @@ export const PdfReaderScreen = () => {
               fontSize: `${(zoom / 100) * 1.05}rem`,
               WebkitOverflowScrolling: 'touch',
               touchAction: 'pan-x pan-y',
-              overflowAnchor: 'none'
+              overflowAnchor: 'none',
             }}
           >
             <div
@@ -400,7 +427,11 @@ export const PdfReaderScreen = () => {
             onTouchEnd={pinchZoomHandlers.handleTouchEnd}
             onTouchCancel={pinchZoomHandlers.handleTouchEnd}
             className="w-full h-full flex flex-col items-center overflow-y-auto p-4 sm:p-8 overscroll-contain"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y', overflowAnchor: 'none' }}
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x pan-y',
+              overflowAnchor: 'none',
+            }}
           >
             <article
               ref={readingPreviewRef}
@@ -417,25 +448,37 @@ export const PdfReaderScreen = () => {
             onTouchEnd={pinchZoomHandlers.handleTouchEnd}
             onTouchCancel={pinchZoomHandlers.handleTouchEnd}
             className="w-full h-full flex flex-col items-center justify-start overflow-y-auto p-4 sm:p-6 overscroll-contain"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y', overflowAnchor: 'none' }}
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x pan-y',
+              overflowAnchor: 'none',
+            }}
           >
             <article
               ref={readingPreviewRef}
               className="relative w-full max-w-3xl bg-ui-card p-8 sm:p-12 rounded-2xl shadow-lg border border-ink-200/60 leading-relaxed text-body text-ink-800 dark:text-cream-100 select-none my-auto"
               style={{
-                fontSize: `${(zoom / 100) * 1.05}rem`
+                fontSize: `${(zoom / 100) * 1.05}rem`,
               }}
             >
               <header className="flex justify-between border-b border-ink-100 pb-3 text-micro font-bold text-ink-400">
                 <span>PERPUSTAKAAN DIGITAL WAHIDIYAH</span>
-                <span>HALAMAN {currentPage} / {totalPages}</span>
+                <span>
+                  HALAMAN {currentPage} / {totalPages}
+                </span>
               </header>
               {samplePages[currentPage - 1]?.arabicHeading && (
-                <p className="font-arabic my-6 text-center text-brand-700" style={{ fontSize: '1.5em' }}>
+                <p
+                  className="font-arabic my-6 text-center text-brand-700"
+                  style={{ fontSize: '1.5em' }}
+                >
                   {samplePages[currentPage - 1].arabicHeading}
                 </p>
               )}
-              <h2 className="mb-4 text-center font-black text-brand-900 dark:text-cream-50" style={{ fontSize: '1.75em' }}>
+              <h2
+                className="mb-4 text-center font-black text-brand-900 dark:text-cream-50"
+                style={{ fontSize: '1.75em' }}
+              >
                 {samplePages[currentPage - 1]?.title}
               </h2>
               <p className="whitespace-pre-line leading-8">
@@ -448,12 +491,13 @@ export const PdfReaderScreen = () => {
             <FileText className="mx-auto h-10 w-10 text-ink-300 mb-3" />
             <h2 className="text-h3 font-bold text-ink-900">Lampiran Dokumen</h2>
             <p className="mt-2 text-caption text-ink-500">
-              {activeBook.contentName ? `${activeBook.contentName} telah tersimpan.` : 'Konten naskah buku belum diunggah.'}
+              {activeBook.contentName
+                ? `${activeBook.contentName} telah tersimpan.`
+                : 'Konten naskah buku belum diunggah.'}
             </p>
           </div>
         )}
       </main>
-
     </div>
   );
 };

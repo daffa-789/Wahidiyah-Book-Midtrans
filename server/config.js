@@ -13,8 +13,10 @@ export const USE_VITE_MIDDLEWARE = process.env.VITE_MIDDLEWARE === '1';
 
 export const LISTEN_PORT = USE_VITE_MIDDLEWARE ? FRONTEND_PORT : Number(PORT);
 
-export const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS ||
-  'http://localhost:3000,http://127.0.0.1:3000,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5000,http://127.0.0.1:5000')
+export const ALLOWED_ORIGINS = (
+  process.env.CORS_ORIGINS ||
+  'http://localhost:3000,http://127.0.0.1:3000,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5000,http://127.0.0.1:5000'
+)
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -25,7 +27,10 @@ export const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS ||
  */
 export const FRONTEND_ORIGIN = (process.env.FRONTEND_ORIGIN || '').trim();
 
-export const SERVE_STATIC = String(process.env.SERVE_STATIC ?? 'true').trim().toLowerCase() !== 'false';
+export const SERVE_STATIC =
+  String(process.env.SERVE_STATIC ?? 'true')
+    .trim()
+    .toLowerCase() !== 'false';
 
 export const STATIC_DIR = path.resolve(ROOT_DIR, 'dist');
 export const STATIC_INDEX_FILE = path.join(STATIC_DIR, 'index.html');
@@ -38,7 +43,10 @@ export const STATIC_INDEX_FILE = path.join(STATIC_DIR, 'index.html');
 export const QRIS_STATUS_RATE_LIMIT = {
   windowMs: 5 * 60 * 1000,
   max: 150,
-  message: { success: false, message: 'Terlalu banyak pengecekan status pembayaran. Tunggu beberapa saat.' }
+  message: {
+    success: false,
+    message: 'Terlalu banyak pengecekan status pembayaran. Tunggu beberapa saat.',
+  },
 };
 
 /*
@@ -73,7 +81,7 @@ export const CSP_DIRECTIVES = {
    */
   'connect-src': ["'self'", 'https://*.supabase.co'],
   'worker-src': ["'self'", 'blob:'],
-  'manifest-src': ["'self'"]
+  'manifest-src': ["'self'"],
 };
 
 /* Report-only secara default: policy yang terlalu ketat bisa mematangkan
@@ -86,7 +94,9 @@ export const CSP_REPORT_ONLY = String(process.env.CSP_ENFORCE || '') !== '1';
  * jumlah hop proxy di depan server, atau `true` bila proxy tunggal.
  */
 export const TRUST_PROXY = (() => {
-  const raw = String(process.env.TRUST_PROXY ?? '').trim().toLowerCase();
+  const raw = String(process.env.TRUST_PROXY ?? '')
+    .trim()
+    .toLowerCase();
   if (!raw) return USE_VITE_MIDDLEWARE ? 1 : false;
   if (raw === 'true') return true;
   if (raw === 'false') return false;
@@ -94,12 +104,14 @@ export const TRUST_PROXY = (() => {
   return Number.isInteger(hops) && hops > 0 ? hops : false;
 })();
 
-
 export const MIDTRANS_SERVER_KEY = (process.env.MIDTRANS_SERVER_KEY || '').trim();
 
 export const MIDTRANS_CLIENT_KEY = (process.env.MIDTRANS_CLIENT_KEY || '').trim();
 
-const isTrueFlag = (value) => String(value ?? 'false').trim().toLowerCase() === 'true';
+const isTrueFlag = (value) =>
+  String(value ?? 'false')
+    .trim()
+    .toLowerCase() === 'true';
 
 export const MIDTRANS_IS_PRODUCTION = isTrueFlag(process.env.MIDTRANS_IS_PRODUCTION);
 
@@ -110,9 +122,7 @@ export const MIDTRANS_QRIS_EXPIRY_MINUTES = (() => {
   return Number.isFinite(parsed) && parsed >= 15 ? Math.floor(parsed) : 15;
 })();
 
-
 export const MIDTRANS_PAYMENT_METHOD_LABEL = 'QRIS Midtrans';
-
 
 /* ── Web Push (pengingat agenda H-1) ─────────────────────────────────────
  * Kunci VAPID dibuat sekali lewat `npm run vapid:keys`. Bila kosong atau

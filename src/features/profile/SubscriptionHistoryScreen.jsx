@@ -18,7 +18,7 @@ export const SubscriptionHistoryScreen = () => {
 
   const handleLoadMore = () => {
     if (!isAllLoaded) {
-      setDisplayCount(prev => Math.min(subscriptions.length, prev + 2));
+      setDisplayCount((prev) => Math.min(subscriptions.length, prev + 2));
     }
   };
 
@@ -60,14 +60,18 @@ export const SubscriptionHistoryScreen = () => {
                       </h3>
                       <p className="text-xs font-semibold text-brand-800 mt-0.5">{sub.price}</p>
                       <p className="text-micro font-mono text-ink-400 mt-0.5">{refNumber}</p>
-                      <p className="text-micro text-ink-400 mt-1">Dibeli: {formatWIB(sub.createdAt)}</p>
+                      <p className="text-micro text-ink-400 mt-1">
+                        Dibeli: {formatWIB(sub.createdAt)}
+                      </p>
                     </div>
 
-                    <span className={`text-micro font-bold px-2.5 py-0.5 rounded-full border ${
-                      isActive
-                        ? 'bg-brand-100 text-brand-800 border-brand-300'
-                        : 'bg-cream-200 text-ink-500 border-cream-300'
-                    }`}>
+                    <span
+                      className={`text-micro font-bold px-2.5 py-0.5 rounded-full border ${
+                        isActive
+                          ? 'bg-brand-100 text-brand-800 border-brand-300'
+                          : 'bg-cream-200 text-ink-500 border-cream-300'
+                      }`}
+                    >
                       {sub.status}
                     </span>
                   </div>
@@ -95,15 +99,19 @@ export const SubscriptionHistoryScreen = () => {
       <PaymentReceiptModal
         isOpen={Boolean(selectedSub)}
         onClose={() => setSelectedSub(null)}
-        details={selectedSub ? {
-          refNo: selectedSub.ref || selectedSub.orderId,
-          dateStr: formatWIB(selectedSub.createdAt),
-          planName: selectedSub.planName || 'Paket Bulanan Pro',
-          amount: selectedSub.rawPrice || 25000,
-          adminFee: selectedSub.adminFee || 0,
-          totalPaid: selectedSub.totalPaid || 25000,
-          periodStr: selectedSub.period || '1 Bulan Langganan Pro'
-        } : null}
+        details={
+          selectedSub
+            ? {
+                refNo: selectedSub.ref || selectedSub.orderId,
+                dateStr: formatWIB(selectedSub.createdAt),
+                planName: selectedSub.planName || 'Paket Bulanan Pro',
+                amount: selectedSub.rawPrice || 25000,
+                adminFee: selectedSub.adminFee || 0,
+                totalPaid: selectedSub.totalPaid || 25000,
+                periodStr: selectedSub.period || '1 Bulan Langganan Pro',
+              }
+            : null
+        }
         user={user}
       />
     </div>

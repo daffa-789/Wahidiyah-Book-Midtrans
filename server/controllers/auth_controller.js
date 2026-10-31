@@ -9,12 +9,7 @@
  * Bentuk respons dipertahankan kompatibel dengan klien yang ada.
  */
 
-import {
-  DB_DOWN_MESSAGE,
-  authFailureMessage,
-  internalErrorDetail,
-  isDbDown
-} from '../lib/http.js';
+import { DB_DOWN_MESSAGE, authFailureMessage, internalErrorDetail, isDbDown } from '../lib/http.js';
 import { createOneTimeCode } from '../lib/oneTimeCode.js';
 import { logger } from '../logger.js';
 import { createSessionToken, toPublicUser } from '../auth.js';
@@ -33,7 +28,7 @@ import {
   resetPassword as resetPasswordService,
   resendVerificationOtp,
   verifyGoogleOAuthCode,
-  findOrCreateGoogleUser
+  findOrCreateGoogleUser,
 } from '../services/auth_service.js';
 
 /** Pemetaan seragam kegagalan tak terduga (database mati → 503, lainnya 500). */
@@ -41,13 +36,13 @@ const replyAuthFailure = (res, error, { dbMessage = DB_DOWN_MESSAGE } = {}) => {
   const isDbError = isDbDown(error);
   logger.error('AUTH', 'Terjadi kegagalan proses otentikasi', {
     pesan: error?.message,
-    code: error?.code
+    code: error?.code,
   });
   return res.status(isDbError ? 503 : 500).json({
     success: false,
     message: isDbError ? dbMessage : authFailureMessage(error),
     error: internalErrorDetail(error),
-    isDatabaseError: isDbError
+    isDatabaseError: isDbError,
   });
 };
 
@@ -58,14 +53,13 @@ const rejectOutcome = (res, result) => {
   return res.status(result.status).json(body);
 };
 
-
 /** POST /api/auth/login */
 export async function login(req, res) {
   try {
     const result = await authenticateWithPassword({
       email: req.body?.email,
       identifier: req.body?.identifier,
-      password: req.body?.password
+      password: req.body?.password,
     });
 
     if (!result.ok) return rejectOutcome(res, result);
@@ -74,13 +68,12 @@ export async function login(req, res) {
       success: true,
       message: 'Login berhasil',
       token: result.token,
-      user: result.user
+      user: result.user,
     });
   } catch (error) {
     return replyAuthFailure(res, error);
   }
 }
-
 
 /** POST /api/auth/register */
 export async function register(req, res) {
@@ -90,7 +83,7 @@ export async function register(req, res) {
       email: req.body?.email,
       phone: req.body?.phone,
       password: req.body?.password,
-      clientIp: req.ip
+      clientIp: req.ip,
     });
 
     if (!result.ok) return rejectOutcome(res, result);
@@ -100,7 +93,6 @@ export async function register(req, res) {
   }
 }
 
-
 /** POST /api/auth/verify-registration */
 export async function verifyRegistration(req, res) {
   try {
@@ -108,7 +100,7 @@ export async function verifyRegistration(req, res) {
       identifier: req.body?.identifier,
       email: req.body?.email,
       phone: req.body?.phone,
-      code: req.body?.code
+      code: req.body?.code,
     });
 
     if (!result.ok) return rejectOutcome(res, result);
@@ -117,13 +109,12 @@ export async function verifyRegistration(req, res) {
       success: true,
       message: 'Akun berhasil dibuat.',
       token: result.token,
-      user: result.user
+      user: result.user,
     });
   } catch (error) {
     return replyAuthFailure(res, error, { dbMessage: 'Gagal terhubung ke database.' });
   }
 }
-
 
 /** POST /api/auth/request-password-reset */
 export async function requestPasswordReset(req, res) {
@@ -132,7 +123,7 @@ export async function requestPasswordReset(req, res) {
       method: req.body?.method === 'whatsapp' || req.body?.phone ? 'whatsapp' : 'email',
       email: req.body?.email,
       phone: req.body?.phone || req.body?.identifier,
-      clientIp: req.ip
+      clientIp: req.ip,
     });
 
     if (!result.ok) return rejectOutcome(res, result);
@@ -147,21 +138,20 @@ export async function requestPasswordReset(req, res) {
           ...RESET_UNIFORM_WA_RESPONSE,
           phone: result.phone,
           identifier: result.identifier,
-          devOtp: result.devOtp
+          devOtp: result.devOtp,
         });
       default: // 'sent-email'
         return res.json({
           ...RESET_UNIFORM_RESPONSE,
           method: 'email',
           identifier: result.identifier,
-          devOtp: result.devOtp
+          devOtp: result.devOtp,
         });
     }
   } catch (error) {
     return replyAuthFailure(res, error);
   }
 }
-
 
 /** POST /api/auth/reset-password */
 export async function resetPassword(req, res) {
@@ -172,7 +162,7 @@ export async function resetPassword(req, res) {
       phone: req.body?.phone,
       identifier: req.body?.identifier,
       code: req.body?.code,
-      password: String(req.body?.password || '')
+      password: String(req.body?.password || ''),
     });
 
     if (!result.ok) return rejectOutcome(res, result);
@@ -182,7 +172,6 @@ export async function resetPassword(req, res) {
   }
 }
 
-
 /** POST /api/auth/resend-verification */
 export async function resendVerification(req, res) {
   try {
@@ -190,7 +179,7 @@ export async function resendVerification(req, res) {
       method: req.body?.method === 'whatsapp' || req.body?.phone ? 'whatsapp' : 'email',
       identifier: req.body?.identifier || req.body?.phone || req.body?.email,
       purpose: req.body?.purpose,
-      clientIp: req.ip
+      clientIp: req.ip,
     });
 
     if (!result.ok) return rejectOutcome(res, result);
@@ -204,14 +193,13 @@ export async function resendVerification(req, res) {
   }
 }
 
-
 /** POST /api/auth/google-supabase */
 export async function googleSupabase(req, res) {
   try {
     const result = await loginWithGoogleSupabase({
       accessToken: req.body?.access_token,
       googleName: req.body?.user?.name,
-      googleEmail: req.body?.user?.email
+      googleEmail: req.body?.user?.email,
     });
 
     if (!result.ok) return rejectOutcome(res, result);
@@ -220,13 +208,12 @@ export async function googleSupabase(req, res) {
       success: true,
       message: 'Login Google berhasil.',
       token: result.token,
-      user: result.user
+      user: result.user,
     });
   } catch (error) {
     return replyAuthFailure(res, error);
   }
 }
-
 
 const parseCookies = (header) => {
   const out = {};
@@ -241,7 +228,6 @@ const parseCookies = (header) => {
   return out;
 };
 
-
 /** GET /api/auth/google/callback — ujung OAuth direct (redirect browser). */
 export async function googleCallback(req, res) {
   /* Tujuan redirect hanya boleh berasal dari konfigurasi atau allowlist —
@@ -252,17 +238,17 @@ export async function googleCallback(req, res) {
   if (!frontendOrigin) {
     logger.error('GOOGLE_OAUTH', 'Origin frontend tidak dapat ditentukan; redirect dibatalkan', {
       host: req.get('host') || null,
-      forwardedProto: req.headers['x-forwarded-proto'] || null
+      forwardedProto: req.headers['x-forwarded-proto'] || null,
     });
     return res
       .status(500)
       .type('html')
       .send(
-        '<!doctype html><html lang="id"><meta charset="utf-8">'
-        + '<title>Login Google gagal</title>'
-        + '<p>Origin frontend tidak dapat ditentukan. '
-        + 'Set FRONTEND_ORIGIN di server, atau daftarkan origin aplikasi pada CORS_ORIGINS.</p>'
-        + '</html>'
+        '<!doctype html><html lang="id"><meta charset="utf-8">' +
+          '<title>Login Google gagal</title>' +
+          '<p>Origin frontend tidak dapat ditentukan. ' +
+          'Set FRONTEND_ORIGIN di server, atau daftarkan origin aplikasi pada CORS_ORIGINS.</p>' +
+          '</html>',
       );
   }
 
@@ -286,7 +272,9 @@ export async function googleCallback(req, res) {
 
     res.setHeader('Set-Cookie', 'google_oauth_state=; Path=/; Max-Age=0; SameSite=Lax');
     if (!expectedState || expectedState !== state) {
-      return failRedirect('State OAuth tidak cocok (kemungkinan CSRF). Coba lagi dari halaman masuk.');
+      return failRedirect(
+        'State OAuth tidak cocok (kemungkinan CSRF). Coba lagi dari halaman masuk.',
+      );
     }
 
     const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
@@ -294,13 +282,22 @@ export async function googleCallback(req, res) {
     if (!CLIENT_ID || !CLIENT_SECRET) {
       return failRedirect('Konfigurasi Google OAuth di server belum lengkap.');
     }
-    const REDIRECT_URI = process.env.GOOGLE_OAUTH_REDIRECT_URI
-      || `${frontendOrigin}/api/auth/google/callback`;
+    const REDIRECT_URI =
+      process.env.GOOGLE_OAUTH_REDIRECT_URI || `${frontendOrigin}/api/auth/google/callback`;
 
-    const identity = await verifyGoogleOAuthCode({ code, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET, redirectUri: REDIRECT_URI });
+    const identity = await verifyGoogleOAuthCode({
+      code,
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SECRET,
+      redirectUri: REDIRECT_URI,
+    });
     if (!identity.ok) return failRedirect(identity.message);
 
-    const account = await findOrCreateGoogleUser({ email: identity.email, name: identity.name, source: 'direct OAuth' });
+    const account = await findOrCreateGoogleUser({
+      email: identity.email,
+      name: identity.name,
+      source: 'direct OAuth',
+    });
     if (!account.ok) return failRedirect('Gagal membuat atau mengambil akun Google.');
 
     const token = createSessionToken(account.user);
@@ -316,7 +313,6 @@ export async function googleCallback(req, res) {
   }
 }
 
-
 /* Menukar kode sekali-pakai dari redirect Google menjadi sesi (VULN-03).
  * Kode berumur 60 detik dan hangus pada percobaan pertama, berhasil atau tidak.
  */
@@ -328,7 +324,7 @@ export async function exchange(req, res) {
     if (!session) {
       return res.status(401).json({
         success: false,
-        message: 'Kode sesi tidak valid atau sudah kedaluwarsa. Silakan masuk ulang.'
+        message: 'Kode sesi tidak valid atau sudah kedaluwarsa. Silakan masuk ulang.',
       });
     }
 
@@ -337,7 +333,6 @@ export async function exchange(req, res) {
     return replyAuthFailure(res, error);
   }
 }
-
 
 /** GET /api/auth/me */
 export async function me(req, res) {

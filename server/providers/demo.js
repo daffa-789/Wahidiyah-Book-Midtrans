@@ -18,14 +18,14 @@ export class DemoProvider extends BaseWhatsAppProvider {
   async sendOtp({ phone, code, purpose = 'register' }) {
     logger.info('WHATSAPP', `[DEMO OTP] Pesan ke ${phone}: Kode = ${code}`, {
       purpose,
-      mode: 'demo (kredensial gateway belum diisi atau provider=demo)'
+      mode: 'demo (kredensial gateway belum diisi atau provider=demo)',
     });
 
     return {
       success: true,
       deliveredBy: 'demo',
       provider: 'demo',
-      demoCode: code
+      demoCode: code,
     };
   }
 }

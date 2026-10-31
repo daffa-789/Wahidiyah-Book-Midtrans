@@ -55,27 +55,35 @@ async function freePorts(ports = [3000, 5000]) {
     if (!isBusy) continue;
     console.log(pc.yellow(`[DEV] Port ${port} terikat proses lain. Memeriksa pemilik port...`));
     try {
-
-      const ps = spawn('powershell', [
-        '-NoProfile',
-        '-Command',
-        `$conns = Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue; ` +
-        `foreach ($c in $conns) { ` +
-        `$p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue; ` +
-        `if ($p -and $p.ProcessName -eq 'node') { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Write-Output ("KILL " + $p.Id + " " + $p.ProcessName) } ` +
-        `elseif ($p) { Write-Output ("SKIP " + $p.Id + " " + $p.ProcessName) } }`
-      ], { stdio: 'pipe' });
+      const ps = spawn(
+        'powershell',
+        [
+          '-NoProfile',
+          '-Command',
+          `$conns = Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue; ` +
+            `foreach ($c in $conns) { ` +
+            `$p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue; ` +
+            `if ($p -and $p.ProcessName -eq 'node') { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Write-Output ("KILL " + $p.Id + " " + $p.ProcessName) } ` +
+            `elseif ($p) { Write-Output ("SKIP " + $p.Id + " " + $p.ProcessName) } }`,
+        ],
+        { stdio: 'pipe' },
+      );
       let out = '';
-      ps.stdout.on('data', (d) => { out += d.toString(); });
+      ps.stdout.on('data', (d) => {
+        out += d.toString();
+      });
       await new Promise((resolve) => ps.on('close', resolve));
-      for (const line of out.split('\n').map(s => s.trim()).filter(Boolean)) {
+      for (const line of out
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)) {
         if (line.startsWith('KILL')) {
           console.log(pc.yellow(`[DEV]   → proses node dihentikan: PID ${line.slice(5)}`));
         } else if (line.startsWith('SKIP')) {
           console.log(pc.yellow(`[DEV]   → dilewati, bukan proses node: PID ${line.slice(5)}`));
         }
       }
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise((r) => setTimeout(r, 800));
     } catch {}
   }
 }
@@ -95,7 +103,7 @@ async function startDev() {
 
     env: { ...env, VITE_MIDDLEWARE: '1', NODE_ENV: 'development' },
 
-    stdio: 'inherit'
+    stdio: 'inherit',
   });
 
   const killTree = (child) => {

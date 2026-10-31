@@ -10,12 +10,7 @@
  * akan menstandarkan amplop `{ success, message, data }` menyeluruh).
  */
 
-import {
-  badRequest,
-  internalErrorDetail,
-  notFound,
-  unauthorized
-} from '../lib/http.js';
+import { badRequest, internalErrorDetail, notFound, unauthorized } from '../lib/http.js';
 import { fetchQrImage } from '../lib/midtrans.js';
 import { logger } from '../logger.js';
 import {
@@ -23,16 +18,15 @@ import {
   createQrisOrder,
   handleMidtransNotification,
   loadTransactionForViewer,
-  resolveQrisStatus
+  resolveQrisStatus,
 } from '../services/payment_service.js';
 import { TRANSACTION_PENDING_STATUS } from '../auth.js';
-
 
 const ownTransactionOr404 = async (req, res) => {
   const { transaction, forbidden } = await loadTransactionForViewer({
     orderId: req.params.orderId,
     viewerId: req.user?.id,
-    viewerRole: req.user?.role
+    viewerRole: req.user?.role,
   });
 
   if (!transaction) {
@@ -40,14 +34,13 @@ const ownTransactionOr404 = async (req, res) => {
       transaction: null,
       response: res.status(forbidden ? 403 : 404).json({
         success: false,
-        message: forbidden ? 'Transaksi ini bukan milik Anda.' : 'Transaksi tidak ditemukan.'
-      })
+        message: forbidden ? 'Transaksi ini bukan milik Anda.' : 'Transaksi tidak ditemukan.',
+      }),
     };
   }
 
   return { transaction, response: null };
 };
-
 
 /** POST /api/payments/qris/charge */
 export async function createQrisCharge(req, res) {
@@ -56,7 +49,7 @@ export async function createQrisCharge(req, res) {
       planId: req.body?.planId,
       userId: req.user.id,
       fallbackUser: req.user,
-      phone: req.body?.phone
+      phone: req.body?.phone,
     });
 
     if (result.outcome === 'gateway-unavailable') {
@@ -68,7 +61,7 @@ export async function createQrisCharge(req, res) {
         success: true,
         alreadyPro: true,
         message: result.message,
-        user: result.user
+        user: result.user,
       });
     }
 
@@ -82,16 +75,19 @@ export async function createQrisCharge(req, res) {
       return res.status(503).json({ success: false, message: error.message });
     }
     logger.error('MIDTRANS', 'Gagal membuat charge QRIS', { pesan: error.message });
-    return res.status(error?.statusCode && error.statusCode >= 400 && error.statusCode < 600
-      ? error.statusCode
-      : 502).json({
-      success: false,
-      message: error?.statusCode ? error.message : 'Gagal membuat transaksi di Midtrans.',
-      error: internalErrorDetail(error)
-    });
+    return res
+      .status(
+        error?.statusCode && error.statusCode >= 400 && error.statusCode < 600
+          ? error.statusCode
+          : 502,
+      )
+      .json({
+        success: false,
+        message: error?.statusCode ? error.message : 'Gagal membuat transaksi di Midtrans.',
+        error: internalErrorDetail(error),
+      });
   }
 }
-
 
 /** GET /api/payments/qris/:orderId/status */
 export async function getQrisStatus(req, res) {
@@ -106,10 +102,9 @@ export async function getQrisStatus(req, res) {
     totalPaid: transaction.total_paid,
     expiredAt: transaction.expires_at,
     status,
-    isPaid
+    isPaid,
   });
 }
-
 
 /** POST /api/payments/qris/:orderId/cancel */
 export async function cancelQris(req, res) {
@@ -119,7 +114,7 @@ export async function cancelQris(req, res) {
   if (transaction.status === 'success') {
     return res.status(409).json({
       success: false,
-      message: 'Pembayaran sudah selesai dan langganan aktif, jadi tidak bisa dibatalkan.'
+      message: 'Pembayaran sudah selesai dan langganan aktif, jadi tidak bisa dibatalkan.',
     });
   }
 
@@ -128,7 +123,7 @@ export async function cancelQris(req, res) {
       success: true,
       alreadyCancelled: true,
       orderId: transaction.id,
-      message: 'Kode QR ini sudah tidak aktif.'
+      message: 'Kode QR ini sudah tidak aktif.',
     });
   }
 
@@ -145,10 +140,9 @@ export async function cancelQris(req, res) {
         (kedaluwarsaLama ? `${kedaluwarsaLama} WIB` : 'waktu kedaluwarsanya'),
     warning: voidedByMidtrans
       ? null
-      : 'Jangan membayar kode QR lama. Kalau terlanjur dibayar, langganan tetap aktif tetapi kamu membayar dua kali.'
+      : 'Jangan membayar kode QR lama. Kalau terlanjur dibayar, langganan tetap aktif tetapi kamu membayar dua kali.',
   });
 }
-
 
 /** GET /api/payments/qris/:orderId/qr.png */
 export async function getQrImage(req, res) {
@@ -156,7 +150,10 @@ export async function getQrImage(req, res) {
   if (response) return response;
 
   if (!transaction.midtrans_qr_url) {
-    return notFound(res, 'Transaksi ini memakai payload QR (qr_string); tidak ada gambar dari Midtrans.');
+    return notFound(
+      res,
+      'Transaksi ini memakai payload QR (qr_string); tidak ada gambar dari Midtrans.',
+    );
   }
 
   try {
@@ -171,7 +168,6 @@ export async function getQrImage(req, res) {
   }
 }
 
-
 /** POST /api/payments/midtrans/notification — webhook Midtrans */
 export async function midtransNotification(req, res) {
   try {
@@ -182,19 +178,21 @@ export async function midtransNotification(req, res) {
         logger.warn('MIDTRANS', 'Notifikasi ditolak: signature tidak valid', {
           orderId: result.orderId,
           alasan: result.reason,
-          ip: req.ip
+          ip: req.ip,
         });
         return unauthorized(res, 'Notifikasi tidak terautentikasi.');
 
       case 'unknown-order':
-        logger.warn('MIDTRANS', 'Notifikasi untuk order yang tidak dikenal', { orderId: result.orderId });
+        logger.warn('MIDTRANS', 'Notifikasi untuk order yang tidak dikenal', {
+          orderId: result.orderId,
+        });
         return notFound(res, 'Transaksi tidak ditemukan.');
 
       case 'amount-mismatch':
         logger.warn('MIDTRANS', 'Notifikasi ditolak: nominal tidak cocok', {
           orderId: result.orderId,
           notifiedAmount: result.notifiedAmount,
-          storedAmount: result.storedAmount
+          storedAmount: result.storedAmount,
         });
         return badRequest(res, 'Nominal pembayaran tidak sesuai.');
 
@@ -210,7 +208,7 @@ export async function midtransNotification(req, res) {
     return res.status(500).json({
       success: false,
       message: 'Gagal memproses notifikasi.',
-      error: internalErrorDetail(error)
+      error: internalErrorDetail(error),
     });
   }
 }

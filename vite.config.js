@@ -1,7 +1,7 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import { fileURLToPath, URL } from 'node:url'
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { fileURLToPath, URL } from 'node:url';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
         '@data': fileURLToPath(new URL('./src/data', import.meta.url)),
         '@context': fileURLToPath(new URL('./src/context', import.meta.url)),
         '@theme': fileURLToPath(new URL('./src/theme', import.meta.url)),
-      }
+      },
     },
     build: {
       chunkSizeWarningLimit: 1000,
@@ -54,12 +54,16 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/lucide-react')) {
               return 'icons';
             }
-            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/scheduler/')) {
+            if (
+              id.includes('node_modules/react/') ||
+              id.includes('node_modules/react-dom/') ||
+              id.includes('node_modules/scheduler/')
+            ) {
               return 'vendor';
             }
-          }
-        }
-      }
+          },
+        },
+      },
     },
     server: {
       port: frontendPort,
@@ -70,16 +74,16 @@ export default defineConfig(({ mode }) => {
           './src/main.jsx',
           './src/App.jsx',
           './src/context/AppContext.jsx',
-          './src/features/auth/LoginScreen.jsx'
-        ]
+          './src/features/auth/LoginScreen.jsx',
+        ],
       },
       proxy: {
         '/api': {
           target: `http://localhost:${backendPort}`,
           changeOrigin: true,
-          xfwd: true
-        }
-      }
-    }
+          xfwd: true,
+        },
+      },
+    },
   };
-})
+});

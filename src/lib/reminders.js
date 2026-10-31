@@ -17,7 +17,9 @@ const todayYmd = (now = new Date()) => {
 const daysBetweenYmd = (fromYmd, toYmd) => {
   const parse = (value) => {
     if (!value) return null;
-    const match = String(value).slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const match = String(value)
+      .slice(0, 10)
+      .match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (!match) return null;
     const [, y, m, d] = match.map(Number);
     return new Date(y, m - 1, d, 12, 0, 0);
@@ -35,7 +37,7 @@ const daysUntilExpiry = (expiresAt, now = new Date()) => {
   const targetYmd = [
     target.getFullYear(),
     String(target.getMonth() + 1).padStart(2, '0'),
-    String(target.getDate()).padStart(2, '0')
+    String(target.getDate()).padStart(2, '0'),
   ].join('-');
   return daysBetweenYmd(todayYmd(now), targetYmd);
 };
@@ -53,7 +55,8 @@ const proReminder = (user, now = new Date()) => {
   if (daysLeft < 0) return null;
   if (!PRO_REMINDER_THRESHOLD_DAYS.includes(daysLeft)) return null;
 
-  const severity = daysLeft === 0 ? 'urgent' : daysLeft <= 1 ? 'urgent' : daysLeft <= 3 ? 'warning' : 'info';
+  const severity =
+    daysLeft === 0 ? 'urgent' : daysLeft <= 1 ? 'urgent' : daysLeft <= 3 ? 'warning' : 'info';
   return { daysLeft, expiresAt: user.subscriptionExpiresAt, severity };
 };
 
@@ -68,7 +71,7 @@ export const buildReminders = ({ events = [], user = null, now = new Date() } = 
       title: 'Acara hari ini',
       message: event.title,
       detail: [event.time, getDisplayLocation(event.location)].filter(Boolean).join(' · '),
-      date: event.date
+      date: event.date,
     });
   }
 
@@ -80,13 +83,14 @@ export const buildReminders = ({ events = [], user = null, now = new Date() } = 
       kind: 'pro',
       severity: pro.severity,
       title: daysLeft === 0 ? 'Langganan Pro berakhir hari ini' : 'Langganan Pro akan berakhir',
-      message: daysLeft === 0
-        ? 'Masa aktif Pro Anda habis hari ini. Perpanjang agar akses kitab Pro tidak terputus.'
-        : daysLeft === 1
-          ? 'Masa aktif Pro Anda berakhir besok.'
-          : `Masa aktif Pro Anda tersisa ${daysLeft} hari lagi.`,
+      message:
+        daysLeft === 0
+          ? 'Masa aktif Pro Anda habis hari ini. Perpanjang agar akses kitab Pro tidak terputus.'
+          : daysLeft === 1
+            ? 'Masa aktif Pro Anda berakhir besok.'
+            : `Masa aktif Pro Anda tersisa ${daysLeft} hari lagi.`,
       detail: '',
-      date: String(pro.expiresAt).slice(0, 10)
+      date: String(pro.expiresAt).slice(0, 10),
     });
   }
 
@@ -95,7 +99,11 @@ export const buildReminders = ({ events = [], user = null, now = new Date() } = 
 
 const REMINDER_SEEN_KEY = 'wahidiyah:reminders-seen';
 
-export const markRemindersSeen = (ids = [], now = new Date(), storage = globalThis.localStorage) => {
+export const markRemindersSeen = (
+  ids = [],
+  now = new Date(),
+  storage = globalThis.localStorage,
+) => {
   if (!storage) return;
   try {
     storage.setItem(REMINDER_SEEN_KEY, JSON.stringify({ [todayYmd(now)]: ids }));
@@ -104,7 +112,11 @@ export const markRemindersSeen = (ids = [], now = new Date(), storage = globalTh
   }
 };
 
-export const wereRemindersSeen = (ids = [], now = new Date(), storage = globalThis.localStorage) => {
+export const wereRemindersSeen = (
+  ids = [],
+  now = new Date(),
+  storage = globalThis.localStorage,
+) => {
   if (!storage || ids.length === 0) return false;
   try {
     const raw = storage.getItem(REMINDER_SEEN_KEY);

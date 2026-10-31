@@ -36,9 +36,25 @@ function probePort(port, host = '127.0.0.1', timeout = 1000) {
     const socket = new net.Socket();
     let done = false;
     socket.setTimeout(timeout);
-    socket.once('connect', () => { done = true; socket.destroy(); resolve(true); });
-    socket.once('timeout', () => { if (!done) { done = true; socket.destroy(); resolve(false); } });
-    socket.once('error', () => { if (!done) { done = true; socket.destroy(); resolve(false); } });
+    socket.once('connect', () => {
+      done = true;
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once('timeout', () => {
+      if (!done) {
+        done = true;
+        socket.destroy();
+        resolve(false);
+      }
+    });
+    socket.once('error', () => {
+      if (!done) {
+        done = true;
+        socket.destroy();
+        resolve(false);
+      }
+    });
     socket.connect(port, host);
   });
 }
@@ -48,31 +64,47 @@ async function freePort(port) {
   if (!(await probePort(port))) return;
   log(C.yellow, `[START] Port ${port} sedang terikat. Memeriksa pemilik...`);
   try {
-    const ps = spawn('powershell', [
-      '-NoProfile', '-Command',
-      `$conns = Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue; ` +
-      `foreach ($c in $conns) { $p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue; ` +
-      `if ($p -and $p.ProcessName -eq 'node') { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Write-Output ("KILL " + $p.Id) } ` +
-      `elseif ($p) { Write-Output ("SKIP " + $p.Id + " " + $p.ProcessName) } }`
-    ], { stdio: 'pipe' });
+    const ps = spawn(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `$conns = Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue; ` +
+          `foreach ($c in $conns) { $p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue; ` +
+          `if ($p -and $p.ProcessName -eq 'node') { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Write-Output ("KILL " + $p.Id) } ` +
+          `elseif ($p) { Write-Output ("SKIP " + $p.Id + " " + $p.ProcessName) } }`,
+      ],
+      { stdio: 'pipe' },
+    );
     let out = '';
-    ps.stdout.on('data', (d) => { out += d.toString(); });
+    ps.stdout.on('data', (d) => {
+      out += d.toString();
+    });
     await new Promise((r) => ps.on('close', r));
-    for (const line of out.split('\n').map((s) => s.trim()).filter(Boolean)) {
-      if (line.startsWith('KILL')) log(C.yellow, `[START]   → proses node dihentikan: PID ${line.slice(5)}`);
+    for (const line of out
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)) {
+      if (line.startsWith('KILL'))
+        log(C.yellow, `[START]   → proses node dihentikan: PID ${line.slice(5)}`);
       else if (line.startsWith('SKIP')) {
-        log(C.red, `[START]   → port ${port} dipakai proses lain (${line.slice(5)}) — hentikan manual lalu ulangi.`);
+        log(
+          C.red,
+          `[START]   → port ${port} dipakai proses lain (${line.slice(5)}) — hentikan manual lalu ulangi.`,
+        );
       }
     }
     await new Promise((r) => setTimeout(r, 800));
-  } catch { }
+  } catch {}
 }
 
 function runBuild() {
   return new Promise((resolve, reject) => {
     log(C.cyan, '[START] Membangun frontend (vite build)...');
     const proc = spawn(nodeExec, [viteBin, 'build'], { cwd: rootDir, env, stdio: 'inherit' });
-    proc.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`vite build gagal (kode ${code})`))));
+    proc.on('close', (code) =>
+      code === 0 ? resolve() : reject(new Error(`vite build gagal (kode ${code})`)),
+    );
     proc.on('error', reject);
   });
 }
@@ -102,12 +134,13 @@ async function main() {
   const proc = spawn(nodeExec, [serverScript], {
     cwd: rootDir,
     env: { ...env, NODE_ENV: 'production', SERVE_STATIC: 'true' },
-    stdio: 'inherit'
+    stdio: 'inherit',
   });
 
   const cleanup = () => {
     try {
-      if (process.platform === 'win32') spawn('taskkill', ['/pid', String(proc.pid), '/T', '/F'], { stdio: 'ignore' });
+      if (process.platform === 'win32')
+        spawn('taskkill', ['/pid', String(proc.pid), '/T', '/F'], { stdio: 'ignore' });
       else proc.kill('SIGTERM');
     } catch {}
     setTimeout(() => process.exit(0), 200);

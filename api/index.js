@@ -4,7 +4,7 @@ import {
   jsonBody,
   responseCompression,
   securityHeaders,
-  trustProxy
+  trustProxy,
 } from '../server/middleware/security.js';
 import { apiNotFound, errorHandler } from '../server/middleware/errors.js';
 import { requestContext } from '../server/middleware/requestLog.js';

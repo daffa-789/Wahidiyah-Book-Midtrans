@@ -5,7 +5,7 @@ import { logger } from '../logger.js';
 // Instansiasi singleton untuk setiap provider
 const providers = {
   fonnte: new FonnteProvider(),
-  demo: new DemoProvider()
+  demo: new DemoProvider(),
 };
 
 /**
@@ -28,7 +28,7 @@ export function getActiveWhatsAppProvider() {
     }
     logger.warn(
       'WHATSAPP',
-      `WHATSAPP_PROVIDER diset ke '${chosenName}', tetapi FONNTE_TOKEN belum lengkap. Beralih ke mode demo.`
+      `WHATSAPP_PROVIDER diset ke '${chosenName}', tetapi FONNTE_TOKEN belum lengkap. Beralih ke mode demo.`,
     );
     return providers.demo;
   }
@@ -45,7 +45,9 @@ export function getActiveWhatsAppProvider() {
  * @param {string} name
  */
 export function getProviderByName(name) {
-  const key = String(name || '').trim().toLowerCase();
+  const key = String(name || '')
+    .trim()
+    .toLowerCase();
   return providers[key] || null;
 }
 
@@ -58,13 +60,13 @@ export function listSupportedProviders() {
       id: 'fonnte',
       name: 'Fonnte (Indonesia)',
       isConfigured: providers.fonnte.isConfigured(),
-      requiredEnv: ['FONNTE_TOKEN']
+      requiredEnv: ['FONNTE_TOKEN'],
     },
     {
       id: 'demo',
       name: 'Demo Mode (Lokal / Log Konsol)',
       isConfigured: true,
-      requiredEnv: []
-    }
+      requiredEnv: [],
+    },
   ];
 }

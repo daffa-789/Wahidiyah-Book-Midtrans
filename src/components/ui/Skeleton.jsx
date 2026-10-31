@@ -46,7 +46,11 @@ export const BookGridSkeleton = ({ count = 8 }) => (
 );
 
 export const CalendarSkeleton = () => (
-  <div data-testid="calendar-skeleton" className="space-y-6 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6" aria-label="Memuat kalender...">
+  <div
+    data-testid="calendar-skeleton"
+    className="space-y-6 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6"
+    aria-label="Memuat kalender..."
+  >
     {/* Banner atas */}
     <div className="rounded-3xl bg-cream-200/70 dark:bg-cream-300/30 p-6 animate-pulse">
       <Skeleton className="h-7 w-64 rounded-md mb-2 bg-cream-300/80 dark:bg-cream-300/60" />
@@ -83,7 +87,11 @@ export const CalendarSkeleton = () => (
 );
 
 export const AdminSkeleton = () => (
-  <div data-testid="admin-skeleton" className="space-y-6 p-4 sm:p-6 w-full" aria-label="Memuat data admin...">
+  <div
+    data-testid="admin-skeleton"
+    className="space-y-6 p-4 sm:p-6 w-full"
+    aria-label="Memuat data admin..."
+  >
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <Skeleton className="h-7 w-48 rounded-md mb-2" />
@@ -95,7 +103,10 @@ export const AdminSkeleton = () => (
     {/* Baris Statistik */}
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-cream-50 rounded-2xl p-4 border border-cream-200 shadow-sm space-y-2">
+        <div
+          key={i}
+          className="bg-cream-50 rounded-2xl p-4 border border-cream-200 shadow-sm space-y-2"
+        >
           <Skeleton className="h-4 w-20 rounded-md" />
           <Skeleton className="h-7 w-28 rounded-md" />
           <Skeleton className="h-3 w-16 rounded-md" />

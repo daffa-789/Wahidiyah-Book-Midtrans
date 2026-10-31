@@ -29,7 +29,7 @@ export const PhoneInput = ({
   required = false,
   id = 'phone',
   name = 'phone',
-  className = ''
+  className = '',
 }) => {
   const [typed, setTyped] = useState(() => (value ? displayPhone(value) : ''));
 
@@ -49,7 +49,12 @@ export const PhoneInput = ({
   };
 
   return (
-    <div className={cn('auth-input-wrap flex items-center transition focus-within:ring-2 focus-within:ring-brand-500/20', className)}>
+    <div
+      className={cn(
+        'auth-input-wrap flex items-center transition focus-within:ring-2 focus-within:ring-brand-500/20',
+        className,
+      )}
+    >
       <input
         id={id}
         name={name}

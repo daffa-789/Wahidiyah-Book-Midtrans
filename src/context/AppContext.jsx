@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   apiJson,
   authHeaders,
@@ -8,13 +16,9 @@ import {
   getPendingVerification,
   getStoredSession,
   savePendingVerification,
-  saveSession
+  saveSession,
 } from '@lib/api';
-import {
-  EMPTY_USER,
-  normalizeUser,
-  userSignature
-} from '@lib/normalizers';
+import { EMPTY_USER, normalizeUser, userSignature } from '@lib/normalizers';
 import { PATH_TO_SCREEN } from '@lib/navigation';
 import { useCatalogSlice } from './slices/useCatalogSlice';
 import { usePaymentSlice, isQrisPaymentMethod } from './slices/usePaymentSlice';
@@ -41,9 +45,13 @@ export const AppProvider = ({ children, initialScreen }) => {
   const [verificationState, setVerificationState] = useState(() => getPendingVerification());
 
   const patchUser = useCallback((fields) => {
-    setUser((current) => normalizeUser(
-      typeof fields === 'function' ? { ...current, ...fields(current) } : { ...current, ...fields }
-    ));
+    setUser((current) =>
+      normalizeUser(
+        typeof fields === 'function'
+          ? { ...current, ...fields(current) }
+          : { ...current, ...fields },
+      ),
+    );
   }, []);
 
   const nav = useNavigationSlice({ initialScreen, userRole: user.role });
@@ -73,7 +81,9 @@ export const AppProvider = ({ children, initialScreen }) => {
       }
 
       try {
-        const payload = await apiJson('/api/auth/me', { headers: authHeaders(storedSession.token) });
+        const payload = await apiJson('/api/auth/me', {
+          headers: authHeaders(storedSession.token),
+        });
         if (cancelled) return;
         const restoredUser = normalizeUser(payload.user);
         setSessionToken(storedSession.token);
@@ -82,7 +92,11 @@ export const AppProvider = ({ children, initialScreen }) => {
 
         const bootPath = window.location.pathname;
         if (restoredUser.role !== 'admin') {
-          if (bootPath === '/admin' || bootPath === '/admin-dashboard' || nav.currentScreen === 'admin-dashboard') {
+          if (
+            bootPath === '/admin' ||
+            bootPath === '/admin-dashboard' ||
+            nav.currentScreen === 'admin-dashboard'
+          ) {
             nav.screenRef.current = 'home';
             nav.setCurrentScreen('home');
             nav.setCurrentPath('/');
@@ -122,35 +136,42 @@ export const AppProvider = ({ children, initialScreen }) => {
       }
     };
     restoreSession();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     userRef.current = user;
   }, [user]);
 
-  const syncUserFromBackend = useCallback(async ({ silent = false } = {}) => {
-    const storedSession = getStoredSession();
-    if (!storedSession?.token) return;
-    try {
-      const payload = await apiJson('/api/auth/me', { headers: authHeaders(storedSession.token) });
-      if (!payload?.user) return;
-      const refreshedUser = normalizeUser(payload.user);
-      const previousUser = userRef.current;
-      userRef.current = refreshedUser;
+  const syncUserFromBackend = useCallback(
+    async ({ silent = false } = {}) => {
+      const storedSession = getStoredSession();
+      if (!storedSession?.token) return;
+      try {
+        const payload = await apiJson('/api/auth/me', {
+          headers: authHeaders(storedSession.token),
+        });
+        if (!payload?.user) return;
+        const refreshedUser = normalizeUser(payload.user);
+        const previousUser = userRef.current;
+        userRef.current = refreshedUser;
 
-      if (previousUser?.id && previousUser.role !== refreshedUser.role) {
-        nav.applyRoleChange(refreshedUser.role, { notify: true });
+        if (previousUser?.id && previousUser.role !== refreshedUser.role) {
+          nav.applyRoleChange(refreshedUser.role, { notify: true });
+        }
+        if (userSignature(previousUser) !== userSignature(refreshedUser)) {
+          setUser(refreshedUser);
+        }
+      } catch {
+        if (!silent && import.meta.env?.DEV) {
+          console.warn('[syncUserFromBackend] gagal menyegarkan user dari backend.');
+        }
       }
-      if (userSignature(previousUser) !== userSignature(refreshedUser)) {
-        setUser(refreshedUser);
-      }
-    } catch {
-      if (!silent && import.meta.env?.DEV) {
-        console.warn('[syncUserFromBackend] gagal menyegarkan user dari backend.');
-      }
-    }
-  }, [nav]);
+    },
+    [nav],
+  );
 
   useEffect(() => {
     if (!isLoggedIn || !sessionToken) return;
@@ -184,23 +205,26 @@ export const AppProvider = ({ children, initialScreen }) => {
     }
   }, [isLoggedIn, sessionToken, user]);
 
-  const login = useCallback((apiUser, token) => {
-    const loggedInUser = normalizeUser(apiUser);
-    if (!token) {
-      throw new Error('Token sesi tidak ditemukan dari server.');
-    }
-    setSessionToken(token);
-    saveSession({ token, user: loggedInUser });
-    setUser(loggedInUser);
-    setIsLoggedIn(true);
-    setAuthReady(true);
+  const login = useCallback(
+    (apiUser, token) => {
+      const loggedInUser = normalizeUser(apiUser);
+      if (!token) {
+        throw new Error('Token sesi tidak ditemukan dari server.');
+      }
+      setSessionToken(token);
+      saveSession({ token, user: loggedInUser });
+      setUser(loggedInUser);
+      setIsLoggedIn(true);
+      setAuthReady(true);
 
-    const destScreen = nav.consumeIntendedScreen(loggedInUser.role);
-    nav.navigateTo(destScreen, {
-      replace: true,
-      currentRole: loggedInUser.role
-    });
-  }, [nav]);
+      const destScreen = nav.consumeIntendedScreen(loggedInUser.role);
+      nav.navigateTo(destScreen, {
+        replace: true,
+        currentRole: loggedInUser.role,
+      });
+    },
+    [nav],
+  );
 
   const logout = useCallback(() => {
     clearSession();
@@ -226,13 +250,16 @@ export const AppProvider = ({ children, initialScreen }) => {
     } catch {}
   }, []);
 
-  const updateUserRole = useCallback((userId, role) => {
-    if (userRef.current?.id !== userId) return;
-    userRef.current = { ...userRef.current, role };
-    setUser((current) => ({ ...current, role }));
-    nav.applyRoleChange(role);
-    broadcastRoleChange(role);
-  }, [nav, broadcastRoleChange]);
+  const updateUserRole = useCallback(
+    (userId, role) => {
+      if (userRef.current?.id !== userId) return;
+      userRef.current = { ...userRef.current, role };
+      setUser((current) => ({ ...current, role }));
+      nav.applyRoleChange(role);
+      broadcastRoleChange(role);
+    },
+    [nav, broadcastRoleChange],
+  );
 
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return undefined;
@@ -248,68 +275,71 @@ export const AppProvider = ({ children, initialScreen }) => {
     return () => channel.close();
   }, [nav]);
 
-  const value = useMemo(() => ({
-    currentScreen: nav.currentScreen,
-    currentPath: nav.currentPath,
-    navigateTo: nav.navigateTo,
-    user,
-    patchUser,
-    isLoggedIn,
-    authReady,
-    sessionToken,
-    login,
-    logout,
-    verification: verificationState,
-    setVerification,
-    clearVerification,
-    rememberIntendedLocation: nav.rememberIntendedLocation,
-    setRouterNavigator: nav.setRouterNavigator,
-    syncScreenFromPath: nav.syncScreenFromPath,
-    books: catalog.books,
-    loadingCatalog: catalog.loadingCatalog,
-    catalogError: catalog.catalogError,
-    refreshBooks: catalog.refreshBooks,
-    activeBook: catalog.activeBook,
-    openReader: catalog.openReader,
-    selectedPlan: payment.selectedPlan,
-    setSelectedPlan: payment.setSelectedPlan,
-    selectedPaymentMethod: payment.selectedPaymentMethod,
-    setSelectedPaymentMethod: payment.setSelectedPaymentMethod,
-    paymentPhone: payment.paymentPhone,
-    setPaymentPhone: payment.setPaymentPhone,
-    paymentAgreed: payment.paymentAgreed,
-    setPaymentAgreed: payment.setPaymentAgreed,
-    lastPaymentResult: payment.lastPaymentResult,
-    clearLastPaymentResult: payment.clearLastPaymentResult,
-    completePayment: payment.completePayment,
-    subscriptions: payment.subscriptions,
-    refreshSubscriptions: payment.refreshSubscriptions,
-    role: user.role,
-    events: catalog.events,
-    loadingAgenda: catalog.loadingAgenda,
-    agendaError: catalog.agendaError,
-    setEvents: catalog.setEvents,
-    refreshEvents: catalog.refreshEvents,
-    carouselSlides: catalog.carouselSlides,
-    refreshCarousel: catalog.refreshCarousel,
-    updateUserRole,
-    isSubscriptionActive: payment.isSubscriptionActive,
-  }), [
-    nav,
-    user,
-    patchUser,
-    isLoggedIn,
-    authReady,
-    sessionToken,
-    login,
-    logout,
-    verificationState,
-    setVerification,
-    clearVerification,
-    catalog,
-    payment,
-    updateUserRole
-  ]);
+  const value = useMemo(
+    () => ({
+      currentScreen: nav.currentScreen,
+      currentPath: nav.currentPath,
+      navigateTo: nav.navigateTo,
+      user,
+      patchUser,
+      isLoggedIn,
+      authReady,
+      sessionToken,
+      login,
+      logout,
+      verification: verificationState,
+      setVerification,
+      clearVerification,
+      rememberIntendedLocation: nav.rememberIntendedLocation,
+      setRouterNavigator: nav.setRouterNavigator,
+      syncScreenFromPath: nav.syncScreenFromPath,
+      books: catalog.books,
+      loadingCatalog: catalog.loadingCatalog,
+      catalogError: catalog.catalogError,
+      refreshBooks: catalog.refreshBooks,
+      activeBook: catalog.activeBook,
+      openReader: catalog.openReader,
+      selectedPlan: payment.selectedPlan,
+      setSelectedPlan: payment.setSelectedPlan,
+      selectedPaymentMethod: payment.selectedPaymentMethod,
+      setSelectedPaymentMethod: payment.setSelectedPaymentMethod,
+      paymentPhone: payment.paymentPhone,
+      setPaymentPhone: payment.setPaymentPhone,
+      paymentAgreed: payment.paymentAgreed,
+      setPaymentAgreed: payment.setPaymentAgreed,
+      lastPaymentResult: payment.lastPaymentResult,
+      clearLastPaymentResult: payment.clearLastPaymentResult,
+      completePayment: payment.completePayment,
+      subscriptions: payment.subscriptions,
+      refreshSubscriptions: payment.refreshSubscriptions,
+      role: user.role,
+      events: catalog.events,
+      loadingAgenda: catalog.loadingAgenda,
+      agendaError: catalog.agendaError,
+      setEvents: catalog.setEvents,
+      refreshEvents: catalog.refreshEvents,
+      carouselSlides: catalog.carouselSlides,
+      refreshCarousel: catalog.refreshCarousel,
+      updateUserRole,
+      isSubscriptionActive: payment.isSubscriptionActive,
+    }),
+    [
+      nav,
+      user,
+      patchUser,
+      isLoggedIn,
+      authReady,
+      sessionToken,
+      login,
+      logout,
+      verificationState,
+      setVerification,
+      clearVerification,
+      catalog,
+      payment,
+      updateUserRole,
+    ],
+  );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

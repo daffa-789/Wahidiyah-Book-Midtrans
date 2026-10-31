@@ -7,15 +7,27 @@ import DOMPurify from 'dompurify';
 
 const HTML_ONLY_PROFILE = Object.freeze({ USE_PROFILES: { html: true } });
 
-const DANGEROUS_BLOCK_TAGS = ['script', 'style', 'iframe', 'object', 'embed', 'applet', 'form', 'svg', 'math'];
+const DANGEROUS_BLOCK_TAGS = [
+  'script',
+  'style',
+  'iframe',
+  'object',
+  'embed',
+  'applet',
+  'form',
+  'svg',
+  'math',
+];
 const BLOCK_TAGS_PATTERN = DANGEROUS_BLOCK_TAGS.join('|');
 const DANGEROUS_TAG_REGEX = new RegExp(
   '<(?:' + BLOCK_TAGS_PATTERN + ')\\b[\\s\\S]*?<\\/(?:' + BLOCK_TAGS_PATTERN + ')>',
-  'gi'
+  'gi',
 );
-const DANGEROUS_SELF_CLOSING_REGEX = /<\/?(?:script|style|iframe|object|embed|applet|form|input|button|textarea|select|option|link|meta|base|svg|math)[^>]*>/gi;
+const DANGEROUS_SELF_CLOSING_REGEX =
+  /<\/?(?:script|style|iframe|object|embed|applet|form|input|button|textarea|select|option|link|meta|base|svg|math)[^>]*>/gi;
 const ON_EVENT_REGEX = /\s+on[a-zA-Z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi;
-const JAVASCRIPT_URL_REGEX = /\s+(?:href|src|action)\s*=\s*(?:"\s*(?:javascript|vbscript):[^"]*"|'\s*(?:javascript|vbscript):[^']*'|(?:javascript|vbscript):[^\s>]+)/gi;
+const JAVASCRIPT_URL_REGEX =
+  /\s+(?:href|src|action)\s*=\s*(?:"\s*(?:javascript|vbscript):[^"]*"|'\s*(?:javascript|vbscript):[^']*'|(?:javascript|vbscript):[^\s>]+)/gi;
 const CSS_EXPRESSION_REGEX = /style\s*=\s*(?:"[^"]*expression\([^"]*"|'[^']*expression\([^']*')/gi;
 
 function sanitizeForNode(html) {

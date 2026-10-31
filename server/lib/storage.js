@@ -18,8 +18,7 @@ const bucket = () => supabaseServer.storage.from(CONTENT_BUCKET);
 
 export const contentRef = (path) => `${REF_PREFIX}${path}`;
 
-export const isContentRef = (value) =>
-  typeof value === 'string' && value.startsWith(REF_PREFIX);
+export const isContentRef = (value) => typeof value === 'string' && value.startsWith(REF_PREFIX);
 
 const pathOfRef = (value) => value.slice(REF_PREFIX.length);
 
@@ -42,7 +41,7 @@ export const headBytes = async (path) => {
   const { data, error } = await bucket().createSignedUrl(path, READ_URL_TTL_SECONDS);
   if (error) return null;
   const response = await fetch(data.signedUrl, {
-    headers: { range: `bytes=0-${HEAD_PROBE_BYTES - 1}` }
+    headers: { range: `bytes=0-${HEAD_PROBE_BYTES - 1}` },
   });
   if (!response.ok) return null;
   return Buffer.from(await response.arrayBuffer());

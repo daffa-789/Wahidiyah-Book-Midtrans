@@ -5,7 +5,7 @@ import { logger } from './logger.js';
 import {
   getActiveWhatsAppProvider,
   getProviderByName,
-  listSupportedProviders
+  listSupportedProviders,
 } from './providers/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -22,7 +22,9 @@ dotenv.config();
  */
 export const normalizePhone = (raw) => {
   if (!raw) return '';
-  let cleaned = String(raw).trim().replace(/[^0-9+]/g, '');
+  let cleaned = String(raw)
+    .trim()
+    .replace(/[^0-9+]/g, '');
   if (cleaned.startsWith('+')) {
     cleaned = cleaned.slice(1);
   }
@@ -60,7 +62,7 @@ export const getWhatsAppProviderInfo = () => {
   return {
     activeProvider: active.name,
     isConfigured: isWhatsAppConfigured(),
-    supportedProviders: listSupportedProviders()
+    supportedProviders: listSupportedProviders(),
   };
 };
 
@@ -82,10 +84,14 @@ export async function sendOtpWhatsApp({ phone, code, purpose = 'register' }) {
       const result = await provider.sendOtp({ phone: normalized, code, purpose });
       return result;
     } catch (err) {
-      logger.error('WHATSAPP', `Gagal kirim via gateway WA ${provider.name} (${err.message}). Menggunakan mode demo.`, {
-        phone: normalized,
-        provider: provider.name
-      });
+      logger.error(
+        'WHATSAPP',
+        `Gagal kirim via gateway WA ${provider.name} (${err.message}). Menggunakan mode demo.`,
+        {
+          phone: normalized,
+          provider: provider.name,
+        },
+      );
       return { deliveredBy: 'demo', success: false, error: err.message };
     }
   }

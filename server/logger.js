@@ -3,8 +3,7 @@
    NO_COLOR dipasang — log yang di-pipe ke berkas tetap bersih. */
 const ansiEnabled = Boolean(process.stdout?.isTTY) && !process.env.NO_COLOR;
 
-const wrapAnsi = (code) => (text) =>
-  ansiEnabled ? `\x1b[${code}m${text}\x1b[0m` : String(text);
+const wrapAnsi = (code) => (text) => (ansiEnabled ? `\x1b[${code}m${text}\x1b[0m` : String(text));
 
 export const color = {
   cyan: wrapAnsi(36),
@@ -16,9 +15,8 @@ export const color = {
   white: wrapAnsi(37),
   gray: wrapAnsi(90),
   dim: wrapAnsi(2),
-  bold: wrapAnsi(1)
+  bold: wrapAnsi(1),
 };
-
 
 const timeWIB = () =>
   new Date().toLocaleTimeString('id-ID', {
@@ -26,7 +24,7 @@ const timeWIB = () =>
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false
+    hour12: false,
   });
 
 const LEVEL_STYLE = {
@@ -35,7 +33,7 @@ const LEVEL_STYLE = {
   WARN: color.yellow,
   ERROR: color.red,
   REQ: color.blue,
-  DATA: color.magenta
+  DATA: color.magenta,
 };
 
 const emit = (level, scope, message, meta) => {
@@ -70,10 +68,12 @@ export const logger = {
       path,
       statusPaint(`→ ${status}`),
       color.gray(`${durationMs}ms`),
-      ip ? color.dim(ip) : ''
-    ].filter(Boolean).join(' ');
+      ip ? color.dim(ip) : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
     console.log(line + slow);
-  }
+  },
 };
 
 export const banner = (title, lines = []) => {

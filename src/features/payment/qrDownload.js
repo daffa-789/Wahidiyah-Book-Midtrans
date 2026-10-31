@@ -37,7 +37,11 @@ export const downloadQrisImage = async ({ container, planId = 'pro', qrImageUrl 
 
           ctx.fillStyle = '#64748B';
           ctx.font = '11px sans-serif';
-          ctx.fillText('Scan via DANA, BCA, GoPay, OVO, ShopeePay', canvas.width / 2, canvas.height - 12);
+          ctx.fillText(
+            'Scan via DANA, BCA, GoPay, OVO, ShopeePay',
+            canvas.width / 2,
+            canvas.height - 12,
+          );
 
           const pngUrl = canvas.toDataURL('image/png');
           const downloadLink = document.createElement('a');

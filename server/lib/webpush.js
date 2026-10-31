@@ -52,7 +52,10 @@ const derToRawSignature = (der) => {
     let length = der[index + 1];
     let start = index + 2;
     // Angka besar (bit tertinggi 1) diberi awalan 0x00 — buang kelebihannya.
-    while (length > 32 && der[start] === 0x00) { start += 1; length -= 1; }
+    while (length > 32 && der[start] === 0x00) {
+      start += 1;
+      length -= 1;
+    }
     const value = Buffer.alloc(32);
     der.copy(value, 32 - length, start, start + length);
     return { value, next: start + length };
@@ -63,7 +66,13 @@ const derToRawSignature = (der) => {
   return Buffer.concat([r.value, s.value]);
 };
 
-const buildVapidJwt = ({ audience, subject, publicKey, privateKey, expiresInSeconds = 12 * 60 * 60 }) => {
+const buildVapidJwt = ({
+  audience,
+  subject,
+  publicKey,
+  privateKey,
+  expiresInSeconds = 12 * 60 * 60,
+}) => {
   const header = { typ: 'JWT', alg: 'ES256' };
   const now = Math.floor(Date.now() / 1000);
   const payload = { aud: audience, exp: now + expiresInSeconds, sub: subject };
@@ -79,14 +88,14 @@ const buildVapidJwt = ({ audience, subject, publicKey, privateKey, expiresInSeco
       crv: 'P-256',
       d: b64url(privateBytes),
       x: b64url(publicBytes.subarray(1, 33)),
-      y: b64url(publicBytes.subarray(33, 65))
+      y: b64url(publicBytes.subarray(33, 65)),
     },
-    format: 'jwk'
+    format: 'jwk',
   });
 
   const derSignature = crypto.sign('sha256', Buffer.from(signingInput), {
     key: keyObject,
-    dsaEncoding: 'der'
+    dsaEncoding: 'der',
   });
 
   return `${signingInput}.${b64url(derToRawSignature(derSignature))}`;
@@ -128,13 +137,11 @@ const encryptPayload = ({ payload, p256dh, auth }) => {
   const authInfo = Buffer.concat([
     Buffer.from('WebPush: info\0'),
     clientPublicKey,
-    serverPublicKey
+    serverPublicKey,
   ]);
   const ikm = hkdf(authSecret, sharedSecret, authInfo, 32);
 
-  const contentEncryptionKeyInfo = Buffer.concat([
-    Buffer.from('Content-Encoding: aes128gcm\0')
-  ]);
+  const contentEncryptionKeyInfo = Buffer.concat([Buffer.from('Content-Encoding: aes128gcm\0')]);
   const nonceInfo = Buffer.concat([Buffer.from('Content-Encoding: nonce\0')]);
 
   const contentEncryptionKey = hkdf(salt, ikm, contentEncryptionKeyInfo, KEY_LENGTH);
@@ -142,7 +149,7 @@ const encryptPayload = ({ payload, p256dh, auth }) => {
 
   const plaintext = Buffer.concat([
     Buffer.from(typeof payload === 'string' ? payload : JSON.stringify(payload), 'utf8'),
-    Buffer.from([0x02])
+    Buffer.from([0x02]),
   ]);
 
   const cipher = createCipheriv('aes-128-gcm', contentEncryptionKey, nonce);
@@ -154,7 +161,7 @@ const encryptPayload = ({ payload, p256dh, auth }) => {
 
   return {
     body: Buffer.concat([salt, recordSizeBuffer, keyIdLength, serverPublicKey, ciphertext]),
-    salt
+    salt,
   };
 };
 
@@ -166,7 +173,7 @@ export const sendWebPush = async ({
   payload,
   vapid,
   ttl = 12 * 60 * 60,
-  urgency = 'normal'
+  urgency = 'normal',
 }) => {
   const { endpoint, keys } = subscription;
 
@@ -177,7 +184,7 @@ export const sendWebPush = async ({
   const { body } = encryptPayload({
     payload,
     p256dh: keys.p256dh,
-    auth: keys.auth
+    auth: keys.auth,
   });
 
   const response = await fetch(endpoint, {
@@ -187,14 +194,14 @@ export const sendWebPush = async ({
         endpoint,
         subject: vapid.subject,
         publicKey: vapid.publicKey,
-        privateKey: vapid.privateKey
+        privateKey: vapid.privateKey,
       }),
       'Content-Encoding': 'aes128gcm',
       'Content-Type': 'application/octet-stream',
       TTL: String(ttl),
-      Urgency: urgency
+      Urgency: urgency,
     },
-    body
+    body,
   });
 
   /* 404/410 = langganan sudah tidak berlaku (peramban dibersihkan, izin
@@ -205,7 +212,12 @@ export const sendWebPush = async ({
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    return { ok: false, reason: 'http-error', status: response.status, detail: detail.slice(0, 200) };
+    return {
+      ok: false,
+      reason: 'http-error',
+      status: response.status,
+      detail: detail.slice(0, 200),
+    };
   }
 
   return { ok: true, status: response.status };
@@ -219,7 +231,7 @@ export const generateVapidKeys = () => {
   ecdh.generateKeys();
   return {
     publicKey: b64url(ecdh.getPublicKey()),
-    privateKey: b64url(ecdh.getPrivateKey())
+    privateKey: b64url(ecdh.getPrivateKey()),
   };
 };
 

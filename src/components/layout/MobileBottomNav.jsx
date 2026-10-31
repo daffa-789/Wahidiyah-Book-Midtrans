@@ -8,22 +8,70 @@ import {
   BookOpen,
   Users,
   CalendarDays,
-  Menu
+  Menu,
 } from 'lucide-react';
 
 export const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, onOpenMenu }) => {
   const userItems = [
-    { id: 'home', label: 'Beranda', icon: Home, target: 'home', isActive: activeKeys.includes('home') },
-    { id: 'calendar', label: 'Kalender', icon: Calendar, target: 'calendar', isActive: activeKeys.includes('calendar') },
-    { id: 'pro', label: 'Pro', icon: Sparkles, target: 'pro', isActive: activeKeys.includes('pro') },
-    { id: 'profile', label: 'Profil', icon: UserRound, target: 'profile-edit', isActive: activeKeys.includes('profile') },
+    {
+      id: 'home',
+      label: 'Beranda',
+      icon: Home,
+      target: 'home',
+      isActive: activeKeys.includes('home'),
+    },
+    {
+      id: 'calendar',
+      label: 'Kalender',
+      icon: Calendar,
+      target: 'calendar',
+      isActive: activeKeys.includes('calendar'),
+    },
+    {
+      id: 'pro',
+      label: 'Pro',
+      icon: Sparkles,
+      target: 'pro',
+      isActive: activeKeys.includes('pro'),
+    },
+    {
+      id: 'profile',
+      label: 'Profil',
+      icon: UserRound,
+      target: 'profile-edit',
+      isActive: activeKeys.includes('profile'),
+    },
   ];
 
   const adminItems = [
-    { id: 'admin-overview', label: 'Ringkasan', icon: LayoutDashboard, target: 'admin:overview', isActive: activeKeys.includes('admin-overview') },
-    { id: 'admin-books', label: 'Koleksi', icon: BookOpen, target: 'admin:books', isActive: activeKeys.includes('admin-books') },
-    { id: 'admin-users', label: 'Pengguna', icon: Users, target: 'admin:users', isActive: activeKeys.includes('admin-users') },
-    { id: 'admin-events', label: 'Agenda', icon: CalendarDays, target: 'admin:events', isActive: activeKeys.includes('admin-events') },
+    {
+      id: 'admin-overview',
+      label: 'Ringkasan',
+      icon: LayoutDashboard,
+      target: 'admin:overview',
+      isActive: activeKeys.includes('admin-overview'),
+    },
+    {
+      id: 'admin-books',
+      label: 'Koleksi',
+      icon: BookOpen,
+      target: 'admin:books',
+      isActive: activeKeys.includes('admin-books'),
+    },
+    {
+      id: 'admin-users',
+      label: 'Pengguna',
+      icon: Users,
+      target: 'admin:users',
+      isActive: activeKeys.includes('admin-users'),
+    },
+    {
+      id: 'admin-events',
+      label: 'Agenda',
+      icon: CalendarDays,
+      target: 'admin:events',
+      isActive: activeKeys.includes('admin-events'),
+    },
     { id: 'admin-menu', label: 'Menu', icon: Menu, isMenu: true, isActive: false },
   ];
 
@@ -60,9 +108,7 @@ export const MobileBottomNav = React.memo(({ isAdmin, activeKeys, onNavClick, on
               <Icon
                 className={`h-5 w-5 transition-transform duration-200 ${
                   isActive ? 'scale-110' : 'group-hover:scale-105'
-                } ${
-                  isActive ? 'text-brand-700' : 'text-ink-400'
-                }`}
+                } ${isActive ? 'text-brand-700' : 'text-ink-400'}`}
                 strokeWidth={isActive ? 2.3 : 1.8}
               />
             </div>

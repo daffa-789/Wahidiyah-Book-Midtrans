@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Activity, AlertCircle, Clock, RefreshCw, User, CreditCard, Filter, Search } from 'lucide-react';
+import {
+  Activity,
+  AlertCircle,
+  Clock,
+  RefreshCw,
+  User,
+  CreditCard,
+  Filter,
+  Search,
+} from 'lucide-react';
 import { apiJson, authHeaders } from '@lib/api';
 import { formatWIB as formatWIBShared } from '@lib/date';
 import { controls } from '@lib/styles';
@@ -40,10 +49,7 @@ export const LogsTab = ({ sessionToken }) => {
     if (filterType !== 'all' && log.type !== filterType) return false;
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
-    return (
-      log.action?.toLowerCase().includes(term) ||
-      log.detail?.toLowerCase().includes(term)
-    );
+    return log.action?.toLowerCase().includes(term) || log.detail?.toLowerCase().includes(term);
   });
 
   return (
@@ -72,7 +78,7 @@ export const LogsTab = ({ sessionToken }) => {
                   : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
               }`}
             >
-              Pembayaran ({logs.filter(l => l.type === 'subscription').length})
+              Pembayaran ({logs.filter((l) => l.type === 'subscription').length})
             </button>
             <button
               type="button"
@@ -83,11 +89,14 @@ export const LogsTab = ({ sessionToken }) => {
                   : 'bg-cream-100 text-ink-700 hover:bg-cream-200'
               }`}
             >
-              Pendaftaran ({logs.filter(l => l.type === 'user').length})
+              Pendaftaran ({logs.filter((l) => l.type === 'user').length})
             </button>
             <button
               type="button"
-              onClick={() => { setLoading(true); loadLogs(); }}
+              onClick={() => {
+                setLoading(true);
+                loadLogs();
+              }}
               className="inline-flex items-center gap-1.5 rounded-xl border border-cream-300 bg-cream-100 px-3 py-1.5 text-caption font-bold text-ink-700 hover:bg-cream-200 transition shadow-xs cursor-pointer active:scale-95 ml-1"
               title="Segarkan data log aktivitas"
             >
@@ -113,7 +122,9 @@ export const LogsTab = ({ sessionToken }) => {
         <div className="flex items-start gap-2.5 rounded-2xl border border-semantic-danger/30 bg-semantic-dangerLight px-4 py-3">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-semantic-danger" />
           <div className="min-w-0">
-            <p className="text-caption font-bold text-semantic-danger">Gagal memuat log aktivitas</p>
+            <p className="text-caption font-bold text-semantic-danger">
+              Gagal memuat log aktivitas
+            </p>
             <p className="mt-0.5 text-caption text-semantic-danger/85">{error}</p>
           </div>
         </div>
@@ -132,25 +143,40 @@ export const LogsTab = ({ sessionToken }) => {
           <div className="p-12 text-center">
             <Clock className={controls.emptyIcon} />
             <p className="mt-3 font-bold text-ink-700 text-body">Tidak ada aktivitas yang sesuai</p>
-            <p className="mt-1 text-caption text-ink-400">Coba ubah filter atau kata kunci pencarian Anda.</p>
+            <p className="mt-1 text-caption text-ink-400">
+              Coba ubah filter atau kata kunci pencarian Anda.
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-cream-200 max-h-[550px] overflow-y-auto">
             {filteredLogs.map((log, idx) => (
-              <div key={idx} className="flex items-start gap-3.5 px-5 py-3.5 hover:bg-cream-100/70 transition">
-                <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border ${
-                  log.type === 'subscription'
-                    ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-xs'
-                    : 'bg-cream-100 text-ink-700 border-cream-300 shadow-xs'
-                }`}>
-                  {log.type === 'subscription' ? <CreditCard className="h-4 w-4" /> : <User className="h-4 w-4" />}
+              <div
+                key={idx}
+                className="flex items-start gap-3.5 px-5 py-3.5 hover:bg-cream-100/70 transition"
+              >
+                <div
+                  className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border ${
+                    log.type === 'subscription'
+                      ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-xs'
+                      : 'bg-cream-100 text-ink-700 border-cream-300 shadow-xs'
+                  }`}
+                >
+                  {log.type === 'subscription' ? (
+                    <CreditCard className="h-4 w-4" />
+                  ) : (
+                    <User className="h-4 w-4" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="text-body font-bold text-ink-800">{log.action}</p>
-                    <span className={`text-micro font-bold px-1.5 py-0.2 rounded ${
-                      log.type === 'subscription' ? 'bg-brand-100 text-brand-800' : 'bg-cream-200 text-ink-700'
-                    }`}>
+                    <span
+                      className={`text-micro font-bold px-1.5 py-0.2 rounded ${
+                        log.type === 'subscription'
+                          ? 'bg-brand-100 text-brand-800'
+                          : 'bg-cream-200 text-ink-700'
+                      }`}
+                    >
                       {log.type === 'subscription' ? 'Keuangan' : 'Akun'}
                     </span>
                   </div>
@@ -164,7 +190,6 @@ export const LogsTab = ({ sessionToken }) => {
           </div>
         )}
       </div>
-
     </section>
   );
 };

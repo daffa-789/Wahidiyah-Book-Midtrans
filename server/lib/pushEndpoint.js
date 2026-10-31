@@ -3,7 +3,7 @@ const PUSH_SERVICE_HOSTS = new Set([
   'fcm.googleapis.com',
   'push.services.mozilla.com',
   'updates.push.services.mozilla.com',
-  'web.push.apple.com'
+  'web.push.apple.com',
 ]);
 
 const isSupportedPushHost = (hostname) =>
@@ -14,11 +14,13 @@ export const isAllowedPushEndpoint = (value) => {
 
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' &&
+    return (
+      url.protocol === 'https:' &&
       (!url.port || url.port === '443') &&
       !url.username &&
       !url.password &&
-      isSupportedPushHost(url.hostname.toLowerCase());
+      isSupportedPushHost(url.hostname.toLowerCase())
+    );
   } catch {
     return false;
   }

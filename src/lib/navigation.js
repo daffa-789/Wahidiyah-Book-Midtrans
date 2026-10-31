@@ -1,5 +1,7 @@
 export const normalizePath = (pathname) =>
-  String(pathname || '/').toLowerCase().replace(/\/+$/, '') || '/';
+  String(pathname || '/')
+    .toLowerCase()
+    .replace(/\/+$/, '') || '/';
 
 export const SCREEN_TO_PATH = {
   home: '/',
@@ -28,7 +30,7 @@ export const SCREEN_TO_PATH = {
   'payment-method': '/payment-method',
   'payment-confirm': '/payment-confirm',
   'payment-success': '/payment-success',
-  'admin-dashboard': '/admin'
+  'admin-dashboard': '/admin',
 };
 
 export const PATH_TO_SCREEN = {
@@ -69,7 +71,7 @@ export const PATH_TO_SCREEN = {
   '/admin/pengguna': 'admin-dashboard',
   '/admin/agenda': 'admin-dashboard',
   '/admin/carousel': 'admin-dashboard',
-  '/admin/log': 'admin-dashboard'
+  '/admin/log': 'admin-dashboard',
 };
 
 export const ADMIN_DEFAULT_TAB = 'overview';
@@ -83,7 +85,7 @@ const ADMIN_PATH_TO_TAB = {
   '/admin/pengguna': 'users',
   '/admin/agenda': 'events',
   '/admin/carousel': 'carousel',
-  '/admin/log': 'logs'
+  '/admin/log': 'logs',
 };
 
 export const tabIdFromPath = (pathname) =>
@@ -91,13 +93,13 @@ export const tabIdFromPath = (pathname) =>
 
 export const adminPathForTab = (tabId) =>
   Object.keys(ADMIN_PATH_TO_TAB).find(
-    (path) => path.startsWith('/admin/') && ADMIN_PATH_TO_TAB[path] === tabId
+    (path) => path.startsWith('/admin/') && ADMIN_PATH_TO_TAB[path] === tabId,
   ) || '/admin';
 
 export const ADMIN_TAB_SLUGS = new Set(
   Object.keys(ADMIN_PATH_TO_TAB)
     .filter((path) => path.startsWith('/admin/'))
-    .map((path) => path.slice('/admin/'.length))
+    .map((path) => path.slice('/admin/'.length)),
 );
 
 export const AUTH_ONLY_SCREENS = new Set([
@@ -108,7 +110,7 @@ export const AUTH_ONLY_SCREENS = new Set([
 
   'auth-callback',
 
-  'auth-success'
+  'auth-success',
 ]);
 
 export const getScreenFromPath = () => {

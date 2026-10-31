@@ -17,8 +17,8 @@ export const AlreadySubscribedNotice = ({ minHeight = '640px', reason, onPro, on
       </div>
       <h2 className={typography.subTitle}>Langganan Anda Sedang Aktif</h2>
       <p className="text-xs text-ink-500 leading-relaxed max-w-md mx-auto">
-        Akun Anda telah memiliki status langganan aktif (Pro).
-        Anda tidak dapat melakukan {reason} baru karena akun Anda sudah berstatus Pro.
+        Akun Anda telah memiliki status langganan aktif (Pro). Anda tidak dapat melakukan {reason}{' '}
+        baru karena akun Anda sudah berstatus Pro.
       </p>
       <div className="pt-4 flex items-center justify-center gap-3">
         <button

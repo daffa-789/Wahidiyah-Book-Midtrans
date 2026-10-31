@@ -7,9 +7,25 @@ function probePort(port, host = '127.0.0.1', timeout = 1000) {
     const socket = new net.Socket();
     let done = false;
     socket.setTimeout(timeout);
-    socket.once('connect', () => { done = true; socket.destroy(); resolve(true); });
-    socket.once('timeout', () => { if (!done) { done = true; socket.destroy(); resolve(false); } });
-    socket.once('error', () => { if (!done) { done = true; socket.destroy(); resolve(false); } });
+    socket.once('connect', () => {
+      done = true;
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once('timeout', () => {
+      if (!done) {
+        done = true;
+        socket.destroy();
+        resolve(false);
+      }
+    });
+    socket.once('error', () => {
+      if (!done) {
+        done = true;
+        socket.destroy();
+        resolve(false);
+      }
+    });
     socket.connect(port, host);
   });
 }
@@ -24,16 +40,22 @@ async function cleanPort(port) {
   console.log(`  ${pc.yellow('⚠')} Port ${port} sedang digunakan. Menghentikan proses...`);
   if (process.platform === 'win32') {
     try {
-      const ps = spawn('powershell', [
-        '-NoProfile',
-        '-Command',
-        `$conns = Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue; ` +
-        `foreach ($c in $conns) { ` +
-        `$p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue; ` +
-        `if ($p -and $p.ProcessName -eq 'node') { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Write-Output ("KILL " + $p.Id) } }`
-      ], { stdio: 'pipe' });
+      const ps = spawn(
+        'powershell',
+        [
+          '-NoProfile',
+          '-Command',
+          `$conns = Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue; ` +
+            `foreach ($c in $conns) { ` +
+            `$p = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue; ` +
+            `if ($p -and $p.ProcessName -eq 'node') { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue; Write-Output ("KILL " + $p.Id) } }`,
+        ],
+        { stdio: 'pipe' },
+      );
       let out = '';
-      ps.stdout.on('data', (d) => { out += d.toString(); });
+      ps.stdout.on('data', (d) => {
+        out += d.toString();
+      });
       await new Promise((r) => ps.on('close', r));
       if (out.includes('KILL')) {
         console.log(`  ${pc.green('✔')} Proses Node pada Port ${port} berhasil dihentikan.`);

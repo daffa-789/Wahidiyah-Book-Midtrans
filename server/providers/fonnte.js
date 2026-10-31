@@ -31,13 +31,13 @@ export class FonnteProvider extends BaseWhatsAppProvider {
       method: 'POST',
       headers: {
         Authorization: token,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         target: phone,
         message: message,
-        countryCode: '62'
-      })
+        countryCode: '62',
+      }),
     });
 
     const resJson = await response.json().catch(() => ({}));
@@ -51,14 +51,14 @@ export class FonnteProvider extends BaseWhatsAppProvider {
     logger.ok('WHATSAPP', `OTP berhasil terkirim via Fonnte ke ${phone}`, {
       purpose,
       provider: 'fonnte',
-      messageId
+      messageId,
     });
 
     return {
       success: true,
       deliveredBy: 'whatsapp',
       provider: 'fonnte',
-      messageId
+      messageId,
     };
   }
 }

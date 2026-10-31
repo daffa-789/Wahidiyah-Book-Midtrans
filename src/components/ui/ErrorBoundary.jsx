@@ -18,8 +18,6 @@ export class ErrorBoundary extends React.Component {
 
   handleReset = () => {
     try {
-      
-      
       clearSession();
     } catch {}
     window.location.href = '/login';
@@ -35,7 +33,8 @@ export class ErrorBoundary extends React.Component {
             </div>
             <h2 className="text-xl font-black text-ink-900 mb-2">Terjadi Kendala Memuat Layar</h2>
             <p className="text-sm text-ink-400 mb-5 leading-relaxed">
-              Komponen aplikasi mengalami kendala saat memuat data. Silakan muat ulang atau masuk kembali ke akun Anda.
+              Komponen aplikasi mengalami kendala saat memuat data. Silakan muat ulang atau masuk
+              kembali ke akun Anda.
             </p>
             {this.state.error && (
               <div className="bg-cream-100 border border-cream-300 rounded-2xl p-3.5 text-left text-xs font-mono text-ink-700 overflow-x-auto mb-6 max-h-36">

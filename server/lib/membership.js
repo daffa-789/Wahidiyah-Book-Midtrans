@@ -1,18 +1,20 @@
 import crypto from 'crypto';
 import { supabaseServer } from '../db.js';
-import { generateId, hasActivePro, settleExpiredMembership, TRANSACTION_PENDING_STATUS } from '../auth.js';
+import {
+  generateId,
+  hasActivePro,
+  settleExpiredMembership,
+  TRANSACTION_PENDING_STATUS,
+} from '../auth.js';
 import { logger } from '../logger.js';
 import { QRIS_ADMIN_FEE, SUBSCRIPTION_PLANS } from './constants.js';
 import { toPositiveNumber } from './validate.js';
-
 
 export const ACTIVE_SUBSCRIPTION_STATUS = 'Aktif';
 
 export const ENDED_SUBSCRIPTION_STATUS = 'Berakhir';
 
-
 const DEFAULT_PLAN_DAYS = 30;
-
 
 const planDaysFromPeriod = (period) => {
   if (typeof period === 'number' && Number.isFinite(period) && period > 0) {
@@ -28,26 +30,31 @@ const planDaysFromPeriod = (period) => {
   return DEFAULT_PLAN_DAYS;
 };
 
-
 const expiresAtFromNow = (days = DEFAULT_PLAN_DAYS, from = new Date()) =>
   new Date(from.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
-
 
 const generateRefNo = () => `0000${crypto.randomInt(10000000, 100000000)}`;
 
 const throwIfDatabaseError = ({ error }, operation) => {
   if (!error) return;
-  const wrappedError = new Error(`${operation} gagal: ${error.message || 'Galat basis data.'}`, { cause: error });
+  const wrappedError = new Error(`${operation} gagal: ${error.message || 'Galat basis data.'}`, {
+    cause: error,
+  });
   if (error.code) wrappedError.code = error.code;
   throw wrappedError;
 };
 
-
 export const toRefCode = (refNo) => 'REF-' + String(refNo).slice(-8);
 
-
 export async function insertTransaction({
-  txId, userId, planName, amount, adminFee, totalPaid, method, status = 'success'
+  txId,
+  userId,
+  planName,
+  amount,
+  adminFee,
+  totalPaid,
+  method,
+  status = 'success',
 }) {
   const refNo = generateRefNo();
   const result = await supabaseServer.from('transactions').insert({
@@ -60,24 +67,30 @@ export async function insertTransaction({
     total_paid: Number(totalPaid) || 0,
     payment_method: method,
     status,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
   });
   throwIfDatabaseError(result, 'Penyimpanan transaksi');
   return refNo;
 }
 
-
 export async function activatePaidMembership({
-  userId, planName, price, refCode, periodFallback = null
+  userId,
+  planName,
+  price,
+  refCode,
+  periodFallback = null,
 }) {
   const subId = generateId('sub');
   const days = planDaysFromPeriod(periodFallback);
   const expiresAt = expiresAtFromNow(days);
 
-  const userUpdate = await supabaseServer.from('users').update({
-    is_pro: true,
-    subscription_expires_at: expiresAt
-  }).eq('id', userId);
+  const userUpdate = await supabaseServer
+    .from('users')
+    .update({
+      is_pro: true,
+      subscription_expires_at: expiresAt,
+    })
+    .eq('id', userId);
   throwIfDatabaseError(userUpdate, 'Pembaruan status Pro pengguna');
 
   const subscriptionInsert = await supabaseServer.from('subscriptions').insert({
@@ -88,13 +101,12 @@ export async function activatePaidMembership({
     status: ACTIVE_SUBSCRIPTION_STATUS,
     expires_at: expiresAt,
     ref_code: refCode,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
   });
   throwIfDatabaseError(subscriptionInsert, 'Penyimpanan langganan');
 
   return { subscriptionId: subId, expiresAt, days };
 }
-
 
 export async function restorePendingTransaction(transactionId) {
   try {
@@ -107,18 +119,17 @@ export async function restorePendingTransaction(transactionId) {
   } catch (error) {
     logger.error('MEMBERSHIP', 'Gagal memulihkan transaksi ke pending', {
       transactionId,
-      pesan: error.message
+      pesan: error.message,
     });
     throw error;
   }
 }
 
-
 export const activeSubscriptionConflict = (user) => {
   if (!hasActivePro(user)) return null;
   return {
     success: false,
-    message: 'Langganan Pro Anda saat ini masih aktif. Anda sudah menikmati seluruh fitur Pro.'
+    message: 'Langganan Pro Anda saat ini masih aktif. Anda sudah menikmati seluruh fitur Pro.',
   };
 };
 
@@ -138,13 +149,18 @@ export function startMembershipSweeper(intervalMs = MEMBERSHIP_SWEEP_INTERVAL_MS
     const before = new Date();
     await settleExpiredMembership();
     logger.info('MEMBERSHIP', 'Penyapu kedaluwarsa langganan berjalan', {
-      sejak: before.toISOString()
+      sejak: before.toISOString(),
     });
   };
-  run().catch((error) => logger.error('MEMBERSHIP', 'Penyapu kedaluwarsa gagal', { pesan: error?.message }));
+  run().catch((error) =>
+    logger.error('MEMBERSHIP', 'Penyapu kedaluwarsa gagal', { pesan: error?.message }),
+  );
   const timer = setInterval(
-    () => run().catch((error) => logger.error('MEMBERSHIP', 'Penyapu kedaluwarsa gagal', { pesan: error?.message })),
-    intervalMs
+    () =>
+      run().catch((error) =>
+        logger.error('MEMBERSHIP', 'Penyapu kedaluwarsa gagal', { pesan: error?.message }),
+      ),
+    intervalMs,
   );
   timer.unref?.();
   return timer;
@@ -158,7 +174,9 @@ export function startMembershipSweeper(intervalMs = MEMBERSHIP_SWEEP_INTERVAL_MS
 export const matchCatalogPlan = ({ planId, planName } = {}) => {
   const id = String(planId ?? '').trim();
   if (id) return SUBSCRIPTION_PLANS.find((plan) => plan.id === id) || null;
-  const name = String(planName ?? '').trim().toLowerCase();
+  const name = String(planName ?? '')
+    .trim()
+    .toLowerCase();
   if (!name) return null;
   return SUBSCRIPTION_PLANS.find((plan) => String(plan.name).trim().toLowerCase() === name) || null;
 };
@@ -175,11 +193,15 @@ export const matchCatalogPlan = ({ planId, planName } = {}) => {
 export const resolveManualTransferPricing = (body = {}) => {
   const plan = matchCatalogPlan({ planId: body.plan_id, planName: body.plan_name });
   if (!plan) {
-    return { ok: false, message: 'Paket langganan tidak dikenali. Muat ulang halaman lalu pilih paket lagi.' };
+    return {
+      ok: false,
+      message: 'Paket langganan tidak dikenali. Muat ulang halaman lalu pilih paket lagi.',
+    };
   }
 
   const claimedRaw = body.amount;
-  const hasClaim = claimedRaw !== undefined && claimedRaw !== null && String(claimedRaw).trim() !== '';
+  const hasClaim =
+    claimedRaw !== undefined && claimedRaw !== null && String(claimedRaw).trim() !== '';
   if (hasClaim) {
     const claimed = toPositiveNumber(claimedRaw);
     if (claimed === null) {
@@ -189,7 +211,7 @@ export const resolveManualTransferPricing = (body = {}) => {
       return {
         ok: false,
         conflict: true,
-        message: `Harga ${plan.name} adalah Rp ${plan.price}. Muat ulang halaman untuk harga terbaru.`
+        message: `Harga ${plan.name} adalah Rp ${plan.price}. Muat ulang halaman untuk harga terbaru.`,
       };
     }
   }
@@ -200,6 +222,6 @@ export const resolveManualTransferPricing = (body = {}) => {
     planName: plan.name,
     amount: plan.price,
     adminFee: QRIS_ADMIN_FEE,
-    totalPaid: plan.price + QRIS_ADMIN_FEE
+    totalPaid: plan.price + QRIS_ADMIN_FEE,
   };
 };

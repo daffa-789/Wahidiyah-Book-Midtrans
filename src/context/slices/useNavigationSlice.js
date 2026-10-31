@@ -6,13 +6,9 @@ import {
   SCREEN_TO_PATH,
   adminPathForTab,
   getScreenFromPath,
-  normalizePath
+  normalizePath,
 } from '@lib/navigation';
-import {
-  clearIntendedLocation,
-  peekIntendedLocation,
-  saveIntendedLocation
-} from '@lib/api';
+import { clearIntendedLocation, peekIntendedLocation, saveIntendedLocation } from '@lib/api';
 import { saveScrollPositionBeforeNavigation } from '@lib/scrollPositionEvents';
 
 export const useNavigationSlice = ({ initialScreen, userRole }) => {
@@ -70,53 +66,57 @@ export const useNavigationSlice = ({ initialScreen, userRole }) => {
     setCurrentPath(path);
     routerNavigatorRef.current?.(path, { replace: true });
     if (notify) {
-      toast.info(isAdmin
-        ? 'Role akun Anda telah diubah menjadi Administrator.'
-        : 'Role akun Anda telah diubah menjadi User.');
+      toast.info(
+        isAdmin
+          ? 'Role akun Anda telah diubah menjadi Administrator.'
+          : 'Role akun Anda telah diubah menjadi User.',
+      );
     }
   }, []);
 
-  const navigateTo = useCallback((screen, { replace = false, currentRole, adminTab } = {}) => {
-    let destScreen = screen;
-    const effectiveRole = currentRole !== undefined ? currentRole : userRole;
+  const navigateTo = useCallback(
+    (screen, { replace = false, currentRole, adminTab } = {}) => {
+      let destScreen = screen;
+      const effectiveRole = currentRole !== undefined ? currentRole : userRole;
 
-    if (destScreen === 'admin-dashboard' && effectiveRole !== 'admin') {
-      destScreen = 'home';
-    }
-
-    if (
-      effectiveRole === 'admin' &&
-      destScreen !== 'admin-dashboard' &&
-      !AUTH_ONLY_SCREENS.has(destScreen)
-    ) {
-      destScreen = 'admin-dashboard';
-    }
-
-    if (!SCREEN_TO_PATH[destScreen]) {
-      destScreen = 'home';
-    }
-
-    let targetPath = SCREEN_TO_PATH[destScreen];
-    if (destScreen === 'admin-dashboard' && adminTab) {
-      targetPath = adminPathForTab(adminTab);
-    }
-
-    saveScrollPositionBeforeNavigation();
-
-    screenRef.current = destScreen;
-    setCurrentScreen(destScreen);
-    setCurrentPath(targetPath);
-
-    if (routerNavigatorRef.current) {
-      routerNavigatorRef.current(targetPath, { replace });
-    } else if (typeof window !== 'undefined') {
-      const historyMethod = replace ? 'replaceState' : 'pushState';
-      if (window.location.pathname !== targetPath && window.history?.[historyMethod]) {
-        window.history[historyMethod]({ screen: destScreen, path: targetPath }, '', targetPath);
+      if (destScreen === 'admin-dashboard' && effectiveRole !== 'admin') {
+        destScreen = 'home';
       }
-    }
 
-  }, [userRole]);
+      if (
+        effectiveRole === 'admin' &&
+        destScreen !== 'admin-dashboard' &&
+        !AUTH_ONLY_SCREENS.has(destScreen)
+      ) {
+        destScreen = 'admin-dashboard';
+      }
+
+      if (!SCREEN_TO_PATH[destScreen]) {
+        destScreen = 'home';
+      }
+
+      let targetPath = SCREEN_TO_PATH[destScreen];
+      if (destScreen === 'admin-dashboard' && adminTab) {
+        targetPath = adminPathForTab(adminTab);
+      }
+
+      saveScrollPositionBeforeNavigation();
+
+      screenRef.current = destScreen;
+      setCurrentScreen(destScreen);
+      setCurrentPath(targetPath);
+
+      if (routerNavigatorRef.current) {
+        routerNavigatorRef.current(targetPath, { replace });
+      } else if (typeof window !== 'undefined') {
+        const historyMethod = replace ? 'replaceState' : 'pushState';
+        if (window.location.pathname !== targetPath && window.history?.[historyMethod]) {
+          window.history[historyMethod]({ screen: destScreen, path: targetPath }, '', targetPath);
+        }
+      }
+    },
+    [userRole],
+  );
 
   return {
     currentScreen,
@@ -130,6 +130,6 @@ export const useNavigationSlice = ({ initialScreen, userRole }) => {
     rememberIntendedLocation,
     consumeIntendedScreen,
     applyRoleChange,
-    navigateTo
+    navigateTo,
   };
 };

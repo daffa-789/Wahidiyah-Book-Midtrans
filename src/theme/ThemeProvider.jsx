@@ -52,22 +52,26 @@ export const ThemeProvider = ({ children }) => {
     updateMode(nextTheme);
   }, [mode, updateMode]);
 
-  const value = useMemo(() => ({
-    mode,
-    theme,
-    isDark: theme === 'dark',
-    setMode: updateMode,
-    toggleTheme,
-  }), [mode, theme, updateMode, toggleTheme]);
+  const value = useMemo(
+    () => ({
+      mode,
+      theme,
+      isDark: theme === 'dark',
+      setMode: updateMode,
+      toggleTheme,
+    }),
+    [mode, theme, updateMode, toggleTheme],
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 /** Fallback aman bila dipakai di luar provider (mis. di Storybook). */
-export const useTheme = () => useContext(ThemeContext) || {
-  mode: 'system',
-  theme: 'light',
-  isDark: false,
-  setMode: () => {},
-  toggleTheme: () => {},
-};
+export const useTheme = () =>
+  useContext(ThemeContext) || {
+    mode: 'system',
+    theme: 'light',
+    isDark: false,
+    setMode: () => {},
+    toggleTheme: () => {},
+  };

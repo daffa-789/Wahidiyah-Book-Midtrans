@@ -15,7 +15,7 @@ export const HomeScreen = () => {
     openReader,
     user,
     navigateTo,
-    carouselSlides
+    carouselSlides,
   } = useApp();
 
   const [imgErrors, setImgErrors] = useState({});
@@ -24,19 +24,25 @@ export const HomeScreen = () => {
   const paywallPanelRef = useRef(null);
 
   const handleImgError = useCallback((id) => {
-    setImgErrors(prev => ({ ...prev, [id]: true }));
+    setImgErrors((prev) => ({ ...prev, [id]: true }));
   }, []);
 
-  const handleBookClick = useCallback((book) => {
-    const isLocked = book.isLocked && !user.isPro;
-    if (isLocked) {
-      setPaywallBook(book);
-    } else {
-      openReader(book);
-    }
-  }, [user.isPro, openReader]);
+  const handleBookClick = useCallback(
+    (book) => {
+      const isLocked = book.isLocked && !user.isPro;
+      if (isLocked) {
+        setPaywallBook(book);
+      } else {
+        openReader(book);
+      }
+    },
+    [user.isPro, openReader],
+  );
 
-  useDialogFocusTrap(paywallPanelRef, { isOpen: Boolean(paywallBook), onClose: () => setPaywallBook(null) });
+  useDialogFocusTrap(paywallPanelRef, {
+    isOpen: Boolean(paywallBook),
+    onClose: () => setPaywallBook(null),
+  });
 
   return (
     <div className="flex-1 flex flex-col justify-between bg-cream-50 min-h-[calc(100vh-2rem)]">
@@ -46,17 +52,39 @@ export const HomeScreen = () => {
             <BookGridSkeleton count={10} />
           </div>
         ) : catalogError ? (
-          <section className="my-auto w-full max-w-xl rounded-3xl border border-dashed border-semantic-danger/40 bg-semantic-dangerLight p-10 text-center" role="alert">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-semantic-danger/15 text-semantic-danger"><BookOpen className="h-7 w-7" /></div>
-            <h1 className="mt-5 font-display text-h2 font-bold tracking-tight text-ink-900">Koleksi gagal dimuat</h1>
-            <p className="mx-auto mt-2 max-w-md text-body leading-relaxed text-ink-500">{catalogError}</p>
-            <button type="button" onClick={() => refreshBooks().catch(() => {})} className="mt-5 rounded-2xl bg-brand-700 px-4 py-3 text-small font-bold text-cream-50 transition hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">Coba muat ulang</button>
+          <section
+            className="my-auto w-full max-w-xl rounded-3xl border border-dashed border-semantic-danger/40 bg-semantic-dangerLight p-10 text-center"
+            role="alert"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-semantic-danger/15 text-semantic-danger">
+              <BookOpen className="h-7 w-7" />
+            </div>
+            <h1 className="mt-5 font-display text-h2 font-bold tracking-tight text-ink-900">
+              Koleksi gagal dimuat
+            </h1>
+            <p className="mx-auto mt-2 max-w-md text-body leading-relaxed text-ink-500">
+              {catalogError}
+            </p>
+            <button
+              type="button"
+              onClick={() => refreshBooks().catch(() => {})}
+              className="mt-5 rounded-2xl bg-brand-700 px-4 py-3 text-small font-bold text-cream-50 transition hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+            >
+              Coba muat ulang
+            </button>
           </section>
         ) : books.length === 0 ? (
           <section className="my-auto w-full max-w-xl rounded-3xl border border-dashed border-cream-300 bg-cream-100 p-10 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100 text-brand-700"><BookOpen className="h-7 w-7" /></div>
-            <h1 className="mt-5 font-display text-h2 font-bold tracking-tight text-ink-900">Koleksi sedang disiapkan</h1>
-            <p className="mx-auto mt-2 max-w-md text-body leading-relaxed text-ink-500">Belum ada buku yang tersedia. Administrator dapat menambahkan buku beserta thumbnail dan lampiran bacaan dari dashboard.</p>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-100 text-brand-700">
+              <BookOpen className="h-7 w-7" />
+            </div>
+            <h1 className="mt-5 font-display text-h2 font-bold tracking-tight text-ink-900">
+              Koleksi sedang disiapkan
+            </h1>
+            <p className="mx-auto mt-2 max-w-md text-body leading-relaxed text-ink-500">
+              Belum ada buku yang tersedia. Administrator dapat menambahkan buku beserta thumbnail
+              dan lampiran bacaan dari dashboard.
+            </p>
           </section>
         ) : (
           <div className="w-full">
@@ -106,7 +134,9 @@ export const HomeScreen = () => {
             </h2>
 
             <p className="mt-2 text-body leading-relaxed text-ink-500">
-              <strong className="text-ink-900">{paywallBook.title}</strong> merupakan bagian dari koleksi eksklusif Wahidiyah Book. Berlangganan Pro untuk membuka akses baca penuh tanpa batas.
+              <strong className="text-ink-900">{paywallBook.title}</strong> merupakan bagian dari
+              koleksi eksklusif Wahidiyah Book. Berlangganan Pro untuk membuka akses baca penuh
+              tanpa batas.
             </p>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">

@@ -9,11 +9,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 53682;
 const REDIRECT_URI = `http://localhost:${PORT}/oauth2callback`;
 
-
-
-
-
-
 const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
 
 const env = {};
@@ -34,10 +29,6 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
   process.exit(1);
 }
 
-
-
-
-
 console.log('┌──────────────────────────────────────────────────────────────────────┐');
 console.log('│  SEBELUM LANJUT — pastikan dua hal ini sudah ada di Google Cloud:    │');
 console.log('│                                                                      │');
@@ -51,15 +42,17 @@ console.log('');
 console.log('Client ID :', `${CLIENT_ID.slice(0, 24)}…`);
 console.log('');
 
-const client = new OAuth2Client({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET, redirectUri: REDIRECT_URI });
+const client = new OAuth2Client({
+  clientId: CLIENT_ID,
+  clientSecret: CLIENT_SECRET,
+  redirectUri: REDIRECT_URI,
+});
 
 const authUrl = client.generateAuthUrl({
   access_type: 'offline',
-  
-  
-  
+
   prompt: 'consent',
-  scope: SCOPES
+  scope: SCOPES,
 });
 
 console.log('Membuka peramban… Kalau tidak terbuka otomatis, salin URL ini:');
@@ -121,23 +114,23 @@ const server = http.createServer(async (req, res) => {
     console.log('════════════════════════════════════════════════════════════');
     console.log('');
 
-    
-    
-    
-    
     let senderEmail = '';
     try {
       if (tokens.access_token) {
         const profileRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
-          headers: { Authorization: `Bearer ${tokens.access_token}` }
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
         });
         if (profileRes.ok) {
           const profile = await profileRes.json();
           senderEmail = profile.emailAddress || '';
         } else if (profileRes.status === 403) {
-          console.warn('(Catatan: scope gmail.send tidak mengizinkan baca profil — isi GMAIL_SENDER manual.)');
+          console.warn(
+            '(Catatan: scope gmail.send tidak mengizinkan baca profil — isi GMAIL_SENDER manual.)',
+          );
         } else {
-          console.warn('(Catatan: tidak bisa membaca profil Gmail — HTTP ' + profileRes.status + ')');
+          console.warn(
+            '(Catatan: tidak bisa membaca profil Gmail — HTTP ' + profileRes.status + ')',
+          );
         }
       }
     } catch (profileError) {
@@ -170,25 +163,25 @@ server.listen(PORT, () => {
   console.log('Tekan Ctrl+C untuk membatalkan.');
   console.log('');
 
-  
-  
-  
-  setTimeout(() => {
-    console.log('');
-    console.log('════════════════════════════════════════════════════════════');
-    console.log('BERHENTI: 5 menit berlalu tanpa callback dari Google.');
-    console.log('');
-    console.log('Penyebab paling sering — Google TIDAK mengarahkan balik ke sini:');
-    console.log(`  • Redirect URI belum terdaftar: ${REDIRECT_URI}`);
-    console.log('    → Google Cloud → APIs & Services → Credentials →');
-    console.log('      OAuth 2.0 Client ID Anda → Authorized redirect URIs → tambahkan.');
-    console.log('  • Halaman peramban menampilkan "redirect_uri_mismatch" atau');
-    console.log('    "access_denied" — itu pesan dari Google, bukan dari skrip ini.');
-    console.log('  • Jendela izin belum diselesaikan / ditutup sebelum selesai.');
-    console.log('');
-    console.log('Jalankan ulang skrip ini setelah diperbaiki.');
-    console.log('════════════════════════════════════════════════════════════');
-    server.close();
-    process.exit(1);
-  }, 5 * 60 * 1000).unref();
+  setTimeout(
+    () => {
+      console.log('');
+      console.log('════════════════════════════════════════════════════════════');
+      console.log('BERHENTI: 5 menit berlalu tanpa callback dari Google.');
+      console.log('');
+      console.log('Penyebab paling sering — Google TIDAK mengarahkan balik ke sini:');
+      console.log(`  • Redirect URI belum terdaftar: ${REDIRECT_URI}`);
+      console.log('    → Google Cloud → APIs & Services → Credentials →');
+      console.log('      OAuth 2.0 Client ID Anda → Authorized redirect URIs → tambahkan.');
+      console.log('  • Halaman peramban menampilkan "redirect_uri_mismatch" atau');
+      console.log('    "access_denied" — itu pesan dari Google, bukan dari skrip ini.');
+      console.log('  • Jendela izin belum diselesaikan / ditutup sebelum selesai.');
+      console.log('');
+      console.log('Jalankan ulang skrip ini setelah diperbaiki.');
+      console.log('════════════════════════════════════════════════════════════');
+      server.close();
+      process.exit(1);
+    },
+    5 * 60 * 1000,
+  ).unref();
 });

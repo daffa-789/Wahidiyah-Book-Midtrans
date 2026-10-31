@@ -48,7 +48,9 @@ const looksLikeText = (buffer) => {
 /** Apakah isi berkas benar-benar cocok dengan ekstensi konten yang diizinkan. */
 export const matchesContentExtension = (buffer, extension) => {
   if (!buffer?.length) return false;
-  const ext = String(extension || '').replace(/^\./, '').toLowerCase();
+  const ext = String(extension || '')
+    .replace(/^\./, '')
+    .toLowerCase();
 
   switch (ext) {
     case 'pdf':

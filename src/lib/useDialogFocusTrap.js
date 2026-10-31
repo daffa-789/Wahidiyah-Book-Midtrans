@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
-const FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE_SELECTOR =
+  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 export const useDialogFocusTrap = (panelRef, { isOpen, onClose }) => {
   const onCloseRef = useRef(onClose);

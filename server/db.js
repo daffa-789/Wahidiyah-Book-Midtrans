@@ -10,8 +10,6 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env'), override: true });
 dotenv.config({ path: path.resolve(__dirname, '.env'), override: true });
 dotenv.config({ override: true });
 
-
-
 const SUPABASE_PROJECT_URL = 'https://pdimjmbjutlzjdfjaqgt.supabase.co';
 
 export const resolveSupabaseCredentials = (env = process.env) => {
@@ -20,7 +18,9 @@ export const resolveSupabaseCredentials = (env = process.env) => {
   const anonKey = String(env.SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY || '').trim();
 
   if (env.NODE_ENV === 'production' && !secretKey) {
-    throw new Error('[DB] SUPABASE_SECRET_KEY (atau SUPABASE_SERVICE_ROLE_KEY) wajib diset di produksi. Boot dihentikan: tanpa kunci server, seluruh INSERT/UPDATE diblokir RLS dan aplikasi hidup setengah-konfigurasi.');
+    throw new Error(
+      '[DB] SUPABASE_SECRET_KEY (atau SUPABASE_SERVICE_ROLE_KEY) wajib diset di produksi. Boot dihentikan: tanpa kunci server, seluruh INSERT/UPDATE diblokir RLS dan aplikasi hidup setengah-konfigurasi.',
+    );
   }
 
   return { url, key: secretKey || anonKey, hasServiceRoleKey: Boolean(secretKey) };
@@ -28,12 +28,14 @@ export const resolveSupabaseCredentials = (env = process.env) => {
 
 const { url: supaUrl, key: supaKey, hasServiceRoleKey } = resolveSupabaseCredentials(process.env);
 
-export const supabaseServer = (supaUrl && supaKey) ? createClient(supaUrl, supaKey) : null;
-
+export const supabaseServer = supaUrl && supaKey ? createClient(supaUrl, supaKey) : null;
 
 export async function testConnection() {
   if (!supabaseServer) {
-    logger.error('DB', 'Supabase belum terkonfigurasi — set SUPABASE_URL & SUPABASE_SECRET_KEY di .env');
+    logger.error(
+      'DB',
+      'Supabase belum terkonfigurasi — set SUPABASE_URL & SUPABASE_SECRET_KEY di .env',
+    );
     return false;
   }
   try {
@@ -41,7 +43,10 @@ export async function testConnection() {
     if (error) throw error;
     logger.ok('DB', 'Berhasil terhubung ke Supabase Cloud (Skripsi_Project)');
     if (!hasServiceRoleKey) {
-      logger.warn('DB', '⚠️ Backend berjalan dengan Anon Key karena SUPABASE_SECRET_KEY belum diisi di .env! Operasi INSERT/UPDATE akan diblokir oleh Row-Level Security (RLS).');
+      logger.warn(
+        'DB',
+        '⚠️ Backend berjalan dengan Anon Key karena SUPABASE_SECRET_KEY belum diisi di .env! Operasi INSERT/UPDATE akan diblokir oleh Row-Level Security (RLS).',
+      );
     }
     return true;
   } catch (e) {
@@ -49,7 +54,6 @@ export async function testConnection() {
     return false;
   }
 }
-
 
 export async function isDatabaseHealthy() {
   if (!supabaseServer) {
@@ -63,7 +67,7 @@ export async function isDatabaseHealthy() {
     return {
       ok: false,
       code: error.code || 'UNKNOWN',
-      message: 'Koneksi Supabase tidak tersedia.'
+      message: 'Koneksi Supabase tidak tersedia.',
     };
   }
 }

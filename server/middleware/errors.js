@@ -6,24 +6,18 @@ export const apiNotFound = (req, res) => {
 };
 
 export const errorHandler = (error, req, res, next) => {
-  
-  
-  
-  
   if (error?.type === 'entity.too.large') {
     return res.status(413).json({
       success: false,
-      message: 'Ukuran data yang dikirim terlalu besar.'
+      message: 'Ukuran data yang dikirim terlalu besar.',
     });
   }
 
   if (error instanceof multer.MulterError) {
-    
-    
-    
-    const message = error.code === 'LIMIT_FILE_SIZE'
-      ? 'Ukuran berkas melebihi batas yang diizinkan.'
-      : 'Berkas unggahan tidak valid.';
+    const message =
+      error.code === 'LIMIT_FILE_SIZE'
+        ? 'Ukuran berkas melebihi batas yang diizinkan.'
+        : 'Berkas unggahan tidak valid.';
     return res.status(413).json({ success: false, message });
   }
 
@@ -32,7 +26,7 @@ export const errorHandler = (error, req, res, next) => {
     return res.status(500).json({
       success: false,
       message: 'Server tidak dapat memproses permintaan.',
-      ...(detail ? { error: detail } : {})
+      ...(detail ? { error: detail } : {}),
     });
   }
 

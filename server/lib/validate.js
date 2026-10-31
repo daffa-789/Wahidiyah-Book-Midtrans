@@ -7,27 +7,35 @@ const booleanFlagSchema = z.preprocess((val) => {
   if (typeof val === 'number') return val === 1;
   if (typeof val === 'string') {
     const normalized = val.trim().toLowerCase();
-    return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on';
+    return (
+      normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on'
+    );
   }
   return false;
 }, z.boolean());
 
 export const loginSchema = z.object({
-  email: z.string({ required_error: 'Alamat email wajib diisi' })
+  email: z
+    .string({ required_error: 'Alamat email wajib diisi' })
     .trim()
     .email('Format email tidak valid'),
-  password: z.string({ required_error: 'Password wajib diisi' })
-    .min(8, 'Password minimal 8 karakter')
+  password: z
+    .string({ required_error: 'Password wajib diisi' })
+    .min(8, 'Password minimal 8 karakter'),
 });
 
 export const registerSchema = z.object({
   name: z.string().trim().min(1, 'Nama wajib diisi'),
   email: z.string().trim().email('Format email tidak valid'),
-  phone: z.string({ required_error: 'Nomor WhatsApp wajib diisi' })
+  phone: z
+    .string({ required_error: 'Nomor WhatsApp wajib diisi' })
     .trim()
-    .refine(isValidPhone, 'Nomor WhatsApp tidak valid (contoh: 081234567890 atau format internasional)'),
+    .refine(
+      isValidPhone,
+      'Nomor WhatsApp tidak valid (contoh: 081234567890 atau format internasional)',
+    ),
   password: z.string().min(8, 'Password minimal 8 karakter'),
-  deliveryMethod: z.enum(['whatsapp', 'email']).optional().default('email')
+  deliveryMethod: z.enum(['whatsapp', 'email']).optional().default('email'),
 });
 
 export const bookInputSchema = z.object({
@@ -38,7 +46,7 @@ export const bookInputSchema = z.object({
   pages: z.coerce.number().int().positive().default(100),
   is_locked: booleanFlagSchema.default(false),
   cover_url: z.string().optional().default(''),
-  description: z.string().optional().default('')
+  description: z.string().optional().default(''),
 });
 
 export function parseBooleanFlag(value) {
@@ -72,7 +80,9 @@ export function toDateYmd(value) {
 }
 
 export function clippedText(value, max) {
-  return String(value ?? '').trim().slice(0, max);
+  return String(value ?? '')
+    .trim()
+    .slice(0, max);
 }
 
 export function toRangedInt(value, { min, max, fallback }) {
@@ -80,4 +90,3 @@ export function toRangedInt(value, { min, max, fallback }) {
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(Math.max(parsed, min), max);
 }
-

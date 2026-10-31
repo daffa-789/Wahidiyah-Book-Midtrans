@@ -31,15 +31,16 @@ const persistPosition = (positionsRef, key, y) => {
 
   positionsRef.current[key] = {
     y: Number.isFinite(y) ? Math.max(0, y) : 0,
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
   };
 
   const keysByAge = Object.keys(positionsRef.current)
     .filter((entryKey) => entryKey !== key)
-    .sort((left, right) => (
-      (positionsRef.current[left]?.updatedAt || 0) -
-      (positionsRef.current[right]?.updatedAt || 0)
-    ));
+    .sort(
+      (left, right) =>
+        (positionsRef.current[left]?.updatedAt || 0) -
+        (positionsRef.current[right]?.updatedAt || 0),
+    );
 
   let savedEntryCount = Object.keys(positionsRef.current).length;
   while (savedEntryCount > MAX_SAVED_ENTRIES && keysByAge.length > 0) {
@@ -54,10 +55,7 @@ const persistPosition = (positionsRef, key, y) => {
   }
 };
 
-const getMaxScrollY = () => Math.max(
-  0,
-  document.documentElement.scrollHeight - window.innerHeight
-);
+const getMaxScrollY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
 
 export const ScrollRestoration = () => {
   const location = useLocation();
@@ -139,9 +137,12 @@ export const ScrollRestoration = () => {
     };
   }, []);
 
-  useEffect(() => () => {
-    cancelPendingRestoreRef.current?.();
-  }, []);
+  useEffect(
+    () => () => {
+      cancelPendingRestoreRef.current?.();
+    },
+    [],
+  );
 
   useLayoutEffect(() => {
     const previousKey = activeKeyRef.current;
@@ -155,9 +156,7 @@ export const ScrollRestoration = () => {
       activeKeyRef.current = location.key;
     }
 
-    const targetY = navigationType === 'POP'
-      ? getSavedY(positionsRef.current[location.key])
-      : 0;
+    const targetY = navigationType === 'POP' ? getSavedY(positionsRef.current[location.key]) : 0;
 
     cancelPendingRestoreRef.current?.();
 

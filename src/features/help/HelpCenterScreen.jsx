@@ -32,18 +32,19 @@ export const HelpCenterScreen = () => {
                     aria-expanded={isExpanded}
                     className="w-full min-h-14 px-4 py-3.5 flex items-center gap-3.5 text-left cursor-pointer"
                   >
-
-                    <span className={`w-7 h-7 rounded-xl flex items-center justify-center text-caption font-black shrink-0 ${
-                      isExpanded
-                        ? 'bg-brand-700 text-cream-50'
-                        : 'bg-cream-200 text-ink-400'
-                    }`}>
+                    <span
+                      className={`w-7 h-7 rounded-xl flex items-center justify-center text-caption font-black shrink-0 ${
+                        isExpanded ? 'bg-brand-700 text-cream-50' : 'bg-cream-200 text-ink-400'
+                      }`}
+                    >
                       {index + 1}
                     </span>
 
-                    <span className={`flex-1 text-sm font-bold leading-snug ${
-                      isExpanded ? 'text-brand-900' : 'text-ink-800'
-                    }`}>
+                    <span
+                      className={`flex-1 text-sm font-bold leading-snug ${
+                        isExpanded ? 'text-brand-900' : 'text-ink-800'
+                      }`}
+                    >
                       {item.question}
                     </span>
 
@@ -85,7 +86,6 @@ export const HelpCenterScreen = () => {
           </div>
         </section>
       </div>
-
     </div>
   );
 };

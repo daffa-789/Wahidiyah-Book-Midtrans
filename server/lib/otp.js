@@ -6,7 +6,7 @@ import {
   deleteOtpById,
   findLatestOtp,
   incrementOtpAttempts,
-  insertOtp
+  insertOtp,
 } from '../otpStore.js';
 import { logger } from '../logger.js';
 
@@ -20,7 +20,9 @@ const hashOtp = (identifier, purpose, code) =>
 const IPV4_MAPPED_PREFIX = '::ffff:';
 
 export const isLoopbackAddress = (ip) => {
-  const value = String(ip ?? '').trim().toLowerCase();
+  const value = String(ip ?? '')
+    .trim()
+    .toLowerCase();
   if (!value) return false;
   const normalized = value.startsWith(IPV4_MAPPED_PREFIX)
     ? value.slice(IPV4_MAPPED_PREFIX.length)
@@ -45,7 +47,14 @@ export function resendCooldownRemaining(row) {
   return Math.ceil((OTP_RESEND_COOLDOWN_MS - elapsed) / 1000);
 }
 
-export async function issueOtp({ email, phone, identifier, purpose, payload = null, deliveryMethod = 'email' }) {
+export async function issueOtp({
+  email,
+  phone,
+  identifier,
+  purpose,
+  payload = null,
+  deliveryMethod = 'email',
+}) {
   const target = identifier || (deliveryMethod === 'whatsapp' && phone ? phone : email);
   const code = String(crypto.randomInt(100000, 1000000));
 
@@ -55,7 +64,7 @@ export async function issueOtp({ email, phone, identifier, purpose, payload = nu
     purpose,
     codeHash: hashOtp(target, purpose, code),
     payload,
-    expiresAt: new Date(Date.now() + OTP_TTL_MS).toISOString()
+    expiresAt: new Date(Date.now() + OTP_TTL_MS).toISOString(),
   });
 
   let deliveredBy = 'demo';
@@ -65,7 +74,7 @@ export async function issueOtp({ email, phone, identifier, purpose, payload = nu
       deliveredBy = res.deliveredBy;
     } catch (waError) {
       logger.error('WHATSAPP', 'Gagal mengirim kode via WA, memakai mode demo', {
-        pesan: waError.message
+        pesan: waError.message,
       });
       deliveredBy = 'demo';
     }
@@ -75,7 +84,7 @@ export async function issueOtp({ email, phone, identifier, purpose, payload = nu
       deliveredBy = 'email';
     } catch (mailError) {
       logger.error('MAIL', 'Gagal mengirim kode, memakai mode pengembangan', {
-        pesan: mailError.message
+        pesan: mailError.message,
       });
       deliveredBy = 'demo';
     }
@@ -89,7 +98,11 @@ export async function consumeOtp({ email, phone, identifier, purpose, code }) {
   const row = await findLatestOtp(target, purpose);
 
   if (!row) {
-    return { ok: false, status: 400, message: 'Kode verifikasi tidak ditemukan. Minta kode baru terlebih dahulu.' };
+    return {
+      ok: false,
+      status: 400,
+      message: 'Kode verifikasi tidak ditemukan. Minta kode baru terlebih dahulu.',
+    };
   }
   if ((row.attempts || 0) >= OTP_MAX_ATTEMPTS) {
     await deleteOtpById(row.id);
@@ -97,7 +110,11 @@ export async function consumeOtp({ email, phone, identifier, purpose, code }) {
   }
   if (new Date(row.expires_at).getTime() < Date.now()) {
     await deleteOtpById(row.id);
-    return { ok: false, status: 400, message: 'Kode verifikasi sudah kedaluwarsa. Minta kode baru.' };
+    return {
+      ok: false,
+      status: 400,
+      message: 'Kode verifikasi sudah kedaluwarsa. Minta kode baru.',
+    };
   }
   if (hashOtp(target, purpose, code) !== row.code_hash) {
     await incrementOtpAttempts(row.id);

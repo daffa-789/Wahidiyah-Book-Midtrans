@@ -6,7 +6,6 @@ import { LISTEN_PORT } from '../config.js';
 
 export const healthRouter = Router();
 
-
 healthRouter.get('/health', async (req, res) => {
   const dbHealth = await isDatabaseHealthy();
   res.status(dbHealth.ok ? 200 : 503).json({
@@ -14,14 +13,11 @@ healthRouter.get('/health', async (req, res) => {
     database: dbHealth.ok ? 'connected' : 'disconnected',
     databaseMessage: dbHealth.message || 'Database Supabase Cloud terhubung aktif',
     server: 'running',
-    
-    
-    
+
     port: LISTEN_PORT,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
-
 
 healthRouter.get('/stats', requireAuth, requireAdmin, async (req, res) => {
   try {
@@ -32,29 +28,33 @@ healthRouter.get('/stats', requireAuth, requireAdmin, async (req, res) => {
       { count: bookCount },
       { count: transactionCount },
       { count: pendingCount },
-      { data: recentTransactions }
+      { data: recentTransactions },
     ] = await Promise.all([
       supabaseServer.from('users').select('*', { count: 'exact', head: true }),
       supabaseServer.from('users').select('*', { count: 'exact', head: true }).eq('is_pro', true),
       supabaseServer.from('transactions').select('total_paid').eq('status', 'success'),
       supabaseServer.from('books').select('*', { count: 'exact', head: true }),
       supabaseServer.from('transactions').select('*', { count: 'exact', head: true }),
-      supabaseServer.from('transactions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabaseServer.from('transactions')
+      supabaseServer
+        .from('transactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending'),
+      supabaseServer
+        .from('transactions')
         .select('*, users(name, email)')
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(5),
     ]);
 
     const totalRevenue = (revenueRows || []).reduce(
       (acc, row) => acc + (Number(row.total_paid) || 0),
-      0
+      0,
     );
 
     const mappedRecent = (recentTransactions || []).map((tx) => ({
       ...tx,
       userName: tx.users?.name,
-      userEmail: tx.users?.email
+      userEmail: tx.users?.email,
     }));
 
     res.json({
@@ -65,9 +65,9 @@ healthRouter.get('/stats', requireAuth, requireAdmin, async (req, res) => {
         totalRevenue,
         totalBooks: bookCount || 0,
         totalTransactions: transactionCount || 0,
-        pendingTransactions: pendingCount || 0
+        pendingTransactions: pendingCount || 0,
       },
-      recentTransactions: mappedRecent
+      recentTransactions: mappedRecent,
     });
   } catch (error) {
     fail(res, error);

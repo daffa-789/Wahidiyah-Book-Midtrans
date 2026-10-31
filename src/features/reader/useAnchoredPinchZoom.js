@@ -2,10 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { getPinchScale, getPinchZoom } from './zoomUtils';
 
 const getTouchDistance = (touches) =>
-  Math.hypot(
-    touches[0].clientX - touches[1].clientX,
-    touches[0].clientY - touches[1].clientY
-  );
+  Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
 
 const getTextPositionAtPoint = (x, y) => {
   if (document.caretPositionFromPoint) {
@@ -57,7 +54,7 @@ export const useAnchoredPinchZoom = ({ containerRef, previewRef, zoom, setZoom }
       scrollLeft: container.scrollLeft,
       scrollTop: container.scrollTop,
       scrollWidth: container.scrollWidth,
-      scrollHeight: container.scrollHeight
+      scrollHeight: container.scrollHeight,
     };
   };
 
@@ -68,12 +65,7 @@ export const useAnchoredPinchZoom = ({ containerRef, previewRef, zoom, setZoom }
     const rect = container.getBoundingClientRect();
     const focalX = container.clientWidth / 2;
     const focalY = container.clientHeight * 0.35;
-    pendingAnchorRef.current = captureAnchor(
-      rect.left + focalX,
-      rect.top + focalY,
-      focalX,
-      focalY
-    );
+    pendingAnchorRef.current = captureAnchor(rect.left + focalX, rect.top + focalY, focalX, focalY);
   };
 
   const handleTouchStart = (event) => {
@@ -93,13 +85,13 @@ export const useAnchoredPinchZoom = ({ containerRef, previewRef, zoom, setZoom }
     startMidpointRef.current = { x: midpointX, y: midpointY };
     transformOriginRef.current = {
       x: midpointX - previewRect.left,
-      y: midpointY - previewRect.top
+      y: midpointY - previewRect.top,
     };
     pendingAnchorRef.current = captureAnchor(
       midpointX,
       midpointY,
       midpointX - containerRect.left,
-      midpointY - containerRect.top
+      midpointY - containerRect.top,
     );
     isPinchingRef.current = true;
     previewRef.current.style.willChange = 'transform';
@@ -122,7 +114,7 @@ export const useAnchoredPinchZoom = ({ containerRef, previewRef, zoom, setZoom }
         midpointX,
         midpointY,
         midpointX - containerRect.left,
-        midpointY - containerRect.top
+        midpointY - containerRect.top,
       );
     }
 
@@ -153,7 +145,11 @@ export const useAnchoredPinchZoom = ({ containerRef, previewRef, zoom, setZoom }
     if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
     pinchRafRef.current = null;
 
-    const targetZoom = getPinchZoom(startZoomRef.current, startDistanceRef.current, lastDistanceRef.current);
+    const targetZoom = getPinchZoom(
+      startZoomRef.current,
+      startDistanceRef.current,
+      lastDistanceRef.current,
+    );
     startDistanceRef.current = 0;
 
     if (targetZoom === zoom) {
@@ -193,16 +189,21 @@ export const useAnchoredPinchZoom = ({ containerRef, previewRef, zoom, setZoom }
 
     const verticalRange = Math.max(1, anchor.scrollHeight - container.clientHeight);
     const horizontalRange = Math.max(1, anchor.scrollWidth - container.clientWidth);
-    container.scrollTop = (anchor.scrollTop / verticalRange)
-      * Math.max(0, container.scrollHeight - container.clientHeight);
-    container.scrollLeft = (anchor.scrollLeft / horizontalRange)
-      * Math.max(0, container.scrollWidth - container.clientWidth);
+    container.scrollTop =
+      (anchor.scrollTop / verticalRange) *
+      Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollLeft =
+      (anchor.scrollLeft / horizontalRange) *
+      Math.max(0, container.scrollWidth - container.clientWidth);
   }, [containerRef, previewRef, zoom]);
 
-  useLayoutEffect(() => () => {
-    if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
-    clearPreviewTransform(previewRef.current);
-  }, [previewRef]);
+  useLayoutEffect(
+    () => () => {
+      if (pinchRafRef.current) cancelAnimationFrame(pinchRafRef.current);
+      clearPreviewTransform(previewRef.current);
+    },
+    [previewRef],
+  );
 
   useLayoutEffect(() => {
     const container = containerRef.current;

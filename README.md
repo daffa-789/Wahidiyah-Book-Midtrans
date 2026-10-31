@@ -14,6 +14,8 @@ Prasyarat: Node.js 24+, konfigurasi Supabase, dan file .env yang diisi sesuai da
 ## Perintah utama
 
 - **npm run build** — build frontend Vite.
+- **npm run format** — rapikan seluruh kode dengan Prettier.
+- **npm run format:check** — periksa kepatuhan format tanpa mengubah berkas.
 - **npm run health** — periksa konfigurasi layanan.
 - **npm start** — jalankan aplikasi dalam mode produksi.
 

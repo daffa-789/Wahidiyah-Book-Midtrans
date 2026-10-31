@@ -10,12 +10,7 @@ import { layout, typography, controls } from '@lib/styles';
  * 3. Aksi edit dan hapus per buku
  * 4. Tampilan kosong (empty state) jika belum ada buku
  */
-export const BooksTab = ({
-  books = [],
-  onAddBook,
-  onEditBook,
-  onDeleteBook
-}) => {
+export const BooksTab = ({ books = [], onAddBook, onEditBook, onDeleteBook }) => {
   return (
     <section className="space-y-5">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">

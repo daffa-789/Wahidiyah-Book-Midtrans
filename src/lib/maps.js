@@ -17,7 +17,11 @@ export function getMapUrl(location) {
   }
 
   // 2. URL langsung Google Maps (maps.app.goo.gl, google.com/maps, goo.gl)
-  if (/^https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i.test(trimmed)) {
+  if (
+    /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i.test(
+      trimmed,
+    )
+  ) {
     return trimmed;
   }
 

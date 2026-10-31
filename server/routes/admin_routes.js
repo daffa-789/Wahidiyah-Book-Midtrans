@@ -11,46 +11,54 @@ export const adminRouter = Router();
 
 const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
 
-adminRouter.get('/admin/logs', requireAuth, requireAdmin, wrap(async (req, res) => {
-  const limit = Math.min(Number(req.query.limit) || DEFAULT_LOG_LIMIT, MAX_LOG_LIMIT);
-  const logs = [];
+adminRouter.get(
+  '/admin/logs',
+  requireAuth,
+  requireAdmin,
+  wrap(async (req, res) => {
+    const limit = Math.min(Number(req.query.limit) || DEFAULT_LOG_LIMIT, MAX_LOG_LIMIT);
+    const logs = [];
 
-  const { data: subscriptions, error: subError } = await supabaseServer
-    .from('subscriptions')
-    .select('id, user_id, plan_name, status, price, created_at')
-    .order('created_at', { ascending: false })
-    .limit(limit);
+    const { data: subscriptions, error: subError } = await supabaseServer
+      .from('subscriptions')
+      .select('id, user_id, plan_name, status, price, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-  if (subError) throw subError;
+    if (subError) throw subError;
 
-  (subscriptions || []).forEach((row) => {
-    logs.push({
-      type: 'subscription',
-      action: row.status === ACTIVE_SUBSCRIPTION_STATUS ? 'Pembayaran berhasil' : `Status: ${row.status}`,
-      detail: `${row.plan_name} - ${formatRupiah(row.price)}`,
-      userId: row.user_id,
-      timestamp: row.created_at
+    (subscriptions || []).forEach((row) => {
+      logs.push({
+        type: 'subscription',
+        action:
+          row.status === ACTIVE_SUBSCRIPTION_STATUS
+            ? 'Pembayaran berhasil'
+            : `Status: ${row.status}`,
+        detail: `${row.plan_name} - ${formatRupiah(row.price)}`,
+        userId: row.user_id,
+        timestamp: row.created_at,
+      });
     });
-  });
 
-  const { data: users, error: userError } = await supabaseServer
-    .from('users')
-    .select('id, name, email, login_method, created_at')
-    .order('created_at', { ascending: false })
-    .limit(limit);
+    const { data: users, error: userError } = await supabaseServer
+      .from('users')
+      .select('id, name, email, login_method, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-  if (userError) throw userError;
+    if (userError) throw userError;
 
-  (users || []).forEach((row) => {
-    logs.push({
-      type: 'user',
-      action: 'Pengguna terdaftar',
-      detail: `${row.name} (${row.email}) via ${row.login_method || 'email'}`,
-      userId: row.id,
-      timestamp: row.created_at
+    (users || []).forEach((row) => {
+      logs.push({
+        type: 'user',
+        action: 'Pengguna terdaftar',
+        detail: `${row.name} (${row.email}) via ${row.login_method || 'email'}`,
+        userId: row.id,
+        timestamp: row.created_at,
+      });
     });
-  });
 
-  logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  res.json({ success: true, logs: logs.slice(0, limit) });
-}));
+    logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    res.json({ success: true, logs: logs.slice(0, limit) });
+  }),
+);

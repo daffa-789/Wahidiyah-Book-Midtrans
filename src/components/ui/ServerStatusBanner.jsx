@@ -10,7 +10,6 @@ export const ServerStatusBanner = () => {
   const checkHealth = useCallback(async () => {
     setIsRefreshing(true);
     try {
-
       let response;
       try {
         response = await fetch('/api/health', { cache: 'no-store' });
@@ -58,9 +57,12 @@ export const ServerStatusBanner = () => {
             <ServerCrash className="w-4 h-4" />
           </div>
           <div>
-            <div className="font-semibold text-ink-900">Peringatan: Server Backend Belum Berjalan</div>
+            <div className="font-semibold text-ink-900">
+              Peringatan: Server Backend Belum Berjalan
+            </div>
             <p className="mt-0.5 text-caption leading-relaxed text-ink-700">
-              {detail || 'Layanan backend (Port 5000) tidak merespons. Jalankan "npm run dev" pada Command Prompt / Terminal.'}
+              {detail ||
+                'Layanan backend (Port 5000) tidak merespons. Jalankan "npm run dev" pada Command Prompt / Terminal.'}
             </p>
           </div>
         </div>
@@ -72,7 +74,9 @@ export const ServerStatusBanner = () => {
           title="Periksa Ulang Status Koneksi"
           className="p-1.5 hover:bg-ink-900/5 rounded-lg text-ink-400 hover:text-ink-800 transition shrink-0"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-brand-600' : ''}`} />
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-brand-600' : ''}`}
+          />
         </button>
       </div>
     </div>

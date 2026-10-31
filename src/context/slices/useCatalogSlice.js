@@ -54,10 +54,13 @@ export const useCatalogSlice = ({ navigateTo }) => {
     }
   }, []);
 
-  const openReader = useCallback((book) => {
-    setActiveBook(book);
-    navigateTo('reader');
-  }, [navigateTo]);
+  const openReader = useCallback(
+    (book) => {
+      setActiveBook(book);
+      navigateTo('reader');
+    },
+    [navigateTo],
+  );
 
   useEffect(() => {
     refreshBooks().catch(() => {});
@@ -81,6 +84,6 @@ export const useCatalogSlice = ({ navigateTo }) => {
     refreshEvents,
     carouselSlides,
     setCarouselSlides,
-    refreshCarousel
+    refreshCarousel,
   };
 };

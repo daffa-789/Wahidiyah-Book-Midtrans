@@ -23,7 +23,7 @@ import {
   hashPassword,
   normalizeEmail,
   toPublicUser,
-  verifyPassword
+  verifyPassword,
 } from '../auth.js';
 import { canExposeDevOtp, consumeOtp, issueOtp, resendCooldownRemaining } from '../lib/otp.js';
 import { findLatestOtp, deleteOtpByEmailPurpose, deleteOtpById } from '../otpStore.js';
@@ -43,20 +43,19 @@ export const GOOGLE_ACCOUNT_MESSAGE =
  * dikenal TIDAK boleh dibedakan dari akun yang benar-benar dikirimi kode. */
 export const RESET_UNIFORM_RESPONSE = {
   success: true,
-  message: 'Jika akun tersebut terdaftar, kode pemulihan telah dikirim dan berlaku 10 menit.'
+  message: 'Jika akun tersebut terdaftar, kode pemulihan telah dikirim dan berlaku 10 menit.',
 };
 
 export const RESET_UNIFORM_WA_RESPONSE = {
   success: true,
   method: 'whatsapp',
-  message: 'Jika nomor tersebut terdaftar, kode pemulihan telah dikirim ke WhatsApp dan berlaku 10 menit.'
+  message:
+    'Jika nomor tersebut terdaftar, kode pemulihan telah dikirim ke WhatsApp dan berlaku 10 menit.',
 };
 
 const OTP_VALIDITY_LABEL = 'berlaku 10 menit';
 
-
 const firstIssueMessage = (parsed) => parsed.error.issues[0]?.message || 'Input tidak valid';
-
 
 /**
  * Login email/password. Pesan galat dibedakan antara kredensial salah dan
@@ -87,7 +86,7 @@ export async function authenticateWithPassword({ email, identifier, password }) 
     return {
       ok: false,
       status: 401,
-      message: user.password ? INVALID_CREDENTIALS_MESSAGE : GOOGLE_ACCOUNT_MESSAGE
+      message: user.password ? INVALID_CREDENTIALS_MESSAGE : GOOGLE_ACCOUNT_MESSAGE,
     };
   }
 
@@ -95,7 +94,6 @@ export async function authenticateWithPassword({ email, identifier, password }) 
 
   return { ok: true, token: createSessionToken(user), user: toPublicUser(user) };
 }
-
 
 /**
  * Memulai pendaftaran: validasi, cek keunikan email/telepon, lalu terbitkan
@@ -114,7 +112,7 @@ export async function beginRegistration({ name, email, phone, password, clientIp
     email: normalizedEmail,
     phone: normalizedPhone,
     password,
-    deliveryMethod: chosenMethod
+    deliveryMethod: chosenMethod,
   });
   if (!parsed.success) {
     return { ok: false, status: 400, message: firstIssueMessage(parsed) };
@@ -126,7 +124,11 @@ export async function beginRegistration({ name, email, phone, password, clientIp
     .eq('email', normalizedEmail)
     .maybeSingle();
   if (existingEmail) {
-    return { ok: false, status: 409, message: 'Email sudah terdaftar. Silakan masuk atau gunakan email lain.' };
+    return {
+      ok: false,
+      status: 409,
+      message: 'Email sudah terdaftar. Silakan masuk atau gunakan email lain.',
+    };
   }
 
   if (normalizedPhone) {
@@ -139,7 +141,8 @@ export async function beginRegistration({ name, email, phone, password, clientIp
       return {
         ok: false,
         status: 409,
-        message: 'Nomor WhatsApp sudah terdaftar pada akun lain. Silakan masuk atau gunakan nomor lain.'
+        message:
+          'Nomor WhatsApp sudah terdaftar pada akun lain. Silakan masuk atau gunakan nomor lain.',
       };
     }
   }
@@ -157,17 +160,18 @@ export async function beginRegistration({ name, email, phone, password, clientIp
       email: normalizedEmail,
       phone: normalizedPhone,
       deliveryMethod: chosenMethod,
-      passwordHash: await hashPassword(password)
-    }
+      passwordHash: await hashPassword(password),
+    },
   });
 
   logger.info('OTP', 'Kode pendaftaran dikirim', {
     identifier: targetIdentifier,
     method: chosenMethod,
-    deliveredBy
+    deliveredBy,
   });
 
-  const targetLabel = chosenMethod === 'whatsapp' ? `nomor WhatsApp ${normalizedPhone}` : `email ${normalizedEmail}`;
+  const targetLabel =
+    chosenMethod === 'whatsapp' ? `nomor WhatsApp ${normalizedPhone}` : `email ${normalizedEmail}`;
   const deliveryFailed = deliveredBy === 'demo';
 
   return {
@@ -182,18 +186,22 @@ export async function beginRegistration({ name, email, phone, password, clientIp
       message: deliveryFailed
         ? `Kode verifikasi dibuat, tetapi pengiriman ke ${targetLabel} gagal. Coba kirim ulang atau gunakan metode lain.`
         : `Kode verifikasi telah dikirim ke ${targetLabel} dan ${OTP_VALIDITY_LABEL}.`,
-      devOtp: deliveryFailed && canExposeDevOtp(process.env, clientIp) ? code : undefined
-    }
+      devOtp: deliveryFailed && canExposeDevOtp(process.env, clientIp) ? code : undefined,
+    },
   };
 }
-
 
 /**
  * Menuntaskan pendaftaran: menukar kode OTP menjadi baris pengguna baru.
  * Konflik unik (23505) saat INSERT dibedakan berdasarkan pesan PostgreSQL —
  * telepon vs email — lalu OTP dihanguskan supaya tidak bisa dipakai ulang.
  */
-export async function completeRegistration({ identifier: rawIdentifier, email: rawEmail, phone: rawPhone, code }) {
+export async function completeRegistration({
+  identifier: rawIdentifier,
+  email: rawEmail,
+  phone: rawPhone,
+  code,
+}) {
   const email = rawEmail ? normalizeEmail(rawEmail) : '';
   const phone = rawPhone ? normalizePhone(rawPhone) : '';
   const identity = rawIdentifier ? String(rawIdentifier).trim() : '';
@@ -211,7 +219,11 @@ export async function completeRegistration({ identifier: rawIdentifier, email: r
   const payload = result.row.payload || {};
   if (!payload.name || !payload.passwordHash) {
     await deleteOtpById(result.row.id);
-    return { ok: false, status: 400, message: 'Data pendaftaran tidak lengkap. Silakan daftar ulang.' };
+    return {
+      ok: false,
+      status: 400,
+      message: 'Data pendaftaran tidak lengkap. Silakan daftar ulang.',
+    };
   }
 
   const newId = generateId('usr');
@@ -223,7 +235,7 @@ export async function completeRegistration({ identifier: rawIdentifier, email: r
     password: payload.passwordHash,
     role: 'user',
     login_method: 'email',
-    is_pro: false
+    is_pro: false,
   };
 
   const { error: insertError } = await supabaseServer.from('users').insert([newUser]);
@@ -240,15 +252,18 @@ export async function completeRegistration({ identifier: rawIdentifier, email: r
 
   await deleteOtpById(result.row.id);
 
-  logger.ok('AUTH', 'Registrasi akun baru berhasil', { email: newUser.email, phone: newUser.phone, id: newId });
+  logger.ok('AUTH', 'Registrasi akun baru berhasil', {
+    email: newUser.email,
+    phone: newUser.phone,
+    id: newId,
+  });
 
   return {
     ok: true,
     token: createSessionToken(newUser),
-    user: toPublicUser(newUser)
+    user: toPublicUser(newUser),
   };
 }
-
 
 /**
  * Meminta kode pemulihan password via WhatsApp atau email.
@@ -261,7 +276,11 @@ export async function requestPasswordReset({ method, email: rawEmail, phone: raw
   if (method === 'whatsapp') {
     const normalizedPhone = normalizePhone(rawPhone);
     if (!normalizedPhone || !isValidPhone(normalizedPhone)) {
-      return { ok: false, status: 400, message: 'Masukkan nomor WhatsApp yang valid (contoh: 081234567890).' };
+      return {
+        ok: false,
+        status: 400,
+        message: 'Masukkan nomor WhatsApp yang valid (contoh: 081234567890).',
+      };
     }
 
     const { data: account } = await supabaseServer
@@ -271,12 +290,16 @@ export async function requestPasswordReset({ method, email: rawEmail, phone: raw
       .maybeSingle();
 
     if (!account) {
-      logger.info('OTP', 'Permintaan reset untuk nomor WA tak terdaftar', { phone: normalizedPhone });
+      logger.info('OTP', 'Permintaan reset untuk nomor WA tak terdaftar', {
+        phone: normalizedPhone,
+      });
       return { ok: true, kind: 'uniform-wa' };
     }
 
     if (account.login_method === 'google') {
-      logger.info('OTP', 'Reset password ditolak: akun terdaftar lewat Google', { phone: normalizedPhone });
+      logger.info('OTP', 'Reset password ditolak: akun terdaftar lewat Google', {
+        phone: normalizedPhone,
+      });
       return { ok: true, kind: 'uniform-wa' };
     }
 
@@ -284,14 +307,14 @@ export async function requestPasswordReset({ method, email: rawEmail, phone: raw
       phone: normalizedPhone,
       identifier: normalizedPhone,
       purpose: 'reset',
-      deliveryMethod: 'whatsapp'
+      deliveryMethod: 'whatsapp',
     });
     const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp(process.env, clientIp);
 
     logger.info('OTP', 'Permintaan reset password via WhatsApp', {
       phone: normalizedPhone,
       deliveredBy,
-      devOtpExposed: exposeDevOtp
+      devOtpExposed: exposeDevOtp,
     });
 
     return {
@@ -299,7 +322,7 @@ export async function requestPasswordReset({ method, email: rawEmail, phone: raw
       kind: 'sent-wa',
       phone: normalizedPhone,
       identifier: normalizedPhone,
-      devOtp: exposeDevOtp ? code : undefined
+      devOtp: exposeDevOtp ? code : undefined,
     };
   }
 
@@ -327,10 +350,15 @@ export async function requestPasswordReset({ method, email: rawEmail, phone: raw
         await sendGoogleAccountEmail(email);
         deliveredBy = 'email';
       } catch (mailError) {
-        logger.error('MAIL', 'Gagal mengirim pemberitahuan akun Google', { pesan: mailError.message });
+        logger.error('MAIL', 'Gagal mengirim pemberitahuan akun Google', {
+          pesan: mailError.message,
+        });
       }
     }
-    logger.info('OTP', 'Reset password ditolak: akun terdaftar lewat Google', { email, deliveredBy });
+    logger.info('OTP', 'Reset password ditolak: akun terdaftar lewat Google', {
+      email,
+      deliveredBy,
+    });
     return { ok: true, kind: 'uniform-email' };
   }
 
@@ -338,30 +366,41 @@ export async function requestPasswordReset({ method, email: rawEmail, phone: raw
     email,
     identifier: email,
     purpose: 'reset',
-    deliveryMethod: 'email'
+    deliveryMethod: 'email',
   });
   const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp(process.env, clientIp);
 
-  logger.info('OTP', 'Permintaan reset password', { email, deliveredBy, devOtpExposed: exposeDevOtp });
+  logger.info('OTP', 'Permintaan reset password', {
+    email,
+    deliveredBy,
+    devOtpExposed: exposeDevOtp,
+  });
 
   return {
     ok: true,
     kind: 'sent-email',
     identifier: email,
-    devOtp: exposeDevOtp ? code : undefined
+    devOtp: exposeDevOtp ? code : undefined,
   };
 }
-
 
 /**
  * Menetapkan password baru memakai kode OTP reset. Akun Google ditolak dengan
  * pesan khusus dan OTP-nya dihanguskan — akun tanpa password tidak boleh
  * diberi password lewat jalur reset.
  */
-export async function resetPassword({ method, email: rawEmail, phone: rawPhone, identifier, code, password }) {
-  const target = method === 'whatsapp'
-    ? normalizePhone(rawPhone || identifier)
-    : normalizeEmail(rawEmail || identifier);
+export async function resetPassword({
+  method,
+  email: rawEmail,
+  phone: rawPhone,
+  identifier,
+  code,
+  password,
+}) {
+  const target =
+    method === 'whatsapp'
+      ? normalizePhone(rawPhone || identifier)
+      : normalizeEmail(rawEmail || identifier);
 
   if (!target || !code) {
     return { ok: false, status: 400, message: 'Identitas akun dan kode verifikasi wajib diisi.' };
@@ -371,7 +410,8 @@ export async function resetPassword({ method, email: rawEmail, phone: rawPhone, 
   }
 
   let userLookup = supabaseServer.from('users').select('id, login_method');
-  userLookup = method === 'whatsapp' ? userLookup.eq('phone', target) : userLookup.eq('email', target);
+  userLookup =
+    method === 'whatsapp' ? userLookup.eq('phone', target) : userLookup.eq('email', target);
   const { data: targetAccount } = await userLookup.maybeSingle();
 
   if (targetAccount?.login_method === 'google') {
@@ -380,7 +420,8 @@ export async function resetPassword({ method, email: rawEmail, phone: rawPhone, 
     return {
       ok: false,
       status: 400,
-      message: 'Akun ini terdaftar melalui Google sehingga tidak memiliki password. Silakan masuk dengan tombol "Login dengan Google".'
+      message:
+        'Akun ini terdaftar melalui Google sehingga tidak memiliki password. Silakan masuk dengan tombol "Login dengan Google".',
     };
   }
 
@@ -392,20 +433,25 @@ export async function resetPassword({ method, email: rawEmail, phone: rawPhone, 
   await deleteOtpById(result.row.id);
 
   let userUpdate = supabaseServer.from('users').update({ password: await hashPassword(password) });
-  userUpdate = method === 'whatsapp' ? userUpdate.eq('phone', target) : userUpdate.eq('email', target);
+  userUpdate =
+    method === 'whatsapp' ? userUpdate.eq('phone', target) : userUpdate.eq('email', target);
   await userUpdate;
 
   logger.ok('OTP', 'Password berhasil direset', { target, method });
   return { ok: true };
 }
 
-
 /**
  * Mengirim ulang kode verifikasi (tujuan register/reset) dengan masa tunggu.
  * Untuk tujuan reset, akun tak dikenal/Google dijawab sukses palsu — tetap
  * anti-enumerasi tanpa mengungkap keberadaan akun.
  */
-export async function resendVerificationOtp({ method, identifier: rawTarget, purpose: rawPurpose, clientIp }) {
+export async function resendVerificationOtp({
+  method,
+  identifier: rawTarget,
+  purpose: rawPurpose,
+  clientIp,
+}) {
   const target = method === 'whatsapp' ? normalizePhone(rawTarget) : normalizeEmail(rawTarget);
   const purpose = rawPurpose === 'reset' ? 'reset' : 'register';
 
@@ -415,10 +461,18 @@ export async function resendVerificationOtp({ method, identifier: rawTarget, pur
 
   const existing = await findLatestOtp(target, purpose);
   if (!existing) {
-    return { ok: false, status: 400, message: 'Tidak ada permintaan verifikasi yang aktif. Silakan ulangi dari awal.' };
+    return {
+      ok: false,
+      status: 400,
+      message: 'Tidak ada permintaan verifikasi yang aktif. Silakan ulangi dari awal.',
+    };
   }
   if (purpose === 'register' && !existing.payload) {
-    return { ok: false, status: 400, message: 'Data pendaftaran tidak ditemukan. Silakan daftar ulang dari awal.' };
+    return {
+      ok: false,
+      status: 400,
+      message: 'Data pendaftaran tidak ditemukan. Silakan daftar ulang dari awal.',
+    };
   }
 
   const cooldown = resendCooldownRemaining(existing);
@@ -427,13 +481,14 @@ export async function resendVerificationOtp({ method, identifier: rawTarget, pur
       ok: false,
       status: 429,
       retryAfterSeconds: cooldown,
-      message: `Mohon tunggu ${cooldown} detik sebelum meminta kode baru.`
+      message: `Mohon tunggu ${cooldown} detik sebelum meminta kode baru.`,
     };
   }
 
   if (purpose === 'reset') {
     let checkLookup = supabaseServer.from('users').select('login_method');
-    checkLookup = method === 'whatsapp' ? checkLookup.eq('phone', target) : checkLookup.eq('email', target);
+    checkLookup =
+      method === 'whatsapp' ? checkLookup.eq('phone', target) : checkLookup.eq('email', target);
     const { data: account } = await checkLookup.maybeSingle();
     if (!account || account.login_method === 'google') {
       return { ok: true, kind: 'silent-success' };
@@ -446,7 +501,7 @@ export async function resendVerificationOtp({ method, identifier: rawTarget, pur
     email: method === 'email' ? target : null,
     deliveryMethod: method,
     purpose,
-    payload: existing.payload ?? null
+    payload: existing.payload ?? null,
   });
   const exposeDevOtp = deliveredBy === 'demo' && canExposeDevOtp(process.env, clientIp);
 
@@ -465,11 +520,10 @@ export async function resendVerificationOtp({ method, identifier: rawTarget, pur
       message: deliveryFailed
         ? `Kode baru dibuat, tetapi pengiriman ke ${destinationLabel} gagal. Coba lagi atau gunakan metode lain.`
         : `Kode baru telah dikirim ke ${destinationLabel} dan ${OTP_VALIDITY_LABEL}.`,
-      devOtp: exposeDevOtp ? code : undefined
-    }
+      devOtp: exposeDevOtp ? code : undefined,
+    },
   };
 }
-
 
 /**
  * Menukar access_token Supabase (hasil login Google di klien) menjadi sesi
@@ -485,7 +539,10 @@ export async function loginWithGoogleSupabase({ accessToken, googleName, googleE
   const supaUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supaAnonKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
   const supaAuth = createClient(supaUrl, supaAnonKey);
-  const { data: { user: supaUser }, error: authError } = await supaAuth.auth.getUser(accessToken);
+  const {
+    data: { user: supaUser },
+    error: authError,
+  } = await supaAuth.auth.getUser(accessToken);
   if (authError || !supaUser) {
     return { ok: false, status: 401, message: 'Token Google tidak valid atau sudah kedaluwarsa.' };
   }
@@ -498,7 +555,6 @@ export async function loginWithGoogleSupabase({ accessToken, googleName, googleE
 
   return { ok: true, token: createSessionToken(result.user), user: toPublicUser(result.user) };
 }
-
 
 /**
  * Menukar authorization code OAuth Google menjadi identitas terverifikasi
@@ -514,7 +570,9 @@ export async function verifyGoogleOAuthCode({ code, clientId, clientSecret, redi
     const response = await oauthClient.getToken(code);
     tokens = response.tokens;
   } catch (exchangeError) {
-    logger.error('GOOGLE_OAUTH', 'Penukaran code dengan token gagal', { pesan: exchangeError.message });
+    logger.error('GOOGLE_OAUTH', 'Penukaran code dengan token gagal', {
+      pesan: exchangeError.message,
+    });
     return { ok: false, message: 'Penukaran kode OAuth dengan Google gagal.' };
   }
   if (!tokens?.id_token) {
@@ -525,7 +583,7 @@ export async function verifyGoogleOAuthCode({ code, clientId, clientSecret, redi
   try {
     const ticket = await oauthClient.verifyIdToken({
       idToken: tokens.id_token,
-      audience: clientId
+      audience: clientId,
     });
     payload = ticket.getPayload();
   } catch (verifyError) {
@@ -541,7 +599,6 @@ export async function verifyGoogleOAuthCode({ code, clientId, clientSecret, redi
 
   return { ok: true, email, name: payload.name };
 }
-
 
 /**
  * Cari pengguna berdasarkan email Google, atau buat baru. Balapan INSERT
@@ -565,13 +622,16 @@ export async function findOrCreateGoogleUser({ email, name, source }) {
       password: null,
       role: 'user',
       login_method: 'google',
-      is_pro: false
+      is_pro: false,
     };
     const { error: insertError } = await supabaseServer.from('users').insert([newUser]);
     if (insertError) {
       if (insertError.code === '23505') {
         const { data: raceUser } = await supabaseServer
-          .from('users').select('*').eq('email', email).maybeSingle();
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .maybeSingle();
         existingUser = raceUser;
       } else {
         throw insertError;
@@ -579,7 +639,10 @@ export async function findOrCreateGoogleUser({ email, name, source }) {
     } else {
       existingUser = newUser;
     }
-    logger.ok('AUTH', `Registrasi akun baru via Google (${source})`, { email, id: existingUser?.id });
+    logger.ok('AUTH', `Registrasi akun baru via Google (${source})`, {
+      email,
+      id: existingUser?.id,
+    });
   } else {
     logger.ok('AUTH', `Login via Google (${source})`, { email, role: existingUser.role || 'user' });
   }
@@ -587,7 +650,6 @@ export async function findOrCreateGoogleUser({ email, name, source }) {
   if (!existingUser) return { ok: false };
   return { ok: true, user: existingUser };
 }
-
 
 /** Menukar kode sesi sekali-pakai (VULN-03) menjadi token + pengguna. */
 export async function exchangeSessionCode(code) {
@@ -597,7 +659,6 @@ export async function exchangeSessionCode(code) {
   logger.ok('AUTH', 'Kode sesi sekali-pakai ditukar', { userId: session.user?.id });
   return session;
 }
-
 
 /** Memuat ulang baris pengguna terkini untuk GET /me (null bila gagal). */
 export async function loadCurrentUser(userId) {

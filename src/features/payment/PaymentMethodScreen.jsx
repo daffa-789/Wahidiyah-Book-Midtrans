@@ -11,7 +11,7 @@ export const PaymentMethodScreen = () => {
     selectedPaymentMethod,
     setSelectedPaymentMethod,
     navigateTo,
-    isSubscriptionActive
+    isSubscriptionActive,
   } = useApp();
 
   const isSubscribed = isSubscriptionActive ? isSubscriptionActive(user) : Boolean(user?.isPro);
@@ -35,9 +35,10 @@ export const PaymentMethodScreen = () => {
   return (
     <div className="min-h-[700px] flex flex-col justify-between px-4 sm:px-6 lg:px-8 py-6 bg-cream-50">
       <div className="max-w-4xl mx-auto w-full flex-1">
-
         <div className="mb-6">
-          <h2 className="font-display text-subtitle font-bold text-ink-900 tracking-tight">Pilih Metode Pembayaran</h2>
+          <h2 className="font-display text-subtitle font-bold text-ink-900 tracking-tight">
+            Pilih Metode Pembayaran
+          </h2>
         </div>
 
         <div className="bg-gradient-to-r from-brand-600/10 via-brand-50 to-brand-600/10 border border-brand-200/80 rounded-2xl p-5 mb-6 flex justify-between items-center shadow-sm">
@@ -76,9 +77,7 @@ export const PaymentMethodScreen = () => {
                       }`}
                     >
                       <div className="flex items-center gap-4">
-                        <div
-                          className="w-14 h-14 p-2 rounded-xl flex items-center justify-center font-bold text-xs bg-cream-50 border border-cream-200 shadow-sm overflow-hidden"
-                        >
+                        <div className="w-14 h-14 p-2 rounded-xl flex items-center justify-center font-bold text-xs bg-cream-50 border border-cream-200 shadow-sm overflow-hidden">
                           {opt.logoUrl ? (
                             <img
                               src={opt.logoUrl}
@@ -91,14 +90,21 @@ export const PaymentMethodScreen = () => {
                             />
                           ) : null}
                           <span
-                            style={{ display: opt.logoUrl ? 'none' : 'flex', backgroundColor: opt.color }}
+                            style={{
+                              display: opt.logoUrl ? 'none' : 'flex',
+                              backgroundColor: opt.color,
+                            }}
                             className="w-full h-full text-cream-50 items-center justify-center text-xs font-bold rounded-lg shadow-inner"
                           >
                             {opt.id.slice(0, 3).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <p className={`text-sm font-bold transition ${isSelected ? 'text-brand-800' : 'text-ink-900 group-hover:text-brand-800'}`}>{opt.name}</p>
+                          <p
+                            className={`text-sm font-bold transition ${isSelected ? 'text-brand-800' : 'text-ink-900 group-hover:text-brand-800'}`}
+                          >
+                            {opt.name}
+                          </p>
                           <p className={typography.metaTight}>
                             Konfirmasi Instan via QRIS Midtrans
                           </p>

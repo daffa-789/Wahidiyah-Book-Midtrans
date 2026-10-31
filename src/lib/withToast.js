@@ -63,7 +63,7 @@ export const withToastSync = (action, fallbackMessage, successMessage) => {
         (error) => {
           toast.error(error?.message || fallbackMessage);
           return { ok: false, value: undefined, error };
-        }
+        },
       );
     }
     const text = resolveSuccess(successMessage, value);

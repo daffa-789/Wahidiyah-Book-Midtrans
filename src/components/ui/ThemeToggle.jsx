@@ -9,9 +9,10 @@ export const ThemeToggle = ({ variant = 'default', className = '' }) => {
   const { isDark, toggleTheme } = useTheme();
   const Icon = isDark ? Sun : Moon;
 
-  const tone = variant === 'onDark'
-    ? 'text-cream-300 hover:text-cream-50 hover:bg-cream-50/10 focus-visible:ring-brand-500'
-    : 'text-ink-500 hover:text-ink-800 hover:bg-cream-200 focus-visible:ring-brand-400';
+  const tone =
+    variant === 'onDark'
+      ? 'text-cream-300 hover:text-cream-50 hover:bg-cream-50/10 focus-visible:ring-brand-500'
+      : 'text-ink-500 hover:text-ink-800 hover:bg-cream-200 focus-visible:ring-brand-400';
 
   const label = isDark ? 'Aktifkan mode terang' : 'Aktifkan mode malam';
 

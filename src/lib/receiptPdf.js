@@ -14,7 +14,7 @@ export const downloadReceiptPdf = (details, user) => {
   const planName = details?.planName || 'Paket Bulanan Pro';
   const amount = Number(details?.amount || 25000);
   const adminFee = Number(details?.adminFee || 0);
-  const totalPaid = Number(details?.totalPaid || (amount + adminFee));
+  const totalPaid = Number(details?.totalPaid || amount + adminFee);
   const userName = user?.name || user?.fullName || 'Pengguna Wahidiyah';
   const userEmail = user?.email || '-';
   const userPhone = user?.phone || details?.phone || '';
@@ -23,13 +23,13 @@ export const downloadReceiptPdf = (details, user) => {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
-    format: 'a4'
+    format: 'a4',
   });
 
   const pageWidth = doc.internal.pageSize.getWidth(); // 210 mm
   const pageHeight = doc.internal.pageSize.getHeight(); // 297 mm
   const margin = 18;
-  const contentWidth = pageWidth - (margin * 2); // 174 mm
+  const contentWidth = pageWidth - margin * 2; // 174 mm
 
   // 1. Top Decorative Brand Bar (Deep Emerald & Gold Accent)
   doc.setFillColor(20, 82, 58); // #14523A
@@ -84,7 +84,7 @@ export const downloadReceiptPdf = (details, user) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(6, 95, 70);
-  doc.text('● PEMBAYARAN LUNAS (SETTLED)', badgeX + (badgeW / 2), badgeY + 5.2, { align: 'center' });
+  doc.text('● PEMBAYARAN LUNAS (SETTLED)', badgeX + badgeW / 2, badgeY + 5.2, { align: 'center' });
 
   // 3. Subtle Divider Line
   y = 44;
@@ -201,7 +201,11 @@ export const downloadReceiptPdf = (details, user) => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(100, 116, 139);
-  doc.text('Akses Penuh Seluruh Kitab Digital & Dokumen Pengamalan Wahidiyah Pro', margin + 15, y + 11);
+  doc.text(
+    'Akses Penuh Seluruh Kitab Digital & Dokumen Pengamalan Wahidiyah Pro',
+    margin + 15,
+    y + 11,
+  );
 
   doc.setFontSize(8.5);
   doc.setTextColor(51, 65, 85);
@@ -298,9 +302,21 @@ export const downloadReceiptPdf = (details, user) => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(22, 101, 52);
-  doc.text('Dokumen ini merupakan tanda terima digital resmi yang sah menurut ketentuan UU ITE No. 11/2008 Pasal 5.', margin + 19, secBoxY + 13);
-  doc.text(`ID Transaksi / Merchant Order: ${refNo}   |   Status: Settlement Real Midtrans Validated`, margin + 19, secBoxY + 17.5);
-  doc.text('Diterbitkan secara elektronik oleh Sistem Informasi Perpustakaan Digital Wahidiyah Book.', margin + 19, secBoxY + 22);
+  doc.text(
+    'Dokumen ini merupakan tanda terima digital resmi yang sah menurut ketentuan UU ITE No. 11/2008 Pasal 5.',
+    margin + 19,
+    secBoxY + 13,
+  );
+  doc.text(
+    `ID Transaksi / Merchant Order: ${refNo}   |   Status: Settlement Real Midtrans Validated`,
+    margin + 19,
+    secBoxY + 17.5,
+  );
+  doc.text(
+    'Diterbitkan secara elektronik oleh Sistem Informasi Perpustakaan Digital Wahidiyah Book.',
+    margin + 19,
+    secBoxY + 22,
+  );
 
   // 8. Terms & Notes
   y = secBoxY + 33;
@@ -316,7 +332,7 @@ export const downloadReceiptPdf = (details, user) => {
   const notes = [
     '• Paket langganan Pro langsung aktif secara otomatis selama 30 hari kalender sejak transaksi berstatus lunas.',
     '• Hak akses mencakup seluruh literatur, audio Sholawat Wahidiyah, dan berkas kitab tanpa batasan halaman.',
-    '• Apabila membutuhkan bantuan atau konfirmasi lebih lanjut, hubungi layanan dukungan kami di support@bukuku.id.'
+    '• Apabila membutuhkan bantuan atau konfirmasi lebih lanjut, hubungi layanan dukungan kami di support@bukuku.id.',
   ];
   notes.forEach((note) => {
     doc.text(note, margin, y);
@@ -332,14 +348,18 @@ export const downloadReceiptPdf = (details, user) => {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
-  doc.text('Buku Wahidiyah  •  Perpustakaan Digital Ajaran Sholawat Wahidiyah  •  https://wahidiyah-book.vercel.app', margin, footerY);
+  doc.text(
+    'Buku Wahidiyah  •  Perpustakaan Digital Ajaran Sholawat Wahidiyah  •  https://wahidiyah-book.vercel.app',
+    margin,
+    footerY,
+  );
 
   const printDate = new Date().toLocaleString('id-ID', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
   doc.text(`Dicetak: ${printDate} WIB`, margin + contentWidth, footerY, { align: 'right' });
 

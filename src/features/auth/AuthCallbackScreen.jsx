@@ -17,7 +17,10 @@ export const AuthCallbackScreen = () => {
           throw new Error('Supabase belum terkonfigurasi.');
         }
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
         if (sessionError) throw sessionError;
         if (!session) {
@@ -32,9 +35,11 @@ export const AuthCallbackScreen = () => {
             user: {
               id: session.user.id,
               email: session.user.email,
-              name: session.user.user_metadata?.full_name
-                || session.user.user_metadata?.name
-                || session.user.email?.split('@')[0] || 'Pengguna',
+              name:
+                session.user.user_metadata?.full_name ||
+                session.user.user_metadata?.name ||
+                session.user.email?.split('@')[0] ||
+                'Pengguna',
             },
           }),
         });
@@ -50,7 +55,9 @@ export const AuthCallbackScreen = () => {
     };
 
     handleCallback();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [login]);
 
   if (error) {

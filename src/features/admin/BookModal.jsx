@@ -10,7 +10,7 @@ export const BookModal = ({
   setBookForm,
   onSubmit,
   isSavingBook,
-  editingBookId = null
+  editingBookId = null,
 }) => {
   const panelRef = useRef(null);
 
@@ -76,14 +76,22 @@ export const BookModal = ({
               <div className="mt-2.5 flex items-center gap-3 p-2 bg-cream-100 rounded-xl border border-cream-300">
                 <div className="h-16 w-12 rounded-lg overflow-hidden bg-cream-300 shrink-0 border border-cream-300">
                   <img
-                    src={typeof bookForm.thumbnail === 'string' ? bookForm.thumbnail : URL.createObjectURL(bookForm.thumbnail)}
+                    src={
+                      typeof bookForm.thumbnail === 'string'
+                        ? bookForm.thumbnail
+                        : URL.createObjectURL(bookForm.thumbnail)
+                    }
                     alt="Preview thumbnail"
                     className={layout.media}
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-ink-800 text-caption truncate">{bookForm.thumbnail.name}</p>
-                  <p className={typography.metaTight}>{(bookForm.thumbnail.size / 1024).toFixed(1)} KB</p>
+                  <p className="font-bold text-ink-800 text-caption truncate">
+                    {bookForm.thumbnail.name}
+                  </p>
+                  <p className={typography.metaTight}>
+                    {(bookForm.thumbnail.size / 1024).toFixed(1)} KB
+                  </p>
                   <span className="inline-flex items-center gap-1 text-micro font-bold text-brand-600 mt-1">
                     <CheckCircle2 className="w-3 h-3" /> Siap diunggah
                   </span>
@@ -92,11 +100,7 @@ export const BookModal = ({
             ) : bookForm.cover_url ? (
               <div className="mt-2.5 flex items-center gap-3 p-2 bg-cream-100 rounded-xl border border-cream-300">
                 <div className="h-16 w-12 rounded-lg overflow-hidden bg-cream-300 shrink-0 border border-cream-300">
-                  <img
-                    src={bookForm.cover_url}
-                    alt="Thumbnail saat ini"
-                    className={layout.media}
-                  />
+                  <img src={bookForm.cover_url} alt="Thumbnail saat ini" className={layout.media} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-ink-800 text-caption truncate">Thumbnail saat ini</p>
@@ -125,9 +129,12 @@ export const BookModal = ({
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-ink-800 text-caption truncate">{bookForm.content.name}</p>
+                  <p className="font-bold text-ink-800 text-caption truncate">
+                    {bookForm.content.name}
+                  </p>
                   <p className={typography.metaTight}>
-                    {(bookForm.content.size / 1024 / 1024).toFixed(2)} MB • {bookForm.content.name.split('.').pop()?.toUpperCase() || 'DOKUMEN'}
+                    {(bookForm.content.size / 1024 / 1024).toFixed(2)} MB •{' '}
+                    {bookForm.content.name.split('.').pop()?.toUpperCase() || 'DOKUMEN'}
                   </p>
                   <span className="inline-flex items-center gap-1 text-micro font-bold text-brand-700 mt-0.5">
                     <CheckCircle2 className="w-3 h-3" /> Berkas dokumen terlampir
@@ -140,7 +147,9 @@ export const BookModal = ({
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-ink-800 text-caption truncate">{bookForm.content_name}</p>
+                  <p className="font-bold text-ink-800 text-caption truncate">
+                    {bookForm.content_name}
+                  </p>
                   <span className="inline-flex items-center gap-1 text-micro font-bold text-ink-500 mt-0.5">
                     Berkas saat ini • Pilih berkas baru jika ingin mengganti
                   </span>

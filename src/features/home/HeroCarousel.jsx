@@ -16,10 +16,13 @@ const HeroCarousel = ({ slides, autoPlay = true, intervalMs = 6000 }) => {
 
   const total = slides.length;
 
-  const goTo = useCallback((next) => {
-    if (total === 0) return;
-    setIndex(((next % total) + total) % total);
-  }, [total]);
+  const goTo = useCallback(
+    (next) => {
+      if (total === 0) return;
+      setIndex(((next % total) + total) % total);
+    },
+    [total],
+  );
 
   useEffect(() => {
     setIndex(0);

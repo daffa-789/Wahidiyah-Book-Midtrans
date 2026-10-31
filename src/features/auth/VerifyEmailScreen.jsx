@@ -23,11 +23,12 @@ export const VerifyEmailScreen = () => {
   const [deliveredBy, setDeliveredBy] = useState(verification?.deliveredBy || '');
   const codeInputRef = useRef(null);
 
-  const method = verification?.method || (verification?.phone && !verification?.email ? 'whatsapp' : 'email');
+  const method =
+    verification?.method || (verification?.phone && !verification?.email ? 'whatsapp' : 'email');
   const isWhatsApp = method === 'whatsapp';
   const target = isWhatsApp
-    ? (verification?.phone || verification?.identifier || verification?.email || '')
-    : (verification?.email || verification?.identifier || verification?.phone || '');
+    ? verification?.phone || verification?.identifier || verification?.email || ''
+    : verification?.email || verification?.identifier || verification?.phone || '';
   const email = verification?.email || '';
   const phone = verification?.phone || '';
   const purpose = verification?.purpose === 'reset' ? 'reset' : 'register';
@@ -83,8 +84,8 @@ export const VerifyEmailScreen = () => {
             email,
             phone,
             code: trimmed,
-            password
-          })
+            password,
+          }),
         });
         clearVerification();
         setCompletedTarget(target);
@@ -98,8 +99,8 @@ export const VerifyEmailScreen = () => {
             identifier: target,
             email,
             phone,
-            code: trimmed
-          })
+            code: trimmed,
+          }),
         });
         clearVerification();
         login(result.user, result.token);
@@ -127,8 +128,8 @@ export const VerifyEmailScreen = () => {
           identifier: target,
           email,
           phone,
-          purpose
-        })
+          purpose,
+        }),
       });
       setResendNotice(result.message || 'Kode baru telah dikirim.');
       if (result.deliveredBy) setDeliveredBy(result.deliveredBy);
@@ -147,13 +148,23 @@ export const VerifyEmailScreen = () => {
     return (
       <main className={layout.authShell}>
         <section className={layout.authCard}>
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><CheckCircle2 className="h-6 w-6" /></div>
-          <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-ink-900">Password diperbarui</h1>
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+            <CheckCircle2 className="h-6 w-6" />
+          </div>
+          <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-ink-900">
+            Password diperbarui
+          </h1>
           <p className={typography.helperRelaxed}>
-            Password akun <strong className="text-ink-700">{completedTarget || target}</strong> sudah diganti.
-            Silakan masuk dengan password baru Anda.
+            Password akun <strong className="text-ink-700">{completedTarget || target}</strong>{' '}
+            sudah diganti. Silakan masuk dengan password baru Anda.
           </p>
-          <button type="button" onClick={() => navigateTo('login', { replace: true })} className="auth-primary-button mt-7">Masuk sekarang</button>
+          <button
+            type="button"
+            onClick={() => navigateTo('login', { replace: true })}
+            className="auth-primary-button mt-7"
+          >
+            Masuk sekarang
+          </button>
         </section>
       </main>
     );
@@ -162,17 +173,34 @@ export const VerifyEmailScreen = () => {
   return (
     <main className={layout.authShell}>
       <section className={layout.authCard}>
-        <button type="button" onClick={() => { clearVerification(); navigateTo(isReset ? 'forgot-password' : 'register', { replace: true }); }} className="mb-6 inline-flex min-h-6 items-center gap-1 px-1 text-xs font-bold text-ink-400 transition hover:text-brand-700"><ArrowLeft className="h-4 w-4" /> Kembali</button>
+        <button
+          type="button"
+          onClick={() => {
+            clearVerification();
+            navigateTo(isReset ? 'forgot-password' : 'register', { replace: true });
+          }}
+          className="mb-6 inline-flex min-h-6 items-center gap-1 px-1 text-xs font-bold text-ink-400 transition hover:text-brand-700"
+        >
+          <ArrowLeft className="h-4 w-4" /> Kembali
+        </button>
 
         <h1 className="font-display text-2xl font-bold tracking-tight text-ink-900">
           {deliveryFailed
-            ? (isWhatsApp ? 'WhatsApp belum terkirim' : 'Email belum terkirim')
-            : (isWhatsApp ? 'Cek WhatsApp Anda' : 'Cek email Anda')}
+            ? isWhatsApp
+              ? 'WhatsApp belum terkirim'
+              : 'Email belum terkirim'
+            : isWhatsApp
+              ? 'Cek WhatsApp Anda'
+              : 'Cek email Anda'}
         </h1>
         <p className={typography.helperRelaxed}>
           {deliveryFailed
-            ? (isReset ? 'Kode pemulihan gagal dikirim ke ' : 'Kode verifikasi gagal dikirim ke ')
-            : (isReset ? 'Kami mengirim kode pemulihan ke ' : 'Kami mengirim kode verifikasi ke ')}
+            ? isReset
+              ? 'Kode pemulihan gagal dikirim ke '
+              : 'Kode verifikasi gagal dikirim ke '
+            : isReset
+              ? 'Kami mengirim kode pemulihan ke '
+              : 'Kami mengirim kode verifikasi ke '}
           {isWhatsApp && target ? (
             <span className="font-bold text-ink-800 align-baseline">{displayPhone(target)}</span>
           ) : (
@@ -193,7 +221,8 @@ export const VerifyEmailScreen = () => {
               Mode pengembangan — pengiriman {isWhatsApp ? 'WhatsApp' : 'email'} belum aktif
             </p>
             <p className="mt-1 text-xs leading-relaxed text-semantic-warning/85">
-              {isWhatsApp ? 'Gateway WhatsApp (Fonnte)' : 'Pengiriman email'} belum dikonfigurasi, jadi kode ditampilkan di sini. Kode Anda:{' '}
+              {isWhatsApp ? 'Gateway WhatsApp (Fonnte)' : 'Pengiriman email'} belum dikonfigurasi,
+              jadi kode ditampilkan di sini. Kode Anda:{' '}
               <strong className="font-mono text-base tracking-[0.2em]">{devOtp}</strong>
             </p>
           </div>
@@ -209,7 +238,10 @@ export const VerifyEmailScreen = () => {
                 autoComplete="one-time-code"
                 maxLength={6}
                 value={code}
-                onChange={(event) => { setCode(event.target.value.replace(/\D/g, '')); setError(''); }}
+                onChange={(event) => {
+                  setCode(event.target.value.replace(/\D/g, ''));
+                  setError('');
+                }}
                 placeholder="Kode"
                 className="font-mono tracking-[0.35em]"
               />
@@ -225,7 +257,10 @@ export const VerifyEmailScreen = () => {
                     type="password"
                     autoComplete="new-password"
                     value={password}
-                    onChange={(event) => { setPassword(event.target.value); setError(''); }}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      setError('');
+                    }}
                     placeholder="Minimal 8 karakter"
                   />
                 </span>
@@ -237,7 +272,10 @@ export const VerifyEmailScreen = () => {
                     type="password"
                     autoComplete="new-password"
                     value={confirmation}
-                    onChange={(event) => { setConfirmation(event.target.value); setError(''); }}
+                    onChange={(event) => {
+                      setConfirmation(event.target.value);
+                      setError('');
+                    }}
                     placeholder="Tulis ulang password"
                   />
                 </span>
@@ -245,18 +283,39 @@ export const VerifyEmailScreen = () => {
             </>
           )}
 
-          {error && <div role="alert" className="auth-alert"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
-          {resendNotice && <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-xs font-semibold text-brand-800">{resendNotice}</div>}
+          {error && (
+            <div role="alert" className="auth-alert">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+          {resendNotice && (
+            <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-xs font-semibold text-brand-800">
+              {resendNotice}
+            </div>
+          )}
 
           <button type="submit" disabled={isSubmitting} className="auth-primary-button">
-            {isSubmitting
-              ? <><span className="auth-spinner" />Memverifikasi…</>
-              : (isReset ? 'Simpan password baru' : 'Verifikasi & buat akun')}
+            {isSubmitting ? (
+              <>
+                <span className="auth-spinner" />
+                Memverifikasi…
+              </>
+            ) : isReset ? (
+              'Simpan password baru'
+            ) : (
+              'Verifikasi & buat akun'
+            )}
           </button>
         </form>
 
         <div className="mt-5 text-center">
-          <button type="button" onClick={resend} disabled={isResending || resendCooldown > 0} className="auth-link text-xs font-bold disabled:opacity-50">
+          <button
+            type="button"
+            onClick={resend}
+            disabled={isResending || resendCooldown > 0}
+            className="auth-link text-xs font-bold disabled:opacity-50"
+          >
             {resendCooldown > 0 ? `Kirim ulang kode (${resendCooldown} dtk)` : 'Kirim ulang kode'}
           </button>
         </div>
@@ -264,7 +323,16 @@ export const VerifyEmailScreen = () => {
         {!isReset && (
           <p className="mt-4 text-center text-caption leading-relaxed text-ink-400">
             Salah menulis {isWhatsApp ? 'nomor telepon' : 'alamat email'}?{' '}
-            <button type="button" onClick={() => { clearVerification(); navigateTo('register', { replace: true }); }} className="auth-link">Daftar ulang</button>
+            <button
+              type="button"
+              onClick={() => {
+                clearVerification();
+                navigateTo('register', { replace: true });
+              }}
+              className="auth-link"
+            >
+              Daftar ulang
+            </button>
           </p>
         )}
       </section>

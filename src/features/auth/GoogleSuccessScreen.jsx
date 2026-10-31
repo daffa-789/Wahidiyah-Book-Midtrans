@@ -39,7 +39,7 @@ export const GoogleSuccessScreen = () => {
         const payload = await apiJson('/api/auth/exchange', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
+          body: JSON.stringify({ code }),
         });
         login(payload.user, payload.token);
       } catch (exchangeError) {

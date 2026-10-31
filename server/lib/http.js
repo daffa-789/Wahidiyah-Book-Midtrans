@@ -1,36 +1,41 @@
 import { CONTENT_MIME_BY_EXTENSION } from './constants.js';
 
-
 export const DB_DOWN_MESSAGE =
   'Layanan database Cloud sedang sibuk atau tidak terjangkau. Silakan periksa koneksi internet Anda.';
-
 
 export const isDbDown = (error) =>
   error?.code === 'ECONNREFUSED' || Boolean(error?.message?.includes('ECONNREFUSED'));
 
-
 const includeErrorDetail = process.env.NODE_ENV === 'development';
 
-
 export const fail = (res, error) => {
+  /* Service layer melempar Error ber-`statusCode` untuk kegagalan yang memang
+   * bagian aturan bisnis (lihat lib/errors.js). Terjemahkan apa adanya supaya
+   * route tidak perlu menulis cabang status satu per satu.
+   */
+  if (error?.statusCode) {
+    return res.status(error.statusCode).json({
+      success: false,
+      message: error.message,
+      ...(error.extra || {}),
+    });
+  }
   if (isDbDown(error)) {
     return res.status(503).json({
       success: false,
       message: DB_DOWN_MESSAGE,
       error: includeErrorDetail ? error.message : undefined,
-      isDatabaseError: true
+      isDatabaseError: true,
     });
   }
   return res.status(500).json({
     success: false,
-    error: includeErrorDetail ? error.message : undefined
+    error: includeErrorDetail ? error.message : undefined,
   });
 };
 
-
 export const internalErrorDetail = (error, exposeDetail = includeErrorDetail) =>
   exposeDetail ? error?.message : undefined;
-
 
 /**
  * Helper jawaban galat 4xx — memampatkan pola yang sebelumnya ditulis tangan
@@ -56,10 +61,10 @@ export const forbidden = reject(403);
 export const notFound = reject(404);
 export const conflict = reject(409);
 
-
 export const authFailureMessage = (error, exposeDetail = includeErrorDetail) =>
-  exposeDetail ? (error?.message || 'Terjadi kesalahan pada server') : 'Terjadi kesalahan pada server';
-
+  exposeDetail
+    ? error?.message || 'Terjadi kesalahan pada server'
+    : 'Terjadi kesalahan pada server';
 
 export const wrap = (handler) => async (req, res, next) => {
   try {
@@ -69,14 +74,14 @@ export const wrap = (handler) => async (req, res, next) => {
   }
 };
 
-
 export const safeContentMime = (book) =>
-  CONTENT_MIME_BY_EXTENSION[String(book?.content_extension || '').replace('.', '').toLowerCase()] ||
-  'application/octet-stream';
-
+  CONTENT_MIME_BY_EXTENSION[
+    String(book?.content_extension || '')
+      .replace('.', '')
+      .toLowerCase()
+  ] || 'application/octet-stream';
 
 const DATA_URL_PATTERN = /^data:([^;]+);base64,(.+)$/;
-
 
 export const sendDataUrl = (res, url, { contentType, cacheControl } = {}) => {
   if (!url || !url.startsWith('data:')) return false;

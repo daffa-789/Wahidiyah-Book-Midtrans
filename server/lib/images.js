@@ -1,7 +1,9 @@
 import sharp from 'sharp';
 
-
-export async function toWebp(buffer, { width, quality, fallbackMime = 'application/octet-stream' }) {
+export async function toWebp(
+  buffer,
+  { width, quality, fallbackMime = 'application/octet-stream' },
+) {
   try {
     const converted = await sharp(buffer)
       .resize({ width, withoutEnlargement: true })
@@ -13,7 +15,6 @@ export async function toWebp(buffer, { width, quality, fallbackMime = 'applicati
     return { buffer, mime: fallbackMime, converted: false };
   }
 }
-
 
 export const toDataUrl = (buffer, mime) =>
   buffer ? `data:${mime};base64,${buffer.toString('base64')}` : null;

@@ -16,7 +16,7 @@ const SUBPAGE_TITLES = {
   riwayat: 'Riwayat Langganan',
   about: 'Tentang',
   'profile-edit': 'Profil',
-  profile: 'Profil'
+  profile: 'Profil',
 };
 
 const DeviceFrameBase = ({ children }) => {
@@ -33,25 +33,25 @@ const DeviceFrameBase = ({ children }) => {
     return ACTIVE_KEYS_BY_SCREEN[currentScreen] || [];
   }, [isAdmin, currentScreen, currentPath]);
 
-  const sections = useMemo(
-    () => buildSidebarSections(isAdmin, activeKeys),
-    [isAdmin, activeKeys]
-  );
+  const sections = useMemo(() => buildSidebarSections(isAdmin, activeKeys), [isAdmin, activeKeys]);
 
-  const handleNavClick = useCallback((target) => {
-    if (target === 'logout') {
+  const handleNavClick = useCallback(
+    (target) => {
+      if (target === 'logout') {
+        setMobileMenuOpen(false);
+        setLogoutConfirmOpen(true);
+        return;
+      }
+      if (typeof target === 'string' && target.startsWith('admin:')) {
+        navigateTo('admin-dashboard', { adminTab: target.slice('admin:'.length) });
+        setMobileMenuOpen(false);
+        return;
+      }
+      navigateTo(target);
       setMobileMenuOpen(false);
-      setLogoutConfirmOpen(true);
-      return;
-    }
-    if (typeof target === 'string' && target.startsWith('admin:')) {
-      navigateTo('admin-dashboard', { adminTab: target.slice('admin:'.length) });
-      setMobileMenuOpen(false);
-      return;
-    }
-    navigateTo(target);
-    setMobileMenuOpen(false);
-  }, [navigateTo]);
+    },
+    [navigateTo],
+  );
 
   const handleConfirmLogout = useCallback(() => {
     setLogoutConfirmOpen(false);
@@ -79,8 +79,6 @@ const DeviceFrameBase = ({ children }) => {
           />
         </div>
       </aside>
-
-
 
       {/* Drawer Menu Mobile */}
       <Transition show={mobileMenuOpen} as={Fragment}>
@@ -170,7 +168,11 @@ const DeviceFrameBase = ({ children }) => {
                 if (window.history.length > 1) {
                   window.history.back();
                 } else {
-                  navigateTo(currentScreen === 'profile-edit' || currentScreen === 'profile' ? 'home' : 'profile-edit');
+                  navigateTo(
+                    currentScreen === 'profile-edit' || currentScreen === 'profile'
+                      ? 'home'
+                      : 'profile-edit',
+                  );
                 }
               }}
               className="flex items-center gap-2 text-ink-800 hover:text-ink-900 active:opacity-75 cursor-pointer -ml-1 py-1 px-2.5 rounded-xl transition hover:bg-cream-200/60"
@@ -185,7 +187,9 @@ const DeviceFrameBase = ({ children }) => {
         )}
 
         <main className="flex w-full flex-1 flex-col">
-          <div className="relative flex w-full flex-1 flex-col bg-cream-50 pb-20 md:pb-0">{children}</div>
+          <div className="relative flex w-full flex-1 flex-col bg-cream-50 pb-20 md:pb-0">
+            {children}
+          </div>
         </main>
       </div>
 

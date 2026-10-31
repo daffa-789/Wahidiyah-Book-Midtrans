@@ -12,7 +12,12 @@
 
 import { supabaseServer } from '../db.js';
 import { logger } from '../logger.js';
-import { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT, PUSH_REMINDER_HOUR } from '../config.js';
+import {
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY,
+  VAPID_SUBJECT,
+  PUSH_REMINDER_HOUR,
+} from '../config.js';
 import { generateId } from '../auth.js';
 import { todayWib } from './time.js';
 import { sendWebPush, isValidVapidPublicKey, isValidVapidPrivateKey } from './webpush.js';
@@ -25,7 +30,7 @@ export const isPushConfigured = () =>
 const vapidConfig = () => ({
   publicKey: VAPID_PUBLIC_KEY,
   privateKey: VAPID_PRIVATE_KEY,
-  subject: VAPID_SUBJECT
+  subject: VAPID_SUBJECT,
 });
 
 /* Kolom/tabel baru mungkin belum dibuat pemilik (blok PATCH di
@@ -44,7 +49,8 @@ const warnSchemaOnce = (error, scope) => {
   schemaWarningLogged = true;
   logger.warn(scope, 'Tabel/kolom Web Push belum ada — fitur notifikasi dilewati', {
     pesan: error?.message,
-    solusi: 'jalankan blok "PATCH Web Push" pada supabase_database/full_setup.sql di SQL Editor Supabase, lalu restart'
+    solusi:
+      'jalankan blok "PATCH Web Push" pada supabase_database/full_setup.sql di SQL Editor Supabase, lalu restart',
   });
 };
 
@@ -72,7 +78,7 @@ export const saveSubscription = async ({ endpoint, keys, userAgent }) => {
     auth: keys.auth,
     user_agent: String(userAgent || '').slice(0, 255),
     is_active: true,
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   };
 
   if (existing.data) {
@@ -145,7 +151,7 @@ const buildEventPayload = (event, { type = 'auto' } = {}) => {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
-        timeZone: 'Asia/Jakarta'
+        timeZone: 'Asia/Jakarta',
       });
     }
   } catch {}
@@ -159,14 +165,15 @@ const buildEventPayload = (event, { type = 'auto' } = {}) => {
     const parts = [
       formattedDate,
       time ? `Pukul ${time} WIB` : '',
-      event.location ? `di ${event.location}` : ''
+      event.location ? `di ${event.location}` : '',
     ].filter(Boolean);
-    body = parts.join(' · ') || 'Jadwal majelis baru telah diumumkan. Ketuk untuk melihat kalender.';
+    body =
+      parts.join(' · ') || 'Jadwal majelis baru telah diumumkan. Ketuk untuk melihat kalender.';
   } else {
     title = `⏰ Pengingat Besok: ${event.title}`;
     const parts = [
       time ? `Pukul ${time} WIB` : '',
-      event.location ? `di ${event.location}` : ''
+      event.location ? `di ${event.location}` : '',
     ].filter(Boolean);
     body = parts.join(' · ') || 'Agenda majelis besok. Ketuk untuk membuka jadwal lengkap.';
   }
@@ -178,7 +185,7 @@ const buildEventPayload = (event, { type = 'auto' } = {}) => {
     badge: EVENT_ICON,
     tag: isAnnouncement ? `agenda-announcement-${event.id}` : `agenda-reminder-${event.id}`,
     url: '/calendar',
-    kind: isAnnouncement ? 'event-announcement' : 'event-reminder'
+    kind: isAnnouncement ? 'event-announcement' : 'event-reminder',
   };
 };
 
@@ -217,7 +224,7 @@ const broadcastPush = async ({ payload, ttl = 24 * 60 * 60, urgency = 'normal' }
         payload,
         vapid: vapidConfig(),
         ttl,
-        urgency
+        urgency,
       });
 
       if (result.ok) {
@@ -229,7 +236,7 @@ const broadcastPush = async ({ payload, ttl = 24 * 60 * 60, urgency = 'normal' }
         failed += 1;
         logger.warn('PUSH', 'Pengiriman notifikasi gagal', {
           status: result.status,
-          sebab: result.reason
+          sebab: result.reason,
         });
       }
     } catch (error) {
@@ -277,7 +284,7 @@ export const sendEventAnnouncementNow = async (eventId) => {
   logger.ok('PUSH', 'Pengumuman agenda mujahadah berhasil disiarkan', {
     agenda: eventId,
     judul: event.title,
-    terkirim: result.sent
+    terkirim: result.sent,
   });
 
   return result;
@@ -314,7 +321,7 @@ export const sendEventReminderNow = async (eventId, { force = false, type = 'aut
     return { sent: 0, skipped: true, reason: 'not-due-tomorrow' };
   }
 
-  const payloadType = type !== 'auto' ? type : (eventYmd === tomorrow ? 'reminder' : 'announcement');
+  const payloadType = type !== 'auto' ? type : eventYmd === tomorrow ? 'reminder' : 'announcement';
   const result = await broadcastPush({ payload: buildEventPayload(event, { type: payloadType }) });
 
   /* Tandai terkirim HANYA bila benar-benar ada yang menerima dan memang jadwal besok */
@@ -362,7 +369,7 @@ export const sweepDueReminders = async () => {
     timeZone: 'Asia/Jakarta',
     hour: '2-digit',
     minute: '2-digit',
-    hourCycle: 'h23'
+    hourCycle: 'h23',
   }).format(new Date());
 
   const [targetHour, targetMinute] = PUSH_REMINDER_HOUR.split(':').map(Number);
@@ -384,7 +391,7 @@ export const sweepDueReminders = async () => {
     } catch (error) {
       logger.warn('PUSH', 'Pengingat agenda gagal dikirim', {
         event: event.id,
-        pesan: error.message
+        pesan: error.message,
       });
     }
   }
@@ -397,7 +404,8 @@ export const sweepDueReminders = async () => {
 export const startReminderScheduler = ({ intervalMs = 15 * 60 * 1000 } = {}) => {
   if (!isPushConfigured()) {
     logger.warn('PUSH', 'Notifikasi mati — kunci VAPID belum diisi di .env', {
-      cara_mengaktifkan: 'jalankan `node scripts/generate-vapid-keys.js`, tempel hasilnya ke .env, lalu restart'
+      cara_mengaktifkan:
+        'jalankan `node scripts/generate-vapid-keys.js`, tempel hasilnya ke .env, lalu restart',
     });
     return null;
   }
@@ -414,7 +422,7 @@ export const startReminderScheduler = ({ intervalMs = 15 * 60 * 1000 } = {}) => 
 
   logger.ok('PUSH', 'Notifikasi Web Push aktif', {
     jam_kirim: `${PUSH_REMINDER_HOUR} WIB`,
-    penyapu: `setiap ${Math.round(intervalMs / 60000)} menit`
+    penyapu: `setiap ${Math.round(intervalMs / 60000)} menit`,
   });
 
   return timer;
